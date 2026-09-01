@@ -72,7 +72,7 @@ def test_every_notebook_code_cell_has_preceding_markdown():
     }
     configuration = next(cell for cell in notebook["cells"] if cell.get("id") == "configuration")
     source = "".join(configuration["source"])
-    assert 'EXECUTION_MODE = "dry_run"' in source
+    assert 'EXECUTION_MODE = "validation"' in source
     assert 'FUSION_POSITIONS = ["feature"]' in source
     assert "SEEDS = [3407]" in source
     assert 'FILLING_STRATEGIES = ["normalized_mean"]' in source
