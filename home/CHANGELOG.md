@@ -4,6 +4,8 @@
 
 - Added one- and two-GPU DDP selected only through a physical GPU list.
 - Added the tested NCCL transport default required by the current `ws` GPU pair.
+- Added per-epoch live validation summaries, curves, generalization gaps, and
+  class-specific validation figures to classifier monitoring.
 - Added graph-internal label, differentiable loss, and batch-accuracy monitor nodes.
 - Added rank-zero training histories and classifier/cGAN curve exports.
 - Added validation freeze manifests and read-only sealed test execution.

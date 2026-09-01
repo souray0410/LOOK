@@ -119,6 +119,11 @@ The MHD graph contains `label_gt`, differentiable `loss`, and diagnostic
 `batch_accuracy` nodes. Formal results use full-split predictions and report macro,
 weighted, and per-class F1; macro AUROC; balanced accuracy; sensitivity/specificity;
 calibration; Brier score; kappa; confusion matrices; and participant-level uncertainty.
+After every classifier epoch, rank zero prints the principal validation metrics and
+atomically refreshes `training_curves.csv/png/pdf` plus
+`validation_per_class.png/pdf` and `validation_confusion_matrix.png/pdf`; these files
+remain inspectable during training and survive interruption. The JSONL history retains
+the full validation record, including the confusion-matrix counts.
 
 ## Fresh Rebuild On Another Dataset
 

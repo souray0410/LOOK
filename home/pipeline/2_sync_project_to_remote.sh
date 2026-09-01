@@ -52,5 +52,5 @@ if [[ -f "$LOCAL_FAMILY_ROOT/README.md" ]]; then
 fi
 rsync -av --delete \
   --exclude '.git/' --exclude 'tool/environment/.venv/' --exclude 'tool/*.egg-info/' \
-  --exclude '__pycache__/' --exclude '.pytest_cache/' \
+  --exclude '__pycache__/' --exclude '.pytest_cache/' --exclude '.DS_Store' \
   "$LOCAL_ROOT/" "$HOST:$REMOTE_ROOT/"

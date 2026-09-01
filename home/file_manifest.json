@@ -11,9 +11,9 @@
       "sha256": "87c1d65a3413535f9097a7bd7662b3e6e2937d0702b7cdc1793e0032622f8019"
     },
     {
-      "bytes": 1236,
+      "bytes": 1376,
       "path": "CHANGELOG.md",
-      "sha256": "d1d4dafb6f3c5bd90de9d2f725607d4c8a411666ffd9ab6047001e4bbf903f7b"
+      "sha256": "9feccc022a83d3b6b523bc74d425af4e20bc49a684d551bb22271e464e431c46"
     },
     {
       "bytes": 33,
@@ -26,9 +26,9 @@
       "sha256": "c44fead4de677e73b5b7dd0be25565a969f3d1226cd4154c047fe49e98dbb36c"
     },
     {
-      "bytes": 5333,
+      "bytes": 5713,
       "path": "README.md",
-      "sha256": "9b73ad8e6634558ada04d499b5b105eb0d75a95b986dab1f184384be8354dfda"
+      "sha256": "405a67930a4142c6a5005ea515bb3cedd49f0a4e8a0205a297ffc7c338b79714"
     },
     {
       "bytes": 5162,
@@ -76,9 +76,9 @@
       "sha256": "78945a076b57197886a3d4bea8a5f02030b16d2c4b335ada2e80447e96f095b0"
     },
     {
-      "bytes": 9045,
+      "bytes": 9215,
       "path": "pipeline/18_UKB_LOOK_ResNet50_MHD.ipynb",
-      "sha256": "736ca8a311c909c6ea588ad23f6426eb5b144d3d2143ab7e349eb90736239e38"
+      "sha256": "99cbe74493bf8d0932a2aab828cad957dbebd741ea80e6898b9765ddee07627e"
     },
     {
       "bytes": 2661,
@@ -96,9 +96,9 @@
       "sha256": "37e59c20eefdaac7d218f534d1f7516f689ad156e225de9494b0007e1491554d"
     },
     {
-      "bytes": 2340,
+      "bytes": 2362,
       "path": "pipeline/2_sync_project_to_remote.sh",
-      "sha256": "64cd3bda4b3f53d28d5b044976ce4263b7cde0dbb29e9ef4650a31a2a43caef0"
+      "sha256": "73189f5f5e3c48a73a73c88162d8466f83badadc0fddf67af9bfae3e25c55ea0"
     },
     {
       "bytes": 5751,
@@ -256,9 +256,9 @@
       "sha256": "f555e69328b7e3b57c3c56c6bd63a81968dbfdd6e7d650f49f1a0323c04b77e1"
     },
     {
-      "bytes": 3823,
+      "bytes": 10772,
       "path": "tool/look_core/monitoring.py",
-      "sha256": "00d8a1333ee8f34b791a57d2ca9e153625de828bd4d83641a16012961cbcb0a0"
+      "sha256": "ef89d6aacd87c881b4a132e28c889a0edfd36a38eb711954f7d60a5eaed692ed"
     },
     {
       "bytes": 3123,
@@ -436,6 +436,11 @@
       "sha256": "4eba1a21414c0607af832abfc64d82d69cc56dbe33d07a1ced2b750b5b06aac1"
     },
     {
+      "bytes": 2159,
+      "path": "tool/tests/test_monitoring.py",
+      "sha256": "d9e6e99283a8c63b3170dd17aac45b452c77406f2e5a505483e7353c6f23b0df"
+    },
+    {
       "bytes": 2836,
       "path": "tool/tests/test_paths_state.py",
       "sha256": "174a162cacc23a9dcf7cc97d1479e9d476a354c5f713a21d650cb788f78fb263"
@@ -456,7 +461,7 @@
       "sha256": "5c37ee25c313ffca06e8d6ba0350e84b02f7bbd60648697b4ec7689dc3eb9bfc"
     }
   ],
-  "generated_at_utc": "2026-09-01T15:35:53.052165+00:00",
+  "generated_at_utc": "2026-09-01T18:46:50.125084+00:00",
   "release_id": "2026_09_01_16_06_11",
   "schema_version": 2
 }
