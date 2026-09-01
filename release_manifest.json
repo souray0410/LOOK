@@ -1,0 +1,54 @@
+{
+  "data_skeleton": [
+    {
+      "bytes": 1,
+      "path": "data/cache/partial/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/cache/pipeline_state/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/cache/quarantine/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 332,
+      "path": "data/data_manifest.example.json",
+      "sha256": "f26f225d21f78795e645e4c1f91841369c2fbc54827f20e3bb04070b8d32f2f2"
+    },
+    {
+      "bytes": 1,
+      "path": "data/dataset/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/experiments/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/smoke/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/sweeps/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    }
+  ],
+  "data_tree": "data",
+  "deployment_data_root": "/Users/mengh/Downloads/LOOK/2026_08_30_11_20_47/data",
+  "home_tree": "home",
+  "project": "LOOK",
+  "release_version": "1.0.0",
+  "schema_version": 1,
+  "source_manifest": {
+    "path": "home/file_manifest.json",
+    "sha256": "62c1b82dcf92e36a95404a08b50d686012a3f94aa6322e10ce8bbd382b48d11b"
+  }
+}

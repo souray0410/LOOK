@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "project_name": "LOOK",
+  "release_id": "2026_08_30_11_20_47",
+  "release_version": "1.0.0",
+  "deployment_defaults": {
+    "project_root": "/home/mengh/LOOK/2026_08_30_11_20_47",
+    "data_root": "/data/mengh/LOOK/2026_08_30_11_20_47",
+    "ssh_host": "ws",
+    "ukb_source_uuid": "7E0E-D004",
+    "ukb_source_mount": "/mnt/ukbiobank",
+    "ukb_source_root": "/mnt/ukbiobank/UKB",
+    "ukb_label_uuid": "69B9-6FD2",
+    "ukb_label_mount": "/mnt/liverpool_ukbiobank",
+    "ukb_label_root": "/mnt/liverpool_ukbiobank/ukbb/UKB利物浦文件夹/csv",
+    "torch_index_url": "https://download.pytorch.org/whl/cu128",
+    "torch_version": "2.8.0",
+    "torchvision_version": "0.23.0"
+  },
+  "management_standard": {
+    "name": "Reproducible Research Project Management Standard",
+    "version": "1.0",
+    "document": "../README.md"
+  },
+  "directories": {
+    "tool": "tool",
+    "pipeline": "pipeline",
+    "dataset": "dataset",
+    "cache": "cache",
+    "runs": "runs"
+  },
+  "compute": {
+    "maximum_visible_gpus": 1,
+    "execution": "sequential"
+  }
+}

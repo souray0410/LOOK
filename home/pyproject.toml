@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ukb-look"
+version = "1.0.0"
+description = "Reproducible single-GPU LOOK experiments on paired UK Biobank ophthalmology data"
+requires-python = ">=3.10,<3.14"
+
+[tool.setuptools]
+package-dir = {"" = "tool"}
+
+[tool.setuptools.packages.find]
+where = ["tool"]
+include = ["look_core*", "MHD_Project*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tool/tests"]
+addopts = "-ra -p no:cacheprovider"

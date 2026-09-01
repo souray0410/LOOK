@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "release_version": "1.0.0",
+  "status": "EMPTY_RELEASE_SKELETON",
+  "dataset_included": false,
+  "required_validation": {
+    "pairs": 162202,
+    "images": 324404,
+    "participant_split_leakage": 0,
+    "reference_labels_sha256": "8b55005521a8cb426ad40fcb6dd417cfc50f71699554ac33be1880d207842911"
+  }
+}

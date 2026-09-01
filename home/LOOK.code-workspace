@@ -1,0 +1,8 @@
+{
+  "folders": [{"path": "."}],
+  "settings": {
+    "python.defaultInterpreterPath": "${workspaceFolder}/tool/environment/.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "jupyter.notebookFileRoot": "${workspaceFolder}"
+  }
+}
