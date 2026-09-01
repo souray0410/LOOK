@@ -70,6 +70,12 @@ def test_every_notebook_code_cell_has_preceding_markdown():
         "language": "python",
         "name": "look",
     }
+    configuration = next(cell for cell in notebook["cells"] if cell.get("id") == "configuration")
+    source = "".join(configuration["source"])
+    assert 'EXECUTION_MODE = "dry_run"' in source
+    assert 'FUSION_POSITIONS = ["feature"]' in source
+    assert "SEEDS = [3407]" in source
+    assert 'FILLING_STRATEGIES = ["normalized_mean"]' in source
 
 
 def test_study_grid_cases_use_singleton_axes_and_keep_existing_case_stable(tmp_path):

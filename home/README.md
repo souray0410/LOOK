@@ -76,6 +76,11 @@ The launcher disables NCCL P2P by default because the current `ws` GPU pair requ
 it. A different server may explicitly set `NCCL_P2P_DISABLE=0`; notebook configuration
 and the GPU-list interface remain unchanged.
 
+The committed notebook opens in a safe single-configuration `dry_run` state
+(`feature`, seed 3407, normalized mean). It cannot begin training until
+`EXECUTION_MODE` is explicitly changed to `validation`. Expand the lists only after
+the singleton plan and pilot have been checked.
+
 Use these execution modes in order:
 
 ```text
