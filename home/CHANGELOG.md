@@ -7,5 +7,6 @@
 - Established canonical `look_core` and `MHD_Project` imports with no aliases.
 - Added resumable single-GPU ResNet50, paired-cGAN, LOOK, sweep and matrix analysis.
 - Added safe structured batch execution and content-addressed file-selection plans.
+- Added self-repairing environment setup and a validated portable Jupyter kernelspec.
 - Documented the five-class reference-standard limitation and sealed-test protocol.
 - Removed prior migration branches, compatibility wrappers and generated run products.

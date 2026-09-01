@@ -1,34 +1,39 @@
 {
   "files": [
     {
-      "bytes": 494,
+      "bytes": 527,
       "path": ".gitignore",
-      "sha256": "64230315d3ba5a75ceb8a691090a1d3d737b5e8ce45c18bc403e38ce361f74e9"
+      "sha256": "a03f6b7a8f4b2c169b3050e65126c36ac911539f01044bc78c31a0aa5e9d4cf4"
     },
     {
-      "bytes": 613,
+      "bytes": 193,
+      "path": ".vscode/settings.json",
+      "sha256": "3452eb1236aed4bf75285353320ffd650ad69ee9c908bec394d11aa731417fed"
+    },
+    {
+      "bytes": 699,
       "path": "CHANGELOG.md",
-      "sha256": "3f4274903671df0b346e2afa1c4c296345c739f86d4fca35f32d2ddaa45daced"
+      "sha256": "2a343109dd6c7b373034ac62dceba08675f21bd41206630f95b7fc513e85c172"
     },
     {
-      "bytes": 249,
+      "bytes": 33,
       "path": "LOOK.code-workspace",
-      "sha256": "5d82151996528567fbdfe7ebfbb7df46cd32dd12ea91c1504445c2af965fba54"
+      "sha256": "5df91d926ddafbf557cd6401bda13fbed410bdc59a6d45fb70dd796c4849361b"
     },
     {
-      "bytes": 4140,
+      "bytes": 4193,
       "path": "PIPELINE_LEDGER.md",
-      "sha256": "9a90060922b08c8385fafba09ef61f6741237b67c7fb99d2998b144ecbb93c41"
+      "sha256": "eaa8b6c6cb5ed5f69424e1277366282508407db9898ae53c99c104a7927e8c5e"
     },
     {
-      "bytes": 7016,
+      "bytes": 7551,
       "path": "README.md",
-      "sha256": "ff2502fd7db17499999f385d876a088168dfe8a79b75c18e3e1c5d46481fca07"
+      "sha256": "25e6300f911eade0886619438fe99e0acb6a7d5d8f4f0a4c4eb7b2b22236291f"
     },
     {
-      "bytes": 4168,
+      "bytes": 4539,
       "path": "STRUCTURE.md",
-      "sha256": "7d962a8856c02c500d59087faef3588d26561a2ed1165a43a270e38f822e17c5"
+      "sha256": "cb3e686cf80b72f579f2539f58e12c14f48500b3d34f2f70f7cee6089d4a5397"
     },
     {
       "bytes": 8136,
@@ -71,9 +76,9 @@
       "sha256": "c8498d63e0dca32db45989633056cd0cbcc93a9aa82ba80236f671994f043b5e"
     },
     {
-      "bytes": 9077,
+      "bytes": 9093,
       "path": "pipeline/18_UKB_LOOK_ResNet50_MHD.ipynb",
-      "sha256": "db07cc664efe3eb8014346e8793a7e431868bdf31487769cc6b3de8e0751a9dc"
+      "sha256": "8019ad7ab81295c6324bffddb49f6ca60ecadad4f21aec124c30d967719a9661"
     },
     {
       "bytes": 2236,
@@ -96,9 +101,9 @@
       "sha256": "64cd3bda4b3f53d28d5b044976ce4263b7cde0dbb29e9ef4650a31a2a43caef0"
     },
     {
-      "bytes": 2671,
+      "bytes": 5609,
       "path": "pipeline/3_create_environment.sh",
-      "sha256": "6b534ff195c2429239e34e99443f9766f1d7755aacd922a69b49cc521106f784"
+      "sha256": "ff6ddc6c00cfcc93129a09ffae7e7f8b34f92f4d5cd2ddbca27ee945b63ea2d2"
     },
     {
       "bytes": 3593,
@@ -154,11 +159,6 @@
       "bytes": 164,
       "path": "tool/MHD_Project/__init__.py",
       "sha256": "8a361292415c61ef74f79ad9626e9e7675ec557350db8b5461653d97ff7d3864"
-    },
-    {
-      "bytes": 193,
-      "path": "tool/configuration/vscode/settings.json",
-      "sha256": "3452eb1236aed4bf75285353320ffd650ad69ee9c908bec394d11aa731417fed"
     },
     {
       "bytes": 2688,
@@ -396,9 +396,9 @@
       "sha256": "55b3f662e879c486efadbaf98e8efe79bf5a8fb2dd1f9b6fb11c7acc8736e3c8"
     },
     {
-      "bytes": 3620,
+      "bytes": 3775,
       "path": "tool/tests/test_configuration.py",
-      "sha256": "f43dc5d891d839b0fe1f9b45e8cb0240dd5bdaf2ab0a58718582bcd05a73827e"
+      "sha256": "9e787e755b10109ed738cd4337dbb3d9ef030bc41a69efad0c58ee8ba6bdb75d"
     },
     {
       "bytes": 840,
@@ -431,9 +431,9 @@
       "sha256": "174a162cacc23a9dcf7cc97d1479e9d476a354c5f713a21d650cb788f78fb263"
     },
     {
-      "bytes": 3000,
+      "bytes": 3687,
       "path": "tool/tests/test_project_governance.py",
-      "sha256": "a6a42531220ddc9642fe3539ea71af3453fcb015456fe192076117be52aecdc3"
+      "sha256": "860c1dff16d7153f6a3a480befbe13ec5d85f4c9c2e6014ab99d6d971bc2e458"
     },
     {
       "bytes": 1285,
@@ -446,7 +446,7 @@
       "sha256": "5c37ee25c313ffca06e8d6ba0350e84b02f7bbd60648697b4ec7689dc3eb9bfc"
     }
   ],
-  "generated_at_utc": "2026-09-01T08:29:10.854195+00:00",
+  "generated_at_utc": "2026-09-01T11:39:50.167417+00:00",
   "release_version": "1.0.0",
   "schema_version": 2
 }

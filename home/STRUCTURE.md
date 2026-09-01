@@ -13,12 +13,12 @@
 |   |-- STRUCTURE.md
 |   |-- PIPELINE_LEDGER.md
 |   |-- file_manifest.json
+|   |-- .vscode/settings.json      project-local interpreter defaults
 |   |-- tool/
 |   |   |-- look_core/            reusable experiment and recovery package
 |   |   |-- MHD_Project/          MHD Framework V3 package
 |   |   |-- tests/
 |   |   |-- environment/
-|   |   |-- configuration/
 |   |   `-- research/
 |   `-- pipeline/                 ordered executable Steps 1-20
 `-- data/                          empty, redistributable runtime skeleton
@@ -35,6 +35,7 @@ or virtual environment.
 
 ```text
 /home/<user>/LOOK/<release>/       source; installable and synchronized
+|-- .vscode/settings.json          resolves the deployment-local interpreter
 |-- tool/environment/.venv/        local to this deployment, ignored
 |-- tool/{look_core,MHD_Project}/
 `-- pipeline/1_...20_...
@@ -50,6 +51,10 @@ or virtual environment.
     |-- sweeps/                    plans, per-case progress and summaries
     `-- smoke/                     disposable integration products
 ```
+
+Step 3 registers the same portable kernel name, `look-1.0.0`, on every host while its
+machine-local kernelspec records that deployment's absolute `.venv/bin/python` path.
+Notebook source therefore remains portable without relying on a personal path.
 
 ## Data Evolution
 

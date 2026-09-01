@@ -76,3 +76,17 @@ def test_shell_entrypoints_parse_with_bash() -> None:
     assert scripts
     for script in scripts:
         subprocess.run(["/bin/bash", "-n", str(script)], check=True)
+
+
+def test_vscode_and_kernel_configuration_are_canonical() -> None:
+    settings = json.loads((PROJECT_ROOT / ".vscode/settings.json").read_text(encoding="utf-8"))
+    assert settings["python.defaultInterpreterPath"] == (
+        "${workspaceFolder}/tool/environment/.venv/bin/python"
+    )
+    assert settings["python.terminal.activateEnvironment"] is True
+    assert not (PROJECT_ROOT / "tool/configuration/vscode/settings.json").exists()
+
+    setup = (PROJECT_ROOT / "pipeline/3_create_environment.sh").read_text(encoding="utf-8")
+    for option in ("--python", "--venv-path", "--kernel-name", "--kernel-display-name"):
+        assert option in setup
+    assert "look-1.0.0" in setup

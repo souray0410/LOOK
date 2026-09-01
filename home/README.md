@@ -53,6 +53,13 @@ cd /home/mengh/LOOK/2026_08_30_11_20_47
 bash pipeline/3_create_environment.sh
 ```
 
+Step 3 accepts `--python` and `--venv-path`, creates a missing environment, repairs an
+incomplete one, verifies the locked scientific stack, and registers the portable
+Jupyter kernelspec `look-1.0.0` with display name `LOOK 1.0.0`. Its `kernel.json`
+always points to the absolute interpreter in this deployment. The tracked
+`.vscode/settings.json` also selects the same project-local interpreter when the
+project root is opened as a VS Code folder.
+
 For another host, pass `--local-root`, `--host`, and `--remote-root` to Step 2. For an
 offline deployment, copy the contents of the release `home/` and `data/` trees to the
 chosen roots, then pass those roots explicitly.
@@ -95,9 +102,10 @@ tool/environment/.venv/bin/python pipeline/19_run_study_sweep.py --dry-run --gpu
 tool/environment/.venv/bin/python pipeline/20_aggregate_matrix_analysis.py
 ```
 
-Step 18 is the interactive scientific entry. Select
-`tool/environment/.venv/bin/python` manually in VS Code/Jupyter, edit only its single
-configuration cell, then run all cells. Scalar choices are represented as lists:
+Step 18 is the interactive scientific entry. After Step 3, reopen the remote project
+folder and the notebook should select `LOOK 1.0.0` directly; no personal interpreter
+path is stored in the notebook. Edit only its single configuration cell, then run all
+cells. Scalar choices are represented as lists:
 a singleton runs one choice; multiple values expand a deterministic Cartesian grid.
 
 Independent axes are backbone, fusion position, seed, filling strategy, and named

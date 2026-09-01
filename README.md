@@ -40,3 +40,6 @@ field identifiers are documented, but no participant data are included here.
 - Corrupt products are quarantined; valid completed products are never overwritten.
 - No deprecated package alias, migration code, compatibility symlink, or hidden path
   setup is part of LOOK 1.0.0.
+- A notebook may bind a stable release kernelspec name only when the environment setup
+  registers that name to the current deployment's absolute interpreter. Repository
+  files must never store a developer-specific interpreter path.

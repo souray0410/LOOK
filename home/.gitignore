@@ -16,6 +16,8 @@ tool/*.egg-info/
 .DS_Store
 .idea/
 .vscode/
+!.vscode/
+!.vscode/settings.json
 
 # LaTeX build products; sources and final PDFs remain tracked
 *.aux

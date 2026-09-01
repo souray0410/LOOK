@@ -64,6 +64,11 @@ def test_every_notebook_code_cell_has_preceding_markdown():
         if cell["cell_type"] == "code":
             assert index > 0
             assert notebook["cells"][index - 1]["cell_type"] == "markdown"
+    assert notebook["metadata"]["kernelspec"] == {
+        "display_name": "LOOK 1.0.0",
+        "language": "python",
+        "name": "look-1.0.0",
+    }
 
 
 def test_study_grid_cases_use_singleton_axes_and_keep_existing_case_stable(tmp_path):

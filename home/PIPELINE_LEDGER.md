@@ -7,7 +7,7 @@ Original UKB volumes are read-only; destructive flags apply only to derived data
 |---:|---|---|---|---|
 | 1 | local/remote | Initialize source manifest and runtime roots | source/release manifests, empty roots | Standard-library bootstrap; atomic manifests; safe repeat |
 | 2 | local | Push source or pull compact results | remote source mirror / local reports | `rsync`; excludes data, venv and caches |
-| 3 | remote | Build isolated environment and editable packages | `.venv`, environment lock | Reuses venv; dependency and import checks |
+| 3 | remote | Create/repair environment, install packages and register Jupyter kernel | `.venv`, lock, `look-1.0.0` kernelspec | Validates interpreter, versions, imports and kernel target |
 | 4 | remote | Verify image and label mounts | console audit | Requires expected UUIDs, files and read-only mounts |
 | 5 | remote | Export CFP and middle OCT B-scans | field directories, export CSV | Per-file size check, `.partial`, atomic rename |
 | 6 | remote | Compare export with source archives | verification text | Counts every field, partial and export error |
