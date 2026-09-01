@@ -107,6 +107,21 @@ $PY pipeline/19_run_study_sweep.py --phase test --gpus 0,1 \
 $PY pipeline/20_aggregate_matrix_analysis.py
 ```
 
+For a run that must survive SSH disconnection or a sleeping client computer, start the
+full default validation grid in a remote `tmux` session:
+
+```bash
+./tool/operations/start_detached_validation.sh
+./tool/operations/check_detached_validation.sh
+./tool/operations/check_detached_validation.sh --follow
+```
+
+The default detached grid is the complete Step 19 validation study: seven fusion
+positions, three seeds, and two filling strategies (42 experiment configurations) on
+GPUs 0 and 1. It resumes valid checkpoints and completed configurations. Attach to the
+live terminal with `tmux attach -t look-validation`; detach without stopping the job by
+pressing `Ctrl-b`, then `d`. Logs and launcher state are stored under `runs/logs/`.
+
 ## Resume And Outputs
 
 The same normalized configuration resolves to the same deterministic run ID. A rerun

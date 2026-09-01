@@ -53,3 +53,12 @@ the read-only source; never repair the source disk.
 
 Step 18 and Step 19 share `look_core.study_grid`; source code is never text-replaced to
 create a run. The full resolved configuration is persisted with every experiment.
+
+## Detached Operations
+
+`tool/operations/start_detached_validation.sh` launches Step 19 inside a named remote
+`tmux` session and writes an append-only log plus an atomic launcher-status file under
+`runs/logs/`. `tool/operations/check_detached_validation.sh` reports session state,
+completed/total configurations, the newest saved epoch and validation metrics, GPU
+state, and recent log lines. These utilities do not define scientific steps or alter
+the study grid; they only keep Step 19 alive across SSH disconnections.

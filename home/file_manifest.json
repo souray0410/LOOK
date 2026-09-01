@@ -21,19 +21,19 @@
       "sha256": "5df91d926ddafbf557cd6401bda13fbed410bdc59a6d45fb70dd796c4849361b"
     },
     {
-      "bytes": 4344,
+      "bytes": 4866,
       "path": "PIPELINE_LEDGER.md",
-      "sha256": "c44fead4de677e73b5b7dd0be25565a969f3d1226cd4154c047fe49e98dbb36c"
+      "sha256": "c8ac214d389a71829e99761626dfbaba45c919c2273edf5701f6868db097dc97"
     },
     {
-      "bytes": 6386,
+      "bytes": 7120,
       "path": "README.md",
-      "sha256": "28177367764a3099a15b53ee26e3e3db1dc1b1f679e27e524d9e330ac718e2ec"
+      "sha256": "2688f6b74b6737bc324d703148d0bb3085b36b11e7ee26c4f6d8b0f73b39facb"
     },
     {
-      "bytes": 5162,
+      "bytes": 5315,
       "path": "STRUCTURE.md",
-      "sha256": "525167b0ac1cd6ae44edc60313e071c129f8f505d260e205d639cab05b54ed02"
+      "sha256": "3e1e11bcf7e659662597d0e665f710d35e7c8839b1847315b6ffb3c08258cceb"
     },
     {
       "bytes": 8136,
@@ -291,6 +291,16 @@
       "sha256": "57cdc3bafb6954a64610c509682d3a269c1a6bd1046008bed7bb0571c2e4aea3"
     },
     {
+      "bytes": 2799,
+      "path": "tool/operations/check_detached_validation.sh",
+      "sha256": "310ee8cc54f7617ff3c13e2aa5ed083791da4404558a39f78d669def9333497e"
+    },
+    {
+      "bytes": 3094,
+      "path": "tool/operations/start_detached_validation.sh",
+      "sha256": "3b51c305cd6a0fecc46570cea0caf3a7124a44d94624d51869fc4bc4191c7ead"
+    },
+    {
       "bytes": 282465,
       "path": "tool/research/LOOK.pdf",
       "sha256": "47e7cb89bbcd671796afc2d5d5f059e847f195fd469d8c4893593a29ff7fbfb1"
@@ -461,7 +471,7 @@
       "sha256": "5c37ee25c313ffca06e8d6ba0350e84b02f7bbd60648697b4ec7689dc3eb9bfc"
     }
   ],
-  "generated_at_utc": "2026-09-01T19:21:45.228885+00:00",
+  "generated_at_utc": "2026-09-01T20:17:12.007835+00:00",
   "release_id": "2026_09_01_16_06_11",
   "schema_version": 2
 }

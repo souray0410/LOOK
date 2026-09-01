@@ -19,6 +19,7 @@
 |   |   |-- MHD_Project/          MHD Framework V3 package
 |   |   |-- tests/
 |   |   |-- environment/
+|   |   |-- operations/          detached execution and status utilities
 |   |   `-- research/
 |   `-- pipeline/                 ordered executable Steps 1-20
 `-- data/                          empty, redistributable runtime skeleton
@@ -51,6 +52,7 @@ or virtual environment.
     |-- experiments/               deterministic formal results and LOOK artifacts
     |-- sweeps/                    plans, per-case progress and summaries
     |-- freezes/                   hashed validation selections for sealed test
+    |-- logs/                      detached launcher state and append-only logs
     `-- smoke/                     disposable integration products
 
 /data/<user>/LOOK/<dataset-release>/dataset/
