@@ -53,11 +53,29 @@ def launch_ddp_stage(
         "--stage", stage,
     ]
     process = subprocess.Popen(command, cwd=project_root, env=environment, start_new_session=True)
+    received_signal: int | None = None
+
+    def forward_signal(signum, _frame) -> None:
+        nonlocal received_signal
+        received_signal = signum
+        if process.poll() is None:
+            try:
+                os.killpg(process.pid, signum)
+            except ProcessLookupError:
+                pass
+
+    handled_signals = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
+    previous_handlers = {signum: signal.getsignal(signum) for signum in handled_signals}
+    for signum in handled_signals:
+        signal.signal(signum, forward_signal)
     try:
         return_code = process.wait()
-    except KeyboardInterrupt:
-        os.killpg(process.pid, signal.SIGINT)
-        return_code = process.wait()
-        raise
+    finally:
+        for signum, handler in previous_handlers.items():
+            signal.signal(signum, handler)
+    if received_signal == signal.SIGINT:
+        raise KeyboardInterrupt
+    if received_signal is not None:
+        raise SystemExit(128 + received_signal)
     if return_code:
         raise RuntimeError(f"DDP stage {stage!r} failed with exit code {return_code}")

@@ -136,4 +136,6 @@ def test_gpu_list_is_the_only_compute_selector_and_preserves_global_batches(tmp_
     assert multi.config.per_device_micro_batch_size == 160
     assert single.config.gan_batch_size == multi.config.gan_batch_size == 448
     assert multi.config.per_device_gan_batch_size == 224
+    assert single.config.num_workers == multi.config.num_workers == 16
+    assert single.config.gan_num_workers == multi.config.gan_num_workers == 16
     assert single.config.world_size == 1 and multi.config.world_size == 2

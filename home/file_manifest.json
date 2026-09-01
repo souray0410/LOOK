@@ -206,9 +206,9 @@
       "sha256": "c390702e9a895d2eaecdd0945a38493d33628508861a81e82b88c196ba0daf98"
     },
     {
-      "bytes": 2241,
+      "bytes": 2938,
       "path": "tool/look_core/distributed.py",
-      "sha256": "e80b07cac5b7cb4283e425ca3def7431a04bd2003d3d7d740fb93dc48461a70d"
+      "sha256": "03b5264e757593adc8a2b861771bcfceeda933d3119f5d469a47e052293eceff"
     },
     {
       "bytes": 3744,
@@ -421,9 +421,9 @@
       "sha256": "55b3f662e879c486efadbaf98e8efe79bf5a8fb2dd1f9b6fb11c7acc8736e3c8"
     },
     {
-      "bytes": 5963,
+      "bytes": 6113,
       "path": "tool/tests/test_configuration.py",
-      "sha256": "4c903d6f3aeaa2a7a9cb2512d562526081f3e95a21407eadacdb51663be009ed"
+      "sha256": "63caf43bce8dfeaca1c81360f0eb03f54b8b653e86d82ed1c93e90c10f929673"
     },
     {
       "bytes": 1587,
@@ -476,7 +476,7 @@
       "sha256": "5c37ee25c313ffca06e8d6ba0350e84b02f7bbd60648697b4ec7689dc3eb9bfc"
     }
   ],
-  "generated_at_utc": "2026-09-01T20:33:13.187672+00:00",
+  "generated_at_utc": "2026-09-01T20:48:29.611293+00:00",
   "release_id": "2026_09_01_16_06_11",
   "schema_version": 2
 }
