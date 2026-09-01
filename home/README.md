@@ -78,6 +78,21 @@ holds one equal-sized worker model; the parent kernel does not retain an extra m
 the first GPU. Post-training LOOK fitting and scenario evaluation are sequential frozen-
 model stages and use the first selected GPU after the DDP workers have exited.
 
+Before changing formal global batch size on a new GPU model, measure the worst-case
+late-fusion training peak with `tool/operations/calibrate_ddp_batch.py` under `torchrun`.
+Choose a batch with material headroom rather than the largest batch that merely avoids
+OOM; record the measured per-rank peak with the experiment configuration.
+
+The current RTX 5000 Ada two-GPU profile was measured with real forward/backward and
+optimizer steps. The classifier uses global batch 320 (160/GPU), with 16.57 GiB peak
+allocation for worst-case feature fusion; AdamW rates use conservative square-root
+scaling to `3e-4` for pretrained parameters and `3e-3` for new layers. The paired cGAN
+uses global batch 448 (224/GPU), with about 14.1 GiB peak allocation and 18.18 GiB CUDA
+reservation; its Adam rate remains `2e-4` for adversarial stability.
+Both formal loaders use 16 workers per rank on the current 128-CPU host. This keeps
+large batches supplied while leaving substantial CPU and RAM headroom; worker count is
+part of the deterministic run identity and should be recalibrated on smaller hosts.
+
 The launcher disables NCCL P2P by default because the current `ws` GPU pair requires
 it. A different server may explicitly set `NCCL_P2P_DISABLE=0`; notebook configuration
 and the GPU-list interface remain unchanged.

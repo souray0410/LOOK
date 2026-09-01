@@ -27,11 +27,11 @@ class ExperimentConfig:
     )
     epochs: int = 50
     patience: int = 10
-    effective_batch_size: int = 32
-    micro_batch_size: int = 32
-    num_workers: int = 8
-    pretrained_lr: float = 1e-4
-    new_layer_lr: float = 1e-3
+    effective_batch_size: int = 320
+    micro_batch_size: int = 320
+    num_workers: int = 16
+    pretrained_lr: float = 3e-4
+    new_layer_lr: float = 3e-3
     weight_decay: float = 1e-4
     warmup_epochs: int = 5
     sampler_power: float = 0.5
@@ -48,8 +48,8 @@ class ExperimentConfig:
     gan_validation_fraction: float = 0.1
     gan_epochs: int = 100
     gan_patience: int = 10
-    gan_batch_size: int = 16
-    gan_num_workers: int = 8
+    gan_batch_size: int = 448
+    gan_num_workers: int = 16
     gan_learning_rate: float = 2e-4
     gan_beta1: float = 0.5
     gan_lambda_l1: float = 100.0

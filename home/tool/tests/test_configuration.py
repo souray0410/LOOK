@@ -131,9 +131,9 @@ def test_gpu_list_is_the_only_compute_selector_and_preserves_global_batches(tmp_
     grid = StudyGrid(fusion_positions=["feature"], seeds=[3407], filling_strategies=["normalized_mean"])
     single = expand_study_grid(grid, paths, gpu_devices=(0,))[0]
     multi = expand_study_grid(grid, paths, gpu_devices=(0, 1))[0]
-    assert single.config.micro_batch_size == multi.config.micro_batch_size == 32
-    assert single.config.per_device_micro_batch_size == 32
-    assert multi.config.per_device_micro_batch_size == 16
-    assert single.config.gan_batch_size == multi.config.gan_batch_size == 16
-    assert multi.config.per_device_gan_batch_size == 8
+    assert single.config.micro_batch_size == multi.config.micro_batch_size == 320
+    assert single.config.per_device_micro_batch_size == 320
+    assert multi.config.per_device_micro_batch_size == 160
+    assert single.config.gan_batch_size == multi.config.gan_batch_size == 448
+    assert multi.config.per_device_gan_batch_size == 224
     assert single.config.world_size == 1 and multi.config.world_size == 2
