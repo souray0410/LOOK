@@ -26,9 +26,9 @@
       "sha256": "c44fead4de677e73b5b7dd0be25565a969f3d1226cd4154c047fe49e98dbb36c"
     },
     {
-      "bytes": 5956,
+      "bytes": 6386,
       "path": "README.md",
-      "sha256": "5543c6f8062220b50d1c11f379833475ef7eaac6ccc5462b5f46f7c8189c59fa"
+      "sha256": "28177367764a3099a15b53ee26e3e3db1dc1b1f679e27e524d9e330ac718e2ec"
     },
     {
       "bytes": 5162,
@@ -266,9 +266,9 @@
       "sha256": "cf1230ef32932f81560c7cea6288fa30b47e31587931e924f9f408e3b7e8129c"
     },
     {
-      "bytes": 27059,
+      "bytes": 27075,
       "path": "tool/look_core/pipeline.py",
-      "sha256": "837a4f881197ec48c3df24b85d6ade90c3e582f41a7a43fa7259af89d5e36d1f"
+      "sha256": "32bd41b27ccf2f3ff66d2bfb76ab792df728c499e626fc40c5064080185b9c89"
     },
     {
       "bytes": 3625,
@@ -406,9 +406,9 @@
       "sha256": "55b3f662e879c486efadbaf98e8efe79bf5a8fb2dd1f9b6fb11c7acc8736e3c8"
     },
     {
-      "bytes": 5407,
+      "bytes": 5957,
       "path": "tool/tests/test_configuration.py",
-      "sha256": "e86e3ce010fb01456756dbc923fe41878e07b30be5f0f98fa4345283875fc20a"
+      "sha256": "b9490dc3bdc22378a7b0f17fad5c0ff78b9903ba4bdd062802266be9bba1ba5e"
     },
     {
       "bytes": 1587,
@@ -461,7 +461,7 @@
       "sha256": "5c37ee25c313ffca06e8d6ba0350e84b02f7bbd60648697b4ec7689dc3eb9bfc"
     }
   ],
-  "generated_at_utc": "2026-09-01T19:01:54.411135+00:00",
+  "generated_at_utc": "2026-09-01T19:21:45.228885+00:00",
   "release_id": "2026_09_01_16_06_11",
   "schema_version": 2
 }

@@ -152,22 +152,28 @@ class ExperimentRunner:
         write_json_atomic(manifest, self.experiment_dir / f"{self.options.phase}_manifest.json")
 
         loaders, datasets = self._build_loaders()
-        checkpoint_candidate = (
-            Path(self.config.output_root) / "backbones" / self._backbone_id() / "best.pt"
+        summary_graph = build_resnet50_mhd_graph(
+            self.selection.fusion_position,
+            self.config.num_classes,
+            1,
+            self.config.image_size,
+            torch.device("cpu"),
+            pretrained=False,
         )
+        structure = graph_summary(summary_graph)
+        del summary_graph
+        write_json_atomic(structure, self.experiment_dir / "graph_summary.json")
+        checkpoint_path = self._train_or_resume()
+
+        checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
         graph = build_resnet50_mhd_graph(
             self.selection.fusion_position,
             self.config.num_classes,
             self.config.micro_batch_size,
             self.config.image_size,
             self.device,
-            pretrained=not (checkpoint_candidate.exists() and self.options.resume),
+            pretrained=False,
         )
-        structure = graph_summary(graph)
-        write_json_atomic(structure, self.experiment_dir / "graph_summary.json")
-        checkpoint_path = self._train_or_resume(graph, loaders["train"], loaders["validation"])
-
-        checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
         if checkpoint["architecture_id"] != self.selection.architecture_id:
             raise RuntimeError("Checkpoint architecture does not match the selected experiment")
         if checkpoint.get("backbone_training") != "complete_modalities_only":
@@ -289,7 +295,7 @@ class ExperimentRunner:
         ).hexdigest()[:12]
         return f"{self.selection.architecture_id}__complete_modalities__seed{self.selection.seed}__{fingerprint}"
 
-    def _train_or_resume(self, graph, train_loader, validation_loader) -> Path:
+    def _train_or_resume(self) -> Path:
         run_dir = Path(self.config.output_root) / "backbones" / self._backbone_id()
         checkpoint_path = run_dir / "best.pt"
         completion = run_dir / "training_complete.json"

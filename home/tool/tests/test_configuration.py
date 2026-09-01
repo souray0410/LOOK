@@ -78,6 +78,18 @@ def test_every_notebook_code_cell_has_preceding_markdown():
     assert 'FILLING_STRATEGIES = ["normalized_mean"]' in source
 
 
+def test_parent_process_builds_only_a_lightweight_cpu_summary_graph():
+    project_root = Path(__file__).resolve().parents[2]
+    source = (project_root / "tool/look_core/pipeline.py").read_text(encoding="utf-8")
+    summary_block = source.split("summary_graph = build_resnet50_mhd_graph(", 1)[1].split(
+        "write_json_atomic(structure", 1
+    )[0]
+    assert 'torch.device("cpu")' in summary_block
+    assert "pretrained=False" in summary_block
+    assert "\n            1,\n" in summary_block
+    assert "del summary_graph" in summary_block
+
+
 def test_study_grid_cases_use_singleton_axes_and_keep_existing_case_stable(tmp_path):
     dataset = tmp_path / "dataset"
     dataset.mkdir()

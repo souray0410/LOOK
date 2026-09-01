@@ -72,6 +72,12 @@ classifier and cGAN batch sizes stay fixed and are divided internally per GPU. I
 list is changed after PyTorch has already been imported in the notebook kernel, restart
 that kernel and run all cells again.
 
+The notebook orchestrator creates graph metadata with a batch-one CPU graph and frees
+it before DDP starts. During classifier and cGAN training, each selected GPU therefore
+holds one equal-sized worker model; the parent kernel does not retain an extra model on
+the first GPU. Post-training LOOK fitting and scenario evaluation are sequential frozen-
+model stages and use the first selected GPU after the DDP workers have exited.
+
 The launcher disables NCCL P2P by default because the current `ws` GPU pair requires
 it. A different server may explicitly set `NCCL_P2P_DISABLE=0`; notebook configuration
 and the GPU-list interface remain unchanged.
