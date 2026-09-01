@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "release_id": "2026_09_01_16_06_11",
+  "status": "EXTERNAL_VALIDATED_DATASET_REFERENCE",
+  "dataset_included": false,
+  "author_dataset_root": "/data/mengh/LOOK/2026_08_30_11_20_47/dataset",
+  "required_validation": {
+    "pairs": 162202,
+    "images": 324404,
+    "participant_split_leakage": 0,
+    "reference_labels_sha256": "8b55005521a8cb426ad40fcb6dd417cfc50f71699554ac33be1880d207842911"
+  }
+}

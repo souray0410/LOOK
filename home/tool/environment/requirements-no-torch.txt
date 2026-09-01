@@ -1,0 +1,13 @@
+numpy==2.2.6
+pandas==2.3.2
+Pillow==11.3.0
+scikit-learn==1.7.1
+scipy==1.16.1
+tqdm==4.67.1
+matplotlib==3.10.6
+seaborn==0.13.2
+jupyterlab==4.4.6
+ipykernel==6.30.1
+nbformat==5.10.4
+nbclient==0.10.2
+pytest==8.4.1
