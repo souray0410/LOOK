@@ -1,0 +1,39 @@
+field_id,side,description,available_in_liverpool_exports
+30905,right,Fundus image quality,no
+30906,right,OCT scan quality,no
+30907,right,Age-related macular degeneration (AMD),no
+30908,right,Fundus AMD non-drusen features,no
+30910,right,Fundus drusen,no
+30911,right,OCT drusen,no
+30912,right,OCT focal atrophy,no
+30913,right,OCT central subfield thickness,no
+30914,right,Fundus retinal haemorrhage,no
+30915,right,Fundus diabetic retinopathy non-drusen features,no
+30916,right,Fundus visible laser treatment,no
+30917,right,OCT hyporeflective intraretinal spaces,no
+30918,right,Fundus cup-disc ratio,no
+30919,right,Fundus haemorrhage on disc,no
+30920,right,Fundus suspicious optic-disc features,no
+30921,right,Occlusion type,no
+30922,right,Epi-retinal membrane with structural changes,no
+30923,right,Other abnormalities present,no
+30924,left,Fundus image quality,no
+30925,left,OCT scan quality,no
+30926,left,Age-related macular degeneration (AMD),no
+30927,left,Fundus AMD non-drusen features,no
+30928,left,Fundus drusen,no
+30929,left,OCT drusen,no
+30930,left,OCT focal atrophy,no
+30931,left,OCT central subfield thickness,no
+30932,left,Fundus retinal haemorrhage,no
+30933,left,Fundus diabetic retinopathy non-drusen features,no
+30934,left,Fundus visible laser treatment,no
+30935,left,OCT hyporeflective intraretinal spaces,no
+30936,left,Fundus cup-disc ratio,no
+30937,left,Fundus haemorrhage on disc,no
+30938,left,Fundus suspicious optic-disc features,no
+30939,left,Occlusion type,no
+30940,left,Epi-retinal membrane with structural changes,no
+30941,left,Other abnormalities present,no
+30942,right,OCT vitreomacular adhesion with traction,no
+30943,left,OCT vitreomacular adhesion with traction,no

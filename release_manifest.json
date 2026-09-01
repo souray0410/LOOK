@@ -1,0 +1,69 @@
+{
+  "data_skeleton": [
+    {
+      "bytes": 1,
+      "path": "data/cache/partial/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/cache/pipeline_state/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/cache/quarantine/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 428,
+      "path": "data/data_manifest.example.json",
+      "sha256": "4c3171af1099306c661cdba24a6546bc69dd6d4c7bd5f99de6ed58a62c97a99e"
+    },
+    {
+      "bytes": 1,
+      "path": "data/dataset/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/backbones/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/experiments/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/freezes/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/generators/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/smoke/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/sweeps/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    }
+  ],
+  "data_tree": "data",
+  "deployment_data_root": "/data/mengh/LOOK/2026_09_02_00_00_00",
+  "home_tree": "home",
+  "project": "LOOK",
+  "release_id": "2026_09_02_00_00_00",
+  "schema_version": 1,
+  "source_manifest": {
+    "path": "home/file_manifest.json",
+    "sha256": "37301d7769236243b0145e8b9111520d25d0f0d9ef3299470bf723a7916503e3"
+  }
+}
