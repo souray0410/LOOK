@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 import torch
 
+import look_core.study_grid as study_grid_module
 from look_core.config import ExperimentConfig, ExperimentSelection
 from look_core.distributed import parse_gpu_devices
 from look_core.paths import ProjectPaths
@@ -137,6 +138,10 @@ def test_baseline_search_grid_has_168_classifier_only_cases(tmp_path):
     assert all(not case.options.fit_look for case in cases)
     assert all(not case.options.evaluate_missing_baselines for case in cases)
     assert all(case.config.loss_name == "class_balanced_ce" for case in cases)
+    assert {case.config.class_balance_beta for case in cases} == {0.9999, 0.99995, 0.99999}
+    assert cases[0].config.class_balance_beta == 0.99999
+    assert cases[0].config.pretrained_lr == 1e-4
+    assert cases[0].config.new_layer_lr == 1e-3
 
 
 def test_partial_search_diagnostics_retain_best_and_group_evidence():
@@ -161,6 +166,15 @@ def test_partial_search_diagnostics_retain_best_and_group_evidence():
     assert diagnostics["completed_configurations"] == 2
     assert diagnostics["best_overall"]["experiment_id"] == "b"
     assert diagnostics["groups"]["fusion_position"]["feature"]["completed"] == 1
+
+
+def test_sequential_sweep_releases_parent_cuda_cache(monkeypatch):
+    calls = []
+    monkeypatch.setattr(study_grid_module.gc, "collect", lambda: calls.append("gc"))
+    monkeypatch.setattr(study_grid_module.torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(study_grid_module.torch.cuda, "empty_cache", lambda: calls.append("cuda"))
+    study_grid_module._release_parent_cuda_cache()
+    assert calls == ["gc", "cuda"]
 
 
 def test_gpu_list_is_the_only_compute_selector_and_preserves_global_batches(tmp_path):

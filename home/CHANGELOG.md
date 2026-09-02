@@ -15,6 +15,11 @@
 - Added atomic partial leaderboards and grouped diagnostics, plus a detached checker that
   exposes current configuration, complete and per-class validation evidence, confusion
   matrix, best epoch, GPU state and recent logs.
+- Calibrated effective-number betas to the observed 113:1 training imbalance. The search
+  uses `0.9999`, `0.99995`, and `0.99999`; their normal-class shares of total weighted
+  training contribution are approximately 70%, 56%, and 29%, respectively.
+- Explicitly releases parent-process CUDA cache between sequential configurations so
+  rank-zero validation cannot reduce memory headroom for the next two-rank DDP stage.
 
 ## 2026-09-02 data-loader and preprocessing calibration
 

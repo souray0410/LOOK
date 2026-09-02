@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import csv
+import gc
 import io
 import json
 from dataclasses import asdict, dataclass, field
@@ -31,7 +32,7 @@ def _primary_classifier_profile() -> dict[str, Any]:
         "warmup_epochs": 5,
         "sampling_strategy": "natural_without_replacement",
         "loss_name": "class_balanced_ce",
-        "class_balance_beta": 0.9995,
+        "class_balance_beta": 0.99999,
         "label_smoothing": 0.05,
         "classifier_dropout": 0.1,
         "amp": True,
@@ -41,11 +42,11 @@ def _primary_classifier_profile() -> dict[str, Any]:
 def classifier_search_profiles() -> list[dict[str, Any]]:
     profiles: list[dict[str, Any]] = []
     learning_rates = {
-        "low": (3e-5, 3e-4),
         "standard": (1e-4, 1e-3),
+        "low": (3e-5, 3e-4),
     }
     for beta, (lr_name, (pretrained_lr, new_layer_lr)), dropout, smoothing in itertools.product(
-        (0.999, 0.9995, 0.9999),
+        (0.99999, 0.99995, 0.9999),
         learning_rates.items(),
         (0.1, 0.3),
         (0.0, 0.05),
@@ -172,6 +173,13 @@ def _search_diagnostics(leaderboard: list[dict[str, Any]]) -> dict[str, Any]:
             for value, rows in sorted(grouped.items())
         }
     return diagnostics
+
+
+def _release_parent_cuda_cache() -> None:
+    """Keep sequential DDP configurations from inheriting rank-zero eval cache."""
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
 
 @dataclass
@@ -341,6 +349,7 @@ def run_study_grid(
     completed: list[dict[str, str]] = []
     leaderboard: list[dict[str, Any]] = []
     for index, runner in enumerate(runners, start=1):
+        _release_parent_cuda_cache()
         configuration_started_at = utc_now()
         atomic_write_json(
             {
@@ -365,6 +374,7 @@ def run_study_grid(
             sweep_dir / "progress.json",
         )
         result = runner.run()
+        _release_parent_cuda_cache()
         completed.append(
             {
                 "experiment_id": runner.experiment_id,

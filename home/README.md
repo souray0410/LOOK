@@ -152,7 +152,8 @@ complete-modality baseline search in a remote `tmux` session:
 ```
 
 This dedicated search runs 168 complete-pair classifier configurations on GPUs 0 and 1:
-seven fusion positions, three effective-number loss betas, two discriminative learning-
+seven fusion positions, three effective-number loss betas (`0.9999`, `0.99995`, and
+`0.99999`), two discriminative learning-
 rate profiles, two classifier dropouts, two label-smoothing values, and seed 3407. It
 uses natural sampling without replacement and class-balanced cross entropy. Fusion is
 strictly `concatenate -> 1x1 Conv/Linear -> BatchNorm/LayerNorm`; the fusion operation
