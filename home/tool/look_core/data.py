@@ -177,7 +177,25 @@ class UKBPairedEyeDataset(Dataset):
         frame = pd.read_csv(labels_csv, dtype={"participant_id": str})
         frame = frame.loc[frame["split"] == split].reset_index(drop=True)
         if limit is not None:
-            frame = frame.iloc[:limit].copy()
+            groups = {
+                int(label): list(group.index)
+                for label, group in frame.groupby("label_id", sort=True)
+            }
+            selected = []
+            offset = 0
+            while len(selected) < limit and groups:
+                exhausted = []
+                for label, indices in groups.items():
+                    if offset < len(indices):
+                        selected.append(indices[offset])
+                        if len(selected) == limit:
+                            break
+                    else:
+                        exhausted.append(label)
+                for label in exhausted:
+                    groups.pop(label)
+                offset += 1
+            frame = frame.loc[selected].reset_index(drop=True)
         self.frame = frame
         self.data_root = Path(data_root)
         self.image_size = image_size
@@ -302,6 +320,41 @@ class DistributedShuffleSampler(Sampler[int]):
         return self.global_size // self.world_size
 
 
+class DistributedClassBalancedSampler(Sampler[int]):
+    """Uniformly sample classes, then examples, and shard one global draw stream."""
+
+    def __init__(self, labels, seed: int, rank: int, world_size: int):
+        values = np.asarray(labels, dtype=np.int64)
+        self.class_indices = [
+            torch.as_tensor(np.flatnonzero(values == label), dtype=torch.long)
+            for label in sorted(np.unique(values).tolist())
+        ]
+        if len(self.class_indices) < 2 or any(len(indices) == 0 for indices in self.class_indices):
+            raise ValueError("Class-balanced sampling requires at least two non-empty classes")
+        self.size = len(values)
+        self.seed, self.rank, self.world_size, self.epoch = seed, rank, world_size, 0
+        self.global_size = (self.size // world_size) * world_size
+
+    def set_epoch(self, epoch: int) -> None:
+        self.epoch = int(epoch)
+
+    def __iter__(self):
+        generator = torch.Generator().manual_seed(self.seed + self.epoch)
+        class_draws = torch.randint(
+            len(self.class_indices), (self.global_size,), generator=generator
+        )
+        samples = torch.empty(self.global_size, dtype=torch.long)
+        for class_id, indices in enumerate(self.class_indices):
+            positions = torch.where(class_draws == class_id)[0]
+            if len(positions):
+                choices = torch.randint(len(indices), (len(positions),), generator=generator)
+                samples[positions] = indices[choices]
+        return iter(samples[self.rank:self.global_size:self.world_size].tolist())
+
+    def __len__(self) -> int:
+        return self.global_size // self.world_size
+
+
 class DistributedEvalSampler(Sampler[int]):
     """Non-padding evaluation shard: every row appears on exactly one rank."""
 
@@ -325,13 +378,16 @@ def make_loader(
     rank: int = 0,
     world_size: int = 1,
 ) -> DataLoader:
-    if sampling_strategy != "natural_without_replacement":
+    if train and sampling_strategy == "natural_without_replacement":
+        sampler = DistributedShuffleSampler(len(dataset), seed, rank, world_size)
+    elif train and sampling_strategy == "class_balanced_with_replacement":
+        sampler = DistributedClassBalancedSampler(
+            dataset.labels, seed, rank, world_size
+        )
+    elif not train:
+        sampler = DistributedEvalSampler(len(dataset), rank, world_size)
+    else:
         raise ValueError(f"Unknown sampling strategy: {sampling_strategy}")
-    sampler = (
-        DistributedShuffleSampler(len(dataset), seed, rank, world_size)
-        if train
-        else DistributedEvalSampler(len(dataset), rank, world_size)
-    )
     return DataLoader(
         dataset,
         batch_size=batch_size,

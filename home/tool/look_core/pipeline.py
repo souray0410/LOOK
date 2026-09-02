@@ -14,7 +14,6 @@ from .config import ExperimentConfig, ExperimentSelection
 from .data import (
     UKBPairedEyeDataset,
     make_loader,
-    reference_training_class_counts,
     validate_reference_table,
 )
 from .distributed import launch_ddp_stage
@@ -159,9 +158,6 @@ class ExperimentRunner:
         write_json_atomic(manifest, self.experiment_dir / f"{self.options.phase}_manifest.json")
 
         loaders, datasets = self._build_loaders()
-        class_counts = reference_training_class_counts(
-            self.config.labels_csv, self.config.num_classes
-        )
         summary_graph = build_resnet50_mhd_graph(
             self.selection.fusion_position,
             self.config.num_classes,
@@ -169,8 +165,6 @@ class ExperimentRunner:
             self.config.image_size,
             torch.device("cpu"),
             pretrained=False,
-            class_counts=class_counts,
-            label_smoothing=self.config.label_smoothing,
             classifier_dropout=self.config.classifier_dropout,
         )
         structure = graph_summary(summary_graph)
@@ -186,14 +180,16 @@ class ExperimentRunner:
             self.config.image_size,
             self.device,
             pretrained=False,
-            class_counts=class_counts,
-            label_smoothing=self.config.label_smoothing,
             classifier_dropout=self.config.classifier_dropout,
         )
         if checkpoint["architecture_id"] != self.selection.architecture_id:
             raise RuntimeError("Checkpoint architecture does not match the selected experiment")
         if checkpoint.get("backbone_training") != "complete_modalities_only":
             raise RuntimeError("The classifier checkpoint was not trained on complete modalities only")
+        if checkpoint.get("training_strategy") != "classifier_retraining":
+            raise RuntimeError("The classifier checkpoint was not produced by the cRT protocol")
+        if checkpoint.get("training_stage") != "crt":
+            raise RuntimeError("The selected checkpoint is not the final cRT classifier")
         if checkpoint.get("labels_sha256") != self.data_hash:
             raise RuntimeError("The classifier checkpoint was trained from a different label table")
         graph.load_state_dict(checkpoint["graph_state_dict"])
@@ -308,8 +304,13 @@ class ExperimentRunner:
             "warmup_epochs": self.config.warmup_epochs,
             "sampling_strategy": self.config.sampling_strategy,
             "loss_name": self.config.loss_name,
-            "label_smoothing": self.config.label_smoothing,
             "classifier_dropout": self.config.classifier_dropout,
+            "training_strategy": self.config.training_strategy,
+            "crt_epochs": self.config.crt_epochs,
+            "crt_patience": self.config.crt_patience,
+            "crt_learning_rate": self.config.crt_learning_rate,
+            "crt_weight_decay": self.config.crt_weight_decay,
+            "crt_sampling_strategy": self.config.crt_sampling_strategy,
             "amp": self.config.amp,
             "world_size": self.config.world_size,
             "smoke_limit": self.options.smoke_limit,
@@ -323,7 +324,7 @@ class ExperimentRunner:
 
     def _train_or_resume(self) -> Path:
         run_dir = Path(self.config.output_root) / "backbones" / self._backbone_id()
-        checkpoint_path = run_dir / "best.pt"
+        checkpoint_path = run_dir / "crt" / "best.pt"
         completion = run_dir / "training_complete.json"
         if checkpoint_path.exists() and completion.exists() and self.options.resume:
             return checkpoint_path
@@ -335,6 +336,7 @@ class ExperimentRunner:
                 "architecture_id": self.selection.architecture_id,
                 "seed": self.selection.seed,
                 "backbone_training": "complete_modalities_only",
+                "training_strategy": self.config.training_strategy,
                 "labels_sha256": self.data_hash,
                 "implementation_sha256": self.implementation_hash,
             },

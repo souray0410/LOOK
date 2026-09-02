@@ -1,11 +1,15 @@
 import pytest
 import torch
+from torchvision.models import ResNet50_Weights, resnet50
+
+import look_core.graph as graph_module
 
 from look_core.graph import (
     FUSION_POSITIONS,
-    BalancedSoftmaxLoss,
+    ClassificationLoss,
     build_resnet50_mhd_graph,
     classification_loss_metadata,
+    prepare_graph_for_crt,
     reset_and_forward,
 )
 
@@ -47,29 +51,38 @@ def test_branch_weights_are_equal_but_not_shared_and_fusion_is_average_identity(
     assert not any(isinstance(module, (torch.nn.ReLU, torch.nn.GELU)) for module in projection.modules())
 
 
-def test_balanced_softmax_adjustment_and_metadata_are_inside_loss_edge():
-    counts = [1000, 100, 50, 20, 10]
-    graph = build_resnet50_mhd_graph(
-        "feature",
-        batch_size=1,
-        pretrained=False,
-        class_counts=counts,
-        label_smoothing=0.05,
-    )
+def test_imagenet_template_weights_are_requested_and_mapped_into_hyperedges(monkeypatch):
+    template = resnet50(weights=None)
+    with torch.no_grad():
+        template.conv1.weight.fill_(0.125)
+    requested = []
+
+    def fake_resnet50(*, weights):
+        requested.append(weights)
+        return template
+
+    monkeypatch.setattr(graph_module, "resnet50", fake_resnet50)
+    graph = build_resnet50_mhd_graph("feature", batch_size=1, pretrained=True)
+    oct_weight = graph.get_edge_by_name("oct_stem_edge").edge_operations[0].function[0].weight
+    cfp_weight = graph.get_edge_by_name("cfp_stem_edge").edge_operations[0].function[0].weight
+    assert requested == [ResNet50_Weights.IMAGENET1K_V2]
+    assert torch.all(oct_weight == 0.125)
+    assert torch.equal(oct_weight, cfp_weight)
+    assert oct_weight.data_ptr() != cfp_weight.data_ptr()
+
+
+def test_cross_entropy_and_metadata_are_inside_loss_edge():
+    graph = build_resnet50_mhd_graph("feature", batch_size=1, pretrained=False)
     operation = graph.get_edge_by_name("classification_loss_edge").edge_operations[0].function
-    assert isinstance(operation, BalancedSoftmaxLoss)
+    assert isinstance(operation, ClassificationLoss)
     logits = torch.tensor([[1.0, -0.5, 0.25, 2.0, -1.0]])
     labels = torch.tensor([3])
-    expected = torch.nn.functional.cross_entropy(
-        logits + torch.tensor(counts, dtype=logits.dtype).log(),
-        labels,
-        label_smoothing=0.05,
-    )
+    expected = torch.nn.functional.cross_entropy(logits, labels)
     assert torch.allclose(operation(logits, labels), expected)
     metadata = classification_loss_metadata(graph)
-    assert metadata["name"] == "balanced_softmax"
-    assert metadata["class_counts"] == counts
-    assert metadata["label_smoothing"] == 0.05
+    assert metadata["name"] == "cross_entropy"
+    assert metadata["class_weights"] is None
+    assert metadata["label_smoothing"] == 0.0
     assert metadata["inference"] == "raw_logits_standard_softmax"
 
 
@@ -83,7 +96,8 @@ def test_graph_internal_loss_and_backward_messages_are_differentiable():
     )
     assert outputs["loss"].requires_grad
     assert not outputs["batch_accuracy"].requires_grad
-    graph.backward({"loss": None})
+    assert set(graph.forward_levels).isdisjoint(graph.backward_levels)
+    graph.backward(levels=graph.backward_levels)
     classifier = graph.get_edge_by_name("fusion_classifier_edge").edge_operations[0].function
     assert classifier.linear.weight.grad is not None
     assert torch.isfinite(classifier.linear.weight.grad).all()
@@ -91,3 +105,19 @@ def test_graph_internal_loss_and_backward_messages_are_differentiable():
     assert logits_gradient.shape == outputs["fusion_logits"].shape
     assert torch.isfinite(logits_gradient).all()
     assert graph.get_node_by_name("loss").gradient_message.current_state.item() == 1.0
+
+
+def test_crt_freezes_everything_except_the_final_linear_classifier():
+    graph = build_resnet50_mhd_graph("feature", batch_size=1, pretrained=False)
+    old_weight = graph.get_edge_by_name(
+        "fusion_classifier_edge"
+    ).edge_operations[0].function.linear.weight.detach().clone()
+    classifier = prepare_graph_for_crt(graph)
+    trainable = {name for name, parameter in graph.named_parameters() if parameter.requires_grad}
+    expected = {
+        name for name, parameter in graph.named_parameters()
+        if parameter is classifier.linear.weight or parameter is classifier.linear.bias
+    }
+    assert trainable == expected
+    assert not torch.equal(old_weight, classifier.linear.weight)
+    assert graph.crt_backward_levels == graph.backward_levels[:2]

@@ -17,12 +17,11 @@ from MHD_Project.MHD_Utils_V4 import (
     MHD_ParallelConfig,
     destroy_mhd_distributed,
     initialize_mhd_distributed,
-    mhd_all_gather_object,
-    mhd_assert_module_state_identical,
     mhd_barrier,
     prepare_mhd_model,
     unwrap_mhd_graph,
 )
+from look_core.distributed import all_gather_object, assert_module_state_identical
 from look_core.graph import build_resnet50_mhd_graph, optimizer_parameter_groups
 from look_core.gan import PairedUNetGenerator, PatchDiscriminator
 from look_core.train import backward_mhd_loss
@@ -51,7 +50,7 @@ def classifier_steps(args, context) -> dict:
         pretrained=False,
     )
     mark("build_graph")
-    initial_state_sha256 = mhd_assert_module_state_identical(graph, context)
+    initial_state_sha256 = assert_module_state_identical(graph, context)
     mark("verify_initial_state")
     model = prepare_mhd_model(
         graph,
@@ -59,7 +58,6 @@ def classifier_steps(args, context) -> dict:
         output_nodes=("fusion_logits", "loss", "batch_accuracy"),
         parallel=MHD_ParallelConfig(
             data_parallel="ddp" if context.distributed else "none",
-            ddp_init_sync=not context.distributed,
         ),
         context=context,
         precision="fp16",
@@ -120,8 +118,8 @@ def gan_steps(args, context) -> dict:
     torch.cuda.manual_seed_all(3407)
     generator_raw = PairedUNetGenerator(64)
     discriminator_raw = PatchDiscriminator(64)
-    generator_state_sha256 = mhd_assert_module_state_identical(generator_raw, context)
-    discriminator_state_sha256 = mhd_assert_module_state_identical(discriminator_raw, context)
+    generator_state_sha256 = assert_module_state_identical(generator_raw, context)
+    discriminator_state_sha256 = assert_module_state_identical(discriminator_raw, context)
     generator_raw.to(context.device)
     discriminator_raw.to(context.device)
     generator = DistributedDataParallel(
@@ -197,7 +195,7 @@ def main() -> None:
             "peak_reserved_gib": torch.cuda.max_memory_reserved(context.device) / gib,
             **details,
         }
-        records = mhd_all_gather_object(local, context)
+        records = all_gather_object(local, context)
         if context.is_main:
             print(json.dumps(records, indent=2))
         mhd_barrier(context)

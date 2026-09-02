@@ -17,6 +17,8 @@ def run_arm(filling_strategy: str, paths, torch, gpu_devices):
         cache_root=paths.cache_root,
         epochs=1,
         patience=1,
+        crt_epochs=1,
+        crt_patience=1,
         effective_batch_size=4,
         micro_batch_size=2,
         num_workers=0,

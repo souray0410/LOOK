@@ -14,13 +14,15 @@ or cohort, following CLAIM 2024 terminology.
 
 ## Stage A: Complete-Modality Screening
 
-- Run all 56 preregistered configurations on the development split only.
+- Run all seven preregistered fusion configurations on the development split only.
 - Use seed 3407 only for computationally efficient screening.
 - Train exclusively from complete CFP-OCT pairs.
-- Use ImageNet-pretrained ResNet50 branches, natural sampling without replacement,
-  Balanced Softmax derived from complete training-split counts, and patient-disjoint
-  partitions. Apply the log-count adjustment only in the training loss; use raw logits
-  for validation and inference.
+- Use ImageNet-pretrained ResNet50 branches and patient-disjoint partitions. In Stage 1,
+  train all active representation, fusion, and classifier parameters with natural
+  sampling without replacement and ordinary cross-entropy. In Stage 2, restore the best
+  Stage-1 checkpoint, freeze every representation/fusion/normalization parameter, reset
+  only the final linear classifier, and retrain only that classifier using uniform class
+  sampling with replacement and ordinary cross-entropy.
 - Keep fusion activation-free: concatenation, one linear Conv/Linear projection, then
   BatchNorm/LayerNorm. Classifier dropout is outside the fusion operation.
 - Rank by macro F1, then balanced accuracy, macro one-vs-rest AUROC, and lower ECE-15.
@@ -37,7 +39,8 @@ or cohort, following CLAIM 2024 terminology.
 4. Freeze the winning **hyperparameter setting** and retain all three seed-specific
    complete-modality checkpoints. These checkpoints constitute the baseline model family.
 5. Record the selected configuration, code hash, label-table hash, environment, training
-   class counts, seeds, checkpoint hashes, and selection table in one frozen manifest.
+   class counts, seeds, Stage-1 and cRT checkpoint hashes, and selection table in one
+   frozen manifest.
 
 The sealed test split remains untouched during Stages A and B.
 
@@ -98,7 +101,7 @@ claims.
   ophthalmologist labels unless that provenance is actually demonstrated.
 - Report cohort flow, exclusion reasons, class prevalence, participant counts, image
   counts, acquisition details, missing-data assumptions, and patient-level split logic.
-- Report all 56 screening results and all confirmation seeds in supplementary material,
+- Report all seven screening results and all confirmation seeds in supplementary material,
   including unsuccessful configurations. Do not select figures post hoc.
 - Publish code, environment lock, configuration files, deterministic run IDs, and enough
   instructions to reproduce results from authorized UKB data. UKB images and records
@@ -116,8 +119,8 @@ the downstream freeze and creates a new study fingerprint.
 
 ## Reporting Sources
 
-- Balanced Meta-Softmax / Balanced Softmax (NeurIPS 2020):
-  https://proceedings.neurips.cc/paper/2020/hash/2ba61cc3a8f44143e1f2f13b2b729ab3-Abstract.html
+- Decoupling Representation and Classifier for Long-Tailed Recognition (ICLR 2020):
+  https://openreview.net/forum?id=r1gRTCVFvB
 - CLAIM 2024: https://pubs.rsna.org/doi/10.1148/ryai.240300
 - IEEE TMI author instructions: https://ieeetmi.org/authors-instructions/
 - Medical Image Analysis journal page: https://www.sciencedirect.com/journal/medical-image-analysis

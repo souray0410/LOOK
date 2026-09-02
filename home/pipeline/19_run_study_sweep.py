@@ -18,7 +18,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gpus", default="0,1", help="Physical GPU list, e.g. 0 or 0,1.")
     parser.add_argument(
         "--mode",
-        choices=("full-study", "classifier-search"),
+        choices=("full-study", "crt-fusion-search"),
         default="full-study",
     )
     parser.add_argument("--phase", choices=("validation", "freeze", "test"), default="validation")
@@ -55,9 +55,9 @@ def main() -> None:
     if not args.dry_run and not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for formal study execution")
     paths = resolve_runtime_arguments(args)
-    if args.mode == "classifier-search":
+    if args.mode == "crt-fusion-search":
         if args.phase != "validation":
-            raise ValueError("classifier-search is validation-only")
+            raise ValueError("crt-fusion-search is validation-only")
         grid = baseline_search_grid()
     else:
         grid = StudyGrid(

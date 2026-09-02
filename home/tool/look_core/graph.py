@@ -81,27 +81,11 @@ class ClassificationHead(nn.Module):
         return self.linear(self.dropout(feature))
 
 
-class BalancedSoftmaxLoss(nn.Module):
-    """Balanced Softmax training objective represented as an MHD edge operation."""
-
-    def __init__(
-        self,
-        class_counts: Sequence[int],
-        label_smoothing: float,
-    ) -> None:
-        super().__init__()
-        counts = torch.as_tensor(class_counts, dtype=torch.float64)
-        if counts.ndim != 1 or torch.any(counts <= 0):
-            raise ValueError("class_counts must contain one positive count per class")
-        self.register_buffer("class_counts", counts.long())
-        self.register_buffer("log_class_counts", counts.log().float())
-        self.label_smoothing = float(label_smoothing)
+class ClassificationLoss(nn.Module):
+    """Canonical cross-entropy objective used in both cRT stages."""
 
     def forward(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        adjusted_logits = logits + self.log_class_counts.to(dtype=logits.dtype)
-        return nn.functional.cross_entropy(
-            adjusted_logits, labels.long(), label_smoothing=self.label_smoothing
-        )
+        return nn.functional.cross_entropy(logits, labels.long())
 
 
 class BatchAccuracy(nn.Module):
@@ -135,8 +119,7 @@ def _make_node(node_id: int, name: str, stage: str, batch_size: int, device: tor
         node_id,
         name,
         MHD_Node.Message(state),
-        feature_aggregation="replace",
-        gradient_aggregation="sum",
+        aggregation="replace",
     )
 
 
@@ -145,8 +128,7 @@ def _make_tensor_node(node_id: int, name: str, state: torch.Tensor) -> MHD_Node:
         node_id,
         name,
         MHD_Node.Message(state),
-        feature_aggregation="replace",
-        gradient_aggregation="sum",
+        aggregation="replace",
     )
 
 
@@ -211,7 +193,18 @@ def _build_topology(
             sort[edge_id, node_ids[tail]] = len(heads)
         role_matrices.append(role)
         sort_matrices.append(sort)
-    return MHD_Topo(role_matrices, sort_matrices)
+    forward_roles = role_matrices
+    forward_sorts = sort_matrices
+    backward_roles = []
+    for role in forward_roles:
+        reverse = (-role).clone()
+        reverse[edge_ids["batch_accuracy_edge"]].zero_()
+        backward_roles.append(reverse)
+    backward_sorts = [sort.clone() for sort in forward_sorts]
+    return MHD_Topo(
+        [*forward_roles, *backward_roles],
+        [*forward_sorts, *backward_sorts],
+    )
 
 
 def build_resnet50_mhd_graph(
@@ -221,9 +214,7 @@ def build_resnet50_mhd_graph(
     image_size: int = 224,
     device: torch.device | str = "cpu",
     pretrained: bool = True,
-    class_counts: Sequence[int] | None = None,
-    label_smoothing: float = 0.0,
-    classifier_dropout: float = 0.1,
+    classifier_dropout: float = 0.0,
 ) -> MHD_Graph:
     if fusion_position not in FUSION_POSITIONS:
         raise ValueError(f"fusion_position must be one of {FUSION_POSITIONS}")
@@ -264,14 +255,7 @@ def build_resnet50_mhd_graph(
             else ConcatProjection(channels[position])
         )
         _add_edge(edges, f"fuse_{position}_edge", operation)
-    resolved_counts = list(class_counts) if class_counts is not None else [1] * num_classes
-    if len(resolved_counts) != num_classes:
-        raise ValueError("class_counts length must equal num_classes")
-    _add_edge(
-        edges,
-        "classification_loss_edge",
-        BalancedSoftmaxLoss(resolved_counts, label_smoothing),
-    )
+    _add_edge(edges, "classification_loss_edge", ClassificationLoss())
     _add_edge(edges, "batch_accuracy_edge", BatchAccuracy())
 
     topology = _build_topology(nodes, edges, fusion_position, device)
@@ -279,19 +263,24 @@ def build_resnet50_mhd_graph(
     prune_isolated_graph(graph, verbose=False)
     graph.architecture_id = f"resnet50_oct_cfp_fusion_{fusion_position}"
     graph.fusion_position = fusion_position
+    forward_count = len(_active_edge_groups(fusion_position))
+    graph.forward_levels = list(range(forward_count))
+    graph.backward_levels = list(range(2 * forward_count - 1, forward_count - 1, -1))
+    graph.crt_backward_levels = graph.backward_levels[:2]
     start = FUSION_POSITIONS.index(fusion_position)
     graph.correction_nodes = [f"fusion_{name}" for name in FUSION_POSITIONS[start:]]
     graph.node_level_map = active_node_levels(graph)
     graph.monitor_nodes = ["loss", "batch_accuracy", "fusion_logits"]
     graph.monitor_edges = ["fusion_classifier_edge"]
-    graph.monitor_levels = [graph.num_levels - 1]
-    graph.model_levels = list(range(graph.num_levels - 1))
+    graph.monitor_levels = [graph.forward_levels[-1]]
+    graph.model_levels = graph.forward_levels[:-1]
     return graph
 
 
 def active_node_levels(graph: MHD_Graph) -> Dict[str, int]:
     levels: Dict[str, int] = {}
-    for level, role in enumerate(graph.topo.role_matrices):
+    for level in graph.forward_levels:
+        role = graph.topo.role_matrices[level]
         for edge_id in range(role.shape[0]):
             tail_ids = torch.where(role[edge_id] > 0)[0].tolist()
             for node_id in tail_ids:
@@ -314,7 +303,7 @@ def reset_and_forward(
         graph.forward(levels=graph.model_levels)
         return graph.get_node_by_name("fusion_logits").feature_message.current_state
     graph.get_node_by_name("label_gt").feature_message.current_state = labels.long()
-    graph.forward()
+    graph.forward(levels=graph.forward_levels)
     return {
         "fusion_logits": graph.get_node_by_name("fusion_logits").feature_message.current_state,
         "loss": graph.get_node_by_name("loss").feature_message.current_state,
@@ -328,7 +317,11 @@ def optimizer_parameter_groups(graph: MHD_Graph, pretrained_lr: float, new_layer
         target = new if edge.name.startswith("fuse_") or edge.name == "fusion_classifier_edge" else pretrained
         for operation in edge.edge_operations:
             if isinstance(operation.function, nn.Module):
-                target.extend(operation.function.parameters())
+                target.extend(
+                    parameter
+                    for parameter in operation.function.parameters()
+                    if parameter.requires_grad
+                )
     return [
         {"params": pretrained, "lr": pretrained_lr, "group_name": "pretrained"},
         {"params": new, "lr": new_layer_lr, "group_name": "fusion_and_head"},
@@ -337,16 +330,37 @@ def optimizer_parameter_groups(graph: MHD_Graph, pretrained_lr: float, new_layer
 
 def classification_loss_metadata(graph: MHD_Graph) -> Dict[str, object]:
     operation = graph.get_edge_by_name("classification_loss_edge").edge_operations[0].function
-    if not isinstance(operation, BalancedSoftmaxLoss):
-        raise TypeError("classification_loss_edge does not contain BalancedSoftmaxLoss")
+    if not isinstance(operation, ClassificationLoss):
+        raise TypeError("classification_loss_edge does not contain ClassificationLoss")
     return {
-        "name": "balanced_softmax",
-        "label_smoothing": operation.label_smoothing,
-        "class_counts": operation.class_counts.detach().cpu().tolist(),
-        "log_class_counts": operation.log_class_counts.detach().cpu().tolist(),
-        "training_adjustment": "logits + log(class_counts)",
+        "name": "cross_entropy",
+        "label_smoothing": 0.0,
+        "class_weights": None,
         "inference": "raw_logits_standard_softmax",
     }
+
+
+def prepare_graph_for_crt(graph: MHD_Graph) -> ClassificationHead:
+    """Freeze the representation and reinitialize only the final linear classifier."""
+    graph.requires_grad_(False)
+    classifier = graph.get_edge_by_name(
+        "fusion_classifier_edge"
+    ).edge_operations[0].function
+    if not isinstance(classifier, ClassificationHead):
+        raise TypeError("fusion_classifier_edge does not contain ClassificationHead")
+    classifier.linear.reset_parameters()
+    classifier.linear.requires_grad_(True)
+    graph.training_stage = "crt_classifier_retraining"
+    return classifier
+
+
+def set_crt_train_mode(graph: MHD_Graph) -> None:
+    """Keep all frozen normalization state fixed while training the cRT head."""
+    graph.eval()
+    classifier = graph.get_edge_by_name(
+        "fusion_classifier_edge"
+    ).edge_operations[0].function
+    classifier.train()
 
 
 def graph_summary(graph: MHD_Graph) -> Dict[str, object]:
@@ -356,8 +370,10 @@ def graph_summary(graph: MHD_Graph) -> Dict[str, object]:
         "nodes": [node.name for node in sorted(graph.nodes, key=lambda item: item.id)],
         "edges": [edge.name for edge in sorted(graph.edges, key=lambda item: item.id)],
         "levels": graph.num_levels,
-        "backward_levels": len(graph.topo.backward_role_matrices),
-        "backward_topology": "auto_reverse" if graph.topo.backward_is_auto else "explicit",
+        "forward_levels": graph.forward_levels,
+        "backward_levels": graph.backward_levels,
+        "crt_backward_levels": graph.crt_backward_levels,
+        "backward_topology": "explicit_global_levels",
         "backward_api": "MHD_Graph.backward",
         "correction_nodes": graph.correction_nodes,
         "monitor_nodes": graph.monitor_nodes,

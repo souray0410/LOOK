@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Multi-Hypergraph Dynamic Framework (MHD) - Version 4.0
+Multi-Hypergraph Dynamic Framework (MHD) - V4
 Author: Souray Meng (孟号丁)
 Core Framework: Hypergraph-based computational graph with multi-level topology
 License: MIT
@@ -8,13 +8,12 @@ License: MIT
 
 import torch
 import torch.nn as nn
-from typing import List, Dict, Tuple, Optional, Union, Set, Any, Sequence, Mapping, Callable
+from typing import List, Dict, Tuple, Optional, Union, Set, Any, Sequence, Callable
 from dataclasses import dataclass, field
 from collections import defaultdict
 from functools import partial
 import ast
 import logging
-from types import MappingProxyType
 
 logger = logging.getLogger(__name__)
 
@@ -164,8 +163,7 @@ class MHD_Node:
     name: str
     feature_message: Message
     gradient_message: Optional[Message] = None
-    feature_aggregation: Union[str, Callable[[torch.Tensor, Sequence[torch.Tensor]], torch.Tensor]] = "replace"
-    gradient_aggregation: Union[str, Callable[[torch.Tensor, Sequence[torch.Tensor]], torch.Tensor]] = "sum"
+    aggregation: Union[str, Callable[[torch.Tensor, Sequence[torch.Tensor]], torch.Tensor]] = "replace"
     _default_gradient_initial_identity: Optional[int] = field(
         init=False, default=None, repr=False
     )
@@ -182,8 +180,7 @@ class MHD_Node:
             raise ValueError("节点 name 必须是非空字符串")
         if not isinstance(self.feature_message, MHD_Node.Message):
             raise TypeError("feature_message 必须是 MHD_Node.Message")
-        self._validate_aggregation(self.feature_aggregation, "feature_aggregation")
-        self._validate_aggregation(self.gradient_aggregation, "gradient_aggregation")
+        self._validate_aggregation(self.aggregation, "aggregation")
         gradient_message_was_omitted = self.gradient_message is None
         if gradient_message_was_omitted:
             feature = self.feature_message.initial_state
@@ -302,26 +299,19 @@ class MHD_Node:
             return result
         raise ValueError(f"不支持的 Message aggregation: {aggregation}")
 
-    def aggregate_feature_messages(
+    def aggregate_messages(
         self,
         current: torch.Tensor,
         incomings: Union[torch.Tensor, Sequence[torch.Tensor]],
     ) -> torch.Tensor:
+        """Evaluate this Node's one differentiable Message aggregation."""
         values = [incomings] if isinstance(incomings, torch.Tensor) else list(incomings)
-        return self._aggregate_messages(current, values, self.feature_aggregation)
-
-    def aggregate_gradient_messages(
-        self,
-        current: torch.Tensor,
-        incomings: Union[torch.Tensor, Sequence[torch.Tensor]],
-    ) -> torch.Tensor:
-        values = [incomings] if isinstance(incomings, torch.Tensor) else list(incomings)
-        return self._aggregate_messages(current, values, self.gradient_aggregation)
+        return self._aggregate_messages(current, values, self.aggregation)
 
 
 @dataclass
 class MHD_Edge:
-    """Hyperedge carrying ordered forward and optional backward Operations."""
+    """Hyperedge carrying one ordered sequence of differentiable Operations."""
 
     @dataclass(eq=False)
     class Operation:
@@ -344,7 +334,6 @@ class MHD_Edge:
     id: int
     name: str
     edge_operations: List[Operation]
-    backward_operations: Optional[List[Operation]] = None
 
     def __post_init__(self):
         if not isinstance(self.id, int) or self.id < 0:
@@ -357,17 +346,6 @@ class MHD_Edge:
             raise ValueError("edge_operations 不能为空")
         if not all(isinstance(operation, MHD_Edge.Operation) for operation in self.edge_operations):
             raise TypeError("edge_operations 中每一项都必须是 MHD_Edge.Operation")
-        if self.backward_operations is not None:
-            if not isinstance(self.backward_operations, list):
-                raise TypeError("backward_operations 必须是 list 或 None")
-            for operation in self.backward_operations:
-                if not isinstance(operation, MHD_Edge.Operation):
-                    raise TypeError("backward_operations 中每一项都必须是 MHD_Edge.Operation")
-                function = operation.function
-                if isinstance(function, nn.Module) and any(
-                    True for _ in function.parameters()
-                ):
-                    raise ValueError("backward_operations 不得持有可学习参数")
 
     def __hash__(self):
         """基于ID的哈希函数"""
@@ -390,8 +368,6 @@ class MHD_Edge:
             设备迁移后的边自身
         """
         for operation in self.edge_operations:
-            operation.to_device(device)
-        for operation in self.backward_operations or []:
             operation.to_device(device)
         return self
 
@@ -468,198 +444,6 @@ class MHD_Edge:
             raise TypeError(f"edge_operations 输出必须全部为 Tensor，发现: {bad_types}")
         return data
 
-    def execute_backward_operations(
-        self,
-        gradients: Sequence[Optional[torch.Tensor]],
-        *,
-        forward_inputs: Sequence[torch.Tensor],
-        forward_outputs: Sequence[torch.Tensor],
-    ) -> Tuple[List[Optional[torch.Tensor]], Dict[str, Optional[torch.Tensor]]]:
-        """Execute one edge's explicit backward operation sequence."""
-        if self.backward_operations is None:
-            raise RuntimeError(f"边 '{self.name}' 未定义 backward_operations")
-        parameter_items = self.named_edge_parameters()
-        distributed_reference = next(
-            (
-                parameter
-                for _, parameter in parameter_items
-                if hasattr(parameter, "placements") and hasattr(parameter, "device_mesh")
-            ),
-            None,
-        )
-
-        def to_custom_context(value: Optional[torch.Tensor]):
-            if value is None or distributed_reference is None:
-                return value
-            if hasattr(value, "placements"):
-                return value
-            from torch.distributed.tensor import DTensor, Replicate
-
-            placements = tuple(
-                Replicate() for _ in range(distributed_reference.device_mesh.ndim)
-            )
-            return DTensor.from_local(
-                value,
-                device_mesh=distributed_reference.device_mesh,
-                placements=placements,
-                run_check=False,
-            )
-
-        def match_layout(
-            value: Optional[torch.Tensor],
-            reference: torch.Tensor,
-        ) -> Optional[torch.Tensor]:
-            if value is None:
-                return None
-            value_distributed = hasattr(value, "placements")
-            reference_distributed = hasattr(reference, "placements")
-            if reference_distributed:
-                if value_distributed:
-                    return value.redistribute(placements=reference.placements)
-                from torch.distributed.tensor import DTensor
-
-                return DTensor.from_local(
-                    value,
-                    device_mesh=reference.device_mesh,
-                    placements=reference.placements,
-                    run_check=False,
-                )
-            if value_distributed:
-                from torch.distributed.tensor import Replicate
-
-                replicated = tuple(
-                    Replicate() for _ in range(value.device_mesh.ndim)
-                )
-                return value.redistribute(placements=replicated).to_local()
-            return value
-
-        data: Any = [to_custom_context(gradient) for gradient in gradients]
-        parameter_view = MappingProxyType(dict(parameter_items))
-        context_inputs = tuple(to_custom_context(value) for value in forward_inputs)
-        context_outputs = tuple(to_custom_context(value) for value in forward_outputs)
-        accumulated: Dict[str, Optional[torch.Tensor]] = {}
-        for wrapped_operation in self.backward_operations:
-            operation = wrapped_operation.function
-            if isinstance(operation, str):
-                source = data if isinstance(data, (list, tuple)) else [data]
-                data = [
-                    None if value is None else parse_string_operation(operation, value)
-                    for value in source
-                ]
-                continue
-            if not callable(operation):
-                raise TypeError(f"不支持的 backward operation: {type(operation)!r}")
-            gradient_inputs = tuple(data) if isinstance(data, (list, tuple)) else (data,)
-            context = {
-                "forward_inputs": context_inputs,
-                "forward_outputs": context_outputs,
-                "parameters": parameter_view,
-            }
-            result = (
-                operation(gradient_inputs[0], **context)
-                if len(gradient_inputs) == 1
-                else operation(*gradient_inputs, **context)
-            )
-            if not isinstance(result, tuple) or len(result) != 2:
-                raise TypeError(
-                    "backward operation 必须返回 (next_gradients, parameter_gradient_mapping)"
-                )
-            data, contributions = result
-            if not isinstance(contributions, Mapping):
-                raise TypeError("parameter_gradient_mapping 必须是 Mapping")
-            unknown = set(contributions) - set(parameter_view)
-            if unknown:
-                raise KeyError(f"边 '{self.name}' 返回未知参数梯度: {sorted(unknown)}")
-            for parameter_name, contribution in contributions.items():
-                if contribution is not None and not isinstance(contribution, torch.Tensor):
-                    raise TypeError(f"参数梯度 '{parameter_name}' 必须是 Tensor 或 None")
-                parameter = parameter_view[parameter_name]
-                if contribution is not None and (
-                    contribution.shape != parameter.shape
-                ):
-                    raise ValueError(
-                        f"参数梯度 '{parameter_name}' 的 shape 与参数不一致"
-                    )
-                previous = accumulated.get(parameter_name)
-                if contribution is None:
-                    accumulated.setdefault(parameter_name, None)
-                elif previous is None:
-                    accumulated[parameter_name] = contribution
-                else:
-                    accumulated[parameter_name] = previous + contribution
-        required = set(parameter_view)
-        missing = required - set(accumulated)
-        if missing:
-            raise KeyError(f"边 '{self.name}' 缺少参数梯度: {sorted(missing)}")
-        if isinstance(data, torch.Tensor) or data is None:
-            result_gradients = [data]
-        elif isinstance(data, tuple):
-            result_gradients = list(data)
-        elif isinstance(data, list):
-            result_gradients = data
-        else:
-            raise TypeError("backward_operations 最终梯度必须是 Tensor、序列或 None")
-        if len(result_gradients) != len(forward_inputs):
-            raise ValueError(
-                f"边 '{self.name}' 的输入梯度数 {len(result_gradients)} "
-                f"与前向输入数 {len(forward_inputs)} 不一致"
-            )
-        for index, value in enumerate(result_gradients):
-            if value is not None and not isinstance(value, torch.Tensor):
-                raise TypeError(f"第 {index} 个输入梯度必须是 Tensor 或 None")
-        normalized_inputs = [
-            match_layout(value, reference)
-            for value, reference in zip(result_gradients, forward_inputs)
-        ]
-        normalized_parameters = {
-            name: match_layout(accumulated[name], parameter)
-            for name, parameter in parameter_items
-        }
-        return normalized_inputs, normalized_parameters
-
-
-class _MHD_CustomEdgeFunction(torch.autograd.Function):
-    """Connect MHD custom backward operations to native PyTorch backward."""
-
-    @staticmethod
-    def forward(ctx, edge: MHD_Edge, num_inputs: int, *arguments: torch.Tensor):
-        inputs = tuple(arguments[:num_inputs])
-        parameters = tuple(arguments[num_inputs:])
-        outputs = tuple(edge.execute_edge_operations(list(inputs)))
-        ctx.edge = edge
-        ctx.num_inputs = num_inputs
-        ctx.num_parameters = len(parameters)
-        sample = next((value for value in arguments if isinstance(value, torch.Tensor)), None)
-        ctx.device_type = sample.device.type if sample is not None else "cpu"
-        ctx.autocast_enabled = torch.is_autocast_enabled(ctx.device_type)
-        ctx.autocast_dtype = torch.get_autocast_dtype(ctx.device_type)
-        ctx.save_for_backward(*inputs, *outputs)
-        if len(outputs) == 1:
-            return outputs[0]
-        return outputs
-
-    @staticmethod
-    def backward(ctx, *output_gradients: Optional[torch.Tensor]):
-        saved = ctx.saved_tensors
-        inputs = saved[:ctx.num_inputs]
-        outputs = saved[ctx.num_inputs:]
-        with torch.autocast(
-            device_type=ctx.device_type,
-            dtype=ctx.autocast_dtype,
-            enabled=ctx.autocast_enabled,
-        ):
-            input_gradients, parameter_mapping = ctx.edge.execute_backward_operations(
-                output_gradients,
-                forward_inputs=inputs,
-                forward_outputs=outputs,
-            )
-        parameter_gradients = [
-            parameter_mapping[name]
-            for name, _ in ctx.edge.named_edge_parameters()
-        ]
-        return (None, None, *input_gradients, *parameter_gradients)
-
-
 @dataclass(frozen=True)
 class _MHD_ForwardTrace:
     level: int
@@ -686,34 +470,10 @@ class MHD_Topo:
     """
     role_matrices: List[torch.Tensor] = field(default_factory=list)
     sort_matrices: List[torch.Tensor] = field(default_factory=list)
-    backward_role_matrices: Optional[List[torch.Tensor]] = None
-    backward_sort_matrices: Optional[List[torch.Tensor]] = None
-    backward_is_auto: bool = field(init=False, repr=False, compare=False)
 
     def __post_init__(self):
-        """Validate the symmetric forward/backward topology."""
-        self._validate_matrix_pair(self.role_matrices, self.sort_matrices, "前向")
-        one_backward_missing = (self.backward_role_matrices is None) != (
-            self.backward_sort_matrices is None
-        )
-        if one_backward_missing:
-            raise ValueError("backward_role_matrices 与 backward_sort_matrices 必须同时提供")
-        self.backward_is_auto = self.backward_role_matrices is None
-        if self.backward_is_auto:
-            self.backward_role_matrices = [(-matrix).clone() for matrix in self.role_matrices]
-            self.backward_sort_matrices = [matrix.clone() for matrix in self.sort_matrices]
-        self._validate_matrix_pair(
-            self.backward_role_matrices,
-            self.backward_sort_matrices,
-            "反向",
-        )
-        if len(self.backward_role_matrices) != len(self.role_matrices):
-            raise ValueError("前向与反向拓扑层数必须一致")
-        for level, (forward_role, backward_role) in enumerate(
-            zip(self.role_matrices, self.backward_role_matrices)
-        ):
-            if forward_role.shape != backward_role.shape:
-                raise ValueError(f"第 {level} 层前向与反向拓扑形状必须一致")
+        """Validate the single global Role/Sort level definition list."""
+        self._validate_matrix_pair(self.role_matrices, self.sort_matrices, "全局")
 
     @staticmethod
     def _validate_matrix_pair(
@@ -759,14 +519,6 @@ class MHD_Topo:
                 self.role_matrices[i] = self.role_matrices[i].to(device, non_blocking=True)
             if self.sort_matrices[i].device != device:
                 self.sort_matrices[i] = self.sort_matrices[i].to(device, non_blocking=True)
-            if self.backward_role_matrices[i].device != device:
-                self.backward_role_matrices[i] = self.backward_role_matrices[i].to(
-                    device, non_blocking=True
-                )
-            if self.backward_sort_matrices[i].device != device:
-                self.backward_sort_matrices[i] = self.backward_sort_matrices[i].to(
-                    device, non_blocking=True
-                )
         return self
 
     def get_topo(self, level: int, edge_id: int, node_id: int, matrix_type: str = "role") -> int:
@@ -782,14 +534,9 @@ class MHD_Topo:
         Returns:
             拓扑值，如果索引越界返回0
         """
-        matrices_by_type = {
-            "role": self.role_matrices,
-            "sort": self.sort_matrices,
-            "backward_role": self.backward_role_matrices,
-            "backward_sort": self.backward_sort_matrices,
-        }
+        matrices_by_type = {"role": self.role_matrices, "sort": self.sort_matrices}
         if matrix_type not in matrices_by_type:
-            raise ValueError("matrix_type 必须是 role/sort/backward_role/backward_sort")
+            raise ValueError("matrix_type 必须是 role 或 sort")
         matrices = matrices_by_type[matrix_type]
         if 0 <= level < len(matrices):
             mat = matrices[level]
@@ -807,14 +554,9 @@ class MHD_Topo:
         Returns:
             三维列表
         """
-        matrices_by_type = {
-            "role": self.role_matrices,
-            "sort": self.sort_matrices,
-            "backward_role": self.backward_role_matrices,
-            "backward_sort": self.backward_sort_matrices,
-        }
+        matrices_by_type = {"role": self.role_matrices, "sort": self.sort_matrices}
         if matrix_type not in matrices_by_type:
-            raise ValueError("matrix_type 必须是 role/sort/backward_role/backward_sort")
+            raise ValueError("matrix_type 必须是 role 或 sort")
         matrices = matrices_by_type[matrix_type]
         return [m.tolist() for m in matrices]
 
@@ -822,13 +564,7 @@ class MHD_Topo:
         """基于所有矩阵内容的哈希函数"""
         flat_role = tuple(tuple(r.flatten().tolist()) for r in self.role_matrices)
         flat_sort = tuple(tuple(s.flatten().tolist()) for s in self.sort_matrices)
-        flat_backward_role = tuple(
-            tuple(r.flatten().tolist()) for r in self.backward_role_matrices
-        )
-        flat_backward_sort = tuple(
-            tuple(s.flatten().tolist()) for s in self.backward_sort_matrices
-        )
-        return hash((flat_role, flat_sort, flat_backward_role, flat_backward_sort))
+        return hash((flat_role, flat_sort))
 
     def __eq__(self, other):
         """基于所有矩阵内容的相等判断"""
@@ -840,12 +576,6 @@ class MHD_Topo:
             if not torch.equal(r1, r2):
                 return False
         for s1, s2 in zip(self.sort_matrices, other.sort_matrices):
-            if not torch.equal(s1, s2):
-                return False
-        for r1, r2 in zip(self.backward_role_matrices, other.backward_role_matrices):
-            if not torch.equal(r1, r2):
-                return False
-        for s1, s2 in zip(self.backward_sort_matrices, other.backward_sort_matrices):
             if not torch.equal(s1, s2):
                 return False
         return True
@@ -866,11 +596,6 @@ class MHD_Topo:
                 raise ValueError(
                     f"第{i}层拓扑维度不匹配: 边{num_edges}×节点{num_nodes}，实际{r.shape}"
                 )
-        for i, (r, s) in enumerate(
-            zip(self.backward_role_matrices, self.backward_sort_matrices)
-        ):
-            if r.shape != (num_edges, num_nodes) or s.shape != (num_edges, num_nodes):
-                raise ValueError(f"第{i}层反向拓扑维度不匹配")
 
     @property
     def num_levels(self) -> int:
@@ -880,15 +605,15 @@ class MHD_Topo:
 
 class MHD_Graph(nn.Module):
     """
-    多超图动态框架核心类 - Version 4.0（双向 Message + 多层级拓扑）
+    多超图动态框架核心类 - V4（双向 Message + 全局 Level）
 
     特性：
     1. Node 同时承载 Feature Message 与 Gradient Message
     2. 两类 Message 均包含 Initial State 与 Current State
-    3. 前向与反向都由 Role/Sort Matrix 和确定性 n 元聚合驱动
+    3. 前向与反向从同一套全局 Role/Sort level 定义中显式选路
     4. Operation 支持原生 nn.Module、函数、partial 和受限字符串操作
     5. 同一条 Edge 可跨层复用，表达循环网络的静态展开
-    6. 自动反向拓扑与显式反向拓扑共享 graph.backward 接口
+    6. 反向使用一次原生 autograd，并按显式 level 屏蔽未选路径
     7. 图合并与可视化保留稳定的 Node/Edge/Topo/Graph 概念
 
     Author: Souray Meng (孟号丁)
@@ -943,6 +668,7 @@ class MHD_Graph(nn.Module):
         self._register_all_params()
         self.compact_topological_sort()
         self._forward_trace: List[_MHD_ForwardTrace] = []
+        self._last_forward_levels: Tuple[int, ...] = tuple()
 
         logger.info(
             "MHD图初始化完成 | 设备=%s 节点=%d 边=%d 层级=%d",
@@ -1039,12 +765,10 @@ class MHD_Graph(nn.Module):
         return self._edge_by_name.get(edge_name)
 
     def compact_topological_sort(self) -> 'MHD_Graph':
-        """Compile deterministic forward and backward execution plans."""
+        """Compile deterministic execution plans for every global level."""
         if self.topo is None or self.num_levels == 0:
             self._edge_sequence_per_level = []
             self._execution_plan_per_level = []
-            self._backward_edge_sequence_per_level = []
-            self._backward_execution_plan_per_level = []
             return self
         (
             self._edge_sequence_per_level,
@@ -1052,15 +776,7 @@ class MHD_Graph(nn.Module):
         ) = self._compile_topology_phase(
             self.topo.role_matrices,
             self.topo.sort_matrices,
-            "前向",
-        )
-        (
-            self._backward_edge_sequence_per_level,
-            self._backward_execution_plan_per_level,
-        ) = self._compile_topology_phase(
-            self.topo.backward_role_matrices,
-            self.topo.backward_sort_matrices,
-            "反向",
+            "全局",
         )
         return self
 
@@ -1167,17 +883,29 @@ class MHD_Graph(nn.Module):
         indexed = list(enumerate(self.topo.sort_matrices[level][edge_id].tolist()))
         return sorted(indexed, key=lambda p: p[1])
 
-    def forward(self, levels: Optional[List[int]] = None) -> 'MHD_Graph':
-        """Execute deterministic n-ary Feature Message routing."""
+    @staticmethod
+    def _validate_levels(levels: Sequence[int], num_levels: int, phase: str) -> List[int]:
+        if isinstance(levels, (str, bytes)) or not isinstance(levels, Sequence):
+            raise TypeError(f"{phase} levels 必须是非空整数序列")
+        normalized = list(levels)
+        if not normalized:
+            raise ValueError(f"{phase} levels 不能为空")
+        for level in normalized:
+            if not isinstance(level, int):
+                raise TypeError(f"{phase} level 必须是整数，实际为 {type(level).__name__}")
+            if level < 0 or level >= num_levels:
+                raise IndexError(f"层级索引 {level} 超出范围 [0, {num_levels - 1}]")
+        return normalized
+
+    def forward(self, levels: Sequence[int]) -> 'MHD_Graph':
+        """Route Feature Messages in the exact user-supplied level order."""
         if not self.nodes or not self.edges or self.topo is None:
             return self
-        if levels is None:
-            levels = list(range(self.num_levels))
+        levels = self._validate_levels(levels, self.num_levels, "Forward")
         self._forward_trace = []
-        record_backward_trace = torch.is_grad_enabled()
+        self._last_forward_levels = tuple(levels)
+        record_trace = torch.is_grad_enabled()
         for level in levels:
-            if level < 0 or level >= self.num_levels:
-                raise IndexError(f"层级索引 {level} 超出范围 [0, {self.num_levels-1}]")
             node_current = [
                 node.feature_message.current_state for node in self._nodes_in_id_order
             ]
@@ -1188,29 +916,26 @@ class MHD_Graph(nn.Module):
                 if incomings:
                     node_current[node_id] = self._nodes_in_id_order[
                         node_id
-                    ].aggregate_feature_messages(node_current[node_id], incomings)
+                    ].aggregate_messages(node_current[node_id], incomings)
 
             for step in self._execution_plan_per_level[level]:
                 for node_id in step.head_ids:
                     flush(node_id)
                 edge = step.edge
                 head_tensors = [node_current[nid] for nid in step.head_ids]
-                if edge.backward_operations is None:
-                    output_list = edge.execute_edge_operations(head_tensors)
-                else:
-                    parameters = [parameter for _, parameter in edge.named_edge_parameters()]
-                    result = _MHD_CustomEdgeFunction.apply(
-                        edge,
-                        len(head_tensors),
-                        *head_tensors,
-                        *parameters,
-                    )
-                    output_list = list(result) if isinstance(result, tuple) else [result]
+                output_list = edge.execute_edge_operations(head_tensors)
+                # Give every Edge occurrence a distinct hook boundary without
+                # copying tensor storage. This keeps repeated/passthrough
+                # Operations independently selectable during backward.
+                output_list = [
+                    output.view_as(output) if output.requires_grad else output
+                    for output in output_list
+                ]
                 if len(output_list) != len(step.tail_ids):
                     raise ValueError(
                         f"边 '{edge.name}' 输出数量 ({len(output_list)}) 与尾节点数 ({len(step.tail_ids)}) 不匹配"
                     )
-                if record_backward_trace:
+                if record_trace:
                     self._forward_trace.append(
                         _MHD_ForwardTrace(
                             level,
@@ -1227,286 +952,220 @@ class MHD_Graph(nn.Module):
                 flush(node_id)
             for node, value in zip(self._nodes_in_id_order, node_current):
                 node.feature_message.current_state = value
-                if value.requires_grad:
-                    value.retain_grad()
         return self
 
     def backward(
         self,
-        seeds: Mapping[str, Optional[torch.Tensor]],
+        levels: Sequence[int],
         *,
         retain_graph: bool = False,
     ) -> 'MHD_Graph':
-        """Backpropagate one or more named Gradient Message seeds."""
-        if not isinstance(seeds, Mapping) or not seeds:
-            raise ValueError("seeds 必须是非空的节点名称 Mapping")
-        unknown = set(seeds) - set(self._node_by_name)
-        if unknown:
-            raise KeyError(f"未知反向根节点: {sorted(unknown)}")
-        # This is an internal implementation choice, not a public execution
-        # mode.  Both branches implement the same graph.backward(...) contract.
-        # The native route is selected only for the subset whose equivalence is
-        # covered by node-, parameter- and optimizer-level numerical tests.
-        use_equivalent_pytorch_backward = (
-            self.topo.backward_is_auto
-            and all(
-                node.gradient_aggregation == "sum"
-                for node in self._nodes_in_id_order
-            )
-            and self._gradient_initial_states_are_zero()
+        """Route Gradient Messages through the exact selected global levels."""
+        return self._backward(
+            levels,
+            retain_graph=retain_graph,
+            loss_scale=1.0,
         )
-        if use_equivalent_pytorch_backward:
-            self._backward_with_pytorch(seeds, retain_graph=retain_graph)
-        else:
-            for node in self._nodes_in_id_order:
-                node.gradient_message.reset()
-            self._execute_backward_messages(seeds, retain_graph=retain_graph)
-        return self
 
-    def _gradient_initial_states_are_zero(self) -> bool:
-        """Return whether native autograd has the same Gradient Message seeds.
+    def _backward(
+        self,
+        levels: Sequence[int],
+        *,
+        retain_graph: bool,
+        loss_scale: float,
+    ) -> 'MHD_Graph':
+        """Route Gradient Messages through selected global levels.
 
-        A non-zero Gradient Initial State is a real message source, not merely
-        metadata.  Such states must therefore use the general hypergraph route.
-        ``count_nonzero`` keeps the test exact across floating, complex and
-        distributed-compatible gradient dtypes; this check is private and does
-        not introduce a user-facing execution option.
+        The supplied sequence is interpreted exactly as written.  Every
+        backward Edge occurrence must reverse one compatible occurrence from
+        the latest forward trace.  PyTorch still performs one native backward;
+        hooks at the recorded Edge outputs block all unselected paths.
         """
-        return all(node._gradient_initial_is_zero() for node in self._nodes_in_id_order)
-
-    def _normalize_seeds(
-        self,
-        seeds: Mapping[str, Optional[torch.Tensor]],
-    ) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
-        roots: List[torch.Tensor] = []
-        gradients: List[torch.Tensor] = []
-        for name, seed in seeds.items():
-            value = self._node_by_name[name].feature_message.current_state
-            if not (value.is_floating_point() or value.is_complex()):
-                raise TypeError(f"反向根节点 '{name}' 必须是浮点或复数 Tensor")
-            if not value.requires_grad:
-                raise RuntimeError(f"反向根节点 '{name}' 不在可微计算图中")
-            if seed is None:
-                seed = torch.ones_like(value)
-            if not isinstance(seed, torch.Tensor):
-                raise TypeError(f"节点 '{name}' 的 seed 必须是 Tensor 或 None")
-            if seed.shape != value.shape or seed.device != value.device:
-                raise ValueError(f"节点 '{name}' 的 seed shape/device 与 Feature Message 不一致")
-            roots.append(value)
-            gradients.append(seed.to(dtype=value.dtype))
-        return roots, gradients
-
-    def _backward_with_pytorch(
-        self,
-        seeds: Mapping[str, Optional[torch.Tensor]],
-        *,
-        retain_graph: bool,
-    ) -> None:
-        roots, gradients = self._normalize_seeds(seeds)
-        previous_gradients = {
-            id(node.feature_message.current_state): (
-                None
-                if node.feature_message.current_state.grad is None
-                else node.feature_message.current_state.grad.detach().clone()
-            )
-            for node in self._nodes_in_id_order
-        }
-        if len(roots) == 1:
-            torch.autograd.backward(
-                roots[0], gradients[0], retain_graph=retain_graph
-            )
-        else:
-            torch.autograd.backward(roots, gradients, retain_graph=retain_graph)
-        for node in self._nodes_in_id_order:
-            feature = node.feature_message.current_state
-            gradient = feature.grad
-            if gradient is None:
-                node.gradient_message.reset()
-                continue
-            previous = previous_gradients[id(feature)]
-            if previous is not None:
-                gradient = gradient - previous
-            # Native execution is selected only when every Initial State is
-            # zero and aggregation is sum, so this assignment is exactly the
-            # same value without a redundant clone and addition kernel.
-            node.gradient_message.current_state = gradient.detach()
-        if not retain_graph:
-            self._forward_trace = []
-
-    def _execute_backward_messages(
-        self,
-        seeds: Mapping[str, Optional[torch.Tensor]],
-        *,
-        retain_graph: bool,
-    ) -> None:
         if not self._forward_trace:
-            raise RuntimeError("graph.backward() 前必须先执行 graph.forward()")
-        roots, seed_tensors = self._normalize_seeds(seeds)
-        del roots  # Values are routed by node name below rather than native traversal.
-        current = [
-            node.gradient_message.current_state for node in self._nodes_in_id_order
-        ]
-        pending: Dict[int, List[torch.Tensor]] = defaultdict(list)
-        for name, seed in zip(seeds, seed_tensors):
-            pending[self._node_by_name[name].id].append(seed)
+            raise RuntimeError("graph.backward(levels=...) 前必须先执行 graph.forward(levels=...)")
+        levels = self._validate_levels(levels, self.num_levels, "Backward")
+        overlap = sorted(set(levels).intersection(self._last_forward_levels))
+        if overlap:
+            raise ValueError(f"同一轮 Forward/Backward levels 不得重叠: {overlap}")
 
-        def flush(node_id: int) -> None:
-            incomings = pending.pop(node_id, None)
-            if incomings:
-                current[node_id] = self._nodes_in_id_order[
-                    node_id
-                ].aggregate_gradient_messages(current[node_id], incomings)
-
-        traces = {(trace.level, trace.edge_id): trace for trace in self._forward_trace}
-        parameter_contributions: Dict[int, Tuple[nn.Parameter, torch.Tensor]] = {}
-        for level in reversed(range(self.num_levels)):
-            for step in self._backward_execution_plan_per_level[level]:
-                for node_id in step.head_ids:
-                    flush(node_id)
-                trace = traces.get((level, step.edge_id))
-                if trace is None:
-                    raise RuntimeError(
-                        f"缺少第 {level} 层边 '{step.edge.name}' 的前向执行轨迹"
-                    )
-                output_gradients: List[Optional[torch.Tensor]] = []
-                for output, tail_id in zip(trace.outputs, trace.tail_ids):
-                    final_state = self._nodes_in_id_order[
-                        tail_id
-                    ].feature_message.current_state
-                    if final_state is output:
-                        output_gradients.append(current[tail_id])
-                    else:
-                        output_gradients.append(
-                            torch.autograd.grad(
-                                final_state,
-                                output,
-                                grad_outputs=current[tail_id],
-                                retain_graph=True,
-                                allow_unused=True,
-                            )[0]
-                        )
-                parameter_items = step.edge.named_edge_parameters()
-                local_targets = [*trace.inputs, *(p for _, p in parameter_items)]
-                differentiable_outputs = []
-                differentiable_gradients = []
-                for output, gradient in zip(trace.outputs, output_gradients):
-                    if output.requires_grad and gradient is not None:
-                        differentiable_outputs.append(output)
-                        differentiable_gradients.append(gradient)
-                if differentiable_outputs:
-                    target_indices = [
-                        index
-                        for index, target in enumerate(local_targets)
-                        if target.requires_grad
-                    ]
-                    differentiable_targets = [local_targets[index] for index in target_indices]
-                    computed_gradients = (
-                        torch.autograd.grad(
-                            differentiable_outputs,
-                            differentiable_targets,
-                            grad_outputs=differentiable_gradients,
-                            retain_graph=True,
-                            allow_unused=True,
-                        )
-                        if differentiable_targets
-                        else tuple()
-                    )
-                    local_gradient_list: List[Optional[torch.Tensor]] = [
-                        None for _ in local_targets
-                    ]
-                    for target_index, gradient in zip(
-                        target_indices, computed_gradients
+        # Match each requested reverse Edge occurrence to the most recent
+        # compatible forward occurrence.  The list order is never normalized.
+        unmatched = list(range(len(self._forward_trace)))
+        selected_trace_indices: List[int] = []
+        selected_node_ids: Set[int] = set()
+        backward_steps: List[_MHD_ExecutionStep] = []
+        for level in levels:
+            for step in self._execution_plan_per_level[level]:
+                match_index = None
+                for trace_index in reversed(unmatched):
+                    trace = self._forward_trace[trace_index]
+                    if (
+                        trace.edge_id == step.edge_id
+                        and trace.tail_ids == step.head_ids
+                        and trace.head_ids == step.tail_ids
                     ):
-                        local_gradient_list[target_index] = gradient
-                    local_gradients = tuple(local_gradient_list)
-                else:
-                    local_gradients = tuple(None for _ in local_targets)
-                input_gradients = local_gradients[:len(trace.inputs)]
-                if len(step.tail_ids) != len(input_gradients):
+                        match_index = trace_index
+                        break
+                if match_index is None:
                     raise ValueError(
-                        f"显式反向边 '{step.edge.name}' 的目标数必须等于前向输入数"
+                        f"Backward level {level} 的边 '{step.edge.name}' 没有兼容的 "
+                        "Forward trace；反向 Role/Sort 必须对应真实前向输入输出"
                     )
-                for node_id, gradient in zip(step.tail_ids, input_gradients):
-                    if gradient is not None:
-                        pending[node_id].append(gradient)
-                for (_, parameter), gradient in zip(
-                    parameter_items,
-                    local_gradients[len(trace.inputs):],
-                ):
-                    if gradient is None:
-                        continue
-                    identity = id(parameter)
-                    if identity in parameter_contributions:
-                        previous_parameter, previous = parameter_contributions[identity]
-                        parameter_contributions[identity] = (
-                            previous_parameter,
-                            previous + gradient,
-                        )
-                    else:
-                        parameter_contributions[identity] = (parameter, gradient)
-            for node_id in sorted(pending):
-                flush(node_id)
-        for node, gradient in zip(self._nodes_in_id_order, current):
-            node.gradient_message.current_state = gradient.detach()
-        backward_targets: List[torch.Tensor] = []
-        backward_gradients: List[torch.Tensor] = []
-        if parameter_contributions:
-            parameters, gradients = zip(*parameter_contributions.values())
-            backward_targets.extend(parameters)
-            backward_gradients.extend(gradients)
-        for node, gradient in zip(self._nodes_in_id_order, current):
+                unmatched.remove(match_index)
+                selected_trace_indices.append(match_index)
+                selected_node_ids.update(step.head_ids)
+                selected_node_ids.update(step.tail_ids)
+                backward_steps.append(step)
+        if not selected_trace_indices:
+            raise ValueError("Backward levels 没有选择任何与本次 Forward 对应的 Edge")
+
+        # A training graph has one produced, unconsumed differentiable scalar
+        # terminal.  Metrics detached from the graph are intentionally ignored.
+        last_produced: Dict[int, int] = {}
+        last_consumed: Dict[int, int] = {}
+        for position, trace in enumerate(self._forward_trace):
+            for node_id in trace.head_ids:
+                last_consumed[node_id] = position
+            for node_id in trace.tail_ids:
+                last_produced[node_id] = position
+        terminal_nodes = []
+        for node_id, produced_at in last_produced.items():
+            value = self._nodes_in_id_order[node_id].feature_message.current_state
+            if (
+                produced_at > last_consumed.get(node_id, -1)
+                and value.requires_grad
+                and value.numel() == 1
+            ):
+                terminal_nodes.append(self._nodes_in_id_order[node_id])
+        if len(terminal_nodes) != 1:
+            names = [node.name for node in terminal_nodes]
+            raise RuntimeError(
+                "本次 Forward 必须产生唯一可微标量终点，"
+                f"实际找到 {len(terminal_nodes)} 个: {names}"
+            )
+        loss_node = terminal_nodes[0]
+        selected_node_ids.add(loss_node.id)
+
+        # Validate that the requested logical reverse sequence is reachable
+        # from the loss or an explicit non-zero Gradient Initial State.
+        reachable = {loss_node.id}
+        for node in self._nodes_in_id_order:
+            if not node._gradient_initial_is_zero():
+                reachable.add(node.id)
+        for step in backward_steps:
+            if not any(node_id in reachable for node_id in step.head_ids):
+                raise ValueError(
+                    f"Backward 边 '{step.edge.name}' 在给定 level 顺序中不可达"
+                )
+            reachable.update(step.tail_ids)
+
+        selected_set = set(selected_trace_indices)
+        hook_handles = []
+        captured_node_gradients: Dict[int, List[torch.Tensor]] = defaultdict(list)
+
+        # Gradient Message needs the gradient value, but non-leaf ``retain_grad``
+        # would also allocate ``Tensor.grad`` for every intermediate. Capture it
+        # once through a hook instead, keeping large-model activation memory near
+        # native autograd behavior.
+        for node in self._nodes_in_id_order:
+            node.gradient_message.reset()
             feature = node.feature_message.current_state
-            if feature.is_leaf and feature.requires_grad:
-                backward_targets.append(feature)
-                backward_gradients.append(gradient)
-        if backward_targets:
+            if feature.is_leaf and feature.grad is not None:
+                feature.grad = None
+            if node.id in selected_node_ids and feature.requires_grad:
+                def capture(gradient: torch.Tensor, target=node.id) -> torch.Tensor:
+                    captured_node_gradients[target].append(gradient.detach())
+                    return gradient
+                hook_handles.append(feature.register_hook(capture))
+
+        def block_output(trace_index: int, output_index: int):
+            def hook(gradient: torch.Tensor) -> torch.Tensor:
+                return torch.zeros_like(gradient)
+            return hook
+
+        for trace_index, trace in enumerate(self._forward_trace):
+            if trace_index in selected_set:
+                continue
+            for output_index, output in enumerate(trace.outputs):
+                if output.requires_grad:
+                    hook_handles.append(
+                        output.register_hook(block_output(trace_index, output_index))
+                    )
+
+        root_seeds: Dict[int, Tuple[torch.Tensor, torch.Tensor]] = {}
+        loss = loss_node.feature_message.current_state
+        root_seeds[id(loss)] = (loss, torch.ones_like(loss) * float(loss_scale))
+        for node in self._nodes_in_id_order:
+            if node._gradient_initial_is_zero():
+                continue
+            feature = node.feature_message.current_state
+            seed = node.gradient_message.initial_state
+            if not feature.requires_grad:
+                raise RuntimeError(
+                    f"节点 '{node.name}' 的非零 Gradient Initial State 没有可微 Feature"
+                )
+            previous = root_seeds.get(id(feature))
+            scaled_seed = seed * float(loss_scale)
+            root_seeds[id(feature)] = (
+                feature,
+                scaled_seed if previous is None else previous[1] + scaled_seed,
+            )
+
+        try:
+            roots = [item[0] for item in root_seeds.values()]
+            seeds = [item[1] for item in root_seeds.values()]
             torch.autograd.backward(
-                backward_targets,
-                backward_gradients,
+                roots if len(roots) > 1 else roots[0],
+                seeds if len(seeds) > 1 else seeds[0],
                 retain_graph=retain_graph,
             )
+        finally:
+            for handle in hook_handles:
+                handle.remove()
+
+        selected_parameter_ids = {
+            id(parameter)
+            for trace_index in selected_set
+            for _, parameter in self._edges_in_id_order[
+                self._forward_trace[trace_index].edge_id
+            ].named_edge_parameters()
+        }
+        for parameter in self.parameters():
+            if id(parameter) not in selected_parameter_ids:
+                parameter.grad = None
+
+        for node in self._nodes_in_id_order:
+            if node.id not in selected_node_ids:
+                node.gradient_message.reset()
+                continue
+            gradients = captured_node_gradients.get(node.id)
+            if not gradients:
+                node.gradient_message.reset()
+            else:
+                gradient = gradients[0].clone()
+                for contribution in gradients[1:]:
+                    gradient = gradient + contribution
+                node.gradient_message.current_state = gradient
         if not retain_graph:
             self._forward_trace = []
+            self._last_forward_levels = tuple()
+        return self
 
     def generate_mermaid(
         self,
-        levels: Union[int, slice, List[int], None] = None,
-        phase: str = "forward",
+        forward_levels: Sequence[int],
+        backward_levels: Sequence[int],
     ) -> str:
-        """Generate a symmetric forward/backward Mermaid topology view.
-
-        Args:
-            levels: ``None`` for all levels, or an int/slice/list selection.
-            phase: ``forward``, ``backward`` or ``both``. The default keeps the
-                V3/V4 forward-only call compatible.
-
-        Returns:
-            Mermaid flowchart source. Feature links are solid and Gradient
-            links are dotted; every link includes its level and sort value.
-        """
-        if phase not in {"forward", "backward", "both"}:
-            raise ValueError("phase 必须是 forward、backward 或 both")
-        if self.topo is None or self.num_levels == 0:
-            levels_iter = []
-        elif levels is None:
-            levels_iter = list(range(self.num_levels))
-        elif isinstance(levels, int):
-            levels_iter = [levels]
-        elif isinstance(levels, slice):
-            levels_iter = list(range(self.num_levels))[levels]
-        elif isinstance(levels, list):
-            # 保持传入顺序，同时去重（dict.fromkeys 保留顺序）
-            levels_iter = list(dict.fromkeys(levels))
-        else:
-            raise TypeError("levels 参数类型应为 int / slice / list / None")
-        invalid_levels = [
-            level for level in levels_iter
-            if level < 0 or level >= self.num_levels
-        ]
-        if invalid_levels:
-            raise IndexError(
-                f"层级索引 {invalid_levels} 超出范围 [0, {self.num_levels - 1}]"
-            )
+        """Draw explicit Feature and Gradient execution sequences together."""
+        forward_levels = self._validate_levels(
+            forward_levels, self.num_levels, "Mermaid Forward"
+        )
+        backward_levels = self._validate_levels(
+            backward_levels, self.num_levels, "Mermaid Backward"
+        )
+        overlap = sorted(set(forward_levels).intersection(backward_levels))
+        if overlap:
+            raise ValueError(f"Mermaid 前后向 levels 不得重叠: {overlap}")
 
         mermaid = [
             "flowchart TD",
@@ -1524,37 +1183,22 @@ class MHD_Graph(nn.Module):
                 f' N{node.id}["{escape_label(node.name)}"]:::MHD_Node_Style'
             )
 
-        phase_specs = []
-        if phase in {"forward", "both"}:
-            phase_specs.append(
-                (
-                    "forward",
-                    "Feature",
-                    self.topo.role_matrices,
-                    self.topo.sort_matrices,
-                )
-            )
-        if phase in {"backward", "both"}:
-            phase_specs.append(
-                (
-                    "backward",
-                    "Gradient",
-                    self.topo.backward_role_matrices,
-                    self.topo.backward_sort_matrices,
-                )
-            )
+        phase_specs = [
+            ("forward", "Feature", forward_levels),
+            ("backward", "Gradient", backward_levels),
+        ]
 
         for edge in sorted(self.edges, key=lambda x: x.id):
             edge_id = edge.id
             connections: Dict[
-                Tuple[str, int, int], List[Tuple[int, int]]
+                Tuple[str, int, int], List[Tuple[int, int, int]]
             ] = defaultdict(list)
             phase_labels: Dict[str, str] = {}
-            for phase_name, message_name, role_matrices, sort_matrices in phase_specs:
+            for phase_name, message_name, phase_levels in phase_specs:
                 phase_labels[phase_name] = message_name
-                for level in levels_iter:
-                    role = role_matrices[level]
-                    sort = sort_matrices[level]
+                for execution_index, level in enumerate(phase_levels):
+                    role = self.topo.role_matrices[level]
+                    sort = self.topo.sort_matrices[level]
                     if edge_id >= role.shape[0]:
                         continue
                     for node_id, role_value in enumerate(role[edge_id].tolist()):
@@ -1565,7 +1209,7 @@ class MHD_Graph(nn.Module):
                         else:
                             source_id, target_id = -(edge_id + 1), node_id
                         connections[(phase_name, source_id, target_id)].append(
-                            (level, int(sort[edge_id, node_id].item()))
+                            (execution_index, level, int(sort[edge_id, node_id].item()))
                         )
             if not connections:
                 continue
@@ -1585,8 +1229,8 @@ class MHD_Graph(nn.Module):
                 source = f"E{-source_id - 1}" if source_id < 0 else f"N{source_id}"
                 target = f"E{-target_id - 1}" if target_id < 0 else f"N{target_id}"
                 order_text = ", ".join(
-                    f"L{level}:S{sort_value}"
-                    for level, sort_value in order_values
+                    f"#{execution_index}:L{level}:S{sort_value}"
+                    for execution_index, level, sort_value in order_values
                 )
                 label = f"{phase_labels[phase_name]} {order_text}"
                 if phase_name == "forward":
@@ -1651,13 +1295,12 @@ class MHD_Graph(nn.Module):
         name_to_global_nid: Dict[str, int] = {}
         for global_nid, name in enumerate(sorted(node_groups)):
             grouped = node_groups[name]
-            for attribute in ("feature_aggregation", "gradient_aggregation"):
-                reference = getattr(grouped[0], attribute)
-                if not all(
-                    compatible_value(reference, getattr(node, attribute))
-                    for node in grouped[1:]
-                ):
-                    raise ValueError(f"节点 '{name}' 的 {attribute} 不兼容")
+            reference = grouped[0].aggregation
+            if not all(
+                compatible_value(reference, node.aggregation)
+                for node in grouped[1:]
+            ):
+                raise ValueError(f"节点 '{name}' 的 aggregation 不兼容")
             feature = MHD_Node.Message(
                 cls._merge_tensors(
                     [node.feature_message.initial_state for node in grouped]
@@ -1680,8 +1323,7 @@ class MHD_Graph(nn.Module):
                     name,
                     feature,
                     gradient,
-                    grouped[0].feature_aggregation,
-                    grouped[0].gradient_aggregation,
+                    grouped[0].aggregation,
                 )
             )
             name_to_global_nid[name] = global_nid
@@ -1730,19 +1372,11 @@ class MHD_Graph(nn.Module):
                 [edge.edge_operations for edge in grouped],
                 "edge_operations",
             )
-            validate_operations(
-                name,
-                [edge.backward_operations for edge in grouped],
-                "backward_operations",
-            )
             merged_edges.add(
                 MHD_Edge(
                     global_eid,
                     name,
                     grouped[0].edge_operations.copy(),
-                    None
-                    if grouped[0].backward_operations is None
-                    else grouped[0].backward_operations.copy(),
                 )
             )
             name_to_global_eid[name] = global_eid
@@ -1755,10 +1389,7 @@ class MHD_Graph(nn.Module):
         }
         max_levels = max(graph.num_levels for graph in ordered_graphs)
 
-        def merge_topology_phase(
-            role_attribute: str,
-            sort_attribute: str,
-        ) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+        def merge_topology() -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
             merged_roles: List[torch.Tensor] = []
             merged_sorts: List[torch.Tensor] = []
             for level in range(max_levels):
@@ -1772,10 +1403,8 @@ class MHD_Graph(nn.Module):
                 for graph in ordered_graphs:
                     if level >= graph.num_levels:
                         continue
-                    source_roles = getattr(graph.topo, role_attribute)
-                    source_sorts = getattr(graph.topo, sort_attribute)
-                    source_role = source_roles[level]
-                    source_sort = source_sorts[level]
+                    source_role = graph.topo.role_matrices[level]
+                    source_sort = graph.topo.sort_matrices[level]
                     edge_map = graph_id_to_global_edge[id(graph)]
                     node_map = graph_id_to_global_node[id(graph)]
                     for local_edge in range(source_role.shape[0]):
@@ -1800,22 +1429,8 @@ class MHD_Graph(nn.Module):
                 merged_sorts.append(sort)
             return merged_roles, merged_sorts
 
-        forward_roles, forward_sorts = merge_topology_phase(
-            "role_matrices", "sort_matrices"
-        )
-        all_auto = all(graph.topo.backward_is_auto for graph in ordered_graphs)
-        if all_auto:
-            merged_topo = MHD_Topo(forward_roles, forward_sorts)
-        else:
-            backward_roles, backward_sorts = merge_topology_phase(
-                "backward_role_matrices", "backward_sort_matrices"
-            )
-            merged_topo = MHD_Topo(
-                forward_roles,
-                forward_sorts,
-                backward_roles,
-                backward_sorts,
-            )
+        merged_roles, merged_sorts = merge_topology()
+        merged_topo = MHD_Topo(merged_roles, merged_sorts)
         return cls(
             nodes=merged_nodes,
             edges=merged_edges,

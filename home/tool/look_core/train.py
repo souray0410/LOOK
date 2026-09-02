@@ -16,14 +16,19 @@ from MHD_Project.MHD_Utils_V4 import (
     MHD_DistributedContext,
     MHD_Monitor,
     MHD_ParallelConfig,
-    mhd_assert_module_state_identical,
-    mhd_all_gather_object,
     mhd_barrier,
     prepare_mhd_model,
     unwrap_mhd_graph,
 )
 
-from .graph import classification_loss_metadata, optimizer_parameter_groups, reset_and_forward
+from .distributed import all_gather_object, assert_module_state_identical
+
+from .graph import (
+    classification_loss_metadata,
+    optimizer_parameter_groups,
+    reset_and_forward,
+    set_crt_train_mode,
+)
 from .metrics import classification_metrics
 from .monitoring import TrainingMonitor
 from .reproducibility import sha256, write_json_atomic
@@ -36,18 +41,24 @@ def _schedule(epoch: int, epochs: int, warmup_epochs: int) -> float:
     return 0.5 * (1.0 + math.cos(math.pi * progress))
 
 
-def backward_mhd_loss(graph, loss: torch.Tensor, scaler, divisor: int = 1) -> None:
+def backward_mhd_loss(
+    graph,
+    loss: torch.Tensor,
+    scaler,
+    backward_levels,
+    divisor: int = 1,
+) -> None:
     """Route an AMP-compatible scalar loss seed through the V4 hypergraph."""
     if scaler.is_enabled():
-        # Initialize GradScaler's per-iteration state without bypassing the
-        # hypergraph backward API. The same scale is routed as the loss-node
-        # Gradient Message seed below.
         scaler.scale(loss)
         scale = float(scaler.get_scale())
     else:
         scale = 1.0
-    seed = torch.ones_like(loss) * (scale / float(divisor))
-    graph.backward({"loss": seed})
+    graph._backward(
+        levels=list(backward_levels),
+        retain_graph=False,
+        loss_scale=scale / float(divisor),
+    )
     if scale != 1.0:
         for node in graph.nodes:
             initial = node.gradient_message.initial_state
@@ -121,7 +132,7 @@ def train_complete_model(
                 loss = outputs["loss"]
             group_start = (step // accumulation) * accumulation
             group_size = min(accumulation, len(train_loader) - group_start)
-            backward_mhd_loss(graph, loss, scaler, group_size)
+            backward_mhd_loss(graph, loss, scaler, graph.backward_levels, group_size)
             if step - group_start + 1 == group_size:
                 scale_before = float(scaler.get_scale())
                 scaler.step(optimizer)
@@ -223,7 +234,7 @@ def predict_distributed(model, loader, context: MHD_DistributedContext) -> Dict[
         local["participant_ids"].extend(map(str, batch["participant_id"]))
         local["loss_sum"] += float(outputs["loss"].item()) * len(labels)
         local["count"] += len(labels)
-    pieces = mhd_all_gather_object(local, context)
+    pieces = all_gather_object(local, context)
     labels = np.asarray([item for piece in pieces for item in piece["labels"]], dtype=np.int64)
     probabilities = np.asarray([item for piece in pieces for item in piece["probabilities"]], dtype=np.float64)
     participants = np.asarray([item for piece in pieces for item in piece["participant_ids"]])
@@ -245,31 +256,60 @@ def train_complete_model_ddp(
     config,
     run_dir: Path,
     context: MHD_DistributedContext,
+    *,
+    training_stage: str = "representation",
+    stage1_checkpoint_sha256: str | None = None,
 ):
+    if training_stage not in {"representation", "crt"}:
+        raise ValueError(f"Unknown classifier training stage: {training_stage}")
+    stage_epochs = config.epochs if training_stage == "representation" else config.crt_epochs
+    stage_patience = config.patience if training_stage == "representation" else config.crt_patience
+    backward_levels = (
+        graph.backward_levels
+        if training_stage == "representation"
+        else graph.crt_backward_levels
+    )
     run_dir.mkdir(parents=True, exist_ok=True)
     last_path = run_dir / "last.pt"
     last = None
     if last_path.is_file():
         last = torch.load(last_path, map_location=graph.device, weights_only=False)
         graph.load_state_dict(last["graph_state_dict"])
-    initial_state_sha256 = mhd_assert_module_state_identical(graph, context)
+    initial_state_sha256 = assert_module_state_identical(graph, context)
     model = prepare_mhd_model(
         graph,
         input_nodes=("oct_input", "cfp_input", "label_gt"),
         output_nodes=("fusion_logits", "loss", "batch_accuracy"),
+        levels=graph.forward_levels,
+        backward_levels=backward_levels,
         parallel=MHD_ParallelConfig(
             data_parallel="ddp" if context.distributed else "none",
-            ddp_init_sync=not context.distributed,
         ),
         context=context,
         precision="fp16" if config.amp else "fp32",
     )
     raw_graph = unwrap_mhd_graph(model)
-    optimizer = AdamW(
-        optimizer_parameter_groups(raw_graph, config.pretrained_lr, config.new_layer_lr),
-        weight_decay=config.weight_decay,
+    if training_stage == "representation":
+        optimizer = AdamW(
+            optimizer_parameter_groups(raw_graph, config.pretrained_lr, config.new_layer_lr),
+            weight_decay=config.weight_decay,
+        )
+        stage_warmup = config.warmup_epochs
+    else:
+        classifier_parameters = [
+            parameter for parameter in raw_graph.parameters() if parameter.requires_grad
+        ]
+        if not classifier_parameters:
+            raise RuntimeError("cRT has no trainable classifier parameters")
+        optimizer = AdamW(
+            classifier_parameters,
+            lr=config.crt_learning_rate,
+            weight_decay=config.crt_weight_decay,
+        )
+        stage_warmup = 0
+    scheduler = LambdaLR(
+        optimizer, lambda epoch: _schedule(epoch, stage_epochs, stage_warmup)
     )
-    scheduler = LambdaLR(optimizer, lambda epoch: _schedule(epoch, config.epochs, config.warmup_epochs))
     scaler = torch.amp.GradScaler("cuda", enabled=config.amp and context.device.type == "cuda")
     accumulation = config.effective_batch_size // config.global_micro_batch_size
     start_epoch, best_score, stale_epochs, history = 0, -float("inf"), 0, []
@@ -290,12 +330,14 @@ def train_complete_model_ddp(
             "gradient_message.current_state",
         ),
     )
-    for epoch in range(start_epoch, config.epochs):
+    for epoch in range(start_epoch, stage_epochs):
         if hasattr(train_loader.sampler, "set_epoch"):
             train_loader.sampler.set_epoch(epoch)
         if hasattr(train_loader.dataset, "set_epoch"):
             train_loader.dataset.set_epoch(epoch)
         model.train()
+        if training_stage == "crt":
+            set_crt_train_mode(raw_graph)
         optimizer.zero_grad(set_to_none=True)
         loss_sum, accuracy_sum, count = 0.0, 0.0, 0
         optimizer_steps = 0
@@ -317,7 +359,7 @@ def train_complete_model_ddp(
                         "label_gt": labels,
                     })
                     loss = outputs["loss"]
-                backward_mhd_loss(raw_graph, loss, scaler, group_size)
+                backward_mhd_loss(raw_graph, loss, scaler, backward_levels, group_size)
             should_monitor = (step + 1) % config.monitor_interval_steps == 0 or step + 1 == len(train_loader)
             if should_monitor:
                 graph_monitor.monitor_node(raw_graph, prefix="node/")
@@ -334,7 +376,7 @@ def train_complete_model_ddp(
             loss_sum += float(outputs["loss"].detach().item()) * batch_count
             accuracy_sum += float(outputs["batch_accuracy"].detach().item()) * batch_count
             count += batch_count
-        train_parts = mhd_all_gather_object({"loss": loss_sum, "accuracy": accuracy_sum, "count": count}, context)
+        train_parts = all_gather_object({"loss": loss_sum, "accuracy": accuracy_sum, "count": count}, context)
         validation_model = model.module if context.distributed else model
         validation = predict_distributed(validation_model, validation_loader, context)
         metrics = classification_metrics(validation["labels"], validation["probabilities"])
@@ -343,7 +385,7 @@ def train_complete_model_ddp(
         train_loss = sum(part["loss"] for part in train_parts) / max(1, total_count)
         train_accuracy = sum(part["accuracy"] for part in train_parts) / max(1, total_count)
         score = float(metrics[config.primary_metric])
-        monitor_parts = mhd_all_gather_object(graph_monitor.get_mean_metrics(), context)
+        monitor_parts = all_gather_object(graph_monitor.get_mean_metrics(), context)
         monitor_keys = sorted({key for part in monitor_parts for key in part})
         graph_metrics = {
             key: float(np.mean([part[key] for part in monitor_parts if key in part]))
@@ -373,6 +415,9 @@ def train_complete_model_ddp(
                     "optimizer_state_dict": optimizer.state_dict(),
                     "config": config.as_dict(),
                     "backbone_training": "complete_modalities_only",
+                    "training_strategy": "classifier_retraining",
+                    "training_stage": training_stage,
+                    "stage1_checkpoint_sha256": stage1_checkpoint_sha256,
                     "framework_version": "MHD V4",
                     "backward_api": "MHD_Graph.backward",
                     "initial_state_sha256": initial_state_sha256,
@@ -402,11 +447,13 @@ def train_complete_model_ddp(
                 "backward_api": "MHD_Graph.backward",
                 "initial_state_sha256": initial_state_sha256,
                 "classification_loss": classification_loss_metadata(raw_graph),
+                "training_stage": training_stage,
+                "stage1_checkpoint_sha256": stage1_checkpoint_sha256,
             }, temporary)
             temporary.replace(last_path)
             monitor.append({"event": "epoch", **record})
         mhd_barrier(context)
-        if stale_epochs >= config.patience:
+        if stale_epochs >= stage_patience:
             break
     if context.is_main:
         checkpoint = torch.load(run_dir / "best.pt", map_location="cpu", weights_only=False)
@@ -420,6 +467,10 @@ def train_complete_model_ddp(
             "backward_api": "MHD_Graph.backward",
             "initial_state_sha256": initial_state_sha256,
             "classification_loss": checkpoint["classification_loss"],
+            "training_strategy": "classifier_retraining",
+            "training_stage": training_stage,
+            "stage1_checkpoint_sha256": stage1_checkpoint_sha256,
+            "backward_levels": list(backward_levels),
         }, run_dir / "training_complete.json")
         monitor.finalize()
     mhd_barrier(context)

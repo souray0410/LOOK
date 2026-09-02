@@ -15,11 +15,11 @@ from tqdm.auto import tqdm
 
 from MHD_Project.MHD_Utils_V4 import (
     MHD_DistributedContext,
-    mhd_assert_module_state_identical,
     mhd_barrier,
 )
 
 from .data import DistributedEvalSampler, IMAGENET_MEAN, IMAGENET_STD
+from .distributed import assert_module_state_identical
 from .monitoring import TrainingMonitor
 from .reproducibility import seed_everything, write_json_atomic
 
@@ -372,8 +372,8 @@ def train_paired_cgan_direction_ddp(
         best_validation = float(last["best_validation"])
         stale = int(last["stale"])
         history = list(last["history"])
-    generator_state_sha256 = mhd_assert_module_state_identical(generator_raw, context)
-    discriminator_state_sha256 = mhd_assert_module_state_identical(discriminator_raw, context)
+    generator_state_sha256 = assert_module_state_identical(generator_raw, context)
+    discriminator_state_sha256 = assert_module_state_identical(discriminator_raw, context)
     generator_raw.to(context.device)
     discriminator_raw.to(context.device)
     optimizer_g = Adam(generator_raw.parameters(), lr=config.gan_learning_rate, betas=(config.gan_beta1, 0.999))

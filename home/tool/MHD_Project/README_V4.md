@@ -1,233 +1,61 @@
-# MHD Framework V4（4.0.0）
+# MHD Framework V4
 
-MHD V4 继续从超图视角统一表示和训练深度学习网络。顶层理论核心仍然只有四个对象：
+MHD V4 仍从超图视角描述深度学习：Node 保存 Message，Edge 保存
+Operation，Topo 用 Role/Sort Matrix 描述连接与位置顺序，Graph 按用户给出的
+全局 level 序列执行。它不是大模型专用框架；卷积网络、Transformer、图网络、
+超图网络和普通自定义 `nn.Module` 使用同一套接口。
 
-- `MHD_Node`：节点；
-- `MHD_Edge`：超边；
-- `MHD_Topo`：拓扑；
-- `MHD_Graph`：图。
+V4 只有四个顶层理论核心：
 
-V4 没有增加“大模型专用核心”。CNN、ResNet、RNN、Transformer、GNN、超图网络和用户自定义网络仍由同一组 Node、Edge、Topo、Graph 组装。`MHD_Node.Message` 与 `MHD_Edge.Operation` 是所属核心对象的嵌套辅助类型，不是新的顶层理论对象。
+- `MHD_Node`
+- `MHD_Edge`
+- `MHD_Topo`
+- `MHD_Graph`
 
-LOOK 本次干净发行版嵌入的目录为：
+V4 只增加两个嵌套辅助类型：`MHD_Node.Message` 与
+`MHD_Edge.Operation`。并行配置、Trainer 和内部 PyTorch Adapter 都在 Utils 中，
+不改变这四个核心概念。
 
-```text
-MHD_Project/
-├── MHD_Framework_V4.py
-├── MHD_Utils_V4.py
-└── README_V4.md
-```
+## V3 到 V4 的直接变化
 
-## 1. V3 保持不变的部分
-
-- Node、Edge、Topo、Graph 四个核心名称和超图含义不变。
-- Edge 仍承载有序操作序列。
-- Role Matrix 仍用 `-1 / 0 / 1` 表示头节点、无关节点、尾节点。
-- Sort Matrix 仍决定一条超边内部 Node Message 的稳定顺序。
-- 多个 level 仍表示分层传播；同一 Edge/Module 可以跨 level 复用。
-- `graph.forward()`、按名称读取 Node、普通 Trainer 的主要使用方式保持一致。
-
-## 2. V3 → V4 完整变化
-
-| 项目 | V3 | 最终 V4 |
+| 项目 | V3 | V4 |
 |---|---|---|
-| Node 状态 | Node 直接持有 `initial_state/current_state` | `feature_message` 与 `gradient_message`；二者各自持有 `initial_state/current_state` |
-| Node 构造 | 直接传两个 Tensor | 必须传 `MHD_Node.Message`；Gradient Message 可省略 |
-| 状态访问 | `node.current_state` | `node.feature_message.current_state` 或 `node.gradient_message.current_state` |
-| 状态聚合 | `transfer_mode`，逐次二元更新 | `feature_aggregation` 与 `gradient_aggregation` 使用同一 n 元聚合约定 |
-| Edge 操作 | 裸字符串、Module 或 callable | 每项必须包装为 `MHD_Edge.Operation(...)` |
-| 多输入调用 | 捕获运行异常并猜解包/列表/广播 | Sort Matrix 排序后确定性地作为位置参数传入；不吞模型异常 |
-| 前向 | Feature 状态逐次更新 | Feature Message 缓冲后确定性 n 元归并 |
-| 反向 | 主要直接依赖 loss Tensor | `graph.backward({node_name: seed})` 统一发送 Gradient Message |
-| 反向拓扑 | 无独立表达 | 可自动由前向拓扑生成，也可显式给出反向 Role/Sort Matrix |
-| 自定义梯度 | 无 Edge 级统一协议 | `backward_operations` 与稳定参数名映射 |
-| 参数梯度 | PyTorch autograd | 仍接回 PyTorch autograd；共享 Parameter 按对象身份累加 |
-| 多卡 | 基础 DDP 工具 | DDP、FSDP2、TP、PP 四个独立并行族 |
-| 混合并行 | 未明确 | 本轮明确拒绝 DP×TP、DP×PP、TP×PP 等组合 |
-| Merge | 合并 Feature 状态 | 分别合并两类 Message 的四个 State，并严格检查 Operation/Topo/共享状态 Module |
-| Monitor | 当前 Feature 指标 | 旧指标名保持；可选监控四个 Message State |
-| Checkpoint | Node 直接状态 | 保存两类 Message 下四个 State；可读取旧 V4 Feature-only 状态 |
+| 顶层核心 | Node、Edge、Topo、Graph | 不变 |
+| Node 状态 | 直接 `initial_state/current_state` | `feature_message` 与 `gradient_message`，各含 Initial/Current State |
+| Node 合并 | `transfer_mode`，输出到达时逐次二元修改 | 单一 `aggregation`，同一 Node 的待处理 Message 做确定性 n 元合并 |
+| Gradient | 不在 Node 中公开 | `gradient_message.current_state` 保存本次真实 autograd 梯度 |
+| Edge 操作 | 裸字符串、Module、`partial` 或 callable | 每项统一包装成 `MHD_Edge.Operation(...)`，字段仍叫 `edge_operations` |
+| Operation 调用 | 捕获异常后猜测解包、列表或逐项广播 | Sort Matrix 排序后确定性位置参数调用，模型内部异常原样抛出 |
+| 自定义梯度 | 直接依赖 PyTorch | 仍依赖 PyTorch；在 Operation 内使用标准 `torch.autograd.Function.apply` |
+| Topo | Role/Sort 用于 Forward | 仍只有一套全局 `role_matrices/sort_matrices`，两种执行方向显式选择不同 level |
+| level | Forward 可默认全部执行 | Forward/Backward 均必须显式给出非空序列；不排序、不去重 |
+| Forward 更新 | Edge 输出立即修改 Node | 同一 Node 的输入先缓冲，在读取前或 level 结束时统一 aggregation |
+| Backward 根 | 用户取得 loss 后调用 Tensor `.backward()` | `graph.backward(levels=[...])` 自动寻找本次 Forward 唯一可微标量终点 |
+| Backward 路径 | 完整 PyTorch 图 | level 序列选择真实 Forward trace 的反向子路径；底层仍只做一次原生 autograd |
+| 参数梯度 | 原生 autograd | 仍是原生 autograd；未选路径被 hook 屏蔽，未选参数 `.grad=None` |
+| Trainer | `backward_node` | 删除 `backward_node`，保存显式 `forward_levels/backward_levels` |
+| Checkpoint | 两个 Node State | 两类 Message 下四个 State，并保存 Trainer 的 level 序列 |
+| Merge | 合并两个 State | 分别合并四个 State，并检查 aggregation、Operation 与全局 Topo |
+| Monitor | 默认读取 `current_state` | 旧指标名不变，可选监控四种 Message State |
+| 多卡 | 基础 distributed 工具 | Utils 独立支持 DDP、FSDP2、TP、PP；不组合多个并行族 |
 
-这些是有意的破坏性调整：V4 不保留 `node.initial_state`、`node.current_state`、`transfer_mode`、`accumulate_mode`，也不接受未包装的 `edge_operations`。这样避免一套概念同时存在多个别名。
+保持不变的概念和名称包括：Node/Edge/Topo/Graph、`edge_operations`、Node/Edge
+ID 与名称查询、Role Matrix 的 `-1/0/1`、Sort Matrix、普通 `nn.Module` 参数与
+原生 optimizer。
 
-## 3. Message：前向与反向的对称状态
+有意破坏的接口包括：Node 直接状态字段、`transfer_mode`、裸
+`edge_operations`、无参数的 `graph.forward()`、直接对 Node loss Tensor 调用
+`.backward()`，以及 Trainer 的 `backward_node`。
 
-```python
-import torch
-from V4.MHD_Framework_V4 import MHD_Node
-
-feature_message = MHD_Node.Message(
-    initial_state=torch.zeros(2, 8),
-    current_state=None,  # 自动克隆 Initial State
-)
-
-node = MHD_Node(
-    id=0,
-    name="tokens",
-    feature_message=feature_message,
-    # gradient_message 省略时自动生成兼容的零状态
-    feature_aggregation="replace",
-    gradient_aggregation="sum",
-)
-
-node.feature_message.initial_state
-node.feature_message.current_state
-node.gradient_message.initial_state
-node.gradient_message.current_state
-```
-
-Feature 为浮点或复数时，默认 Gradient Message 使用同 dtype、shape、device；Feature 为整数或布尔类型时，默认 Gradient Message 使用同 shape/device 的 FP32。显式 Gradient Message 必须是浮点或复数，且其 Initial/Current State 的 shape、dtype、device 必须一致。
-
-两类 Message 使用相同操作：
-
-```python
-node.feature_message.reset()
-node.feature_message.update_initial(new_feature, update_current=True)
-node.gradient_message.update_initial(new_gradient)
-node.to_device("cuda")       # 同时移动两类 Message
-node.reset()                  # 同时重置两类 Message
-```
-
-聚合可选 `replace/sum/avg/max/min/mul`，也可传无可学习参数的 callable：
-
-```python
-def aggregate(current, incomings):
-    return current + torch.stack(tuple(incomings)).sum(dim=0)
-```
-
-Node 聚合只负责 Message 的确定性传输。需要学习参数的注意力聚合、GNN pooling 或 MoE 路由属于模型计算，应写成 `nn.Module` 放进 Edge Operation。这样 Message 负责“怎么汇入节点”，Operation 负责“消息怎么算”，职责清楚但接口仍统一。
-
-## 4. Operation：前向与反向的对称计算
-
-```python
-import torch.nn as nn
-from V4.MHD_Framework_V4 import MHD_Edge
-
-edge = MHD_Edge(
-    id=0,
-    name="encoder",
-    edge_operations=[
-        MHD_Edge.Operation(nn.Linear(8, 16)),
-        MHD_Edge.Operation(".relu()"),
-        MHD_Edge.Operation(lambda value: value + 1),
-    ],
-)
-```
-
-确定性调用规则只有一套：
-
-- 一个输入 Message：`operation(message)`；
-- 多个输入 Message：按 Sort Matrix 顺序调用 `operation(*messages)`；
-- 字符串 Operation：逐 Message 应用；
-- 一个输出 Tensor 对应一个尾节点，Tensor 序列按顺序对应多个尾节点。
-
-V4 不再像 V3 那样捕获 `TypeError/ValueError/RuntimeError` 后猜另一种调用方式，因为这会吞掉模型内部的真实错误。需要逐 Message 应用普通函数时显式返回列表即可：
-
-```python
-MHD_Edge.Operation(
-    lambda *messages: [message.relu() for message in messages]
-)
-```
-
-早期开发稿中的 `MHD_ModuleAdapter(keyword_inputs=..., output_keys=...)` 没有保留。把整张 Graph 暴露为标准 `nn.Module` 的桥接逻辑仍是 DDP/FSDP2/TP/compile 所必需的，但它已经收成 Utils 私有实现 `_MHD_ForwardAdapter`，不是用户需要理解或配置的建模概念。对于关键字专用输入或字典输出，直接用普通 `nn.Module` 表达绑定即可：
-
-```python
-class ModelOperation(nn.Module):
-    def __init__(self, native_module):
-        super().__init__()
-        self.native_module = native_module
-
-    def forward(self, value, mask):
-        result = self.native_module(value, attention_mask=mask)
-        return result["last_hidden_state"], result["auxiliary_output"]
-
-edge = MHD_Edge(
-    0,
-    "model",
-    [MHD_Edge.Operation(ModelOperation(native_module))],
-)
-```
-
-这里必须使用 `nn.Module` 而不是捕获有参数 Module 的 lambda，这样内部 Module/Parameter 才会被 Graph 注册，optimizer、DDP、FSDP2 和 TP 才能正确发现。V4 测试覆盖了关键字绑定、dict 输出拆分、嵌套参数注册、Node Gradient 和 Parameter Gradient。
-
-自定义反向仍使用 Operation 序列。每一步按同样的规则接收一个或多个 Gradient Message，并额外获得只读前向上下文：
-
-```python
-def custom_backward(
-    gradient,
-    *,
-    forward_inputs,
-    forward_outputs,
-    parameters,
-):
-    weight = parameters["op0.weight"]
-    input_gradient = gradient @ weight
-    weight_gradient = gradient.transpose(-2, -1) @ forward_inputs[0]
-    return [input_gradient], {"op0.weight": weight_gradient}
-
-edge = MHD_Edge(
-    id=0,
-    name="projection",
-    edge_operations=[MHD_Edge.Operation(nn.Linear(8, 8, bias=False))],
-    backward_operations=[MHD_Edge.Operation(custom_backward)],
-)
-```
-
-参数名稳定为 `op{operation_index}.{parameter_name}`。多步贡献求和；未知、缺失、形状错误或非法梯度会明确报错；显式 `None` 表示该参数无梯度。Backward Operation 自身不得持有可学习参数。stop、scale、reverse、straight-through estimator 等规则都可由同一协议表达。
-
-## 5. Topo 与统一前后向
-
-```python
-from V4.MHD_Framework_V4 import MHD_Topo
-
-topo = MHD_Topo(
-    role_matrices=[forward_role],
-    sort_matrices=[forward_sort],
-)
-```
-
-未传反向矩阵时，V4 自动生成：
-
-```text
-backward_role = -forward_role
-backward_sort = forward_sort
-```
-
-也可同时显式传 `backward_role_matrices` 与 `backward_sort_matrices`。二者必须成对出现，并与前向具有相同层数和矩阵形状。反向依赖与 level 顺序反转，但一条 Edge 内的 sort 不反转，所以自定义 backward 接收 Gradient Message 的顺序仍稳定。
-
-用户无论使用自动拓扑、显式反向拓扑、标准聚合还是自定义聚合，都只调用：
-
-```python
-graph.forward()
-graph.backward({"loss": None})
-graph.backward({
-    "loss_a": None,               # ones_like seed
-    "loss_b": explicit_seed,
-})
-```
-
-外部 seed 是额外 Gradient Message，不覆盖 Gradient Initial State。单根和多根统一使用 Mapping。
-
-V4 没有公开的 `backend=`、`fast_path=` 或执行器选择。内部只在 Node Gradient、Parameter Gradient、共享参数及 optimizer step 都经数值测试证明等价时，透明使用 PyTorch 原生 autograd；非零 Gradient Initial State、自定义聚合、显式反向拓扑等情况自动使用通用超图路由。两者共享完全相同的公开接口和结果语义。
-
-Mermaid 可视化与前后向拓扑使用同一套 phase 写法：
-
-```python
-graph.generate_mermaid(phase="forward")   # Feature：实线
-graph.generate_mermaid(phase="backward")  # Gradient：虚线
-graph.generate_mermaid(phase="both")      # 在同一组 Node/Edge 上叠加来回路径
-```
-
-默认 phase 仍是 `forward`。Backward 图直接读取
-`backward_role_matrices/backward_sort_matrices`，每条连线标注
-`L{level}:S{sort}`；`levels=int/slice/list` 对三个 phase 使用同一筛选规则。
-
-## 6. V3 与 V4 并排迁移
+### 并排迁移
 
 ```python
 # V3
-node = MHD_Node(id, name, initial_state, current_state)
+node = MHD_Node(id, name, initial_state, current_state, transfer_mode="sum")
 value = node.current_state
+edge = MHD_Edge(edge_id, edge_name, [module])
+graph.forward()
+loss_node.current_state.mean().backward()
 ```
 
 ```python
@@ -236,95 +64,253 @@ node = MHD_Node(
     id=id,
     name=name,
     feature_message=MHD_Node.Message(initial_state, current_state),
+    aggregation="sum",
 )
 value = node.feature_message.current_state
+edge = MHD_Edge(
+    id=edge_id,
+    name=edge_name,
+    edge_operations=[MHD_Edge.Operation(module)],
+)
+graph.forward(levels=forward_levels)
+graph.backward(levels=backward_levels)
 ```
 
-```python
-# V3 Edge
-edge = MHD_Edge(0, "encoder", [nn.Linear(8, 8), ".relu()"])
+## Message、Operation 与 aggregation
 
-# V4 Edge
+Feature Message 与 Gradient Message 的公开结构严格对称：
+
+```python
+node.feature_message.initial_state
+node.feature_message.current_state
+node.gradient_message.initial_state
+node.gradient_message.current_state
+```
+
+两者都是 `MHD_Node.Message`，因此都支持：
+
+```python
+message.reset()
+message.update_initial(tensor, update_current=True)
+message.to_device(device)
+```
+
+`current_state=None` 时从同一 Message 的 Initial State 克隆。省略 Gradient
+Message 时自动创建零状态：浮点/复数 Feature 使用兼容 dtype，整数或布尔 Feature
+使用 FP32。显式 Gradient Message 必须是浮点或复数 Tensor；一对 Initial/Current
+State 在构造与加载时检查 shape、dtype 和 device。
+
+`Operation` 是一般计算容器，`aggregation` 只负责一个 Node 收到多个 Message 时的
+合并。不要把两者做成相同大小的类：职责不同，但它们共同进入同一张 autograd 计算图。
+
+内置 aggregation 为 `replace/sum/avg/max/min/mul`，也可以传无可学习参数的 callable：
+
+```python
+def aggregate(current, incomings):
+    return current + torch.stack(tuple(incomings)).sum(dim=0)
+
+node = MHD_Node(
+    0,
+    "state",
+    MHD_Node.Message(torch.zeros(8)),
+    aggregation=aggregate,
+)
+```
+
+aggregation 的真实数学导数由 autograd 生成；多条反向贡献按链式法则求和。因此没有第二个
+`gradient_aggregation`。例如 `max` 的梯度遵循 `torch.maximum` 的导数，`replace`
+只沿最后一个 incoming 返回梯度。
+
+Operation 支持字符串、`nn.Module`、`partial`、callable 和
+`torch.autograd.Function.apply`。多个输入严格按 Sort Matrix 作为位置参数调用：
+
+```python
 edge = MHD_Edge(
     0,
-    "encoder",
-    [
-        MHD_Edge.Operation(nn.Linear(8, 8)),
+    "attention_or_join",
+    edge_operations=[
+        MHD_Edge.Operation(module_or_function),
         MHD_Edge.Operation(".relu()"),
     ],
 )
 ```
 
-## 7. 传统网络与 Transformer
+V4 不再捕获模型内部的 `TypeError/ValueError/RuntimeError` 后猜测另一种调用方式。
+如果需要逐项广播，请在 Operation 中明确写出并返回列表。
 
-普通网络不需要并行配置，也不需要适配器：
+## 一套全局 Topo，两种显式执行序列
+
+Topo 只有：
 
 ```python
-nodes = {
-    MHD_Node(0, "input", MHD_Node.Message(torch.zeros(4, 8))),
-    MHD_Node(1, "hidden", MHD_Node.Message(torch.zeros(4, 16))),
-    MHD_Node(2, "output", MHD_Node.Message(torch.zeros(4, 2))),
-}
-edges = {
-    MHD_Edge(0, "encoder", [MHD_Edge.Operation(nn.Linear(8, 16))]),
-    MHD_Edge(1, "head", [MHD_Edge.Operation(nn.Linear(16, 2))]),
-}
-role = torch.tensor([[-1, 1, 0], [0, -1, 1]])
-sort = torch.tensor([[0, 1, 0], [0, 0, 1]])
-graph = MHD_Graph(nodes, edges, {MHD_Topo([role], [sort])}, device="cpu")
-
-graph.get_node_by_name("input").feature_message.current_state = torch.randn(4, 8)
-graph.forward()
+MHD_Topo(role_matrices=[...], sort_matrices=[...])
 ```
 
-Transformer 仍只是一个 Operation：
+没有 phase、`backward_start_level`、`backward_role_matrices` 或第二套执行器。
+`levels` 是用户定义的全局索引；列表本身就是执行顺序：
 
 ```python
-block = nn.TransformerEncoderLayer(
-    d_model=128,
-    nhead=8,
-    dim_feedforward=512,
-    batch_first=True,
-)
+graph.forward(levels=[0, 2, 0])
+graph.backward(levels=[5, 3])
+```
+
+- 不自动排序；`[5, 3]` 就先执行 level 5 的逻辑反向选择，再执行 level 3。
+- 不去重；重复 level 会产生独立 Edge occurrence/trace。
+- 允许不连续。
+- 同一轮 Forward 与 Backward 不得使用相同 level。
+- 一个 Backward Edge occurrence 必须反向匹配一个尚未匹配的真实 Forward
+  occurrence；重复 Edge 按 LIFO 调用栈匹配。
+- 不可达、依赖顺序错误、Role/Sort 方向不兼容都会明确报错。
+
+下面是 `x -> linear -> prediction -> mean -> loss` 的四个全局 level：
+
+```python
+# Node 顺序: x, prediction, loss
+# Edge 顺序: linear, mean
+role_matrices = [
+    torch.tensor([[-1,  1,  0], [ 0,  0,  0]]),  # level 0
+    torch.tensor([[ 0,  0,  0], [ 0, -1,  1]]),  # level 1
+    torch.tensor([[ 0,  0,  0], [ 0,  1, -1]]),  # level 2
+    torch.tensor([[ 1, -1,  0], [ 0,  0,  0]]),  # level 3
+]
+sort_matrices = [
+    torch.tensor([[0, 1, 0], [0, 0, 0]]),
+    torch.tensor([[0, 0, 0], [0, 0, 1]]),
+    torch.tensor([[0, 0, 0], [0, 0, 1]]),
+    torch.tensor([[0, 1, 0], [0, 0, 0]]),
+]
+topo = MHD_Topo(role_matrices, sort_matrices)
+
+graph.forward(levels=[0, 1])
+graph.backward(levels=[2, 3])       # 完整路径
+
+# 下一轮可截断在 prediction：
+graph.forward(levels=[0, 1])
+graph.backward(levels=[2])          # linear 参数 .grad=None
+```
+
+Backward 的矩阵用于描述“选哪条真实依赖向哪里返回梯度”；它不会再次执行 Edge
+Operation。底层只调用一次 `torch.autograd.backward`。完整与部分路径共用这一种机制，
+没有 native fast path、Message router、custom VJP bridge 三套分支。
+
+## 标量终点、Gradient Initial State 与自定义梯度
+
+一次 Forward 必须留下唯一的、可微的标量终点。`graph.backward(levels=...)` 自动以
+`ones_like` 启动。非零 Gradient Initial State 是额外原生 seed，不覆盖自动 loss seed：
+
+```python
+node.gradient_message.update_initial(extra_seed)
+graph.backward(levels=[...])
+```
+
+特殊梯度写在 Operation 内，使用标准 PyTorch 方式：
+
+```python
+class ReverseGradient(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, value):
+        return value
+
+    @staticmethod
+    def backward(ctx, gradient):
+        return -gradient
+
 edge = MHD_Edge(
     0,
-    "transformer",
-    [MHD_Edge.Operation(block)],
+    "reverse_gradient",
+    [MHD_Edge.Operation(ReverseGradient.apply)],
 )
 ```
 
-Attention、残差、归一化等细节继续由原生 Module 定义，MHD 不重复实现 PyTorch 已有网络层。
+共享 Parameter 由 PyTorch 按对象身份自动累加。未选 occurrence 的 Tensor hook 返回零，
+未选参数最终为 `.grad=None`；选中的共享 Parameter 保留所有选中贡献。
 
-## 8. GNN 与超图网络的表达
+V4 用轻量 autograd hook 直接写入 Gradient Current State，不对每个中间 Tensor 调用
+`retain_grad()`，避免为了公开 Gradient Message 再保留一份非叶 `.grad`。
 
-- 一条 Edge 可消费多个头节点并产生多个尾节点，因此能直接表达超边计算。
-- 多条 Edge 向同一 Node 发送 Feature Message，再由 Node 的 n 元 aggregation 合并，可表达邻居消息聚合。
-- 同一 Module 可跨 Edge 或 level 共享；多个 level 可静态展开循环消息传递。
-- 动态改变图结构时，构造新的 Role/Sort Matrix；V4 不把模型特有的动态路由硬编码进核心。
-
-测试中已经把“带自环的三节点有向图、共享 Linear、两轮消息传递”与邻接矩阵 PyTorch 实现逐项比较，前向、输入梯度和共享权重梯度一致；也验证了一条三头两尾的真实超边。
-
-## 9. Trainer、AMP 与梯度累积
-
-原 Trainer 的主要调用方式保持：
+## Mermaid
 
 ```python
-from V4.MHD_Utils_V4 import MHD_Monitor, MHD_Trainer, create_mhd_optimizer
+diagram = graph.generate_mermaid(
+    forward_levels=[0, 1, 0],
+    backward_levels=[3, 2],
+)
+```
 
-optimizer = create_mhd_optimizer(graph, default_optimizer_type="adamw")
+Feature 路径为实线，Gradient 路径为虚线；标签同时显示列表位置、全局 level 和 Sort
+值，因此重复执行不会被合并成无法区分的一次调用。
+
+## 传统网络、Transformer 与图/超图网络
+
+普通 Module 不需要改写：
+
+```python
+residual_edge = MHD_Edge(
+    0, "residual_block", [MHD_Edge.Operation(residual_block)]
+)
+transformer_edge = MHD_Edge(
+    1, "transformer_block", [MHD_Edge.Operation(encoder_layer)]
+)
+```
+
+图网络或超图网络可以把一次消息传递写成一个 level，并在多个 level 重复同一 Edge：
+
+```python
+graph.forward(levels=[message_level, message_level, readout_level])
+```
+
+每次重复都有独立 trace，因此同一个共享 Message Module 的参数梯度正常累加。不同
+Role Matrix 可以表示不同邻接、超边和传播路径。V4 不内置某一种 GNN layer；用户仍可把
+GCN/GAT/HypergraphConv 写成普通 Operation。
+
+可执行的合成数值等价验证位于 `tests/model_smoke_v4.py`，覆盖 ResNet 风格残差分支、
+两层 Transformer 和循环复用 Edge 的超图消息传递。
+
+## Trainer 与 PyTorch Adapter
+
+Trainer 保存默认路径，每次仍显式调用 Graph；单步可覆盖，梯度累积窗口内不得换路径：
+
+```python
 trainer = MHD_Trainer(
     graph,
     optimizer,
     MHD_Monitor(["loss"]),
-    backward_node="loss",
-    precision="fp32",
-    grad_accum_steps=1,
+    forward_levels=[0, 1, 2],
+    backward_levels=[3, 4, 5],
+    input_nodes=["input", "target"],
+    output_nodes=["loss"],
+)
+
+trainer.train_step(batch)
+trainer.train_step(
+    batch,
+    forward_levels=[0, 2],
+    backward_levels=[5, 3],
 )
 ```
 
-Trainer 内部把旧的 `backward_node` 转为 `graph.backward({backward_node: seed})`。FP16 GradScaler 的参数梯度保持缩放语义，而公开的 Node Gradient Message 会转换为未缩放值。BF16、梯度累积和梯度裁剪沿用同一 Trainer。
+Utils 内的私有 `_MHD_GraphAdapter` 只把标准 PyTorch 的输入/输出 dict 转换成 Node
+Message 读写，使 DDP/FSDP2/TP/`torch.compile` 能包装 MHD。它不转换模型、不保存第二份
+拓扑，也不执行第二套计算；普通 `graph.forward/backward` 用户无需接触它。
 
-`MHD_Monitor(["loss"])` 的旧指标名保持，例如 `loss_mean`。需要时可显式选择：
+## Checkpoint、Monitor、Merge 与 Prune
+
+Node checkpoint 的正式结构是：
+
+```text
+node_messages.<name>.feature_message.initial_state
+node_messages.<name>.feature_message.current_state
+node_messages.<name>.gradient_message.initial_state
+node_messages.<name>.gradient_message.current_state
+```
+
+Trainer checkpoint 同时保存 parameter、optimizer、scheduler、GradScaler、训练步数、
+`forward_levels` 和 `backward_levels`。加载后重新校验 level 范围与不重叠规则。
+FP16 GradScaler 同时缩放标量终点与非零 Gradient Initial State；参数梯度交给原生
+`unscale_`，公开的 Gradient Current State 则在 Trainer 内除回 scale，因此用户读取的是
+未缩放梯度。
+
+`MHD_Monitor(["loss"])` 仍产生 `loss_mean/loss_sum/loss_min/loss_max`。需要完整状态时：
 
 ```python
 MHD_Monitor(
@@ -338,122 +324,106 @@ MHD_Monitor(
 )
 ```
 
-## 10. 独立多卡支持
+Merge 对四个 State 分别求 mean，并要求同名 Node 的 aggregation 兼容、同名 Edge 的
+Operation 序列兼容、有状态 Module/Parameter 身份完全相同。Prune 只裁剪这一套全局
+Role/Sort Matrix，并重建 ID、索引、参数注册、执行计划和私有 trace 状态。
 
-并行属于 `MHD_Utils_V4.py` 的可选训练能力，不改变 Framework 核心。默认不开启；一次运行只选择一个并行族。
+## V3 兼容脚本
 
-```python
-from V4.MHD_Utils_V4 import MHD_ParallelConfig
+`MHD_Compatibility_V3_to_V4.py` 负责一次性迁移，不在核心保留旧 API 别名：
 
-ddp = MHD_ParallelConfig(data_parallel="ddp")
-fsdp2 = MHD_ParallelConfig(data_parallel="fsdp2")
+- `initial_state/current_state` → Feature Message；
+- 自动创建零 Gradient Message；
+- `transfer_mode` → `aggregation`；
+- 裸 `edge_operations` → `MHD_Edge.Operation`；
+- V3 Topo 后追加反向兼容的全局 levels；
+- V3 三文件 checkpoint → V4 四 State DCP checkpoint；
+- migration report 给出显式 Forward/Backward level 序列。
 
-tp = MHD_ParallelConfig(
-    tensor_parallel_size=2,
-    tensor_parallel_plan={
-        "transformer:0.encoder.linear1": "colwise",
-        "transformer:0.encoder.linear2": "rowwise",
-    },
-)
-
-pp = MHD_ParallelConfig(
-    pipeline_size=2,
-    pipeline_stages={"encoder": 0, "head": 1},
-    pipeline_microbatches=2,
-    pipeline_schedule="1f1b",  # 或 gpipe
-)
-```
-
-各模式仍由同一个准备入口接收同一张 MHD Graph：
+迁移 live graph：
 
 ```python
-from V4.MHD_Utils_V4 import prepare_mhd_model
+from V4.MHD_Compatibility_V3_to_V4 import migrate_v3_graph
 
-model = prepare_mhd_model(
-    graph,
-    input_nodes=["input", "target"],
-    output_nodes=["loss"],
-    parallel=ddp,  # 也可换为 fsdp2、tp 或 pp
-)
+v4_graph = migrate_v3_graph(v3_graph)
+paths = {
+    "forward_levels": list(range(v3_graph.topo.num_levels)),
+    "backward_levels": list(
+        range(v3_graph.topo.num_levels, 2 * v3_graph.topo.num_levels)
+    ),
+}
 ```
 
-DDP/FSDP2/TP/PP 都使用一进程一卡的原生启动方式，例如双卡：
+迁移 checkpoint：
 
 ```bash
-torchrun --standalone --nproc-per-node=2 train.py
+python -m V4.MHD_Compatibility_V3_to_V4 V3_CHECKPOINT_DIR V4_OUTPUT_DIR \
+  --factory your_package.graphs:build_migrated_graph
 ```
 
-- DDP：代码不锁死卡数，接受任意合法 `WORLD_SIZE`。
-- FSDP2：代码不锁死卡数，使用原生 `fully_shard`。
-- TP：`tensor_parallel_size` 可为任意合法大小；简单 `colwise/rowwise` 方案在内部完成 DTensor 布局衔接。
-- PP：`pipeline_size` 可为任意合法 stage 数；根据 Edge、Topo 与 `pipeline_stages` 自动生成 stage Module。
-- TP 模型若同时含普通 Tensor 与 DTensor 参数，应使用 `create_mhd_optimizer`；它会自动关闭 PyTorch 2.8 不兼容的 foreach 批量更新，无需用户配置布局。
-- 本轮不支持 DP×TP、DP×PP、TP×PP 或 DP×TP×PP。请求这些组合会立即报错，不会静默降级。
+若 factory 返回由 `migrate_v3_graph` 生成的偶数 level 图，脚本自动给出前半 Forward、
+后半 Backward 序列；也可同时传 `--forward-levels` 与 `--backward-levels`。两者只能同时
+提供或同时省略。Operation 的确定性位置调用可能暴露 V3 曾被异常吞掉的 callable，迁移后
+需要把该 callable 明确改成位置参数形式。
 
-`pipeline_stages` 是 Edge 到 stage 的必要归属信息，不是另一套建模 API。旧的手工 `pipeline_stage_modules` 入口没有保留。
+## 单卡与独立多卡
 
-## 11. Checkpoint 与 V3 迁移
+基础单卡不需要并行配置。多卡能力位于 Utils，且一次只启用一个并行族：
 
-V4 checkpoint 保存：
+| 模式 | 用途 | 代码范围 |
+|---|---|---|
+| DDP | 每卡完整模型、数据分片 | 任意合法 `world_size` |
+| FSDP2 | 参数/梯度/optimizer state 分片 | 任意合法 `world_size` |
+| TP | 一个 Module 内张量分片 | 任意合法 `tensor_parallel_size` |
+| PP | 按 Edge 顺序切 stage | 任意合法 `pipeline_size`；GPipe/1F1B |
 
-```text
-feature_message.initial_state
-feature_message.current_state
-gradient_message.initial_state
-gradient_message.current_state
-```
+混合 PP×TP、PP×DP、TP×DP 和 PP×TP×DP 会明确拒绝。AMP、梯度累积和兼容的 compile
+可与一个并行族组合。代码没有“两卡锁死”；配置的独立并行度必须等于本次
+`WORLD_SIZE`。
 
-读取旧 V4 checkpoint 时，旧 `nodes` 或 `node_initial_states/node_current_states` 迁移为 Feature Message；缺失 Gradient Message 时使用默认零状态。
+PP 是可选的 Pipeline Parallel：把顺序 Edge 分配到不同 GPU。它在 V3 中没有正式对应
+能力。V4 的 PP 仍使用 PyTorch 原生 pipeline schedule；显式 Backward levels 通过同一种
+Tensor hook 屏蔽未选 stage/Edge contribution，并写回本 rank 可见的 Gradient Message。
 
-上游 V4 可选提供独立的 V3 checkpoint 迁移工具；LOOK 本次发行版从零开始训练，
-不包含该兼容入口，也不复用 V3 checkpoint。
+## 实际验证与性能边界
 
-## 12. 实际验证结果与边界
+截至 README 最后更新，本地机器没有 PyTorch；实际数值与 GPU 测试在 `ws` 的 LOOK
+虚拟环境完成，环境为 PyTorch 2.8.0+cu128、两张 RTX 5000 Ada：
 
-最终验证环境是 `ws` 上已有隔离虚拟环境：Python 3.12.3、PyTorch 2.8.0+cu128、两张 NVIDIA RTX 5000 Ada。测试使用小 batch/microbatch，并保留机器上原有任务。
+- 32 个 CPU/状态/迁移测试（Message、Operation、aggregation、任意/重复 level、完整与
+  部分路径、共享参数、额外 seed、retain graph、Merge、Monitor、checkpoint、Prune、V3
+  migration）通过；
+- GPU 合成 ResNet、Transformer、循环超图网络与原生参考输出/梯度等价；
+- 双卡 DDP：完整路径，以及部分路径 + BF16 + 自定义 autograd 通过；
+- 双卡 FSDP2：完整路径、部分路径 + BF16 通过；
+- 双卡 TP：完整和部分路径通过；
+- 双卡 PP：GPipe、1F1B 及部分路径通过；
+- DDP + `torch.compile(backend="aot_eager")` 通过；ws 默认 Inductor 因系统缺少
+  `/usr/include/python3.12/Python.h` 在进入 MHD forward 前失败，因此不声称默认
+  Inductor 在该主机完成验证。
 
-| 验证项 | 实际结果 |
-|---|---|
-| 49 项 CPU/模型测试：Message/Operation/Topo/Graph、聚合、反向、Merge、Monitor、checkpoint、V3 迁移 | 通过 |
-| 原生 autograd 与通用 Message 路由：单根、多根、各 Node Gradient、各 Parameter Gradient、共享参数、optimizer step | 数值一致 |
-| ResNet 与 Transformer 对直接 PyTorch | 前向、loss、参数梯度一致 |
-| GNN 两轮传播与三头两尾超边 | 前向和梯度一致 |
-| DDP 两卡，标准/自定义 backward | 通过 |
-| FSDP2 两卡，标准/自定义 backward | 通过 |
-| TP 两卡，标准/自定义 backward；真实 Transformer | 通过 |
-| PP 两卡，GPipe/1F1B，标准/自定义 backward | 通过 |
-| BF16 + DDP，标准/自定义 backward | 通过 |
-| `torch.compile` 图捕获兼容性（记录 backend） | 通过 |
+最终同步后，精确文件又完成了两进程 CPU/Gloo DDP 的完整路径，以及部分路径 + 自定义
+autograd 回归。再次尝试 GPU/NCCL 回归时，两张卡被同机既有训练持续占用 99–100%，测试在
+进入 MHD Forward 前的 DDP 初始化广播处达到硬超时；超时进程已全部清理。因此上面的双卡
+条目来自本轮较早完成的实际 GPU 测试，不把这次资源拥塞记为新的代码通过或代码失败。
 
-默认 Inductor 的 ws 实测没有完成：该虚拟环境缺少系统 `Python.h`，Triton C helper 编译失败。这是当前主机开发头文件缺失，但在补齐环境前不能声称 `compile=True` 的默认 Inductor 路径已经通过。PyTorch 2.13 是 V4 的正式目标版本，本轮可用环境只有 PyTorch 2.8，因此 2.13 仍需在对应环境复验。
+代码目标环境为 PyTorch 2.13；当前可用的 2.8 环境完成了回归，但尚未取得 2.13 环境做
+正式运行。三卡以上的代码路径没有硬编码限制，但性能与稳定性尚未在真实三卡以上机器验证。
 
-代码层面 DDP/FSDP2/TP/PP 均按任意合法并行度实现，并用四卡配置做了不启动进程的 topology/config 验证；硬件实测只有 `ws` 两卡。三卡以上的性能、通信稳定性和具体模型切分不能由两卡结果替代。
+在同一 RTX 5000 Ada 上，以一个 BF16 `TransformerEncoderLayer`（batch=2、sequence=128、
+hidden=512）比较同一原生 Module：
 
-在共享 GPU 负载下，TransformerEncoderLayer（batch 4、序列 128、hidden 512、BF16）采用同步主机墙钟、交替顺序、每轮前向 200 次和训练 100 次，共独立运行三轮。三轮中位结果为：
+| 项目 | 原生中位数 | MHD 中位数 | MHD 额外开销 |
+|---|---:|---:|---:|
+| Forward | 2.3464 ms | 2.3595 ms | 13.05 μs / 0.56% |
+| Forward + Backward | 2.4803 ms | 2.5175 ms | 1.50% |
 
-- 原生前向 0.1109 ms，MHD 0.1199 ms；额外约 9.08 µs，8.19%。
-- 原生前向+反向 0.5788 ms，MHD 0.6338 ms；相对额外开销三轮中位数 9.77%。
+结果来自 `benchmarks/benchmark_v4_overhead.py` 的 10 次 warmup、30 次 Forward 和 10 次
+训练采样。共享 GPU 负载会造成波动，它不是所有模型的保证。更小的 Operation 固定 Python
+调度占比更高；工程上应按卷积 block、Transformer block 或自然消息传递单元划 Edge，
+而不是把每个微小算子拆成 Edge。MHD 不会比原生 kernel 更快，其目标是在保留超图表达、
+显式路径和公开 Message 的同时，让大模型重计算占主导时额外开销保持较小。
 
-结果满足本轮门槛：前向相对回归不超过 15%且绝对额外耗时不超过 25µs，标准训练相对回归不超过 10%。这是该主机当时负载下的回归测试，不是跨设备吞吐承诺。自定义 backward 的目标是正确性与原生分布式 hook 衔接，本轮未把其额外开销混入标准训练基准。
-
-本轮不包含独立 PyTorch/FX/export 图生成。
-
-## 13. 兼容性结论
-
-完全保持的核心：
-
-- `MHD_Node`、`MHD_Edge`、`MHD_Topo`、`MHD_Graph` 名称；
-- Role Matrix、Sort Matrix、level 与超图表达方式；
-- `graph.forward()` 和 Trainer 的主要训练流程；
-- 原生 `nn.Module` 作为模型计算主体。
-
-需要迁移的调用：
-
-- Node 状态改为嵌套 Message；旧直接字段不存在；
-- Edge 中每个操作必须用嵌套 Operation 包装；
-- 早期 `MHD_ModuleAdapter` 不再提供；关键字绑定和结构化输出由普通 `nn.Module` Operation 表达，整图的标准 Module 桥接只作为 Utils 私有实现保留；
-- `transfer_mode` 改为 `feature_aggregation`，反向对应 `gradient_aggregation`；
-- 多输入 callable 使用确定性位置参数，不再猜调用方式；
-- checkpoint 使用四个 Message State，旧文件通过兼容脚本迁移。
-
-V4 的统一含义是：一个超图接口、一套 Message/Operation 规则、一个 `graph.backward` 入口；内部可以透明选择已经证明等价的执行实现，但不把实现选择变成用户配置。
+RETFound ViT-L/16 的 28 个自然 Operation、56 个全局 levels、CFP/OCT 实验与权重加载说明在
+`experiments/V4/retfound_2d/README.md`。该实验目录不属于 V4 核心目录；`V4` 本身严格只有
+Framework、Utils、Compatibility 和本 README 四个文件。

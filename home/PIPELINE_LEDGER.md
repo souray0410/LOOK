@@ -23,7 +23,7 @@ Original UKB volumes are read-only; destructive flags apply only to derived data
 | 16 | remote | Smoke-test MHD fusion topologies and monitor nodes | smoke result | Seven fusion positions; first selected GPU |
 | 17 | remote | Tiny dual-filling integration run | `runs/smoke/` | one- or two-GPU DDP; checkpoint resume |
 | 18 | remote | Interactive complete study entry | deterministic experiment runs | One config cell; GPU list; validation/freeze/test |
-| 19 | remote | Execute full study or baseline classifier search | sweep plan/progress/ranking/diagnostics | Sequential configurations; DDP within training stage |
+| 19 | remote | Execute full study or cRT fusion search | sweep plan/progress/ranking/diagnostics | Sequential configurations; DDP within each cRT stage |
 | 20 | remote/local | Aggregate matrix diagnostics | aggregate CSV | Reads completed runs; no model changes |
 
 ## State Machine
@@ -46,7 +46,7 @@ the read-only source; never repair the source disk.
 - Compute: physical GPU list, workers, per-device micro-batches, global effective
   batches and AMP. Ranks, accumulation, samplers and `torchrun` launch are derived
   internally.
-- Classifier: backbone, fusion stage, seed, epochs, patience, learning rates and decay.
+- Classifier: backbone, fusion stage, seed, Stage-1 epochs/rates, and cRT epochs/rate.
 - Filling: normalized mean or independently trained paired cGAN.
 - Missingness: OCT missing, CFP missing and frozen-model missing ratios.
 - LOOK: correction nodes, downsample factors, latent dimensions, ridge alpha grid,
@@ -67,9 +67,9 @@ completed/total configurations, the newest saved epoch and validation metrics, G
 state, and recent log lines. These utilities do not alter the study grid.
 
 `tool/operations/start_detached_baseline_search.sh` selects Step 19
-`classifier-search` mode and the `look-baseline-search` tmux session. It executes 56
-complete-modality configurations and deliberately bypasses filling, cGAN, LOOK and test
-evaluation. After each configuration, rank zero atomically refreshes the full leaderboard
-and grouped diagnostics for fusion position, loss name, learning rate, dropout and label
-smoothing. `check_detached_baseline_search.sh` exposes those summaries
+`crt-fusion-search` mode and the `look-baseline-search` tmux session. It executes seven
+complete-modality fusion configurations with canonical two-stage cRT and deliberately
+bypasses filling, cGAN, LOOK and test evaluation. After each configuration, rank zero
+atomically refreshes the full leaderboard and fusion-position diagnostics.
+`check_detached_baseline_search.sh` exposes those summaries
 alongside the active run's full epoch and class-level evidence.

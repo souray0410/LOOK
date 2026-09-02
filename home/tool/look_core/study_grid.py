@@ -20,7 +20,7 @@ from .state import atomic_write_json, atomic_write_text, stable_hash, utc_now
 
 def _primary_classifier_profile() -> dict[str, Any]:
     return {
-        "name": "primary",
+        "name": "crt",
         "epochs": 50,
         "patience": 10,
         "effective_batch_size": 256,
@@ -31,44 +31,17 @@ def _primary_classifier_profile() -> dict[str, Any]:
         "weight_decay": 1e-4,
         "warmup_epochs": 5,
         "sampling_strategy": "natural_without_replacement",
-        "loss_name": "balanced_softmax",
-        "label_smoothing": 0.05,
-        "classifier_dropout": 0.1,
+        "loss_name": "cross_entropy",
+        "label_smoothing": 0.0,
+        "classifier_dropout": 0.0,
+        "training_strategy": "classifier_retraining",
+        "crt_epochs": 20,
+        "crt_patience": 5,
+        "crt_learning_rate": 1e-3,
+        "crt_weight_decay": 1e-4,
+        "crt_sampling_strategy": "class_balanced_with_replacement",
         "amp": True,
     }
-
-
-def classifier_search_profiles() -> list[dict[str, Any]]:
-    profiles: list[dict[str, Any]] = []
-    learning_rates = {
-        "standard": (1e-4, 1e-3),
-        "low": (3e-5, 3e-4),
-    }
-    for (lr_name, (pretrained_lr, new_layer_lr)), dropout, smoothing in itertools.product(
-        learning_rates.items(),
-        (0.1, 0.3),
-        (0.0, 0.05),
-    ):
-        dropout_name = str(dropout).replace(".", "p")
-        smoothing_name = str(smoothing).replace(".", "p")
-        profiles.append({
-            "name": f"balanced-softmax__lr-{lr_name}__drop-{dropout_name}__ls-{smoothing_name}",
-            "epochs": 50,
-            "patience": 10,
-            "effective_batch_size": 256,
-            "micro_batch_size": 128,
-            "num_workers": 16,
-            "pretrained_lr": pretrained_lr,
-            "new_layer_lr": new_layer_lr,
-            "weight_decay": 1e-4,
-            "warmup_epochs": 5,
-            "sampling_strategy": "natural_without_replacement",
-            "loss_name": "balanced_softmax",
-            "label_smoothing": smoothing,
-            "classifier_dropout": dropout,
-            "amp": True,
-        })
-    return profiles
 
 
 def _primary_gan_profile() -> dict[str, Any]:
@@ -117,7 +90,7 @@ def baseline_search_grid() -> "StudyGrid":
         fusion_positions=["feature", "layer4", "layer3", "layer2", "layer1", "stem", "input"],
         seeds=[3407],
         filling_strategies=["normalized_mean"],
-        classifier_profiles=classifier_search_profiles(),
+        classifier_profiles=[_primary_classifier_profile()],
         gan_profiles=[{"name": "not_applicable"}],
         look_profiles=[_disabled_look_profile()],
     )
@@ -136,11 +109,6 @@ def _search_diagnostics(leaderboard: list[dict[str, Any]]) -> dict[str, Any]:
     """Persist enough partial evidence to guide the next baseline adjustment."""
     axes = (
         "fusion_position",
-        "loss_name",
-        "pretrained_lr",
-        "new_layer_lr",
-        "classifier_dropout",
-        "label_smoothing",
     )
     diagnostics: dict[str, Any] = {
         "completed_configurations": len(leaderboard),
@@ -359,11 +327,12 @@ def run_study_grid(
                 "current_configuration": {
                     "fusion_position": runner.selection.fusion_position,
                     "seed": runner.selection.seed,
+                    "training_strategy": runner.config.training_strategy,
                     "loss_name": runner.config.loss_name,
                     "pretrained_lr": runner.config.pretrained_lr,
                     "new_layer_lr": runner.config.new_layer_lr,
-                    "classifier_dropout": runner.config.classifier_dropout,
-                    "label_smoothing": runner.config.label_smoothing,
+                    "crt_learning_rate": runner.config.crt_learning_rate,
+                    "crt_sampling_strategy": runner.config.crt_sampling_strategy,
                 },
                 "completed": completed,
             },
@@ -384,11 +353,12 @@ def run_study_grid(
             "backbone_id": result.get("checkpoint", {}).get("backbone_id"),
             "fusion_position": runner.selection.fusion_position,
             "seed": runner.selection.seed,
+            "training_strategy": runner.config.training_strategy,
             "loss_name": runner.config.loss_name,
             "pretrained_lr": runner.config.pretrained_lr,
             "new_layer_lr": runner.config.new_layer_lr,
-            "classifier_dropout": runner.config.classifier_dropout,
-            "label_smoothing": runner.config.label_smoothing,
+            "crt_learning_rate": runner.config.crt_learning_rate,
+            "crt_sampling_strategy": runner.config.crt_sampling_strategy,
             "best_epoch": result.get("checkpoint", {}).get("epoch"),
             "started_at_utc": result.get("started_at_utc"),
             "completed_at_utc": result.get("completed_at_utc"),
@@ -402,8 +372,8 @@ def run_study_grid(
         )
         columns = [
             "rank", "experiment_id", "backbone_id", "fusion_position", "seed",
-            "loss_name", "pretrained_lr", "new_layer_lr",
-            "classifier_dropout", "label_smoothing", "macro_f1",
+            "training_strategy", "loss_name", "pretrained_lr", "new_layer_lr",
+            "crt_learning_rate", "crt_sampling_strategy", "macro_f1",
             "best_epoch", "started_at_utc", "completed_at_utc",
             "balanced_accuracy", "macro_auroc_ovr", "accuracy", "weighted_f1",
             "cohen_kappa", "cross_entropy", "ece_15", "multiclass_brier",

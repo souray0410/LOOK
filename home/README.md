@@ -93,9 +93,12 @@ OOM; record the measured per-rank peak with the experiment configuration.
 
 The current RTX 5000 Ada two-GPU profile was measured with real forward/backward and
 optimizer steps. The classifier uses effective global batch 256 and batch 128/GPU, with
-16.609 GiB peak allocation for worst-case feature fusion. The baseline search compares
-two conservative discriminative-learning-rate profiles: `3e-5/3e-4` and `1e-4/1e-3`
-for ImageNet-pretrained/new parameters. The paired cGAN
+16.609 GiB peak allocation for worst-case feature fusion. Stage 1 uses fixed
+discriminative rates `1e-4/1e-3` for ImageNet-pretrained/new parameters. Stage 2 uses
+canonical classifier re-training (cRT): all representation and normalization parameters
+are frozen, the final linear classifier alone is reset and optimized at `1e-3`, and its
+loader samples classes uniformly with replacement. Both stages use ordinary cross-
+entropy. The paired cGAN
 uses effective global batch 448 (224/GPU), with 13.858 GiB peak allocation and 18.170 GiB CUDA
 reservation; its Adam rate remains `2e-4` for adversarial stability.
 Both formal loaders use 16 workers per rank on the current 128-CPU host. Live profiling
@@ -113,8 +116,7 @@ notebook configuration and the GPU-list interface remain unchanged.
 
 For DDP startup, every rank constructs or restores the model on CPU from the same seed,
 and every parameter plus persistent buffer is covered by a cross-rank SHA-256 check.
-Only after equality is proven does LOOK disable PyTorch's redundant initial model
-broadcast and move one model to each GPU. Gradient all-reduce remains enabled normally.
+The latest V4 then applies standard PyTorch DDP initialization and gradient all-reduce.
 
 The committed notebook opens as the initial single-configuration `validation` pilot
 (`feature`, seed 3407, normalized mean, two GPUs). Running all cells starts or resumes
@@ -151,12 +153,11 @@ complete-modality baseline search in a remote `tmux` session:
 ./tool/operations/check_detached_baseline_search.sh --follow
 ```
 
-This dedicated search runs 56 complete-pair classifier configurations on GPUs 0 and 1:
-seven fusion positions, two discriminative learning-rate profiles, two classifier
-dropouts, two label-smoothing values, and seed 3407. It uses natural sampling without
-replacement and Balanced Softmax. The training loss adjusts each class logit by the
-logarithm of its complete training-split count; inference uses the unadjusted logits.
-There is no manually tuned class-balance beta. Fusion is
+This dedicated search runs seven complete-pair cRT configurations on GPUs 0 and 1: one
+for each fusion position at seed 3407. Stage 1 trains the complete-modality representation
+with natural sampling and cross-entropy. Stage 2 freezes that representation, resets only
+the final linear classifier, and retrains it with class-balanced sampling and cross-
+entropy. Fusion is
 strictly `concatenate -> 1x1 Conv/Linear -> BatchNorm/LayerNorm`; the fusion operation
 contains no activation, attention, or gate. Filling, cGAN, LOOK, random missingness, and
 the sealed test split are not entered during this search. Attach with
@@ -172,8 +173,9 @@ interruption in:
 
 ```text
 runs/backbones/<backbone_id>/run_config.json
-runs/backbones/<backbone_id>/history.json
-runs/backbones/<backbone_id>/{last.pt,best.pt,training_complete.json}
+runs/backbones/<backbone_id>/representation/{history.json,last.pt,best.pt,training_complete.json}
+runs/backbones/<backbone_id>/crt/{history.json,last.pt,best.pt,training_complete.json}
+runs/backbones/<backbone_id>/training_complete.json
 runs/sweeps/validation__<plan_id>/{study_plan.json,progress.json}
 runs/sweeps/validation__<plan_id>/{leaderboard.csv,baseline_search_results.json}
 runs/sweeps/validation__<plan_id>/baseline_search_diagnostics.json
@@ -182,12 +184,12 @@ runs/logs/look-baseline-search_<timestamp>.log
 
 The search can be resumed with the same start command. Completed valid configurations
 are reused, an interrupted classifier resumes from `last.pt`, and a scientific or code
-change creates a different content-fingerprinted run ID. After the 56 configurations,
+change creates a different content-fingerprinted run ID. After the seven configurations,
 inspect the validation ranking before freezing any design or running the full
 filling/LOOK study.
 
 The mandatory post-search selection and evaluation order is defined in
-`tool/research/BASELINE_LOOK_EXPERIMENT_PROTOCOL.md`. Briefly, the 56-run single-seed
+`tool/research/BASELINE_LOOK_EXPERIMENT_PROTOCOL.md`. Briefly, the seven-topology single-seed
 screen is followed by a three-candidate, three-seed stability confirmation. The winning
 hyperparameter setting and all three seed-specific complete-modality checkpoints are
 then frozen before any formal missing-modality/LOOK comparison. The sealed UKB test is

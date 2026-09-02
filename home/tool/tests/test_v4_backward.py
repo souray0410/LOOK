@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from MHD_Project.MHD_Framework_V4 import MHD_Edge, MHD_Graph, MHD_Node, MHD_Topo
-from MHD_Project.MHD_Utils_V4 import mhd_module_state_sha256
+from look_core.distributed import module_state_sha256
 
 
 def _node(node_id: int, name: str, state: torch.Tensor) -> MHD_Node:
@@ -10,8 +10,7 @@ def _node(node_id: int, name: str, state: torch.Tensor) -> MHD_Node:
         node_id,
         name,
         MHD_Node.Message(state),
-        feature_aggregation="replace",
-        gradient_aggregation="sum",
+        aggregation="replace",
     )
 
 
@@ -33,7 +32,10 @@ def _tiny_graph() -> MHD_Graph:
     return MHD_Graph(
         nodes,
         edges,
-        {MHD_Topo([role_0, role_1], [sort_0, sort_1])},
+        {MHD_Topo(
+            [role_0, role_1, -role_0, -role_1],
+            [sort_0, sort_1, sort_0.clone(), sort_1.clone()],
+        )},
         device=torch.device("cpu"),
     )
 
@@ -43,7 +45,7 @@ def _forward(graph: MHD_Graph, inputs: torch.Tensor, targets: torch.Tensor) -> t
         node.reset()
     graph.get_node_by_name("input").feature_message.current_state = inputs
     graph.get_node_by_name("target").feature_message.current_state = targets
-    graph.forward()
+    graph.forward(levels=[0, 1])
     return graph.get_node_by_name("loss").feature_message.current_state
 
 
@@ -57,7 +59,7 @@ def test_graph_backward_matches_native_autograd_and_optimizer_step():
     graph_loss = _forward(graph_backward, inputs.clone(), targets.clone())
     native_loss = _forward(native_backward, inputs.clone(), targets.clone())
 
-    graph_backward.backward({"loss": None})
+    graph_backward.backward(levels=[3, 2])
     native_loss.backward()
 
     graph_parameters = dict(graph_backward.named_parameters())
@@ -95,15 +97,15 @@ def test_module_state_hash_covers_scalar_buffers_deterministically():
     first = nn.BatchNorm1d(3)
     second = nn.BatchNorm1d(3)
     second.load_state_dict(first.state_dict())
-    assert mhd_module_state_sha256(first) == mhd_module_state_sha256(second)
+    assert module_state_sha256(first) == module_state_sha256(second)
     second.num_batches_tracked.add_(1)
-    assert mhd_module_state_sha256(first) != mhd_module_state_sha256(second)
+    assert module_state_sha256(first) != module_state_sha256(second)
 
 
 def test_mermaid_can_show_forward_and_backward_topologies_together():
     graph = _tiny_graph()
-    mermaid = graph.generate_mermaid(phase="both")
-    assert "Feature L0:S0" in mermaid
+    mermaid = graph.generate_mermaid(forward_levels=[0, 1], backward_levels=[3, 2])
+    assert "Feature #0:L0:S0" in mermaid
     assert "Gradient" in mermaid
     assert " -->|Feature " in mermaid
     assert " -. Gradient " in mermaid

@@ -16,8 +16,10 @@ incomplete-modality methods.
 
 ## Locked causal comparison
 
-The classifier is ImageNet-initialized and trained once using complete CFP-OCT
-pairs. The selected checkpoint is frozen before any modality is removed. No
+The classifier is ImageNet-initialized and trained using complete CFP-OCT pairs with
+canonical cRT: full representation learning followed by frozen-representation retraining
+of a reset final linear classifier. The selected cRT checkpoint is frozen before any
+modality is removed. No
 missing-input classifier fine-tuning, modality-dropout classifier training, or
 joint generator-classifier optimization is part of the proposed experiment.
 

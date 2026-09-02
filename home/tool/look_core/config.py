@@ -34,10 +34,16 @@ class ExperimentConfig:
     new_layer_lr: float = 3e-3
     weight_decay: float = 1e-4
     warmup_epochs: int = 5
+    training_strategy: str = "classifier_retraining"
     sampling_strategy: str = "natural_without_replacement"
-    loss_name: str = "balanced_softmax"
+    loss_name: str = "cross_entropy"
     label_smoothing: float = 0.0
-    classifier_dropout: float = 0.1
+    classifier_dropout: float = 0.0
+    crt_epochs: int = 20
+    crt_patience: int = 5
+    crt_learning_rate: float = 1e-3
+    crt_weight_decay: float = 1e-4
+    crt_sampling_strategy: str = "class_balanced_with_replacement"
     amp: bool = True
     world_size: int = 1
     monitor_nodes: List[str] = field(
@@ -127,8 +133,16 @@ class ExperimentConfig:
             raise ValueError("effective_batch_size must be divisible by the global micro batch")
         if self.sampling_strategy != "natural_without_replacement":
             raise ValueError("Classifier search requires natural_without_replacement sampling")
-        if self.loss_name != "balanced_softmax":
-            raise ValueError("Classifier search requires balanced_softmax")
+        if self.training_strategy != "classifier_retraining":
+            raise ValueError("Complete-modality training requires classifier_retraining")
+        if self.loss_name != "cross_entropy":
+            raise ValueError("Canonical cRT requires cross_entropy")
+        if min(self.crt_epochs, self.crt_patience) < 1:
+            raise ValueError("cRT epochs and patience must be positive")
+        if self.crt_learning_rate <= 0 or self.crt_weight_decay < 0:
+            raise ValueError("cRT optimizer settings are invalid")
+        if self.crt_sampling_strategy != "class_balanced_with_replacement":
+            raise ValueError("Canonical cRT requires class_balanced_with_replacement")
         if not 0.0 <= self.label_smoothing < 1.0:
             raise ValueError("label_smoothing must be in [0, 1)")
         if not 0.0 <= self.classifier_dropout < 1.0:

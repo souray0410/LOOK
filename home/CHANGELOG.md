@@ -1,23 +1,21 @@
 # Changelog
 
-## 2026-09-02 complete-modality baseline search
+## 2026-09-02 cRT complete-modality baseline search
 
 - Synchronized the upstream V4 Mermaid phase/level visualization update while retaining
   the verified LOOK multi-GPU utility implementation.
-- Uses deterministic natural sampling without replacement and places Balanced Softmax
-  directly in the MHD loss hyperedge. Its class correction is derived from complete
-  training-split counts; no class-balance beta is searched.
+- Uses canonical two-stage classifier re-training: complete-modality representation
+  learning with natural sampling and cross-entropy, followed by a reset linear head with
+  frozen representation, class-balanced sampling and cross-entropy.
 - Defined activation-free fusion as concatenation, one linear projection, and
   normalization; classifier dropout remains outside the fusion operation.
-- Added a 56-configuration validation-only baseline search over all seven fusion
-  positions, discriminative learning rates, dropout and label smoothing. Filling, cGAN,
-  LOOK and sealed-test evaluation are disabled in this stage.
+- Added a seven-configuration validation-only search over all fusion positions at one
+  screening seed. Filling, cGAN, LOOK and sealed-test evaluation are disabled.
 - Added atomic partial leaderboards and grouped diagnostics, plus a detached checker that
   exposes current configuration, complete and per-class validation evidence, confusion
   matrix, best epoch, GPU state and recent logs.
-- Balanced Softmax replaces the earlier effective-number beta trials. Those incomplete
-  formal attempts are not part of the released evidence; effective-number loss is
-  reserved, if needed, for a later fixed-architecture loss ablation.
+- Removed the superseded loss/dropout search and its formal products; cRT is the sole
+  released long-tail baseline protocol.
 - Explicitly releases parent-process CUDA cache between sequential configurations so
   rank-zero validation cannot reduce memory headroom for the next two-rank DDP stage.
 
@@ -41,8 +39,7 @@
 - Added backward-topology pruning and numerical gradient/optimizer equivalence tests.
 - Added one- and two-GPU DDP selected only through a physical GPU list.
 - Added the tested NCCL transport default required by the current `ws` GPU pair.
-- Added full-state cross-rank SHA-256 verification before safely skipping the slow,
-  redundant DDP initial broadcast on `ws`; gradient synchronization remains enabled.
+- Added full-state cross-rank SHA-256 verification before standard V4 DDP preparation.
 - Calibrated classifier batch 128/GPU to 16.609 GiB peak and paired-cGAN batch 224/GPU
   to 13.858 GiB peak on two RTX 5000 Ada GPUs.
 - Defined micro-batches per device and effective batches globally, with automatic

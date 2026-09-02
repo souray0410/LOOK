@@ -1,12 +1,44 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import signal
 import subprocess
 import sys
 from pathlib import Path
 from typing import Iterable, Sequence
+
+import torch
+import torch.distributed as dist
+
+
+def module_state_sha256(module: torch.nn.Module) -> str:
+    """Hash every parameter and persistent buffer in deterministic name order."""
+    digest = hashlib.sha256()
+    for name, tensor in sorted(module.state_dict().items()):
+        value = tensor.detach().cpu().contiguous()
+        digest.update(name.encode("utf-8"))
+        digest.update(str(value.dtype).encode("ascii"))
+        digest.update(str(tuple(value.shape)).encode("ascii"))
+        digest.update(value.reshape(-1).view(torch.uint8).numpy().tobytes())
+    return digest.hexdigest()
+
+
+def all_gather_object(value, context):
+    if not context.distributed:
+        return [value]
+    gathered = [None] * context.world_size
+    dist.all_gather_object(gathered, value)
+    return gathered
+
+
+def assert_module_state_identical(module: torch.nn.Module, context) -> str:
+    state_hash = module_state_sha256(module)
+    gathered = all_gather_object(state_hash, context)
+    if len(set(gathered)) != 1:
+        raise RuntimeError(f"Module state differs across ranks: {gathered}")
+    return state_hash
 
 
 def parse_gpu_devices(values: Sequence[int | str] | str) -> tuple[int, ...]:

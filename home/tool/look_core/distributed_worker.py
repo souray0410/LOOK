@@ -4,13 +4,15 @@ import argparse
 import json
 from pathlib import Path
 
+import torch
+
 from MHD_Project.MHD_Utils_V4 import destroy_mhd_distributed, initialize_mhd_distributed
 
 from .config import ExperimentConfig
-from .data import UKBPairedEyeDataset, make_loader, reference_training_class_counts
-from .graph import build_resnet50_mhd_graph
+from .data import UKBPairedEyeDataset, make_loader
+from .graph import build_resnet50_mhd_graph, prepare_graph_for_crt
 from .gan import make_gan_loaders, train_paired_cgan_direction_ddp
-from .reproducibility import seed_everything
+from .reproducibility import seed_everything, sha256, write_json_atomic
 from .train import train_complete_model_ddp
 
 
@@ -38,26 +40,74 @@ def run_classifier(payload: dict, context) -> None:
     }
     train_dataset = UKBPairedEyeDataset(split="train", augment=True, **kwargs)
     validation_dataset = UKBPairedEyeDataset(split="validation", augment=False, **kwargs)
-    train_loader = make_loader(
+    representation_loader = make_loader(
         train_dataset, config.per_device_micro_batch_size, config.num_workers, True,
         seed, config.sampling_strategy, context.rank, context.world_size,
+    )
+    crt_loader = make_loader(
+        train_dataset, config.per_device_micro_batch_size, config.num_workers, True,
+        seed + 20_000, config.crt_sampling_strategy, context.rank, context.world_size,
     )
     validation_loader = make_loader(
         validation_dataset, config.per_device_micro_batch_size, config.num_workers, False,
         seed, config.sampling_strategy, context.rank, context.world_size,
     )
     run_dir = Path(payload["run_dir"])
+    representation_dir = run_dir / "representation"
+    crt_dir = run_dir / "crt"
     graph = build_resnet50_mhd_graph(
         payload["fusion_position"], config.num_classes, config.per_device_micro_batch_size,
         config.image_size,
         "cpu",
-        pretrained=not (run_dir / "last.pt").is_file(),
-        class_counts=reference_training_class_counts(config.labels_csv, config.num_classes),
-        label_smoothing=config.label_smoothing,
+        pretrained=not (representation_dir / "last.pt").is_file()
+        and not (representation_dir / "best.pt").is_file(),
         classifier_dropout=config.classifier_dropout,
     )
     seed_everything(seed + context.rank)
-    train_complete_model_ddp(graph, train_loader, validation_loader, config, run_dir, context)
+    if not (representation_dir / "training_complete.json").is_file():
+        train_complete_model_ddp(
+            graph,
+            representation_loader,
+            validation_loader,
+            config,
+            representation_dir,
+            context,
+            training_stage="representation",
+        )
+    stage1_checkpoint = representation_dir / "best.pt"
+    graph.load_state_dict(
+        torch.load(stage1_checkpoint, map_location=graph.device, weights_only=False)[
+            "graph_state_dict"
+        ]
+    )
+    stage1_sha256 = sha256(stage1_checkpoint)
+    seed_everything(seed + 20_000)
+    prepare_graph_for_crt(graph)
+    seed_everything(seed + 20_000 + context.rank)
+    if not (crt_dir / "training_complete.json").is_file():
+        train_complete_model_ddp(
+            graph,
+            crt_loader,
+            validation_loader,
+            config,
+            crt_dir,
+            context,
+            training_stage="crt",
+            stage1_checkpoint_sha256=stage1_sha256,
+        )
+    if context.is_main:
+        final_checkpoint = crt_dir / "best.pt"
+        write_json_atomic(
+            {
+                "status": "complete",
+                "training_strategy": "classifier_retraining",
+                "representation_checkpoint": str(stage1_checkpoint),
+                "representation_sha256": stage1_sha256,
+                "crt_checkpoint": str(final_checkpoint),
+                "crt_sha256": sha256(final_checkpoint),
+            },
+            run_dir / "training_complete.json",
+        )
 
 
 def run_gan(payload: dict, context) -> None:

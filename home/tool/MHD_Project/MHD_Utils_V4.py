@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Multi-Hypergraph Dynamic Utils (MHD-Utils) - Version 4.0
+Multi-Hypergraph Dynamic Utils (MHD-Utils) - V4
 Author: Souray Meng (孟号丁)
 Utility Tools: Dataset, Training, Monitoring for MHD Framework V4
 License: MIT
@@ -22,11 +22,10 @@ from datetime import datetime
 from tqdm import tqdm
 import json
 import warnings
-import hashlib
 from contextlib import nullcontext
 
 from .MHD_Framework_V4 import (
-    MHD_Node, MHD_Edge, MHD_Topo, MHD_Graph, _MHD_CustomEdgeFunction,
+    MHD_Node, MHD_Edge, MHD_Topo, MHD_Graph,
 )
 
 
@@ -70,8 +69,8 @@ class MHD_ParallelConfig:
     pipeline_schedule: str = "gpipe"  # gpipe | 1f1b
     compile: bool = False
     compile_dynamic: Optional[bool] = None
+    compile_backend: Optional[Union[str, Callable]] = None
     fsdp_reshard_after_forward: Optional[bool] = None
-    ddp_init_sync: bool = True
 
     def __post_init__(self) -> None:
         if self.data_parallel not in {"none", "ddp", "fsdp2"}:
@@ -138,103 +137,38 @@ def mhd_all_reduce_mean(value: torch.Tensor, context: MHD_DistributedContext) ->
     return result
 
 
-def mhd_all_gather_object(value: Any, context: MHD_DistributedContext) -> List[Any]:
-    if not context.distributed:
-        return [value]
-    gathered: List[Any] = [None for _ in range(context.world_size)]
-    dist.all_gather_object(gathered, value)
-    return gathered
-
-
-def mhd_module_state_sha256(module: nn.Module) -> str:
-    """Hash every parameter and persistent buffer in a module state."""
-    digest = hashlib.sha256()
-    buckets: Dict[Tuple[str, str], List[torch.Tensor]] = defaultdict(list)
-    for name, tensor in sorted(module.state_dict().items()):
-        value = tensor.detach().contiguous()
-        digest.update(name.encode("utf-8"))
-        digest.update(str(value.dtype).encode("ascii"))
-        digest.update(str(tuple(value.shape)).encode("ascii"))
-        buckets[(str(value.dtype), str(value.device))].append(value.reshape(-1))
-    for key in sorted(buckets):
-        values = buckets[key]
-        packed = values[0] if len(values) == 1 else torch.cat(values)
-        host_bytes = packed.contiguous().cpu().view(torch.uint8).numpy().tobytes()
-        digest.update(repr(key).encode("ascii"))
-        digest.update(host_bytes)
-    return digest.hexdigest()
-
-
-def mhd_assert_module_state_identical(
-    module: nn.Module,
-    context: MHD_DistributedContext,
-) -> str:
-    """Require identical initial state before DDP is used without init sync."""
-    fingerprint = mhd_module_state_sha256(module)
-    fingerprints = mhd_all_gather_object(fingerprint, context)
-    if len(set(fingerprints)) != 1:
-        raise RuntimeError(
-            "DDP init_sync=False requires identical model states on every rank; "
-            f"observed fingerprints={fingerprints}"
-        )
-    return fingerprint
-
-
-class _MHD_ForwardAdapter(nn.Module):
-    """Expose mutable-node MHD execution through a conventional module forward call."""
+class _MHD_GraphAdapter(nn.Module):
+    """Expose an MHD Graph through the standard ``nn.Module`` call interface."""
 
     def __init__(
         self,
         graph: MHD_Graph,
         input_nodes: Sequence[str],
         output_nodes: Sequence[str],
-        levels: Optional[Sequence[int]] = None,
+        levels: Sequence[int],
     ) -> None:
         super().__init__()
         self.graph = graph
         self.input_nodes = tuple(input_nodes)
         self.output_nodes = tuple(output_nodes)
-        self.levels = None if levels is None else tuple(levels)
-        self._forward_levels = None if self.levels is None else list(self.levels)
+        self.levels = tuple(
+            graph._validate_levels(levels, graph.num_levels, "Graph adapter")
+        )
         missing = [name for name in (*self.input_nodes, *self.output_nodes) if graph.get_node_by_name(name) is None]
         if missing:
             raise ValueError(f"Unknown MHD adapter nodes: {missing}")
         self._input_node_objects = tuple(graph.get_node_by_name(name) for name in self.input_nodes)
         self._output_node_objects = tuple(graph.get_node_by_name(name) for name in self.output_nodes)
         self._all_node_objects = tuple(graph._nodes_in_id_order)
-        self._input_node_identities = frozenset(id(node) for node in self._input_node_objects)
-        for level in tuple(range(graph.num_levels)) if self.levels is None else self.levels:
-            if level < 0 or level >= graph.num_levels:
-                raise IndexError(f"层级索引 {level} 超出范围 [0, {graph.num_levels - 1}]")
-        selected_levels = (
-            tuple(range(graph.num_levels)) if self.levels is None else self.levels
-        )
-        first_access: Dict[int, str] = {}
-        for level in selected_levels:
-            for step in graph._execution_plan_per_level[level]:
-                for node_id in step.head_ids:
-                    first_access.setdefault(node_id, "read")
-                for node_id in step.tail_ids:
-                    first_access.setdefault(node_id, "write")
-        self._nodes_requiring_reset = tuple(
-            node
-            for node in self._all_node_objects
-            if id(node) not in self._input_node_identities
-            and not (
-                first_access.get(node.id) == "write"
-                and node.feature_aggregation == "replace"
-            )
-        )
-
     def forward(self, input_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         absent = set(self.input_nodes) - set(input_dict)
         if absent:
             raise ValueError(f"Missing MHD inputs: {sorted(absent)}")
-        for node in self._nodes_requiring_reset:
+        for node in self._all_node_objects:
             node.feature_message.reset()
         for name, node in zip(self.input_nodes, self._input_node_objects):
             node.feature_message.current_state = input_dict[name]
-        self.graph.forward(levels=self._forward_levels)
+        self.graph.forward(levels=self.levels)
         return {
             name: node.feature_message.current_state
             for name, node in zip(self.output_nodes, self._output_node_objects)
@@ -333,7 +267,8 @@ def prepare_mhd_model(
     input_nodes: Sequence[str],
     output_nodes: Sequence[str],
     *,
-    levels: Optional[Sequence[int]] = None,
+    levels: Sequence[int],
+    backward_levels: Optional[Sequence[int]] = None,
     parallel: Optional[MHD_ParallelConfig] = None,
     context: Optional[MHD_DistributedContext] = None,
     precision: str = "fp32",
@@ -347,7 +282,7 @@ def prepare_mhd_model(
     config = parallel or MHD_ParallelConfig()
     context = context or initialize_mhd_distributed()
     graph.to(context.device)
-    adapter: nn.Module = _MHD_ForwardAdapter(graph, input_nodes, output_nodes, levels)
+    adapter: nn.Module = _MHD_GraphAdapter(graph, input_nodes, output_nodes, levels)
     mesh, data_parallel_size = _build_device_mesh(context, config)
 
     if config.pipeline_size > 1:
@@ -359,6 +294,7 @@ def prepare_mhd_model(
             mesh,
             input_nodes,
             output_nodes,
+            backward_levels,
             example_inputs,
             precision,
         )
@@ -386,7 +322,10 @@ def prepare_mhd_model(
         )
 
     if config.compile:
-        adapter = torch.compile(adapter, dynamic=config.compile_dynamic)
+        compile_kwargs = {"dynamic": config.compile_dynamic}
+        if config.compile_backend is not None:
+            compile_kwargs["backend"] = config.compile_backend
+        adapter = torch.compile(adapter, **compile_kwargs)
 
     if config.data_parallel == "ddp" and data_parallel_size > 1:
         from torch.nn.parallel import DistributedDataParallel
@@ -396,7 +335,6 @@ def prepare_mhd_model(
             device_ids=[context.local_rank] if context.device.type == "cuda" else None,
             output_device=context.local_rank if context.device.type == "cuda" else None,
             process_group=mesh["dp"].get_group() if mesh is not None else None,
-            init_sync=config.ddp_init_sync,
         )
     return adapter
 
@@ -427,7 +365,13 @@ class _MHD_PipelineModel(nn.Module):
 
     def forward(self, *args, target=None, losses=None, **kwargs):
         schedule = self.train_schedule if self.training else self.inference_schedule
-        return schedule.step(*args, target=target, losses=losses, **kwargs)
+        stage = getattr(self.stage_module, "_orig_mod", self.stage_module)
+        if hasattr(stage, "begin_execution"):
+            stage.begin_execution()
+        result = schedule.step(*args, target=target, losses=losses, **kwargs)
+        if hasattr(stage, "finish_execution"):
+            stage.finish_execution()
+        return result
 
     def synchronize_last_stage_scalar(self, value: Optional[torch.Tensor] = None) -> torch.Tensor:
         """Broadcast one detached scalar from the last stage along this PP replica."""
@@ -452,16 +396,21 @@ class _MHD_AutoPipelineStage(nn.Module):
     def __init__(
         self,
         graph: MHD_Graph,
-        steps: Sequence[Any],
+        step_records: Sequence[Tuple[Any, bool]],
         input_names: Sequence[str],
         output_names: Sequence[str],
+        selected_node_ids: Set[int],
     ) -> None:
         super().__init__()
-        self.steps = tuple(steps)
+        self.step_records = tuple(step_records)
+        self.steps = tuple(step for step, _ in self.step_records)
         self.input_names = tuple(input_names)
         self.output_names = tuple(output_names)
         self.nodes_by_id = tuple(graph._nodes_in_id_order)
         self.node_ids_by_name = {node.name: node.id for node in self.nodes_by_id}
+        self.selected_node_ids = set(selected_node_ids)
+        self._gradient_captures: Dict[int, List[torch.Tensor]] = defaultdict(list)
+        self._boundary_captures: Dict[int, List[torch.Tensor]] = defaultdict(list)
         relevant_modules: Dict[str, nn.Module] = {}
         seen: Set[int] = set()
         for step in self.steps:
@@ -471,6 +420,44 @@ class _MHD_AutoPipelineStage(nn.Module):
                     seen.add(id(function))
                     relevant_modules[f"e{step.edge_id}_o{operation_index}"] = function
         self.edge_modules = nn.ModuleDict(relevant_modules)
+        self.selected_parameter_ids = {
+            id(parameter)
+            for step, selected in self.step_records
+            if selected
+            for _, parameter in step.edge.named_edge_parameters()
+        }
+
+    def begin_execution(self) -> None:
+        self._gradient_captures.clear()
+        self._boundary_captures.clear()
+        for node_id in self.selected_node_ids:
+            self.nodes_by_id[node_id].gradient_message.reset()
+
+    @staticmethod
+    def _combine_gradients(values: Sequence[torch.Tensor]) -> torch.Tensor:
+        detached = [value.detach() for value in values]
+        if len(detached) == 1:
+            return detached[0].clone()
+        if all(
+            value.ndim > 0 and value.shape[1:] == detached[0].shape[1:]
+            for value in detached
+        ):
+            return torch.cat(detached, dim=0)
+        return torch.stack(detached).sum(dim=0)
+
+    def finish_execution(self) -> None:
+        for node_id in self.selected_node_ids:
+            values = (
+                self._boundary_captures.get(node_id)
+                or self._gradient_captures.get(node_id)
+            )
+            if values:
+                self.nodes_by_id[node_id].gradient_message.current_state = (
+                    self._combine_gradients(values)
+                )
+        for parameter in self.parameters():
+            if id(parameter) not in self.selected_parameter_ids:
+                parameter.grad = None
 
     def forward(self, *inputs: torch.Tensor):
         if len(inputs) != len(self.input_names):
@@ -493,31 +480,39 @@ class _MHD_AutoPipelineStage(nn.Module):
         def flush(node_id: int) -> None:
             incomings = pending.pop(node_id, None)
             if incomings:
-                state[node_id] = self.nodes_by_id[node_id].aggregate_feature_messages(
+                state[node_id] = self.nodes_by_id[node_id].aggregate_messages(
                     value(node_id), incomings
                 )
 
-        for step in self.steps:
+        for step, selected in self.step_records:
             for node_id in step.head_ids:
                 flush(node_id)
             head_tensors = [value(node_id) for node_id in step.head_ids]
-            if step.edge.backward_operations is None:
-                outputs = step.edge.execute_edge_operations(head_tensors)
-            else:
-                parameters = [p for _, p in step.edge.named_edge_parameters()]
-                result = _MHD_CustomEdgeFunction.apply(
-                    step.edge,
-                    len(head_tensors),
-                    *head_tensors,
-                    *parameters,
-                )
-                outputs = list(result) if isinstance(result, tuple) else [result]
+            outputs = step.edge.execute_edge_operations(head_tensors)
+            outputs = [
+                output.view_as(output) if output.requires_grad else output
+                for output in outputs
+            ]
             if len(outputs) != len(step.tail_ids):
                 raise ValueError(f"Pipeline 边 '{step.edge.name}' 输出数量不匹配")
             for node_id, output in zip(step.tail_ids, outputs):
+                if output.requires_grad and not selected:
+                    def block(gradient, target=node_id):
+                        self._boundary_captures[target].append(gradient.detach())
+                        return torch.zeros_like(gradient)
+                    output.register_hook(block)
                 pending[node_id].append(output)
         for node_id in sorted(pending):
             flush(node_id)
+        for node_id in self.selected_node_ids:
+            tensor = state.get(node_id)
+            if tensor is not None and tensor.requires_grad:
+                tensor.retain_grad()
+                tensor.register_hook(
+                    lambda gradient, target=node_id: self._gradient_captures[
+                        target
+                    ].append(gradient.detach())
+                )
         outputs = tuple(value(self.node_ids_by_name[name]) for name in self.output_names)
         return outputs[0] if len(outputs) == 1 else outputs
 
@@ -527,9 +522,56 @@ def _build_auto_pipeline_stages(
     config: MHD_ParallelConfig,
     input_nodes: Sequence[str],
     output_nodes: Sequence[str],
+    levels: Sequence[int],
+    backward_levels: Sequence[int],
 ) -> List[nn.Module]:
+    normalized_levels = graph._validate_levels(levels, graph.num_levels, "Pipeline Forward")
+    flattened_steps = [
+        step
+        for level in normalized_levels
+        for step in graph._execution_plan_per_level[level]
+    ]
+    normalized_backward = graph._validate_levels(
+        backward_levels, graph.num_levels, "Pipeline Backward"
+    )
+    overlap = sorted(set(normalized_levels).intersection(normalized_backward))
+    if overlap:
+        raise ValueError(f"Pipeline 前后向 levels 不得重叠: {overlap}")
+    reachable = {graph.get_node_by_name(name).id for name in output_nodes}
+    unmatched = list(range(len(flattened_steps)))
+    selected_positions: List[int] = []
+    selected_node_ids: Set[int] = set(reachable)
+    for level in normalized_backward:
+        for reverse_step in graph._execution_plan_per_level[level]:
+            match = None
+            for position in reversed(unmatched):
+                forward_step = flattened_steps[position]
+                if (
+                    forward_step.edge_id == reverse_step.edge_id
+                    and forward_step.tail_ids == reverse_step.head_ids
+                    and forward_step.head_ids == reverse_step.tail_ids
+                ):
+                    match = position
+                    break
+            if match is None:
+                raise ValueError(
+                    f"Pipeline Backward level {level} 的边 '{reverse_step.edge.name}' "
+                    "没有兼容的 Forward occurrence"
+                )
+            if not any(node_id in reachable for node_id in reverse_step.head_ids):
+                raise ValueError(
+                    f"Pipeline Backward 边 '{reverse_step.edge.name}' 在给定顺序中不可达"
+                )
+            unmatched.remove(match)
+            selected_positions.append(match)
+            selected_node_ids.update(reverse_step.head_ids)
+            selected_node_ids.update(reverse_step.tail_ids)
+            reachable.update(reverse_step.tail_ids)
+    if not selected_positions:
+        raise ValueError("Pipeline backward_levels 没有选择任何 Forward occurrence")
+    selected_position_set = set(selected_positions)
     stage_map = dict(config.pipeline_stages or {})
-    edge_names = {edge.name for edge in graph.edges}
+    edge_names = {step.edge.name for step in flattened_steps}
     unknown = set(stage_map) - edge_names
     missing = edge_names - set(stage_map)
     if unknown or missing:
@@ -542,16 +584,15 @@ def _build_auto_pipeline_stages(
     }
     if invalid:
         raise ValueError(f"非法 Pipeline stage 编号: {invalid}")
-    flattened_steps = [
-        step
-        for level_steps in graph._execution_plan_per_level
-        for step in level_steps
-    ]
     stage_sequence = [stage_map[step.edge.name] for step in flattened_steps]
     if stage_sequence != sorted(stage_sequence):
         raise ValueError("pipeline_stages 必须与拓扑执行顺序单调一致")
     steps_by_stage = [
-        [step for step in flattened_steps if stage_map[step.edge.name] == stage]
+        [
+            (step, position in selected_position_set)
+            for position, step in enumerate(flattened_steps)
+            if stage_map[step.edge.name] == stage
+        ]
         for stage in range(config.pipeline_size)
     ]
     if any(not steps for steps in steps_by_stage):
@@ -560,8 +601,8 @@ def _build_auto_pipeline_stages(
     node_name = {node.id: node.name for node in graph.nodes}
     introduced: Dict[str, int] = {name: -1 for name in input_nodes}
     consumers: Dict[str, Set[int]] = defaultdict(set)
-    for stage, steps in enumerate(steps_by_stage):
-        for step in steps:
+    for stage, records in enumerate(steps_by_stage):
+        for step, _ in records:
             for node_id in step.head_ids:
                 consumers[node_name[node_id]].add(stage)
             for node_id in step.tail_ids:
@@ -587,6 +628,7 @@ def _build_auto_pipeline_stages(
             steps_by_stage[stage],
             stage_inputs[stage],
             stage_outputs[stage],
+            selected_node_ids,
         )
         for stage in range(config.pipeline_size)
     ]
@@ -600,15 +642,20 @@ def _prepare_mhd_pipeline(
     mesh: Any,
     input_nodes: Sequence[str],
     output_nodes: Sequence[str],
+    backward_levels: Optional[Sequence[int]],
     example_inputs: Optional[Mapping[str, torch.Tensor]],
     precision: str,
 ) -> nn.Module:
     """Build native PP stages directly from MHD Edge/Topo assignments."""
+    if backward_levels is None:
+        raise ValueError("Pipeline Parallel 必须显式提供 backward_levels")
     stage_modules = _build_auto_pipeline_stages(
         graph,
         config,
         input_nodes,
         output_nodes,
+        adapter.levels,
+        backward_levels,
     )
     supplied = dict(example_inputs or {})
     stage_values: Dict[str, torch.Tensor] = {
@@ -632,7 +679,10 @@ def _prepare_mhd_pipeline(
     stage_index = int(coordinate[0])
     stage_module: nn.Module = stage_modules[stage_index].to(context.device)
     if config.compile:
-        stage_module = torch.compile(stage_module, dynamic=config.compile_dynamic)
+        compile_kwargs = {"dynamic": config.compile_dynamic}
+        if config.compile_backend is not None:
+            compile_kwargs["backend"] = config.compile_backend
+        stage_module = torch.compile(stage_module, **compile_kwargs)
     full_example_args = stage_example_args[stage_index]
     for tensor in full_example_args:
         if tensor.ndim > 0 and tensor.shape[0] % config.pipeline_microbatches != 0:
@@ -659,6 +709,7 @@ def _prepare_mhd_pipeline(
     with metadata_autocast:
         example_output = stage_module(*metadata_example_args)
     from torch.distributed.pipelining import PipelineStage, Schedule1F1B, ScheduleGPipe
+    from torch.distributed.pipelining.microbatch import sum_reducer
 
     pipeline_group = mesh["pp"].get_group()
 
@@ -674,12 +725,22 @@ def _prepare_mhd_pipeline(
         )
 
     schedule_type = ScheduleGPipe if config.pipeline_schedule == "gpipe" else Schedule1F1B
+    merge_spec = (
+        sum_reducer
+        if isinstance(example_output, torch.Tensor) and example_output.ndim == 0
+        else None
+    )
     train_schedule = schedule_type(
         build_stage(),
         config.pipeline_microbatches,
         loss_fn=config.pipeline_loss_fn or _embedded_pipeline_loss,
+        output_merge_spec=merge_spec,
     )
-    inference_schedule = ScheduleGPipe(build_stage(), config.pipeline_microbatches)
+    inference_schedule = ScheduleGPipe(
+        build_stage(),
+        config.pipeline_microbatches,
+        output_merge_spec=merge_spec,
+    )
     pipeline_ranks = dist.get_process_group_ranks(pipeline_group)
     return _MHD_PipelineModel(
         train_schedule,
@@ -698,7 +759,7 @@ def unwrap_mhd_graph(module: nn.Module) -> MHD_Graph:
     visited: Set[int] = set()
     while isinstance(candidate, nn.Module) and id(candidate) not in visited:
         visited.add(id(candidate))
-        if isinstance(candidate, _MHD_ForwardAdapter):
+        if isinstance(candidate, _MHD_GraphAdapter):
             return candidate.graph
         for attribute in ("module", "_orig_mod", "stage_module"):
             child = getattr(candidate, attribute, None)
@@ -821,6 +882,7 @@ def updown_node(nodes: Set[MHD_Node], path: str, mode: str, target_device: torch
                     node.gradient_message.initial_state.clone()
                 )
             node.gradient_message.validate()
+            node.feature_message.validate()
 
     # 输出统计信息
     mode_cn = "保存" if mode == 'down' else "加载"
@@ -1207,6 +1269,33 @@ class MHD_Monitor:
 
 # ===================== 训练器类 =====================
 
+def _infer_scalar_terminal_name(graph: MHD_Graph, levels: Sequence[int]) -> str:
+    """Infer the unique scalar terminal produced by an explicit Forward path."""
+    normalized = graph._validate_levels(levels, graph.num_levels, "Trainer Forward")
+    last_produced: Dict[int, int] = {}
+    last_consumed: Dict[int, int] = {}
+    position = 0
+    for level in normalized:
+        for step in graph._execution_plan_per_level[level]:
+            for node_id in step.head_ids:
+                last_consumed[node_id] = position
+            for node_id in step.tail_ids:
+                last_produced[node_id] = position
+            position += 1
+    candidates = [
+        graph.get_node_by_id(node_id)
+        for node_id, produced_at in last_produced.items()
+        if produced_at > last_consumed.get(node_id, -1)
+        and graph.get_node_by_id(node_id).feature_message.initial_state.numel() == 1
+    ]
+    if len(candidates) != 1:
+        raise ValueError(
+            "forward_levels 必须静态产生唯一标量终点，"
+            f"实际候选={[node.name for node in candidates]}"
+        )
+    return candidates[0].name
+
+
 class MHD_Trainer:
     """Unified trainer for ordinary and optionally parallel MHD graphs.
 
@@ -1219,7 +1308,8 @@ class MHD_Trainer:
         mhd_graph: MHD_Graph,
         optimizer: Union[torch.optim.Optimizer, Callable[[Any], torch.optim.Optimizer]],
         monitor: MHD_Monitor,
-        backward_node: str,
+        forward_levels: Sequence[int],
+        backward_levels: Sequence[int],
         criteria_node: Optional[str] = None,
         criteria_mode: str = 'min',
         save_dir: str = "./mhd_ckpts",
@@ -1229,7 +1319,6 @@ class MHD_Trainer:
         *,
         input_nodes: Optional[Sequence[str]] = None,
         output_nodes: Optional[Sequence[str]] = None,
-        levels: Optional[Sequence[int]] = None,
         parallel: Optional[MHD_ParallelConfig] = None,
         distributed_context: Optional[MHD_DistributedContext] = None,
         precision: str = "fp32",
@@ -1242,8 +1331,9 @@ class MHD_Trainer:
             mhd_graph: MHD图实例
             optimizer: 优化器
             monitor: 监控器
-            backward_node: 用于反向传播的节点名称（必须是标量或可 reduce 的节点）
-            criteria_node: 用于判断最佳模型的监控节点，默认同 backward_node
+            forward_levels: 默认 Feature Message 执行序列
+            backward_levels: 默认 Gradient Message 执行序列
+            criteria_node: 用于判断最佳模型的监控节点，默认使用标量终点
             criteria_mode: 'min' 或 'max'，默认 'min'
             save_dir: 保存目录
             grad_clip_norm: 梯度裁剪阈值
@@ -1256,8 +1346,17 @@ class MHD_Trainer:
             raise ValueError("grad_accum_steps 必须大于等于 1")
         self.mhd_graph = mhd_graph
         self.monitor = monitor
-        self.backward_node_name = backward_node
-        self.criteria_node_name = criteria_node if criteria_node is not None else backward_node
+        self.forward_levels = tuple(
+            mhd_graph._validate_levels(forward_levels, mhd_graph.num_levels, "Trainer Forward")
+        )
+        self.backward_levels = tuple(
+            mhd_graph._validate_levels(backward_levels, mhd_graph.num_levels, "Trainer Backward")
+        )
+        overlap = sorted(set(self.forward_levels).intersection(self.backward_levels))
+        if overlap:
+            raise ValueError(f"Trainer 前后向 levels 不得重叠: {overlap}")
+        self.loss_node_name = _infer_scalar_terminal_name(mhd_graph, self.forward_levels)
+        self.criteria_node_name = criteria_node if criteria_node is not None else self.loss_node_name
         self.criteria_mode = criteria_mode
         self.save_dir = save_dir
         self.grad_clip_norm = grad_clip_norm
@@ -1268,9 +1367,10 @@ class MHD_Trainer:
         self.precision = precision.lower()
         self.grad_accum_steps = grad_accum_steps
         self._micro_step = 0
+        self._accumulation_paths: Optional[Tuple[Tuple[int, ...], Tuple[int, ...]]] = None
         self.input_nodes = tuple(input_nodes or ())
         requested_outputs = list(output_nodes or ())
-        for name in [backward_node, self.criteria_node_name, *monitor.monitor_nodes]:
+        for name in [self.loss_node_name, self.criteria_node_name, *monitor.monitor_nodes]:
             if name not in requested_outputs:
                 requested_outputs.append(name)
         self.output_nodes = tuple(requested_outputs)
@@ -1291,7 +1391,8 @@ class MHD_Trainer:
                 mhd_graph,
                 self.input_nodes,
                 self.output_nodes,
-                levels=levels,
+                levels=self.forward_levels,
+                backward_levels=self.backward_levels,
                 parallel=self.parallel,
                 context=self.context,
                 precision=self.precision,
@@ -1331,7 +1432,7 @@ class MHD_Trainer:
             "eval": {"metrics": []},
             "best_eval_value": float("inf") if criteria_mode == 'min' else -float("inf"),
             "best_epoch": -1,
-            "best_backward_value": None
+            "best_loss_value": None
         }
 
         self._validate_nodes()
@@ -1340,7 +1441,11 @@ class MHD_Trainer:
             self.logger.info("=" * 80)
             self.logger.info("🚀 MHD V4 Trainer 初始化完成")
             self.logger.info(f"设备={self.device} precision={self.precision} accum={self.grad_accum_steps}")
-            self.logger.info(f"反向节点={self.backward_node_name} 判定节点={self.criteria_node_name}")
+            self.logger.info(
+                f"Forward levels={list(self.forward_levels)} "
+                f"Backward levels={list(self.backward_levels)} "
+                f"标量终点={self.loss_node_name} 判定节点={self.criteria_node_name}"
+            )
             self.logger.info("=" * 80)
 
     def _setup_logger(self, save_dir: str) -> logging.Logger:
@@ -1361,8 +1466,8 @@ class MHD_Trainer:
         return logger
 
     def _validate_nodes(self):
-        if not self.mhd_graph.get_node_by_name(self.backward_node_name):
-            raise ValueError(f"反向传播节点 '{self.backward_node_name}' 不存在")
+        if not self.mhd_graph.get_node_by_name(self.loss_node_name):
+            raise ValueError(f"标量终点 '{self.loss_node_name}' 不存在")
         if not self.mhd_graph.get_node_by_name(self.criteria_node_name):
             raise ValueError(f"最佳判定节点 '{self.criteria_node_name}' 不存在")
         for node_name in self.monitor.monitor_nodes:
@@ -1387,7 +1492,11 @@ class MHD_Trainer:
             return nullcontext()
         return torch.autocast(device_type=self.device.type, dtype=dtype)
 
-    def _forward_graph(self, input_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def _forward_graph(
+        self,
+        input_dict: Dict[str, torch.Tensor],
+        forward_levels: Sequence[int],
+    ) -> Dict[str, torch.Tensor]:
         moved = {name: tensor.to(self.device, non_blocking=True) for name, tensor in input_dict.items()}
         if self.model is self.mhd_graph:
             for node in self.mhd_graph.nodes:
@@ -1396,7 +1505,7 @@ class MHD_Trainer:
                 node = self.mhd_graph.get_node_by_name(node_name)
                 if node is not None:
                     node.feature_message.current_state = tensor
-            self.mhd_graph.forward()
+            self.mhd_graph.forward(levels=list(forward_levels))
             return {
                 name: self.mhd_graph.get_node_by_name(name).feature_message.current_state
                 for name in self.output_nodes
@@ -1410,8 +1519,16 @@ class MHD_Trainer:
                 result = self.model()
             if self.model.stage_index == self.model.num_stages - 1 and result is not None:
                 value = result[0] if isinstance(result, (tuple, list)) else result
-                return {self.backward_node_name: value}
+                return {self.loss_node_name: value}
             return {}
+        adapters = [
+            module for module in self.model.modules()
+            if isinstance(module, _MHD_GraphAdapter)
+        ]
+        if not adapters:
+            raise RuntimeError("并行模型中未找到内部 MHD Graph adapter")
+        for adapter in adapters:
+            adapter.levels = tuple(forward_levels)
         adapter_inputs = {name: moved[name] for name in self.input_nodes}
         return self.model(adapter_inputs)
 
@@ -1430,14 +1547,39 @@ class MHD_Trainer:
     def train_step(
         self,
         input_dict: dict,
+        *,
+        forward_levels: Optional[Sequence[int]] = None,
+        backward_levels: Optional[Sequence[int]] = None,
         _force_step: bool = False,
         _loss_divisor: Optional[int] = None,
     ) -> dict:
+        active_forward = tuple(
+            self.mhd_graph._validate_levels(
+                self.forward_levels if forward_levels is None else forward_levels,
+                self.mhd_graph.num_levels,
+                "Train Forward",
+            )
+        )
+        active_backward = tuple(
+            self.mhd_graph._validate_levels(
+                self.backward_levels if backward_levels is None else backward_levels,
+                self.mhd_graph.num_levels,
+                "Train Backward",
+            )
+        )
+        overlap = sorted(set(active_forward).intersection(active_backward))
+        if overlap:
+            raise ValueError(f"Train 前后向 levels 不得重叠: {overlap}")
         if isinstance(self.model, _MHD_PipelineModel):
+            if active_forward != self.forward_levels or active_backward != self.backward_levels:
+                raise ValueError("Pipeline stage 已固定，train_step 不支持临时覆盖 level 路径")
             return self._pipeline_train_step(input_dict)
         self.model.train()
         if self._micro_step % self.grad_accum_steps == 0:
             self.optimizer.zero_grad(set_to_none=True)
+            self._accumulation_paths = (active_forward, active_backward)
+        elif self._accumulation_paths != (active_forward, active_backward):
+            raise ValueError("同一梯度累积窗口内 Forward/Backward 路径必须一致")
         should_step = ((self._micro_step + 1) % self.grad_accum_steps == 0) or _force_step
         sync_context = (
             self.model.no_sync()
@@ -1446,42 +1588,38 @@ class MHD_Trainer:
         )
         with sync_context:
             with self._autocast_context():
-                outputs = self._forward_graph(input_dict)
-                loss_value = outputs.get(self.backward_node_name)
+                outputs = self._forward_graph(input_dict, active_forward)
+                loss_value = outputs.get(self.loss_node_name)
                 if loss_value is None:
-                    loss_node = self.mhd_graph.get_node_by_name(self.backward_node_name)
+                    loss_node = self.mhd_graph.get_node_by_name(self.loss_node_name)
                     loss_value = (
                         loss_node.feature_message.current_state
                         if loss_node is not None
                         else None
                     )
                 if loss_value is None:
-                    raise RuntimeError(f"未生成反向节点 {self.backward_node_name}")
-                loss_tensor = loss_value.mean() / float(
-                    _loss_divisor or self.grad_accum_steps
-                )
-            if not loss_tensor.requires_grad:
-                raise RuntimeError("反向传播节点无梯度")
+                    raise RuntimeError(f"未生成标量终点 {self.loss_node_name}")
+                if loss_value.numel() != 1:
+                    raise RuntimeError("训练终点必须是标量 Tensor")
+            if not loss_value.requires_grad:
+                raise RuntimeError("标量终点无梯度")
             scale = (
                 float(self.grad_scaler.get_scale())
                 if self.grad_scaler.is_enabled()
                 else 1.0
             )
-            seed = torch.ones_like(loss_value) * (
-                scale
-                / float(
-                    loss_value.numel()
-                    * (_loss_divisor or self.grad_accum_steps)
-                )
+            loss_scale = scale / float(
+                _loss_divisor or self.grad_accum_steps
             )
-            self.mhd_graph.backward({self.backward_node_name: seed})
+            self.mhd_graph._backward(
+                levels=list(active_backward),
+                retain_graph=False,
+                loss_scale=loss_scale,
+            )
             if scale != 1.0:
                 for node in self.mhd_graph.nodes:
-                    initial = node.gradient_message.initial_state
                     current = node.gradient_message.current_state
-                    node.gradient_message.current_state = (
-                        initial + (current - initial) / scale
-                    )
+                    node.gradient_message.current_state = current / scale
 
         if should_step:
             self.grad_scaler.unscale_(self.optimizer)
@@ -1489,6 +1627,7 @@ class MHD_Trainer:
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip_norm)
             self.grad_scaler.step(self.optimizer)
             self.grad_scaler.update()
+            self._accumulation_paths = None
         self._micro_step += 1
         return self._collect_metrics(outputs)
 
@@ -1513,17 +1652,17 @@ class MHD_Trainer:
         self._micro_step += 1
         local_loss = torch.stack([value.detach().float() for value in losses]).mean() if losses else None
         loss = self.model.synchronize_last_stage_scalar(local_loss)
-        return {self.backward_node_name: float(loss.item())}
+        return {self.loss_node_name: float(loss.item())}
 
     @torch.no_grad()
     def eval_step(self, input_dict: dict) -> dict:
         self.model.eval()
         with self._autocast_context():
-            outputs = self._forward_graph(input_dict)
+            outputs = self._forward_graph(input_dict, self.forward_levels)
         if isinstance(self.model, _MHD_PipelineModel):
-            local_value = outputs.get(self.backward_node_name)
+            local_value = outputs.get(self.loss_node_name)
             value = self.model.synchronize_last_stage_scalar(local_value)
-            return {self.backward_node_name: float(value.item())}
+            return {self.loss_node_name: float(value.item())}
         return self._collect_metrics(outputs)
 
     def _reduce_epoch_metrics(self, metric_sums: Mapping[str, float], steps: int) -> Dict[str, float]:
@@ -1581,7 +1720,7 @@ class MHD_Trainer:
         avg_metrics = self._reduce_epoch_metrics(epoch_metrics_sum, sample_count)
         self.history["eval"]["metrics"].append(avg_metrics)
 
-        cur_backward = avg_metrics.get(self.backward_node_name)
+        cur_loss = avg_metrics.get(self.loss_node_name)
         cur_criteria = avg_metrics.get(self.criteria_node_name)
 
         if cur_criteria is None:
@@ -1599,14 +1738,14 @@ class MHD_Trainer:
         if is_better:
             self.history["best_eval_value"] = cur_criteria
             self.history["best_epoch"] = epoch + 1
-            self.history["best_backward_value"] = cur_backward
+            self.history["best_loss_value"] = cur_loss
             self._save_best_checkpoint()
-            bw_str = f"{cur_backward:.6f}" if cur_backward is not None else "N/A"
-            self.logger.info(f"🏆 当下最佳模型 | Epoch {epoch+1} | {self.backward_node_name}: {bw_str} | {self.criteria_node_name}: {cur_criteria:.6f}")
+            loss_str = f"{cur_loss:.6f}" if cur_loss is not None else "N/A"
+            self.logger.info(f"🏆 当下最佳模型 | Epoch {epoch+1} | {self.loss_node_name}: {loss_str} | {self.criteria_node_name}: {cur_criteria:.6f}")
         else:
-            best_bw = self.history.get("best_backward_value")
-            bw_str = f"{best_bw:.6f}" if best_bw is not None else "N/A"
-            self.logger.info(f"🏆 过往最佳模型 | Epoch {self.history['best_epoch']} | {self.backward_node_name}: {bw_str} | {self.criteria_node_name}: {self.history['best_eval_value']:.6f}")
+            best_loss = self.history.get("best_loss_value")
+            loss_str = f"{best_loss:.6f}" if best_loss is not None else "N/A"
+            self.logger.info(f"🏆 过往最佳模型 | Epoch {self.history['best_epoch']} | {self.loss_node_name}: {loss_str} | {self.criteria_node_name}: {self.history['best_eval_value']:.6f}")
 
         self.logger.info(f"📊 验证轮次 {epoch+1} 指标: {avg_metrics}")
 
@@ -1622,7 +1761,13 @@ class MHD_Trainer:
         state = {
             "model": model_state,
             "optimizer": optimizer_state,
-            "trainer": {"history": self.history, "epoch": epoch, "micro_step": self._micro_step},
+            "trainer": {
+                "history": self.history,
+                "epoch": epoch,
+                "micro_step": self._micro_step,
+                "forward_levels": list(self.forward_levels),
+                "backward_levels": list(self.backward_levels),
+            },
             "scheduler": self.lr_scheduler.state_dict() if self.lr_scheduler else {},
             "scaler": self.grad_scaler.state_dict(),
         }
@@ -1739,6 +1884,22 @@ class MHD_Trainer:
                 node.gradient_message = MHD_Node.Message(gradient_initial, gradient_current)
             self.history = state["trainer"]["history"]
             self._micro_step = int(state["trainer"].get("micro_step", 0))
+            saved_forward = state["trainer"].get("forward_levels")
+            saved_backward = state["trainer"].get("backward_levels")
+            if saved_forward is not None or saved_backward is not None:
+                if saved_forward is None or saved_backward is None:
+                    raise ValueError("Checkpoint 的 Forward/Backward level 配置不完整")
+                restored_forward = tuple(self.mhd_graph._validate_levels(
+                    saved_forward, self.mhd_graph.num_levels, "Checkpoint Forward"
+                ))
+                restored_backward = tuple(self.mhd_graph._validate_levels(
+                    saved_backward, self.mhd_graph.num_levels, "Checkpoint Backward"
+                ))
+                overlap = sorted(set(restored_forward).intersection(restored_backward))
+                if overlap:
+                    raise ValueError(f"Checkpoint 前后向 levels 不得重叠: {overlap}")
+                self.forward_levels = restored_forward
+                self.backward_levels = restored_backward
             if self.lr_scheduler and state["scheduler"]:
                 self.lr_scheduler.load_state_dict(state["scheduler"])
             if state["scaler"]:
@@ -1774,9 +1935,9 @@ class MHD_Trainer:
             self.save_training_history()
             self.logger.info("\n" + "="*80)
             self.logger.info("🎉 训练完成！")
-            best_bw = self.history.get("best_backward_value")
-            bw_str = f"{best_bw:.6f}" if best_bw is not None else "N/A"
-            self.logger.info(f"🏆 最佳 {self.backward_node_name}: {bw_str} (Epoch {self.history['best_epoch']})")
+            best_loss = self.history.get("best_loss_value")
+            loss_str = f"{best_loss:.6f}" if best_loss is not None else "N/A"
+            self.logger.info(f"🏆 最佳 {self.loss_node_name}: {loss_str} (Epoch {self.history['best_epoch']})")
             self.logger.info(f"🏆 最佳 {self.criteria_node_name}: {self.history['best_eval_value']:.6f} (Epoch {self.history['best_epoch']})")
             self.logger.info(f"📝 所有结果已保存至: {self.save_dir}")
             self.logger.info("="*80)
@@ -1886,7 +2047,7 @@ class MHD_Inferencer:
         build_kwargs: dict = None,
         input_nodes: Sequence[str] = ("input_img",),
         output_nodes: Sequence[str] = ("logits",),
-        levels: Optional[Sequence[int]] = None,
+        levels: Sequence[int] = (),
     ):
         """
         Args:
@@ -1899,6 +2060,8 @@ class MHD_Inferencer:
         self.build_kwargs = build_kwargs or {}
         self.input_nodes = tuple(input_nodes)
         self.output_nodes = tuple(output_nodes)
+        if not levels:
+            raise ValueError("MHD_Inferencer 必须显式提供非空 levels")
 
         train_graph = build_graph_fn(batch_size=1, device=self.device, **self.build_kwargs)
         node_path = os.path.join(checkpoint_dir, "node_best.pth")
@@ -1927,7 +2090,7 @@ class MHD_Inferencer:
             raise FileNotFoundError(f"未找到 V4 DCP 或 V3 best 检查点: {checkpoint_dir}")
 
         self.graph = train_graph
-        self.model = _MHD_ForwardAdapter(train_graph, self.input_nodes, self.output_nodes, levels)
+        self.model = _MHD_GraphAdapter(train_graph, self.input_nodes, self.output_nodes, levels)
         print("✅ MHD Inferencer 初始化完成")
 
     @torch.inference_mode()
@@ -1958,7 +2121,7 @@ def prune_isolated_graph(graph: MHD_Graph, verbose: bool = True) -> MHD_Graph:
     自动检测并删除图中所有孤立节点和孤立边。
 
     该操作会重排 Node/Edge ID、裁剪 Topo 并重建 Module 注册，因此必须在
-    第一次 ``graph.forward()``、optimizer 创建和并行包装之前调用。它属于
+    第一次 ``graph.forward(levels=...)``、optimizer 创建和并行包装之前调用。它属于
     建图收尾步骤，不是训练过程中的动态图修改接口。
 
     孤立节点：在所有层级的 role 矩阵中，该列全为 0（无入度也无出度）。
@@ -1980,7 +2143,7 @@ def prune_isolated_graph(graph: MHD_Graph, verbose: bool = True) -> MHD_Graph:
         raise TypeError("graph 必须是 MHD_Graph")
     if graph._forward_trace:
         raise RuntimeError(
-            "prune_isolated_graph 必须在第一次 graph.forward() 之前调用"
+            "prune_isolated_graph 必须在第一次 graph.forward(levels=...) 之前调用"
         )
     if not graph.topo or graph.num_levels == 0:
         if verbose:
@@ -2038,16 +2201,12 @@ def prune_isolated_graph(graph: MHD_Graph, verbose: bool = True) -> MHD_Graph:
     # 5.2 裁剪拓扑矩阵（同时删除孤立行和孤立列）
     new_role_matrices = []
     new_sort_matrices = []
-    new_backward_role_matrices = []
-    new_backward_sort_matrices = []
     keep_node_tensor = torch.tensor(keep_node_ids, device=device)
     keep_edge_tensor = torch.tensor(keep_edge_ids, device=device)
 
-    for role, sort_mat, backward_role, backward_sort in zip(
+    for role, sort_mat in zip(
         graph.topo.role_matrices,
         graph.topo.sort_matrices,
-        graph.topo.backward_role_matrices,
-        graph.topo.backward_sort_matrices,
     ):
         # 先按行删除孤立边，再按列删除孤立节点（顺序无关）
         new_role = role.index_select(dim=0, index=keep_edge_tensor)   # 行（边）
@@ -2056,17 +2215,9 @@ def prune_isolated_graph(graph: MHD_Graph, verbose: bool = True) -> MHD_Graph:
         new_sort = new_sort.index_select(dim=1, index=keep_node_tensor)
         new_role_matrices.append(new_role)
         new_sort_matrices.append(new_sort)
-        new_backward_role = backward_role.index_select(dim=0, index=keep_edge_tensor)
-        new_backward_role = new_backward_role.index_select(dim=1, index=keep_node_tensor)
-        new_backward_sort = backward_sort.index_select(dim=0, index=keep_edge_tensor)
-        new_backward_sort = new_backward_sort.index_select(dim=1, index=keep_node_tensor)
-        new_backward_role_matrices.append(new_backward_role)
-        new_backward_sort_matrices.append(new_backward_sort)
 
     graph.topo.role_matrices = new_role_matrices
     graph.topo.sort_matrices = new_sort_matrices
-    graph.topo.backward_role_matrices = new_backward_role_matrices
-    graph.topo.backward_sort_matrices = new_backward_sort_matrices
 
     # 5.3 先从集合中取出对象，再修改基于 ID 的哈希值。
     # MHD_Node/MHD_Edge 的 __hash__ 依赖 id；对象留在 set 中时原地修改 id
@@ -2104,6 +2255,7 @@ def prune_isolated_graph(graph: MHD_Graph, verbose: bool = True) -> MHD_Graph:
     # 5.7 重新计算拓扑排序（因为边变了）
     graph.compact_topological_sort()
     graph._forward_trace = []
+    graph._last_forward_levels = tuple()
 
     if verbose:
         print(f"🧹 修剪完成！移除 {len(isolated_nodes)} 个孤立节点，{len(isolated_edges)} 条孤立边。")

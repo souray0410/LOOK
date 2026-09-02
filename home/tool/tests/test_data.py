@@ -4,6 +4,7 @@ import torch
 from PIL import Image
 
 from look_core.data import (
+    DistributedClassBalancedSampler,
     DistributedEvalSampler,
     DistributedShuffleSampler,
     UKBPairedEyeDataset,
@@ -88,6 +89,21 @@ def test_distributed_shuffle_sampler_is_deterministic_nonoverlapping_and_without
     assert first_values == list(repeated)
     assert len(set(first_values + second_values)) == 10
     assert set(first_values).isdisjoint(second_values)
+    first.set_epoch(1)
+    assert list(first) != first_values
+
+
+def test_crt_sampler_is_deterministic_balanced_and_sharded():
+    labels = np.asarray([0] * 100 + [1] * 10 + [2] * 5 + [3] * 3 + [4] * 2)
+    first = DistributedClassBalancedSampler(labels, 3407, 0, 2)
+    second = DistributedClassBalancedSampler(labels, 3407, 1, 2)
+    repeated = DistributedClassBalancedSampler(labels, 3407, 0, 2)
+    first_values, second_values = list(first), list(second)
+    assert first_values == list(repeated)
+    assert len(first_values) == len(second_values) == 60
+    sampled_labels = labels[first_values + second_values]
+    counts = np.bincount(sampled_labels, minlength=5)
+    assert counts.max() - counts.min() < 15
     first.set_epoch(1)
     assert list(first) != first_values
 

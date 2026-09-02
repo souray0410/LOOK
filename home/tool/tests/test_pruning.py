@@ -18,7 +18,10 @@ def test_pruning_removes_registered_modules_and_rehashes_sets():
     }
     role = torch.tensor([[-1, 1, 0], [0, 0, 0]], dtype=torch.int8)
     sort = torch.tensor([[0, 1, 0], [0, 0, 0]], dtype=torch.int8)
-    graph = MHD_Graph(nodes, edges, {MHD_Topo([role], [sort])}, device=torch.device("cpu"))
+    graph = MHD_Graph(
+        nodes, edges, {MHD_Topo([role, -role], [sort, sort.clone()])},
+        device=torch.device("cpu"),
+    )
     prune_isolated_graph(graph, verbose=False)
 
     assert [node.id for node in sorted(graph.nodes, key=lambda item: item.id)] == [0, 1]
@@ -26,9 +29,9 @@ def test_pruning_removes_registered_modules_and_rehashes_sets():
     assert graph.get_edge_by_name("isolated") is None
     assert all("isolated" not in key for key in graph.state_dict())
     assert len(graph.edge_module_map) == 1
-    assert graph.topo.backward_role_matrices[0].shape == (1, 2)
-    assert graph.topo.backward_sort_matrices[0].shape == (1, 2)
-    assert torch.equal(graph.topo.backward_role_matrices[0], -graph.topo.role_matrices[0])
+    assert graph.topo.role_matrices[0].shape == (1, 2)
+    assert graph.topo.role_matrices[1].shape == (1, 2)
+    assert torch.equal(graph.topo.role_matrices[1], -graph.topo.role_matrices[0])
     assert all(node in graph.nodes for node in list(graph.nodes))
     assert all(edge in graph.edges for edge in list(graph.edges))
 
@@ -42,6 +45,6 @@ def test_pruning_rejects_graph_after_first_forward():
     role = torch.tensor([[-1, 1]], dtype=torch.int8)
     sort = torch.tensor([[0, 1]], dtype=torch.int8)
     graph = MHD_Graph(nodes, edges, {MHD_Topo([role], [sort])}, device=torch.device("cpu"))
-    graph.forward()
+    graph.forward(levels=[0])
     with pytest.raises(RuntimeError, match="graph.forward"):
         prune_isolated_graph(graph, verbose=False)

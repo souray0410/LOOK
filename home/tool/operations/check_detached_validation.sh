@@ -56,14 +56,15 @@ if plans:
         print(f"current_configuration={progress['current_index']}/{plan['configuration_count']}")
         print(f"current_backbone={progress.get('current_backbone_id')}")
         print(f"current_parameters={json.dumps(progress.get('current_configuration', {}), sort_keys=True)}")
-histories = sorted((runs / "backbones").glob("*/history.json"), key=lambda p: p.stat().st_mtime)
+histories = sorted((runs / "backbones").glob("*/*/history.json"), key=lambda p: p.stat().st_mtime)
 if histories:
     history_path = histories[-1]
     history = json.loads(history_path.read_text())
     if history:
         record = history[-1]
         validation = record.get("validation", {})
-        print(f"latest_backbone={history_path.parent.name}")
+        print(f"latest_backbone={history_path.parent.parent.name}")
+        print(f"latest_training_stage={history_path.parent.name}")
         print(f"epochs_recorded={len(history)}")
         print(f"latest_epoch={record.get('epoch')}")
         print(f"train_loss={record.get('train_loss')}")
@@ -84,9 +85,9 @@ if leaderboards:
     print("leaderboard_top5:")
     for rank, row in enumerate(rows[:5], start=1):
         print(
-            f"  {rank}. fusion={row['fusion_position']} loss={row['loss_name']} "
-            f"lr={row['pretrained_lr']}/{row['new_layer_lr']} "
-            f"dropout={row['classifier_dropout']} smoothing={row['label_smoothing']} "
+            f"  {rank}. fusion={row['fusion_position']} strategy={row['training_strategy']} "
+            f"stage1_lr={row['pretrained_lr']}/{row['new_layer_lr']} "
+            f"crt_lr={row['crt_learning_rate']} "
             f"macro_f1={row.get('macro_f1')} balanced_accuracy={row.get('balanced_accuracy')} "
             f"macro_auroc={row.get('macro_auroc_ovr')} f1_per_class={row.get('f1_per_class')}"
         )
