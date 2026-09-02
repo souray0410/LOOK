@@ -344,6 +344,7 @@ node_messages.<name>.gradient_message.current_state
 
 Trainer checkpoint 同时保存 parameter、optimizer、scheduler、GradScaler、训练步数、
 `forward_levels` 和 `backward_levels`。加载后重新校验 level 范围与不重叠规则。
+新建 Trainer 恢复时先依据 DCP metadata 重建非空 history 的目标结构，再进行严格键匹配加载。
 FP16 GradScaler 同时缩放标量终点与非零 Gradient Initial State；参数梯度交给原生
 `unscale_`，公开的 Gradient Current State 则在 Trainer 内除回 scale，因此用户读取的是
 未缩放梯度。

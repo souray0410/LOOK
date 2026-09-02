@@ -125,13 +125,30 @@ def test_criteria_uses_complete_validation_graph_state_and_saves(tmp_path):
     assert graph.get_node_by_name("target").feature_message.current_state.shape == (2,)
     assert (tmp_path / "best").is_dir()
 
+    trainer.history["train"]["metrics"].append({
+        "loss": 0.25,
+        "batch_accuracy": 0.75,
+    })
     trainer.save_last_checkpoint(1)
     expected = next(graph.parameters()).detach().clone()
-    with torch.no_grad():
-        next(graph.parameters()).zero_()
-    restored_epoch = trainer.load_checkpoint(load_last=True)
+    restored_graph = _graph()
+    restored_trainer = MHD_Trainer(
+        restored_graph,
+        torch.optim.SGD(restored_graph.parameters(), lr=0.1),
+        MHD_Monitor(["batch_accuracy"]),
+        forward_levels=[0, 1],
+        backward_levels=[3, 2],
+        criteria=validation_macro_f1,
+        criteria_mode="max",
+        save_dir=str(tmp_path),
+        input_nodes=["input", "target"],
+        input_mapping={"input": "features", "target": "labels"},
+        output_nodes=["logits", "loss", "batch_accuracy", "target"],
+    )
+    restored_epoch = restored_trainer.load_checkpoint(load_last=True)
     assert restored_epoch == 1
-    assert torch.equal(next(graph.parameters()), expected)
+    assert torch.equal(next(restored_graph.parameters()), expected)
+    assert restored_trainer.history == trainer.history
 
 
 def test_criteria_can_use_complete_scalar_node_values(tmp_path):

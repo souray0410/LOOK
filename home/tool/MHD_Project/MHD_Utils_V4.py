@@ -2084,6 +2084,25 @@ class MHD_Trainer:
             canonical_messages = any(
                 key.startswith("node_messages.") for key in checkpoint_keys
             )
+            for split in ("train", "eval"):
+                prefix = f"trainer.history.{split}.metrics."
+                records: Dict[int, Dict[str, float]] = {}
+                for key in checkpoint_keys:
+                    if not key.startswith(prefix):
+                        continue
+                    index_text, separator, metric_name = key[len(prefix):].partition(".")
+                    if not separator or not index_text.isdigit() or not metric_name:
+                        continue
+                    records.setdefault(int(index_text), {})[metric_name] = 0.0
+                if records:
+                    expected = set(range(max(records) + 1))
+                    if set(records) != expected:
+                        raise ValueError(
+                            f"Checkpoint {split} history indices are not contiguous"
+                        )
+                    self.history[split]["metrics"] = [
+                        records[index] for index in range(len(records))
+                    ]
             state = self._checkpoint_state(
                 epoch or 0,
                 legacy_node_format=not canonical_messages,
