@@ -57,8 +57,10 @@ the read-only source; never repair the source disk.
 - Classifier: backbone, fusion stage, seed, Stage-1 epochs/rates, and cRT epochs/rate.
 - Filling: normalized mean or independently trained paired cGAN.
 - Missingness: OCT missing, CFP missing and frozen-model missing ratios.
-- LOOK: correction nodes, downsample factors, latent dimensions, ridge alpha grid,
-  maximum PCA rank and primary validation metric.
+- LOOK: correction nodes, global spatial downsample factors, latent dimensions,
+  correction alpha grid, maximum PCA rank and primary validation metric. Each factor
+  produces one complete artifact bank; all spatial nodes in that bank share the factor,
+  while the vector-valued `fusion_feature` node uses identity compression.
 
 Step 18 and Step 19 share `look_core.study_grid`; source code is never text-replaced to
 create a run. The full resolved configuration is persisted with every experiment.

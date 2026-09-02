@@ -57,6 +57,29 @@ def implementation_sha256(project_root: Path) -> str:
     return digest.hexdigest()
 
 
+def backbone_implementation_sha256(project_root: Path) -> str:
+    """Hash only code that can change complete-modality backbone training."""
+    relative_paths = (
+        "tool/look_core/data.py",
+        "tool/look_core/distributed.py",
+        "tool/look_core/distributed_worker.py",
+        "tool/look_core/graph.py",
+        "tool/look_core/metrics.py",
+        "tool/look_core/monitoring.py",
+        "tool/look_core/train.py",
+    )
+    paths = [project_root / relative for relative in relative_paths]
+    paths.extend(sorted((project_root / "tool/MHD_Project").glob("*.py")))
+    missing = [path for path in paths if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(f"Backbone implementation files are missing: {missing}")
+    digest = hashlib.sha256()
+    for path in paths:
+        digest.update(str(path.relative_to(project_root)).encode("utf-8"))
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
 def environment_manifest(
     config: Dict[str, Any], labels_csv: Path, project_root: Path
 ) -> Dict[str, Any]:

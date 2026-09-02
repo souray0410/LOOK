@@ -9,9 +9,18 @@ from look_core.data import (
     DistributedShuffleSampler,
     UKBPairedEyeDataset,
     apply_missingness,
+    make_loader,
     participant_missing_pattern,
     reference_training_class_counts,
 )
+
+
+class _TinyDataset(torch.utils.data.Dataset):
+    def __len__(self):
+        return 4
+
+    def __getitem__(self, index):
+        return torch.tensor(index)
 
 
 def test_preprocess_cache_is_lossless_atomic_and_self_repairing(tmp_path):
@@ -118,3 +127,10 @@ def test_class_counts_always_use_the_complete_training_split(tmp_path):
         + [{"split": "validation", "label_id": 4}]
     ).to_csv(labels, index=False)
     assert reference_training_class_counts(labels, 5) == [2, 1, 1, 1, 1]
+
+
+def test_multiworker_loader_uses_spawn_to_avoid_inherited_cuda_context():
+    loader = make_loader(
+        _TinyDataset(), 2, 2, True, 3407, rank=0, world_size=1
+    )
+    assert loader.multiprocessing_context.get_start_method() == "spawn"

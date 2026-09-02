@@ -154,7 +154,15 @@ def analyze_correction_matrix(
         "missing_pattern": artifact.missing_pattern,
         "filling_strategy": artifact.filling_strategy,
         "factor": artifact.factor,
+        "original_dimension": int(np.prod(artifact.feature_shape)),
+        "compressed_dimension": int(np.prod(artifact.downsample_shape)),
+        "compression_ratio": float(
+            np.prod(artifact.downsample_shape) / np.prod(artifact.feature_shape)
+        ),
         "latent_dim": artifact.latent_dim,
+        "pca_explained_variance": artifact.pca_explained_variance,
+        "pca_fit_seconds": artifact.pca_fit_seconds,
+        "pca_peak_rss_bytes": artifact.pca_peak_rss_bytes,
         "alpha": artifact.alpha,
         "ridge_lambda": artifact.ridge_lambda,
         "train_r2": artifact.train_r2,

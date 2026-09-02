@@ -35,6 +35,9 @@ def _artifact():
 
 def test_matrix_diagnostics_have_expected_rank_and_applied_map():
     result = analyze_correction_matrix(_artifact())
+    assert result["original_dimension"] == 3
+    assert result["compressed_dimension"] == 3
+    assert result["compression_ratio"] == 1.0
     assert result["correction_weight"]["numerical_rank"] == 2
     assert np.isclose(result["correction_weight"]["spectral_norm"], 3.0)
     assert np.isclose(result["correction_weight"]["stable_rank"], 10.0 / 9.0)

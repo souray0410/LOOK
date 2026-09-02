@@ -21,19 +21,19 @@
       "sha256": "5df91d926ddafbf557cd6401bda13fbed410bdc59a6d45fb70dd796c4849361b"
     },
     {
-      "bytes": 6216,
+      "bytes": 6411,
       "path": "PIPELINE_LEDGER.md",
-      "sha256": "26f6cd49502d4fb2b0dc8ee73f5b6352c1d32cc4943fda788822474efaf2c640"
+      "sha256": "dd711dc6fceba19dffe574566d27fc871d894d65cacace0c4cbdaaed1e3f6b38"
     },
     {
-      "bytes": 12483,
+      "bytes": 13483,
       "path": "README.md",
-      "sha256": "4a594ff24cac9de998f27a446e63d2ab9a31bc9e5994fa9c888053b43481b88a"
+      "sha256": "3aea2d39407319ca8655a279bcb0cb806c136f7cddc32fcfeb9a62be70784b56"
     },
     {
-      "bytes": 5532,
+      "bytes": 5845,
       "path": "STRUCTURE.md",
-      "sha256": "6de29f8fe2ddd4f9bebcf7ddbe2bd0f9406011c40b0dbecd1142a0761b250951"
+      "sha256": "e388b37b5fbc492dc3207fc0e42ab9275bb84755f70e63bc7eace5f48424e4c7"
     },
     {
       "bytes": 8136,
@@ -76,9 +76,9 @@
       "sha256": "8640f976a8b6b5ba5513e2ed3e095814bc0794422d5f935a195acb7700050c92"
     },
     {
-      "bytes": 10622,
+      "bytes": 10669,
       "path": "pipeline/18_UKB_LOOK_ResNet50_MHD.ipynb",
-      "sha256": "84d37d12829e7155e8e79c3013c7e3491b7a60a6480c706b22b7e101d48f73a4"
+      "sha256": "23bc7d1b3af3f85de1ed1ac748b48fb12534cbca34494e6e6c2e3a0b36e7912d"
     },
     {
       "bytes": 3135,
@@ -201,9 +201,9 @@
       "sha256": "176124ae45594961aa26ad1c414e6f18c51f9be4540da33676e23aa889eecc8c"
     },
     {
-      "bytes": 15882,
+      "bytes": 15952,
       "path": "tool/look_core/data.py",
-      "sha256": "a2420e9f253028362ac5394fec7a8fc63bad519af78ffbd97951d6a8114a3e32"
+      "sha256": "16ab428e978232fb971765dd9dd53008f62f5b832b29db9f4d6c116d73149aa1"
     },
     {
       "bytes": 1478,
@@ -211,9 +211,9 @@
       "sha256": "c390702e9a895d2eaecdd0945a38493d33628508861a81e82b88c196ba0daf98"
     },
     {
-      "bytes": 4116,
+      "bytes": 4358,
       "path": "tool/look_core/distributed.py",
-      "sha256": "c008e114608eabb3214a9b35d8d13752326a12ffdd79ee345f95ed705230151a"
+      "sha256": "68f696a34cf75101d320133e67bd41b8bcd07f9cda06c33264da5fffa931f3b6"
     },
     {
       "bytes": 5992,
@@ -246,14 +246,14 @@
       "sha256": "26c361d36b729d0c366e3b8a8d676450fdbc520e370a59a5d0a32c58ed49efe2"
     },
     {
-      "bytes": 15799,
+      "bytes": 23050,
       "path": "tool/look_core/look.py",
-      "sha256": "b50b3693f8aabdbab589e19ca446d71d7fe9036ba67329ed9b0c18b4e684e8f4"
+      "sha256": "d4d61c9905b98daba2a0d89f75debde76ec11acb5e6c693196253ec3de002a0a"
     },
     {
-      "bytes": 12332,
+      "bytes": 12780,
       "path": "tool/look_core/matrix_analysis.py",
-      "sha256": "ec7a7063dc3c7b45ad1fed91b3d63e54e044edd6d5bcb3a7b9aa2639e25c3509"
+      "sha256": "399a74fa9d8157f39bd0abb387a73cf8f0e4c8690b72833ee1486e042dc95f0e"
     },
     {
       "bytes": 6702,
@@ -271,14 +271,14 @@
       "sha256": "cf1230ef32932f81560c7cea6288fa30b47e31587931e924f9f408e3b7e8129c"
     },
     {
-      "bytes": 28706,
+      "bytes": 29874,
       "path": "tool/look_core/pipeline.py",
-      "sha256": "1a8d077cff51f8d428b9c609d184b188fb8d0b48bb1221a28ca435bbe57ab947"
+      "sha256": "567354ebf85705a807beb735bd90c03fbb8bf37368c5a152b21a9f001bea370b"
     },
     {
-      "bytes": 3625,
+      "bytes": 4576,
       "path": "tool/look_core/reproducibility.py",
-      "sha256": "6e7f0a2daca8ab5e66e6ea722ca1c2cae9bef4bb1f9a453ee10f07dd150d8828"
+      "sha256": "4b346ca1773f65d854f0d7c2b473c03aef97a7c228d51e966c6befd75522da3e"
     },
     {
       "bytes": 6816,
@@ -286,9 +286,9 @@
       "sha256": "8c0f1ae073ce138167b0b848efa725e5bce3b436e529b5fa0247f505ff75e1b7"
     },
     {
-      "bytes": 17443,
+      "bytes": 17547,
       "path": "tool/look_core/study_grid.py",
-      "sha256": "82967390513dba3cdda4e9e7d34d1ad5f37b1b22baa2799f8261a9dd73b204a5"
+      "sha256": "fadf9c2695f571cda7d8ca82fdd834076847f2957170fed79a73d302f8d25f2b"
     },
     {
       "bytes": 9834,
@@ -456,14 +456,24 @@
       "sha256": "b8da0b71d5aa53984659d0fd4555be1af193d5ca5389a6ef97dd0e48b30d38f1"
     },
     {
-      "bytes": 9251,
-      "path": "tool/tests/test_configuration.py",
-      "sha256": "36358eb0128699f7f4d731f1ea7513c69c7bf67b74895440f2475bf2ecd716bb"
+      "bytes": 2749,
+      "path": "tool/tests/ddp_dataloader_smoke.py",
+      "sha256": "9f1638ffc08ae6cc0181b701ae584ee1ebbd6c803cec6bb146b8945c400a5cba"
     },
     {
-      "bytes": 4591,
+      "bytes": 2412,
+      "path": "tool/tests/global_factor_bank_smoke.py",
+      "sha256": "c20e27d1511c39bffb451581832f72c60571b78d2ec1a19867acb212314930ce"
+    },
+    {
+      "bytes": 9706,
+      "path": "tool/tests/test_configuration.py",
+      "sha256": "2c8d36b030032cd26e5223b273fe20ae56b3f90a2ce0bc8f45c6218512543695"
+    },
+    {
+      "bytes": 5009,
       "path": "tool/tests/test_data.py",
-      "sha256": "3239ed5a0f384f7254ca357ede4e78c15345aab8b2b8a53ce4f5fb5c98d232ce"
+      "sha256": "286a899ba1b46332c14b7f0051aa11a56a254f429baf210407da0b0ff0d76f77"
     },
     {
       "bytes": 1810,
@@ -476,14 +486,14 @@
       "sha256": "4cecf388e80d94b56a98dfcccbc3bb40c10c1ef1835cc3d92c90f354383806a5"
     },
     {
-      "bytes": 1319,
+      "bytes": 5924,
       "path": "tool/tests/test_look.py",
-      "sha256": "b06ec2e5b28045f71a4e1d88412fbbb0037e581a0047687ce1b06fd181ef8992"
+      "sha256": "5d790ce7e94144f013afcb129acd570cf358d65d49c3bbfcac41cae47e0a9c79"
     },
     {
-      "bytes": 2796,
+      "bytes": 2934,
       "path": "tool/tests/test_matrix_analysis.py",
-      "sha256": "4eba1a21414c0607af832abfc64d82d69cc56dbe33d07a1ced2b750b5b06aac1"
+      "sha256": "c5471664141f736fc278717037f6e547b909ceb60885eb93b76aa801ca83f436"
     },
     {
       "bytes": 5441,
@@ -521,7 +531,7 @@
       "sha256": "da57a8264ec36ac7d4b8372d88304bf965743d4aba78875da53e2fd12fe0f184"
     }
   ],
-  "generated_at_utc": "2026-09-02T18:48:03.262505+00:00",
+  "generated_at_utc": "2026-09-02T19:36:12.606916+00:00",
   "release_id": "2026_09_02_00_00_00",
   "schema_version": 2
 }

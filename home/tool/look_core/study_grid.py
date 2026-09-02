@@ -420,6 +420,7 @@ def freeze_study_grid(
             artifact_paths.append(Path(direction["checkpoint"]))
         artifact_paths.extend(sorted((runner.experiment_dir / "look").glob("*/selected/*.pt")))
         artifact_paths.extend(sorted((runner.experiment_dir / "look").glob("*/look_complete.json")))
+        artifact_paths.extend(sorted((runner.experiment_dir / "look").glob("*/factor_selection.json")))
         artifact_paths.extend(sorted((runner.experiment_dir / "look").glob("*/matrix_analysis.json")))
     identity = {
         "grid": asdict(grid),

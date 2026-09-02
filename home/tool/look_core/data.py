@@ -396,6 +396,7 @@ def make_loader(
         num_workers=num_workers,
         pin_memory=True,
         persistent_workers=False,
+        multiprocessing_context="spawn" if num_workers > 0 else None,
         drop_last=train,
     )
 

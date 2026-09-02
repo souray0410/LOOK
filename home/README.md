@@ -90,6 +90,14 @@ holds one equal-sized worker model; the parent kernel does not retain an extra m
 the first GPU. Post-training LOOK fitting and scenario evaluation are sequential frozen-
 model stages and use the first selected GPU after the DDP workers have exited.
 
+LOOK uses adaptive average pooling only to keep the flattened feature dimension
+tractable for PCA. Each configured factor (`4`, `8`, or `16`) produces a complete
+artifact bank, and every spatial correction node in that bank uses the same factor.
+The vector-valued `fusion_feature` node is not spatially resampled. Validation selects
+one complete bank; latent dimension and correction alpha remain node-level validation
+choices. The selected residual is lifted to the node's native spatial size with bilinear
+interpolation and added to the untouched missing-modality feature state.
+
 Before changing formal global batch size on a new GPU model, measure the worst-case
 late-fusion training peak with `tool/operations/calibrate_ddp_batch.py` under `torchrun`.
 Choose a batch with material headroom rather than the largest batch that merely avoids
@@ -188,8 +196,9 @@ runs/logs/look-baseline-search_<timestamp>.log
 
 The search can be resumed with the same start command. Completed valid configurations
 are reused, an interrupted classifier resumes from the canonical MHD Trainer `last/`
-checkpoint, and a scientific or code
-change creates a different content-fingerprinted run ID. After the seven configurations,
+checkpoint, and a training-relevant change creates a different backbone ID. Changes
+confined to filling, LOOK, or reporting create a new experiment ID without invalidating
+the complete-modality backbone. After the seven configurations,
 inspect the validation ranking before freezing any design or running the full
 filling/LOOK study.
 
@@ -207,6 +216,11 @@ The same normalized configuration resolves to the same deterministic run ID. A r
 reuses complete artifacts and resumes classifier/cGAN epoch checkpoints. Changing a
 scientific parameter or world size creates another ID and does not overwrite the old
 run. Sweep progress is saved after every configuration.
+
+DDP DataLoader workers use the `spawn` multiprocessing context. This prevents workers
+from inheriting an initialized CUDA context from their parent rank. NCCL flight-recorder
+and asynchronous-error diagnostics are enabled by the launcher so a future worker or
+collective failure leaves an actionable trace.
 
 ```text
 /data/mengh/LOOK/2026_09_02_00_00_00/

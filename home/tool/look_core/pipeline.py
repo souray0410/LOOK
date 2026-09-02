@@ -21,7 +21,7 @@ from .evaluate import evaluate_missing
 from .filling import NormalizedMeanFiller, PairedCGANFiller
 from .gan import load_generator, make_gan_loaders, train_paired_cgan_direction
 from .graph import build_resnet50_mhd_graph, graph_summary
-from .look import greedy_fit_look, load_selected_bank
+from .look import greedy_fit_look, load_selected_bank, validate_global_factor_bank
 from .matrix_analysis import analyze_look_bank
 from .metrics import (
     classification_metrics,
@@ -30,6 +30,7 @@ from .metrics import (
     participant_cluster_bootstrap,
 )
 from .reproducibility import (
+    backbone_implementation_sha256,
     environment_manifest,
     implementation_sha256,
     seed_everything,
@@ -89,6 +90,9 @@ class ExperimentRunner:
         self.project_root = Path(__file__).resolve().parents[2]
         self.data_hash = sha256(config.labels_csv)
         self.implementation_hash = implementation_sha256(self.project_root)
+        self.backbone_implementation_hash = backbone_implementation_sha256(
+            self.project_root
+        )
         self.experiment_id = self._experiment_id()
         self.experiment_dir = Path(config.output_root) / "experiments" / self.experiment_id
         self.prediction_dir = self.experiment_dir / "predictions"
@@ -315,7 +319,7 @@ class ExperimentRunner:
             "world_size": self.config.world_size,
             "smoke_limit": self.options.smoke_limit,
             "labels_sha256": self.data_hash,
-            "implementation_sha256": self.implementation_hash,
+            "backbone_implementation_sha256": self.backbone_implementation_hash,
         }
         fingerprint = hashlib.sha256(
             json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()
@@ -338,7 +342,7 @@ class ExperimentRunner:
                 "backbone_training": "complete_modalities_only",
                 "training_strategy": self.config.training_strategy,
                 "labels_sha256": self.data_hash,
-                "implementation_sha256": self.implementation_hash,
+                "backbone_implementation_sha256": self.backbone_implementation_hash,
             },
             run_dir / "run_config.json",
         )
@@ -469,7 +473,13 @@ class ExperimentRunner:
             output_dir = self.experiment_dir / "look" / pattern
             selected_dir = output_dir / "selected"
             completion = output_dir / "look_complete.json"
-            if selected_dir.exists() and completion.exists() and self.options.resume:
+            factor_selection_path = output_dir / "factor_selection.json"
+            if (
+                selected_dir.exists()
+                and completion.exists()
+                and factor_selection_path.exists()
+                and self.options.resume
+            ):
                 artifacts = load_selected_bank(output_dir)
             else:
                 if self.options.look_load_only:
@@ -488,18 +498,35 @@ class ExperimentRunner:
                     output_dir,
                     filler=filler,
                     primary_metric=self.config.primary_metric,
+                    resume=self.options.resume,
                 )
             if any(artifact.filling_strategy != filler.name for artifact in artifacts):
                 raise RuntimeError("LOOK artifact filling strategy does not match this experiment")
+            factor_selection = json.loads(
+                factor_selection_path.read_text(encoding="utf-8")
+            )
+            validate_global_factor_bank(
+                artifacts,
+                correction_nodes,
+                int(factor_selection["selected_factor"]),
+            )
             if self.options.look_load_only:
                 matrix_path = output_dir / "matrix_analysis.json"
                 if not matrix_path.is_file():
                     raise FileNotFoundError(f"Frozen matrix analysis is incomplete: {matrix_path}")
-                matrix_records = json.loads(matrix_path.read_text(encoding="utf-8"))
+                matrix_records = json.loads(
+                    matrix_path.read_text(encoding="utf-8")
+                )["matrices"]
             else:
                 matrix_records = analyze_look_bank(artifacts, output_dir)
                 write_json_atomic(
-                    {"status": "complete", "pattern": pattern, "artifacts": len(artifacts)},
+                    {
+                        "status": "complete",
+                        "pattern": pattern,
+                        "artifacts": len(artifacts),
+                        "selected_factor": factor_selection["selected_factor"],
+                        "selection_file": str(factor_selection_path),
+                    },
                     completion,
                 )
             banks[pattern] = artifacts
@@ -515,6 +542,8 @@ class ExperimentRunner:
                     }
                     for artifact in artifacts
                 ],
+                "factor_selection": factor_selection,
+                "factor_selection_json": str(factor_selection_path),
                 "matrix_analysis_json": str(output_dir / "matrix_analysis.json"),
                 "matrix_analysis_csv": str(output_dir / "matrix_analysis.csv"),
                 "matrix_summary_png": str(output_dir / "matrix_summary.png"),

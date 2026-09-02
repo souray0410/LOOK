@@ -64,6 +64,17 @@ def test_filling_strategy_changes_experiment_but_not_backbone_identity(tmp_path)
     assert mean._backbone_id() == gan._backbone_id()
 
 
+def test_look_implementation_hash_does_not_change_backbone_identity(tmp_path):
+    runner = ExperimentRunner(
+        _config(tmp_path), ExperimentSelection(), PipelineOptions(), torch.device("cpu")
+    )
+    backbone_id = runner._backbone_id()
+    runner.implementation_hash = "look-only-change"
+    assert runner._backbone_id() == backbone_id
+    runner.backbone_implementation_hash = "training-change"
+    assert runner._backbone_id() != backbone_id
+
+
 def test_every_notebook_code_cell_has_preceding_markdown():
     notebook_path = Path(__file__).resolve().parents[2] / "pipeline/18_UKB_LOOK_ResNet50_MHD.ipynb"
     notebook = json.loads(notebook_path.read_text(encoding="utf-8"))

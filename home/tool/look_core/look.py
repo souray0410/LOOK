@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import resource
+import sys
+import time
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple
@@ -13,6 +16,7 @@ from sklearn.decomposition import IncrementalPCA
 from tqdm.auto import tqdm
 
 from .filling import MissingModalityFiller, NormalizedMeanFiller
+from .reproducibility import write_json_atomic
 
 
 @dataclass
@@ -34,10 +38,15 @@ class LOOKArtifact:
     ridge_lambda: float
     train_r2: float
     train_mse: float
+    pca_explained_variance: float = 0.0
+    pca_fit_seconds: float = 0.0
+    pca_peak_rss_bytes: int = 0
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(asdict(self), path)
+        temporary = path.with_suffix(path.suffix + ".partial")
+        torch.save(asdict(self), temporary)
+        temporary.replace(path)
 
     @classmethod
     def load(cls, path: Path) -> "LOOKArtifact":
@@ -229,6 +238,11 @@ def _fit_incremental_pca(
     return model
 
 
+def _process_peak_rss_bytes() -> int:
+    peak = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    return peak if sys.platform == "darwin" else peak * 1024
+
+
 def _gcv_lambda(cxx: torch.Tensor, cxy: torch.Tensor, tss: float, n: int, dimension: int) -> float:
     eigenvalues, vectors = torch.linalg.eigh(cxx)
     eigenvalues = eigenvalues.flip(0).clamp_min(0)
@@ -271,7 +285,10 @@ def fit_look_node(
     mean, std = moments.finalize()
     feature_dimension = mean.numel()
     rank = min(max_rank, moments.count, feature_dimension)
+    pca_started = time.perf_counter()
     pca = _fit_incremental_pca(pairs, mean, std, rank)
+    pca_fit_seconds = time.perf_counter() - pca_started
+    pca_peak_rss_bytes = _process_peak_rss_bytes()
     components = torch.from_numpy(pca.components_).float()
     pca_mean = torch.from_numpy(pca.mean_).float()
     statistics = LatentSufficientStatistics(rank)
@@ -308,8 +325,180 @@ def fit_look_node(
             ridge_lambda=ridge_lambda,
             train_r2=1.0 - residual_sum_squares / tss if tss > 0 else 0.0,
             train_mse=float(mse),
+            pca_explained_variance=float(
+                np.asarray(pca.explained_variance_ratio_)[:dimension].sum()
+            ),
+            pca_fit_seconds=float(pca_fit_seconds),
+            pca_peak_rss_bytes=pca_peak_rss_bytes,
         )
     return artifacts
+
+
+def validate_global_factor_bank(
+    artifacts: Sequence[LOOKArtifact],
+    correction_nodes: Sequence[str],
+    factor: int,
+    *,
+    allow_prefix: bool = False,
+) -> None:
+    if not allow_prefix and len(artifacts) != len(correction_nodes):
+        raise ValueError(
+            f"LOOK bank x{factor} has {len(artifacts)} artifacts; "
+            f"expected {len(correction_nodes)}"
+        )
+    if len(artifacts) > len(correction_nodes):
+        raise ValueError(f"LOOK bank x{factor} contains too many artifacts")
+    for artifact, expected_node in zip(artifacts, correction_nodes):
+        if artifact.node_name != expected_node:
+            raise ValueError(
+                f"LOOK bank x{factor} expected node {expected_node!r}, "
+                f"found {artifact.node_name!r}"
+            )
+        expected_factor = 1 if len(artifact.feature_shape) == 1 else factor
+        if artifact.factor != expected_factor:
+            raise ValueError(
+                f"LOOK bank x{factor} node {artifact.node_name!r} uses "
+                f"factor {artifact.factor}; expected {expected_factor}"
+            )
+
+
+def _read_search_history(path: Path) -> List[Dict[str, object]]:
+    if not path.is_file():
+        return []
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, list):
+        raise ValueError(f"Invalid LOOK search history: {path}")
+    return payload
+
+
+def _fit_factor_bank(
+    graph,
+    train_loader,
+    validation_loader,
+    missing_pattern: str,
+    correction_nodes: Sequence[str],
+    factor: int,
+    latent_dims: Sequence[int],
+    alpha_grid: Sequence[float],
+    max_rank: int,
+    device: torch.device,
+    output_dir: Path,
+    filler: MissingModalityFiller | None = None,
+    primary_metric: str = "macro_f1",
+    resume: bool = True,
+) -> Tuple[List[LOOKArtifact], List[Dict[str, object]], Dict[str, object]]:
+    """Fit one node-wise LOOK bank with a single shared spatial factor."""
+    from .evaluate import evaluate_missing
+    from .matrix_analysis import analyze_look_bank
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    selected_dir = output_dir / "selected"
+    completion_path = output_dir / "bank_complete.json"
+    history_path = output_dir / "search_history.json"
+    if resume and completion_path.is_file():
+        selected = load_selected_bank(output_dir)
+        validate_global_factor_bank(selected, correction_nodes, factor)
+        completion = json.loads(completion_path.read_text(encoding="utf-8"))
+        return selected, _read_search_history(history_path), completion
+
+    selected = load_selected_bank(output_dir) if resume and selected_dir.exists() else []
+    validate_global_factor_bank(
+        selected, correction_nodes, factor, allow_prefix=True
+    )
+    search_history = _read_search_history(history_path) if resume else []
+    for node_name in correction_nodes[len(selected):]:
+        node_best = None
+        node_best_score = -float("inf")
+        node_records = []
+        node_state = graph.get_node_by_name(node_name).feature_message.current_state
+        node_factor = 1 if node_state.ndim == 2 else factor
+        candidates = fit_look_node(
+            graph=graph,
+            loader=train_loader,
+            node_name=node_name,
+            missing_pattern=missing_pattern,
+            factor=node_factor,
+            latent_dims=latent_dims,
+            max_rank=max_rank,
+            device=device,
+            upstream_artifacts=selected,
+            filler=filler,
+        )
+        for latent_dim, candidate in candidates.items():
+            candidate.save(
+                output_dir / "candidates" /
+                f"{node_name}_x{node_factor}_d{latent_dim}.pt"
+            )
+            for alpha in alpha_grid:
+                configured = replace(candidate, alpha=float(alpha))
+                result = evaluate_missing(
+                    graph,
+                    validation_loader,
+                    device,
+                    fixed_pattern=missing_pattern,
+                    artifact_banks={missing_pattern: [*selected, configured]},
+                    filler=filler,
+                )
+                score = float(result["metrics"][primary_metric])
+                record = {
+                    "bank_factor": factor,
+                    "node": node_name,
+                    "factor": node_factor,
+                    "latent_dim": latent_dim,
+                    "alpha": float(alpha),
+                    "primary_metric": primary_metric,
+                    "primary_score": score,
+                }
+                node_records.append(record)
+                if score > node_best_score:
+                    node_best_score = score
+                    node_best = configured
+        if node_best is None:
+            raise RuntimeError(f"No valid LOOK candidate for {node_name}")
+        selected.append(node_best)
+        node_best.save(output_dir / "selected" / f"{len(selected):02d}_{node_name}.pt")
+        search_history.extend(node_records)
+        write_json_atomic(search_history, history_path)
+
+    validate_global_factor_bank(selected, correction_nodes, factor)
+    validation = evaluate_missing(
+        graph,
+        validation_loader,
+        device,
+        fixed_pattern=missing_pattern,
+        artifact_banks={missing_pattern: selected},
+        filler=filler,
+    )["metrics"]
+    matrix_records = analyze_look_bank(selected, output_dir)
+    selected_paths = sorted(selected_dir.glob("*.pt"))
+    completion = {
+        "status": "complete",
+        "missing_pattern": missing_pattern,
+        "factor": factor,
+        "primary_metric": primary_metric,
+        "primary_score": float(validation[primary_metric]),
+        "validation_metrics": validation,
+        "artifacts": len(selected),
+        "artifact_bytes": sum(path.stat().st_size for path in selected_paths),
+        "compression": [
+            {
+                "node": artifact.node_name,
+                "factor": artifact.factor,
+                "original_dimension": int(np.prod(artifact.feature_shape)),
+                "compressed_dimension": int(np.prod(artifact.downsample_shape)),
+                "compression_ratio": float(
+                    np.prod(artifact.downsample_shape) / np.prod(artifact.feature_shape)
+                ),
+                "pca_explained_variance": artifact.pca_explained_variance,
+                "pca_fit_seconds": artifact.pca_fit_seconds,
+                "pca_peak_rss_bytes": artifact.pca_peak_rss_bytes,
+            }
+            for artifact in selected
+        ],
+        "matrix_diagnostics": matrix_records,
+    }
+    write_json_atomic(completion, completion_path)
+    return selected, search_history, completion
 
 
 def greedy_fit_look(
@@ -326,63 +515,61 @@ def greedy_fit_look(
     output_dir: Path,
     filler: MissingModalityFiller | None = None,
     primary_metric: str = "macro_f1",
+    resume: bool = True,
 ) -> Tuple[List[LOOKArtifact], List[Dict[str, object]]]:
-    """Fit and validation-select LOOK corrections in shallow-to-deep order."""
-    from .evaluate import evaluate_missing
-
+    """Select one shared spatial factor for the complete LOOK artifact bank."""
+    unique_factors = list(dict.fromkeys(int(value) for value in factors))
+    if not unique_factors or any(value < 1 for value in unique_factors):
+        raise ValueError("LOOK factors must be a non-empty sequence of positive integers")
     output_dir.mkdir(parents=True, exist_ok=True)
-    selected: List[LOOKArtifact] = []
-    search_history: List[Dict[str, object]] = []
-    for node_name in correction_nodes:
-        node_best = None
-        node_best_score = -float("inf")
-        node_records = []
-        node_state = graph.get_node_by_name(node_name).feature_message.current_state
-        node_factors = (1,) if node_state.ndim == 2 else factors
-        for factor in node_factors:
-            candidates = fit_look_node(
-                graph=graph,
-                loader=train_loader,
-                node_name=node_name,
-                missing_pattern=missing_pattern,
-                factor=factor,
-                latent_dims=latent_dims,
-                max_rank=max_rank,
-                device=device,
-                upstream_artifacts=selected,
-                filler=filler,
-            )
-            for latent_dim, candidate in candidates.items():
-                candidate.save(output_dir / "candidates" / f"{node_name}_x{factor}_d{latent_dim}.pt")
-                for alpha in alpha_grid:
-                    configured = replace(candidate, alpha=float(alpha))
-                    result = evaluate_missing(
-                        graph,
-                        validation_loader,
-                        device,
-                        fixed_pattern=missing_pattern,
-                        artifact_banks={missing_pattern: [*selected, configured]},
-                        filler=filler,
-                    )
-                    score = float(result["metrics"][primary_metric])
-                    record = {
-                        "node": node_name,
-                        "factor": factor,
-                        "latent_dim": latent_dim,
-                        "alpha": float(alpha),
-                        "primary_metric": primary_metric,
-                        "primary_score": score,
-                    }
-                    node_records.append(record)
-                    if score > node_best_score:
-                        node_best_score = score
-                        node_best = configured
-        if node_best is None:
-            raise RuntimeError(f"No valid LOOK candidate for {node_name}")
-        selected.append(node_best)
-        node_best.save(output_dir / "selected" / f"{len(selected):02d}_{node_name}.pt")
-        search_history.extend(node_records)
-        (output_dir / "search_history.json").write_text(
-            json.dumps(search_history, indent=2), encoding="utf-8"
+    factor_records: List[Dict[str, object]] = []
+    all_history: List[Dict[str, object]] = []
+    best_artifacts: List[LOOKArtifact] | None = None
+    best_score = -float("inf")
+    best_factor = -1
+    for factor in unique_factors:
+        factor_dir = output_dir / "factors" / f"x{factor}"
+        artifacts, history, completion = _fit_factor_bank(
+            graph,
+            train_loader,
+            validation_loader,
+            missing_pattern,
+            correction_nodes,
+            factor,
+            latent_dims,
+            alpha_grid,
+            max_rank,
+            device,
+            factor_dir,
+            filler=filler,
+            primary_metric=primary_metric,
+            resume=resume,
         )
-    return selected, search_history
+        score = float(completion["primary_score"])
+        factor_records.append(completion)
+        all_history.extend(history)
+        if (score, factor) > (best_score, best_factor):
+            best_score, best_factor = score, factor
+            best_artifacts = artifacts
+
+    if best_artifacts is None:
+        raise RuntimeError("No complete LOOK factor bank was produced")
+    selected_dir = output_dir / "selected"
+    selected_dir.mkdir(parents=True, exist_ok=True)
+    for stale in selected_dir.glob("*.pt"):
+        stale.unlink()
+    for index, artifact in enumerate(best_artifacts, start=1):
+        artifact.save(selected_dir / f"{index:02d}_{artifact.node_name}.pt")
+    selection = {
+        "status": "selected",
+        "selection_scope": "one_global_spatial_factor_per_artifact_bank",
+        "vector_node_factor": 1,
+        "primary_metric": primary_metric,
+        "tie_break": "larger_factor_for_lower_spatial_cost",
+        "selected_factor": best_factor,
+        "selected_primary_score": best_score,
+        "factor_banks": factor_records,
+    }
+    write_json_atomic(all_history, output_dir / "search_history.json")
+    write_json_atomic(selection, output_dir / "factor_selection.json")
+    return best_artifacts, all_history

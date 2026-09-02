@@ -133,7 +133,12 @@ runs/generators/<generator_id>/<direction>/
 runs/experiments/<experiment_id>/
 |-- validation/test manifests, predictions and metrics
 `-- look/<missing_pattern>/
-    |-- correction artifacts and search history
+    |-- factors/x4/{candidates/,selected/,bank_complete.json}
+    |-- factors/x8/{candidates/,selected/,bank_complete.json}
+    |-- factors/x16/{candidates/,selected/,bank_complete.json}
+    |-- factor_selection.json       validation-selected global spatial factor
+    |-- selected/                   selected complete artifact bank
+    |-- search_history.json
     |-- matrix_analysis.{json,csv}
     |-- matrix_spectra/
     `-- matrix_summary.{png,pdf}

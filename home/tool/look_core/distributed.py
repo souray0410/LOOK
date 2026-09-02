@@ -75,6 +75,10 @@ def launch_ddp_stage(
     # Other deployments can explicitly restore P2P with NCCL_P2P_DISABLE=0.
     environment.setdefault("NCCL_P2P_DISABLE", "1")
     environment.setdefault("NCCL_SHM_DISABLE", "0")
+    environment.setdefault("PYTHONFAULTHANDLER", "1")
+    environment.setdefault("TORCH_NCCL_ASYNC_ERROR_HANDLING", "1")
+    environment.setdefault("TORCH_FR_BUFFER_SIZE", "2000")
+    environment.setdefault("TORCH_NCCL_DUMP_ON_TIMEOUT", "1")
     command = [
         sys.executable,
         "-m", "torch.distributed.run",
