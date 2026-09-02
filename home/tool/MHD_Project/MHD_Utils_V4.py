@@ -1957,6 +1957,10 @@ def prune_isolated_graph(graph: MHD_Graph, verbose: bool = True) -> MHD_Graph:
     """
     自动检测并删除图中所有孤立节点和孤立边。
 
+    该操作会重排 Node/Edge ID、裁剪 Topo 并重建 Module 注册，因此必须在
+    第一次 ``graph.forward()``、optimizer 创建和并行包装之前调用。它属于
+    建图收尾步骤，不是训练过程中的动态图修改接口。
+
     孤立节点：在所有层级的 role 矩阵中，该列全为 0（无入度也无出度）。
     孤立边：在所有层级的 role 矩阵中，该行全为 0（未连接任何节点）。
 
@@ -1966,12 +1970,18 @@ def prune_isolated_graph(graph: MHD_Graph, verbose: bool = True) -> MHD_Graph:
         - 删除前会打印详细警告，列出所有受影响的节点和边，便于用户复核。
 
     Args:
-        graph: MHD_Graph 实例
+        graph: 尚未执行前向、尚未创建 optimizer/并行包装的 MHD_Graph
         verbose: 是否打印详细日志
 
     Returns:
         修剪后的原图实例（原地修改）
     """
+    if not isinstance(graph, MHD_Graph):
+        raise TypeError("graph 必须是 MHD_Graph")
+    if graph._forward_trace:
+        raise RuntimeError(
+            "prune_isolated_graph 必须在第一次 graph.forward() 之前调用"
+        )
     if not graph.topo or graph.num_levels == 0:
         if verbose:
             print("⚠️ 图无拓扑信息，跳过修剪。")
@@ -2093,6 +2103,7 @@ def prune_isolated_graph(graph: MHD_Graph, verbose: bool = True) -> MHD_Graph:
 
     # 5.7 重新计算拓扑排序（因为边变了）
     graph.compact_topological_sort()
+    graph._forward_trace = []
 
     if verbose:
         print(f"🧹 修剪完成！移除 {len(isolated_nodes)} 个孤立节点，{len(isolated_edges)} 条孤立边。")
