@@ -23,9 +23,13 @@ That mapping is centralized in `home/project.json`. A new iteration changes the
 release roots there and may keep `dataset_root` unchanged. Pipeline and notebook code
 do not contain timestamp-specific runtime paths.
 
-See `home/README.md` for setup and execution commands.
+See `home/README.md` for setup and execution commands. The reusable engineering contract
+for this and future projects is in `GENERAL_PROJECT_STANDARD.md`.
 
 ## Reusable Project Standard
+
+The concise rules below are summarized from `GENERAL_PROJECT_STANDARD.md`; that standalone
+document is the normative, project-independent checklist.
 
 Future research projects should follow the same contract:
 

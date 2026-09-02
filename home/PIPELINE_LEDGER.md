@@ -77,9 +77,12 @@ completed/total configurations, the newest saved epoch and validation metrics, G
 state, and recent log lines. These utilities do not alter the study grid.
 
 `tool/operations/start_detached_baseline_search.sh` selects Step 19
-`crt-fusion-search` mode and the `look-baseline-search` tmux session. It executes seven
-complete-modality fusion configurations with canonical two-stage cRT and deliberately
-bypasses filling, cGAN, LOOK and test evaluation. After each configuration, rank zero
+`baseline-selection` mode and the `look-baseline-search` tmux session. It executes seven
+single-seed fusion screens and automatically confirms the top three across three seeds
+using canonical two-stage cRT. It emits a review-required candidate; the unnumbered
+`approve_baseline_candidate.py` operation freezes it only after explicit scientific
+review. It deliberately bypasses
+filling, cGAN, LOOK and test evaluation. After each configuration, rank zero
 atomically refreshes the full leaderboard and fusion-position diagnostics.
 `check_detached_baseline_search.sh` exposes those summaries
 alongside the active run's full epoch and class-level evidence.

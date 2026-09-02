@@ -30,14 +30,19 @@ or cohort, following CLAIM 2024 terminology.
 
 ## Stage B: Stable Baseline Selection
 
-1. Select the top three Stage A configurations using the fixed ranking rule. Do not
+1. The baseline-selection runner automatically selects the top three Stage A
+   configurations using the fixed ranking rule. Do not
    select candidates by test performance or by a single minority class after inspection.
 2. Re-run each candidate with seeds 3407, 3408, and 3409. Reuse the existing seed-3407
    checkpoint when its fingerprint and manifest remain valid.
 3. Rank candidates by mean macro F1 across seeds, then mean balanced accuracy, mean
    macro AUROC, lower mean ECE-15, and lower between-seed macro-F1 standard deviation.
-4. Freeze the winning **hyperparameter setting** and retain all three seed-specific
-   complete-modality checkpoints. These checkpoints constitute the baseline model family.
+4. The runner emits the winning **hyperparameter setting** as a review-required candidate.
+   Review all class-level metrics, calibration and between-seed stability. If scientifically
+   adequate, explicitly freeze the candidate and retain all three seed-specific complete-
+   modality checkpoints. These checkpoints constitute the baseline model family. If it is
+   inadequate, revise one declared module or training choice, generate a new fingerprint,
+   and repeat Stages A and B rather than proceeding to LOOK.
 5. Record the selected configuration, code hash, label-table hash, environment, training
    class counts, seeds, Stage-1 and cRT checkpoint hashes, and selection table in one
    frozen manifest.
@@ -116,6 +121,21 @@ Do not begin formal LOOK comparison runs until Stage B emits a frozen baseline-s
 manifest. Do not access the sealed test split until Stage C choices are frozen. Any change
 to data, labels, backbone, loss, fusion, preprocessing, or LOOK search space invalidates
 the downstream freeze and creates a new study fingerprint.
+
+The executable sequence is:
+
+```text
+verified dataset
+-> detached baseline-selection (Stage A + Stage B)
+-> baseline_candidate__<selection_id>.json
+-> explicit scientific review
+-> baseline_selection__<selection_id>.json
+-> full-study validation using only the winner and seeds 3407/3408/3409
+-> frozen_configuration_manifest.json
+-> sealed internal test
+-> matrix/statistical aggregation
+-> independent external-cohort evaluation when available
+```
 
 ## Reporting Sources
 

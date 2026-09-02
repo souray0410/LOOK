@@ -18,16 +18,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gpus", default="0,1", help="Physical GPU list, e.g. 0 or 0,1.")
     parser.add_argument(
         "--mode",
-        choices=("full-study", "crt-fusion-search"),
+        choices=("full-study", "baseline-selection"),
         default="full-study",
     )
     parser.add_argument("--phase", choices=("validation", "freeze", "test"), default="validation")
     parser.add_argument("--frozen-manifest", type=Path)
+    parser.add_argument("--baseline-selection-manifest", type=Path)
     parser.add_argument(
         "--fusion-positions", nargs="+",
-        default=["input", "stem", "layer1", "layer2", "layer3", "layer4", "feature"],
+        default=None,
     )
-    parser.add_argument("--seeds", nargs="+", type=int, default=[3407, 3408, 3409])
+    parser.add_argument("--seeds", nargs="+", type=int, default=None)
     parser.add_argument(
         "--filling-strategies", nargs="+", choices=("normalized_mean", "paired_cgan"),
         default=["normalized_mean", "paired_cgan"],
@@ -47,25 +48,59 @@ def main() -> None:
 
     from look_core.study_grid import (
         StudyGrid,
-        baseline_search_grid,
         freeze_study_grid,
+        run_baseline_selection,
         run_study_grid,
+        study_grid_from_baseline_selection,
     )
 
     if not args.dry_run and not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for formal study execution")
     paths = resolve_runtime_arguments(args)
-    if args.mode == "crt-fusion-search":
-        if args.phase != "validation":
-            raise ValueError("crt-fusion-search is validation-only")
-        grid = baseline_search_grid()
-    else:
-        grid = StudyGrid(
-            fusion_positions=args.fusion_positions,
-            seeds=args.seeds,
-            filling_strategies=args.filling_strategies,
-        )
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    if args.mode == "baseline-selection":
+        if args.phase != "validation":
+            raise ValueError("baseline-selection is validation-only")
+        result = run_baseline_selection(
+            paths,
+            device,
+            execute=not args.dry_run,
+            check_all_image_paths=not args.skip_full_path_audit,
+            gpu_devices=gpu_devices,
+        )
+        print(json.dumps(result, indent=2))
+        return
+    else:
+        baseline_manifest = args.baseline_selection_manifest
+        if baseline_manifest is None and not args.dry_run:
+            candidates = sorted(
+                (paths.runs_root / "baseline_selection").glob(
+                    "baseline_selection__*.json"
+                )
+            )
+            if len(candidates) != 1:
+                raise ValueError(
+                    "Formal full-study execution requires exactly one frozen baseline "
+                    "selection manifest or --baseline-selection-manifest"
+                )
+            baseline_manifest = candidates[0]
+        if baseline_manifest is not None:
+            grid = study_grid_from_baseline_selection(
+                baseline_manifest,
+                filling_strategies=args.filling_strategies,
+            )
+            if args.fusion_positions is not None and args.fusion_positions != grid.fusion_positions:
+                raise ValueError("--fusion-positions conflicts with the frozen baseline")
+            if args.seeds is not None and args.seeds != grid.seeds:
+                raise ValueError("--seeds conflicts with the frozen baseline")
+        else:
+            grid = StudyGrid(
+                fusion_positions=args.fusion_positions or [
+                    "input", "stem", "layer1", "layer2", "layer3", "layer4", "feature"
+                ],
+                seeds=args.seeds or [3407, 3408, 3409],
+                filling_strategies=args.filling_strategies,
+            )
     if args.phase == "freeze":
         if args.dry_run:
             raise ValueError("freeze does not support dry-run; complete validation first")

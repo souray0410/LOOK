@@ -5,15 +5,20 @@ import pytest
 import torch
 
 import look_core.study_grid as study_grid_module
+from look_core.artifacts import build_file_manifest
 from look_core.config import ExperimentConfig, ExperimentSelection
 from look_core.distributed import parse_gpu_devices
 from look_core.paths import ProjectPaths
 from look_core.pipeline import ExperimentRunner, PipelineOptions
 from look_core.study_grid import (
     StudyGrid,
+    _aggregate_baseline_confirmation,
     _search_diagnostics,
+    baseline_confirmation_grid,
     baseline_search_grid,
     expand_study_grid,
+    freeze_baseline_candidate,
+    study_grid_from_baseline_selection,
 )
 
 
@@ -156,6 +161,102 @@ def test_baseline_search_grid_has_seven_canonical_crt_cases(tmp_path):
     )
     assert cases[0].config.pretrained_lr == 1e-4
     assert cases[0].config.new_layer_lr == 1e-3
+
+
+def test_baseline_confirmation_uses_top_three_and_three_seeds(tmp_path):
+    dataset = tmp_path / "dataset"
+    dataset.mkdir()
+    (dataset / "reference_labels.csv").write_text("participant_id\n", encoding="utf-8")
+    paths = ProjectPaths(
+        project_root=tmp_path,
+        data_root=tmp_path,
+        dataset_root=dataset,
+        cache_root=tmp_path / "cache",
+        runs_root=tmp_path / "runs",
+        tool_root=tmp_path / "tool",
+        pipeline_root=tmp_path / "pipeline",
+    )
+    cases = expand_study_grid(
+        baseline_confirmation_grid(["feature", "layer4", "layer3"]),
+        paths,
+        gpu_devices=(0, 1),
+    )
+    assert len(cases) == 9
+    assert {case.selection.seed for case in cases} == {3407, 3408, 3409}
+    assert {case.selection.fusion_position for case in cases} == {
+        "feature", "layer4", "layer3",
+    }
+
+
+def test_baseline_confirmation_ranks_seed_means_before_variance():
+    rows = []
+    values_by_fusion = {
+        "feature": [0.40, 0.42, 0.41],
+        "layer4": [0.39, 0.45, 0.43],
+    }
+    for fusion, values in values_by_fusion.items():
+        for seed, value in zip((3407, 3408, 3409), values):
+            rows.append({
+                "fusion_position": fusion,
+                "seed": seed,
+                "experiment_id": f"{fusion}-{seed}",
+                "backbone_id": f"backbone-{fusion}-{seed}",
+                "macro_f1": value,
+                "balanced_accuracy": value,
+                "macro_auroc_ovr": value + 0.3,
+                "ece_15": 0.05,
+            })
+    ranking = _aggregate_baseline_confirmation(rows)
+    assert ranking[0]["fusion_position"] == "layer4"
+    assert ranking[0]["rank"] == 1
+    assert ranking[1]["rank"] == 2
+
+
+def test_frozen_baseline_manifest_defines_formal_look_grid(tmp_path):
+    checkpoint = tmp_path / "checkpoint.pt"
+    checkpoint.write_bytes(b"frozen")
+    manifest = tmp_path / "baseline_selection.json"
+    manifest.write_text(json.dumps({
+        "status": "frozen",
+        "protocol": "two_stage_complete_modality_baseline_selection",
+        "winner": {
+            "fusion_position": "layer3",
+            "seeds": [3407, 3408, 3409],
+        },
+        "artifacts": build_file_manifest([checkpoint]),
+    }), encoding="utf-8")
+    grid = study_grid_from_baseline_selection(manifest)
+    assert grid.fusion_positions == ["layer3"]
+    assert grid.seeds == [3407, 3408, 3409]
+    assert grid.filling_strategies == ["normalized_mean", "paired_cgan"]
+
+
+def test_baseline_candidate_requires_explicit_review_before_freeze(tmp_path):
+    checkpoint = tmp_path / "checkpoint.pt"
+    checkpoint.write_bytes(b"candidate")
+    candidate_dir = tmp_path / "baseline_selection" / "candidates"
+    candidate_dir.mkdir(parents=True)
+    candidate = candidate_dir / "baseline_candidate__abc.json"
+    candidate.write_text(json.dumps({
+        "status": "candidate_selected",
+        "decision": "scientific_review_required",
+        "selection_id": "abc",
+        "protocol": "two_stage_complete_modality_baseline_selection",
+        "winner": {
+            "fusion_position": "layer3",
+            "seeds": [3407, 3408, 3409],
+        },
+        "artifacts": build_file_manifest([checkpoint]),
+    }), encoding="utf-8")
+    with pytest.raises(ValueError, match="reviewer note"):
+        freeze_baseline_candidate(candidate, reviewer_note="")
+    frozen = freeze_baseline_candidate(
+        candidate,
+        reviewer_note="All classes and three-seed stability reviewed.",
+    )
+    assert frozen["status"] == "frozen"
+    assert frozen["decision"] == "approved_for_look"
+    assert Path(frozen["manifest_path"]).is_file()
 
 
 def test_partial_search_diagnostics_retain_best_and_group_evidence():

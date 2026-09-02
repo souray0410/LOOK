@@ -6,6 +6,6 @@ exec "$SCRIPT_DIR/start_detached_validation.sh" \
   --session look-baseline-search \
   --skip-cache-warm \
   -- \
-  --mode crt-fusion-search \
+  --mode baseline-selection \
   --skip-full-path-audit \
   "$@"

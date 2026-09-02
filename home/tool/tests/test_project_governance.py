@@ -10,6 +10,17 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
+def test_release_contains_general_project_standard() -> None:
+    standard = PROJECT_ROOT.parent / "GENERAL_PROJECT_STANDARD.md"
+    text = standard.read_text(encoding="utf-8")
+    assert "General Reproducible Research Project Standard" in text
+    assert "Artifact And Resume Contract" in text
+    sync_script = (PROJECT_ROOT / "pipeline/2_sync_project_to_remote.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "GENERAL_PROJECT_STANDARD.md" in sync_script
+
+
 def test_required_project_contract_is_declared() -> None:
     config = json.loads((PROJECT_ROOT / "project.json").read_text(encoding="utf-8"))
     required = {

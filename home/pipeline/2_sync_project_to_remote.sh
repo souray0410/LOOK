@@ -47,9 +47,13 @@ fi
 REMOTE_FAMILY_ROOT="$(dirname "$REMOTE_ROOT")"
 LOCAL_FAMILY_ROOT="$(cd "$LOCAL_ROOT/.." && pwd)"
 ssh "$HOST" "mkdir -p '$REMOTE_ROOT' '$REMOTE_FAMILY_ROOT'"
-if [[ -f "$LOCAL_FAMILY_ROOT/README.md" ]]; then
-  rsync -av "$LOCAL_FAMILY_ROOT/README.md" "$HOST:$REMOTE_FAMILY_ROOT/README.md"
-fi
+for RELEASE_DOCUMENT in README.md GENERAL_PROJECT_STANDARD.md; do
+  if [[ -f "$LOCAL_FAMILY_ROOT/$RELEASE_DOCUMENT" ]]; then
+    rsync -av \
+      "$LOCAL_FAMILY_ROOT/$RELEASE_DOCUMENT" \
+      "$HOST:$REMOTE_FAMILY_ROOT/$RELEASE_DOCUMENT"
+  fi
+done
 rsync -av --delete \
   --exclude '.git/' --exclude 'tool/environment/.venv/' --exclude 'tool/*.egg-info/' \
   --exclude '__pycache__/' --exclude '.pytest_cache/' --exclude '.DS_Store' \

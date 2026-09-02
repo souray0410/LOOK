@@ -26,7 +26,7 @@
     |-- data_manifest.example.json
     |-- dataset/
     |-- cache/{pipeline_state,partial,quarantine}/
-    `-- runs/{backbones,generators,experiments,sweeps,freezes,smoke}/
+    `-- runs/{backbones,generators,experiments,baseline_selection,sweeps,freezes,smoke}/
 ```
 
 The source package contains no UK Biobank records, images, model checkpoints, cache,
@@ -50,6 +50,7 @@ or virtual environment.
     |-- backbones/                 complete-modality checkpoints and monitors
     |-- generators/                independent cGAN checkpoints and monitors
     |-- experiments/               deterministic formal results and LOOK artifacts
+    |-- baseline_selection/        reviewed candidate and frozen backbone family
     |-- sweeps/                    plans, per-case progress and summaries
     |-- freezes/                   hashed validation selections for sealed test
     |-- logs/                      detached launcher state and append-only logs
@@ -149,6 +150,10 @@ runs/sweeps/<phase>__<plan_id>/
 |-- leaderboard.csv
 |-- baseline_search_results.json
 `-- baseline_search_diagnostics.json
+
+runs/baseline_selection/
+|-- candidates/baseline_candidate__<selection_id>.json
+`-- baseline_selection__<selection_id>.json
 
 runs/freezes/freeze__<freeze_id>/
 `-- frozen_configuration_manifest.json

@@ -1,5 +1,8 @@
 # LOOK
 
+This project follows the project-independent engineering contract in
+`../GENERAL_PROJECT_STANDARD.md` in the release bundle.
+
 LOOK studies linear latent correction for incomplete paired CFP-OCT classification.
 An ImageNet-pretrained ResNet50 is first trained on complete pairs and then frozen.
 Normalized-mean or independently trained paired-cGAN filling is followed by LOOK;
@@ -143,18 +146,26 @@ freeze      hash the selected validation artifacts and emit a frozen manifest
 test        load that manifest and evaluate the sealed test split without training/fitting
 ```
 
-For command-line sweeps, Step 19 uses the same `StudyGrid` implementation. Its default
-`full-study` mode remains the complete filling/LOOK protocol:
+For command-line sweeps, Step 19 uses the same `StudyGrid` implementation. Formal
+`full-study` execution is gated by the frozen baseline-selection manifest and therefore
+runs only the winning fusion setting across all three registered seeds:
 
 ```bash
 PY=/home/mengh/LOOK/2026_08_30_11_20_47/tool/environment/.venv/bin/python
 $PY pipeline/19_run_study_sweep.py --dry-run --phase validation --gpus 0,1
-$PY pipeline/19_run_study_sweep.py --phase validation --gpus 0,1
-$PY pipeline/19_run_study_sweep.py --phase freeze --gpus 0,1
+BASELINE=/data/mengh/LOOK/2026_09_02_00_00_00/runs/baseline_selection/<selection>.json
+$PY pipeline/19_run_study_sweep.py --phase validation --gpus 0,1 \
+  --baseline-selection-manifest "$BASELINE"
+$PY pipeline/19_run_study_sweep.py --phase freeze --gpus 0,1 \
+  --baseline-selection-manifest "$BASELINE"
 $PY pipeline/19_run_study_sweep.py --phase test --gpus 0,1 \
+  --baseline-selection-manifest "$BASELINE" \
   --frozen-manifest /data/mengh/LOOK/2026_09_02_00_00_00/runs/freezes/<freeze_id>/frozen_configuration_manifest.json
 $PY pipeline/20_aggregate_matrix_analysis.py
 ```
+
+Without an explicit baseline manifest, a formal run proceeds only when exactly one valid
+frozen baseline-selection manifest exists. Zero or multiple candidates fail closed.
 
 For a run that must survive SSH disconnection or a sleeping client computer, start the
 complete-modality baseline search in a remote `tmux` session:
@@ -165,8 +176,11 @@ complete-modality baseline search in a remote `tmux` session:
 ./tool/operations/check_detached_baseline_search.sh --follow
 ```
 
-This dedicated search runs seven complete-pair cRT configurations on GPUs 0 and 1: one
-for each fusion position at seed 3407. Stage 1 trains the complete-modality representation
+This dedicated selection first runs seven complete-pair cRT configurations on GPUs 0 and
+1: one for each fusion position at seed 3407. It then automatically takes the top three
+positions and confirms each with seeds 3407, 3408, and 3409. Existing seed-3407 artifacts
+are reused, so the protocol trains 13 unique backbones rather than 16. Stage 1 trains the
+complete-modality representation
 with natural sampling and cross-entropy. Stage 2 freezes that representation, resets only
 the final linear classifier, and retrains it with class-balanced sampling and cross-
 entropy. Fusion is
@@ -191,6 +205,8 @@ runs/backbones/<backbone_id>/training_complete.json
 runs/sweeps/validation__<plan_id>/{study_plan.json,progress.json}
 runs/sweeps/validation__<plan_id>/{leaderboard.csv,baseline_search_results.json}
 runs/sweeps/validation__<plan_id>/baseline_search_diagnostics.json
+runs/baseline_selection/candidates/baseline_candidate__<selection_id>.json
+runs/baseline_selection/baseline_selection__<selection_id>.json
 runs/logs/look-baseline-search_<timestamp>.log
 ```
 
@@ -198,15 +214,25 @@ The search can be resumed with the same start command. Completed valid configura
 are reused, an interrupted classifier resumes from the canonical MHD Trainer `last/`
 checkpoint, and a training-relevant change creates a different backbone ID. Changes
 confined to filling, LOOK, or reporting create a new experiment ID without invalidating
-the complete-modality backbone. After the seven configurations,
-inspect the validation ranking before freezing any design or running the full
-filling/LOOK study.
+the complete-modality backbone. After confirmation, the fixed aggregate ranking selects
+by mean macro F1, mean balanced accuracy, mean macro AUROC, lower mean ECE-15, and lower
+macro-F1 standard deviation. It writes a candidate manifest and stops for scientific
+review. After reviewing stability, class-level failure modes and calibration, freeze it:
+
+```bash
+$PY tool/operations/approve_baseline_candidate.py \
+  --candidate /data/mengh/LOOK/2026_09_02_00_00_00/runs/baseline_selection/candidates/<candidate>.json \
+  --reviewer-note "Three-seed metrics and class-level errors reviewed" --execute
+```
+
+Only the resulting frozen baseline-selection manifest permits a filling/LOOK study.
 
 The mandatory post-search selection and evaluation order is defined in
-`tool/research/BASELINE_LOOK_EXPERIMENT_PROTOCOL.md`. Briefly, the seven-topology single-seed
-screen is followed by a three-candidate, three-seed stability confirmation. The winning
-hyperparameter setting and all three seed-specific complete-modality checkpoints are
-then frozen before any formal missing-modality/LOOK comparison. The sealed UKB test is
+`tool/research/BASELINE_LOOK_EXPERIMENT_PROTOCOL.md`. The seven-topology single-seed screen
+and three-candidate, three-seed stability confirmation are executed automatically. The
+winning candidate requires explicit scientific review before its three seed-specific
+complete-modality checkpoints are frozen for formal missing-modality/LOOK comparison.
+The sealed UKB test is
 accessed only after those choices are fixed; external testing remains a separate evidence
 requirement.
 

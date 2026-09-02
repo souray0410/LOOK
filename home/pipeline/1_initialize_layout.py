@@ -77,10 +77,17 @@ def release_manifest(project_root: Path, data_root: Path, source_manifest_path: 
         for path in (bundle_root / "data").rglob("*")
         if path.is_file() and path.name != ".DS_Store"
     )
+    release_documents = [
+        path for path in (
+            bundle_root / "README.md",
+            bundle_root / "GENERAL_PROJECT_STANDARD.md",
+        )
+        if path.is_file()
+    ]
     destination = bundle_root / "release_manifest.json"
     atomic_json(
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "project": "LOOK",
             "release_id": release_id,
             "home_tree": "home",
@@ -90,6 +97,14 @@ def release_manifest(project_root: Path, data_root: Path, source_manifest_path: 
                 "path": "home/file_manifest.json",
                 "sha256": sha256(source_manifest_path),
             },
+            "release_documents": [
+                {
+                    "path": str(path.relative_to(bundle_root)),
+                    "bytes": path.stat().st_size,
+                    "sha256": sha256(path),
+                }
+                for path in release_documents
+            ],
             "data_skeleton": [
                 {
                     "path": str(path.relative_to(bundle_root)),
@@ -144,6 +159,7 @@ def main() -> int:
         "partial": cache_root / "partial",
         "quarantine": cache_root / "quarantine",
         "experiments": runs_root / "experiments",
+        "baseline_selection": runs_root / "baseline_selection",
         "sweeps": runs_root / "sweeps",
         "smoke": runs_root / "smoke",
     }

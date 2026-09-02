@@ -5,6 +5,7 @@ import csv
 import gc
 import io
 import json
+import statistics
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
@@ -96,6 +97,19 @@ def baseline_search_grid() -> "StudyGrid":
     )
 
 
+def baseline_confirmation_grid(fusion_positions: list[str]) -> "StudyGrid":
+    if len(fusion_positions) != 3 or len(set(fusion_positions)) != 3:
+        raise ValueError("Baseline confirmation requires three unique fusion positions")
+    return StudyGrid(
+        fusion_positions=fusion_positions,
+        seeds=[3407, 3408, 3409],
+        filling_strategies=["normalized_mean"],
+        classifier_profiles=[_primary_classifier_profile()],
+        gan_profiles=[{"name": "not_applicable"}],
+        look_profiles=[_disabled_look_profile()],
+    )
+
+
 def _ranking_key(row: dict[str, Any]) -> tuple[float, float, float, float]:
     return (
         -float(row.get("macro_f1", -1.0)),
@@ -137,6 +151,46 @@ def _search_diagnostics(leaderboard: list[dict[str, Any]]) -> dict[str, Any]:
             for value, rows in sorted(grouped.items())
         }
     return diagnostics
+
+
+def _aggregate_baseline_confirmation(
+    rows: list[dict[str, Any]],
+    expected_seeds: tuple[int, ...] = (3407, 3408, 3409),
+) -> list[dict[str, Any]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        grouped.setdefault(str(row["fusion_position"]), []).append(row)
+    aggregated: list[dict[str, Any]] = []
+    metrics = ("macro_f1", "balanced_accuracy", "macro_auroc_ovr", "ece_15")
+    for fusion_position, candidates in grouped.items():
+        candidates.sort(key=lambda row: int(row["seed"]))
+        seeds = tuple(int(row["seed"]) for row in candidates)
+        if seeds != expected_seeds:
+            raise RuntimeError(
+                f"Fusion position {fusion_position} has seeds {seeds}; "
+                f"expected {expected_seeds}"
+            )
+        summary: dict[str, Any] = {
+            "fusion_position": fusion_position,
+            "seeds": list(seeds),
+            "experiment_ids": [row["experiment_id"] for row in candidates],
+            "backbone_ids": [row["backbone_id"] for row in candidates],
+        }
+        for metric in metrics:
+            values = [float(row[metric]) for row in candidates]
+            summary[f"mean_{metric}"] = statistics.fmean(values)
+            summary[f"std_{metric}"] = statistics.pstdev(values)
+        aggregated.append(summary)
+    aggregated.sort(key=lambda row: (
+        -row["mean_macro_f1"],
+        -row["mean_balanced_accuracy"],
+        -row["mean_macro_auroc_ovr"],
+        row["mean_ece_15"],
+        row["std_macro_f1"],
+    ))
+    for rank, row in enumerate(aggregated, start=1):
+        row["rank"] = rank
+    return aggregated
 
 
 def _release_parent_cuda_cache() -> None:
@@ -398,6 +452,177 @@ def run_study_grid(
     final = {**plan, "status": "complete", "completed_count": len(completed), "completed": completed}
     atomic_write_json(final, sweep_dir / "progress.json")
     return final
+
+
+def run_baseline_selection(
+    paths: ProjectPaths,
+    device: torch.device,
+    *,
+    execute: bool,
+    check_all_image_paths: bool = False,
+    gpu_devices: tuple[int, ...] = (0,),
+) -> dict[str, Any]:
+    stage_a = run_study_grid(
+        baseline_search_grid(),
+        paths,
+        device,
+        execute=execute,
+        phase="validation",
+        check_all_image_paths=check_all_image_paths,
+        gpu_devices=gpu_devices,
+    )
+    if not execute:
+        return {
+            "status": "dry_run",
+            "protocol": "baseline_selection",
+            "stage_a": stage_a,
+            "stage_b": {
+                "candidate_count": 3,
+                "seeds": [3407, 3408, 3409],
+                "unique_additional_backbones": 6,
+            },
+        }
+
+    stage_a_dir = paths.runs_root / "sweeps" / f"validation__{stage_a['plan_id']}"
+    stage_a_rows = json.loads(
+        (stage_a_dir / "baseline_search_results.json").read_text(encoding="utf-8")
+    )
+    top_positions = [str(row["fusion_position"]) for row in stage_a_rows[:3]]
+    if len(top_positions) != 3 or len(set(top_positions)) != 3:
+        raise RuntimeError("Stage A did not produce three unique fusion candidates")
+
+    stage_b = run_study_grid(
+        baseline_confirmation_grid(top_positions),
+        paths,
+        device,
+        execute=True,
+        phase="validation",
+        check_all_image_paths=False,
+        gpu_devices=gpu_devices,
+    )
+    stage_b_dir = paths.runs_root / "sweeps" / f"validation__{stage_b['plan_id']}"
+    stage_b_rows = json.loads(
+        (stage_b_dir / "baseline_search_results.json").read_text(encoding="utf-8")
+    )
+    ranking = _aggregate_baseline_confirmation(stage_b_rows)
+    winner = ranking[0]
+    winner_rows = [
+        row for row in stage_b_rows
+        if row["fusion_position"] == winner["fusion_position"]
+    ]
+    winner_rows.sort(key=lambda row: int(row["seed"]))
+    artifact_paths: list[Path] = []
+    for row in winner_rows:
+        backbone_root = paths.runs_root / "backbones" / str(row["backbone_id"])
+        experiment_root = paths.runs_root / "experiments" / str(row["experiment_id"])
+        artifact_paths.extend([
+            backbone_root / "training_complete.json",
+            backbone_root / "representation" / "best.pt",
+            backbone_root / "crt" / "best.pt",
+            experiment_root / "validation_result.json",
+        ])
+    missing = [str(path) for path in artifact_paths if not path.is_file()]
+    if missing:
+        raise RuntimeError(f"Winning baseline artifacts are incomplete: {missing}")
+    identity = {
+        "protocol": "two_stage_complete_modality_baseline_selection",
+        "stage_a_plan_id": stage_a["plan_id"],
+        "stage_b_plan_id": stage_b["plan_id"],
+        "ranking_rule": [
+            "mean_macro_f1_desc",
+            "mean_balanced_accuracy_desc",
+            "mean_macro_auroc_ovr_desc",
+            "mean_ece_15_asc",
+            "std_macro_f1_asc",
+        ],
+        "winner": winner,
+        "ranking": ranking,
+        "artifacts": build_file_manifest(artifact_paths),
+    }
+    selection_id = stable_hash(identity)[:12]
+    destination = (
+        paths.runs_root
+        / "baseline_selection"
+        / "candidates"
+        / f"baseline_candidate__{selection_id}.json"
+    )
+    payload = {
+        **identity,
+        "selection_id": selection_id,
+        "selected_at_utc": utc_now(),
+        "status": "candidate_selected",
+        "decision": "scientific_review_required",
+        "manifest_path": str(destination),
+    }
+    if destination.is_file():
+        existing = json.loads(destination.read_text(encoding="utf-8"))
+        if (
+            existing.get("selection_id") == selection_id
+            and existing.get("status") == "candidate_selected"
+        ):
+            return existing
+    atomic_write_json(payload, destination)
+    return payload
+
+
+def freeze_baseline_candidate(
+    candidate_path: Path,
+    *,
+    reviewer_note: str,
+) -> dict[str, Any]:
+    candidate_path = Path(candidate_path).resolve()
+    candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+    if candidate.get("status") != "candidate_selected":
+        raise ValueError("Baseline candidate is not awaiting scientific review")
+    errors = validate_file_manifest(candidate.get("artifacts", {}))
+    if errors:
+        raise RuntimeError(f"Baseline candidate artifacts failed verification: {errors[:10]}")
+    note = reviewer_note.strip()
+    if not note:
+        raise ValueError("A reviewer note is required to freeze the baseline")
+    selection_id = str(candidate["selection_id"])
+    destination = candidate_path.parent.parent / f"baseline_selection__{selection_id}.json"
+    payload = {
+        **candidate,
+        "candidate_manifest": str(candidate_path),
+        "reviewer_note": note,
+        "approved_at_utc": utc_now(),
+        "status": "frozen",
+        "decision": "approved_for_look",
+        "manifest_path": str(destination),
+    }
+    if destination.is_file():
+        existing = json.loads(destination.read_text(encoding="utf-8"))
+        if existing.get("selection_id") == selection_id and existing.get("status") == "frozen":
+            return existing
+    atomic_write_json(payload, destination)
+    return payload
+
+
+def study_grid_from_baseline_selection(
+    manifest_path: Path,
+    *,
+    filling_strategies: list[str] | None = None,
+) -> StudyGrid:
+    payload = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    if payload.get("status") != "frozen":
+        raise ValueError("Baseline-selection manifest is not frozen")
+    if payload.get("protocol") != "two_stage_complete_modality_baseline_selection":
+        raise ValueError("Unexpected baseline-selection protocol")
+    errors = validate_file_manifest(payload.get("artifacts", []))
+    if errors:
+        raise RuntimeError(f"Baseline-selection artifacts failed verification: {errors[:10]}")
+    winner = payload["winner"]
+    seeds = [int(seed) for seed in winner["seeds"]]
+    if seeds != [3407, 3408, 3409]:
+        raise ValueError(f"Baseline-selection seeds are incomplete: {seeds}")
+    return StudyGrid(
+        fusion_positions=[str(winner["fusion_position"])],
+        seeds=seeds,
+        filling_strategies=list(
+            filling_strategies or ["normalized_mean", "paired_cgan"]
+        ),
+    )
 
 
 def freeze_study_grid(
