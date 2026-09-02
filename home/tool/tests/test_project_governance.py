@@ -88,7 +88,8 @@ def test_release_uses_only_v4_graph_training_contract() -> None:
     assert not (package / "MHD_Compatibility_V3_to_V4.py").exists()
     training = (PROJECT_ROOT / "tool/look_core/train.py").read_text(encoding="utf-8")
     assert "MHD_Trainer(" in training
-    assert ".register_epoch_node(" in training
+    assert "register_" + "epoch_node" not in training
+    assert "criteria_levels=graph.criteria_levels" in training
     assert "criteria_node=graph.criteria_node" in training
     assert "graph._backward(" not in training
     assert "scaler.scale(loss).backward()" not in training

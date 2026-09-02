@@ -21,9 +21,9 @@
       "sha256": "5df91d926ddafbf557cd6401bda13fbed410bdc59a6d45fb70dd796c4849361b"
     },
     {
-      "bytes": 6198,
+      "bytes": 6297,
       "path": "PIPELINE_LEDGER.md",
-      "sha256": "c26dd4065f4ea87978a19300e3bba4b5291c52c66d1e46bc651f7854e2594b70"
+      "sha256": "f9e3c41399f428891876b19067f68a07a5fb8e9e8a51252cbc48df99803ab712"
     },
     {
       "bytes": 12500,
@@ -76,9 +76,9 @@
       "sha256": "8640f976a8b6b5ba5513e2ed3e095814bc0794422d5f935a195acb7700050c92"
     },
     {
-      "bytes": 10449,
+      "bytes": 10574,
       "path": "pipeline/18_UKB_LOOK_ResNet50_MHD.ipynb",
-      "sha256": "55f13e852eae6502e080c845e54e9b748123a293d2e61beda4aefbd2a20383df"
+      "sha256": "d2ba3ad8f1dc73635eb27fa5101cef4d7906e58e4ccfd47b399d7c7845dd1bab"
     },
     {
       "bytes": 3135,
@@ -151,14 +151,14 @@
       "sha256": "939e61186871c2f5c9bfb8974cf65345c6caa6b4c4ec4bbff6a073e3398684ec"
     },
     {
-      "bytes": 107224,
+      "bytes": 106195,
       "path": "tool/MHD_Project/MHD_Utils_V4.py",
-      "sha256": "d10d0c78cab23b7f765c485c66cac8bd0f826d790b74ed64ff3728018e01c217"
+      "sha256": "5926c471d7ef20e2741d14c8b3149db06d027bdba75203a11cbd019b8d404450"
     },
     {
-      "bytes": 19855,
+      "bytes": 19914,
       "path": "tool/MHD_Project/README_V4.md",
-      "sha256": "361c73cac95814a6d48e96698f5708f2baf57b9397aa87d37e8c57ae780ccfa3"
+      "sha256": "d59e1454c59fe07ccf909965cc96656a8d21a44994bd602a9db5d63bab9507a4"
     },
     {
       "bytes": 164,
@@ -291,9 +291,9 @@
       "sha256": "82967390513dba3cdda4e9e7d34d1ad5f37b1b22baa2799f8261a9dd73b204a5"
     },
     {
-      "bytes": 10027,
+      "bytes": 9898,
       "path": "tool/look_core/train.py",
-      "sha256": "7f844331a05a35b4d15bc86ebb623109aa615e1fe43e07409737f9330941d1bd"
+      "sha256": "8f4d376c7cecb38052d433556bebe29387b2d4fb02f0251d4513c6aa3d6878e1"
     },
     {
       "bytes": 8114,
@@ -451,9 +451,9 @@
       "sha256": "55b3f662e879c486efadbaf98e8efe79bf5a8fb2dd1f9b6fb11c7acc8736e3c8"
     },
     {
-      "bytes": 2463,
-      "path": "tool/tests/ddp_epoch_monitor_smoke.py",
-      "sha256": "1a892765a3e34aeb9a0462b350b9253516dc8b0a5b1cb0c8dbd0a13c06037c56"
+      "bytes": 2338,
+      "path": "tool/tests/ddp_criteria_smoke.py",
+      "sha256": "e9eb9e562df807b256cc51339f65c6726c6ff239e8e7824e1c1a73f1f5a536b0"
     },
     {
       "bytes": 9251,
@@ -486,9 +486,9 @@
       "sha256": "4eba1a21414c0607af832abfc64d82d69cc56dbe33d07a1ced2b750b5b06aac1"
     },
     {
-      "bytes": 5313,
-      "path": "tool/tests/test_mhd_trainer_epoch_monitor.py",
-      "sha256": "bd1c800230870a50d8f20458c32e75320385f16757021c97c1b8422051b84726"
+      "bytes": 6145,
+      "path": "tool/tests/test_mhd_trainer_criteria.py",
+      "sha256": "1e6437935c5cbd7c1e0997be6c8b99f950d875c8fc86740fd8b1dccd3e27d325"
     },
     {
       "bytes": 2159,
@@ -501,9 +501,9 @@
       "sha256": "174a162cacc23a9dcf7cc97d1479e9d476a354c5f713a21d650cb788f78fb263"
     },
     {
-      "bytes": 4624,
+      "bytes": 4694,
       "path": "tool/tests/test_project_governance.py",
-      "sha256": "4cc51ef68848fc47182278dfcf2dc814df9c45d705c186b9634d421f691cc454"
+      "sha256": "2aa3f710da48d84211ae1bb612225a797ccf3f0cf8ff7e740aad2083e9b76d8e"
     },
     {
       "bytes": 2253,
@@ -521,7 +521,7 @@
       "sha256": "50aab445f8dc8ec73b598ec64a49492bf9b13450b7390889fa3d976e63b5f248"
     }
   ],
-  "generated_at_utc": "2026-09-02T17:37:39.259142+00:00",
+  "generated_at_utc": "2026-09-02T17:59:01.378000+00:00",
   "release_id": "2026_09_02_00_00_00",
   "schema_version": 2
 }

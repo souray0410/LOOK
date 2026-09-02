@@ -14,7 +14,7 @@ from MHD_Project.MHD_Utils_V4 import (
     initialize_mhd_distributed,
     mhd_barrier,
 )
-from test_mhd_trainer_epoch_monitor import _graph
+from test_mhd_trainer_criteria import _graph
 
 
 def main() -> None:
@@ -26,11 +26,6 @@ def main() -> None:
         graph = _graph()
         optimizer = torch.optim.SGD(graph.parameters(), lr=0.1)
         monitor = MHD_Monitor(["batch_accuracy"])
-        monitor.register_epoch_node(
-            "validation_macro_f1",
-            source_nodes=["logits", "target"],
-            levels=[2],
-        )
         trainer = MHD_Trainer(
             graph,
             optimizer,
@@ -38,6 +33,7 @@ def main() -> None:
             forward_levels=[0, 1],
             backward_levels=[4, 3],
             criteria_node="validation_macro_f1",
+            criteria_levels=[2],
             criteria_mode="max",
             save_dir=str(args.output),
             input_nodes=["input", "target"],

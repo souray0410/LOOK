@@ -1180,30 +1180,6 @@ class MHD_Monitor:
             raise ValueError(f"未知统计量: {sorted(unknown_statistics)}")
         self.records = defaultdict(list)
         self.step_counter = 0
-        self.epoch_nodes: Dict[str, Dict[str, Tuple[Any, ...]]] = {}
-        self.epoch_tensors: Dict[str, torch.Tensor] = {}
-
-    def register_epoch_node(
-        self,
-        node_name: str,
-        *,
-        source_nodes: Sequence[str],
-        levels: Sequence[int],
-    ) -> "MHD_Monitor":
-        """Register a graph node that must be evaluated from a complete split."""
-        sources = tuple(source_nodes)
-        active_levels = tuple(levels)
-        if not isinstance(node_name, str) or not node_name:
-            raise ValueError("Epoch Monitor node_name 必须是非空节点名称")
-        if not sources or len(set(sources)) != len(sources):
-            raise ValueError("Epoch Monitor source_nodes 必须非空且不得重复")
-        if not active_levels:
-            raise ValueError("Epoch Monitor levels 不得为空")
-        self.epoch_nodes[node_name] = {
-            "source_nodes": sources,
-            "levels": active_levels,
-        }
-        return self
 
     def reset(self):
         self.records = defaultdict(list)
@@ -1337,6 +1313,7 @@ class MHD_Trainer:
         forward_levels: Sequence[int],
         backward_levels: Sequence[int],
         criteria_node: str,
+        criteria_levels: Optional[Sequence[int]] = None,
         criteria_mode: str = 'min',
         save_dir: str = "./mhd_ckpts",
         grad_clip_norm: float = None,
@@ -1363,6 +1340,7 @@ class MHD_Trainer:
             forward_levels: 默认 Feature Message 执行序列
             backward_levels: 默认 Gradient Message 执行序列
             criteria_node: 用于判断最佳模型的节点，必须显式指定
+            criteria_levels: 在完整验证集上产生 Criteria Node 的可选 Level 序列
             criteria_mode: 'min' 或 'max'，默认 'min'
             save_dir: 保存目录
             grad_clip_norm: 梯度裁剪阈值
@@ -1390,6 +1368,25 @@ class MHD_Trainer:
             raise ValueError(f"Trainer 前后向 levels 不得重叠: {overlap}")
         self.loss_node_name = _infer_scalar_terminal_name(mhd_graph, self.forward_levels)
         self.criteria_node_name = criteria_node
+        if self.mhd_graph.get_node_by_name(self.criteria_node_name) is None:
+            raise ValueError(f"最佳判定节点 '{self.criteria_node_name}' 不存在")
+        self.criteria_levels = (
+            tuple(mhd_graph._validate_levels(
+                criteria_levels,
+                mhd_graph.num_levels,
+                "Trainer Criteria",
+            ))
+            if criteria_levels is not None
+            else tuple()
+        )
+        criteria_overlap = sorted(
+            set(self.criteria_levels).intersection(
+                {*self.forward_levels, *self.backward_levels}
+            )
+        )
+        if criteria_overlap:
+            raise ValueError(f"Trainer Criteria levels 必须独立于训练路径: {criteria_overlap}")
+        self.criteria_source_nodes = self._infer_criteria_source_nodes()
         self.criteria_mode = criteria_mode
         self.save_dir = save_dir
         self.grad_clip_norm = grad_clip_norm
@@ -1405,7 +1402,7 @@ class MHD_Trainer:
         self._micro_step = 0
         self._optimizer_steps = 0
         self._accumulation_paths: Optional[Tuple[Tuple[int, ...], Tuple[int, ...]]] = None
-        self.last_eval_epoch_tensors: Dict[str, torch.Tensor] = {}
+        self.last_eval_tensors: Dict[str, torch.Tensor] = {}
         self.input_nodes = tuple(input_nodes or ())
         self.input_mapping = {name: name for name in self.input_nodes}
         for node_name, batch_key in dict(input_mapping or {}).items():
@@ -1413,30 +1410,13 @@ class MHD_Trainer:
                 raise ValueError(f"input_mapping 包含未声明的输入节点 '{node_name}'")
             self.input_mapping[node_name] = batch_key
         requested_outputs = list(output_nodes or ())
-        self.epoch_monitor_nodes: Dict[str, Dict[str, Tuple[Any, ...]]] = {}
-        for node_name, specification in monitor.epoch_nodes.items():
-            criterion_levels = tuple(mhd_graph._validate_levels(
-                specification["levels"],
-                mhd_graph.num_levels,
-                f"Epoch Monitor {node_name}",
-            ))
-            overlap = sorted(
-                set(criterion_levels).intersection(
-                    {*self.forward_levels, *self.backward_levels}
-                )
-            )
-            if overlap:
-                raise ValueError(
-                    f"Epoch Monitor levels 必须独立于训练路径: {overlap}"
-                )
-            self.epoch_monitor_nodes[node_name] = {
-                "source_nodes": tuple(specification["source_nodes"]),
-                "levels": criterion_levels,
-            }
-            for name in specification["source_nodes"]:
-                if name not in requested_outputs:
-                    requested_outputs.append(name)
-        for name in [self.loss_node_name, self.criteria_node_name, *monitor.monitor_nodes]:
+        for name in self.criteria_source_nodes:
+            if name not in requested_outputs:
+                requested_outputs.append(name)
+        metric_outputs = [self.loss_node_name, *monitor.monitor_nodes]
+        if not self.criteria_levels:
+            metric_outputs.append(self.criteria_node_name)
+        for name in metric_outputs:
             if name not in requested_outputs:
                 requested_outputs.append(name)
         self.output_nodes = tuple(requested_outputs)
@@ -1509,10 +1489,33 @@ class MHD_Trainer:
             self.logger.info(f"设备={self.device} precision={self.precision} accum={self.grad_accum_steps}")
             self.logger.info(
                 f"Forward levels={list(self.forward_levels)} "
+                f"Criteria levels={list(self.criteria_levels)} "
                 f"Backward levels={list(self.backward_levels)} "
                 f"标量终点={self.loss_node_name} 判定节点={self.criteria_node_name}"
             )
             self.logger.info("=" * 80)
+
+    def _infer_criteria_source_nodes(self) -> Tuple[str, ...]:
+        if not self.criteria_levels:
+            return tuple()
+        produced = set()
+        boundary = []
+        criterion_id = self.mhd_graph.get_node_by_name(self.criteria_node_name).id
+        criterion_produced = False
+        for level in self.criteria_levels:
+            for step in self.mhd_graph._execution_plan_per_level[level]:
+                for node_id in step.head_ids:
+                    if node_id not in produced and node_id not in boundary:
+                        boundary.append(node_id)
+                produced.update(step.tail_ids)
+                criterion_produced = criterion_produced or criterion_id in step.tail_ids
+        if not criterion_produced:
+            raise ValueError(
+                f"Criteria levels 未产生节点 '{self.criteria_node_name}'"
+            )
+        return tuple(
+            self.mhd_graph.get_node_by_id(node_id).name for node_id in boundary
+        )
 
     def _setup_logger(self, save_dir: str) -> logging.Logger:
         logger = logging.getLogger(f"mhd_train.rank{self.context.rank}")
@@ -1536,23 +1539,6 @@ class MHD_Trainer:
             raise ValueError(f"标量终点 '{self.loss_node_name}' 不存在")
         if not self.mhd_graph.get_node_by_name(self.criteria_node_name):
             raise ValueError(f"最佳判定节点 '{self.criteria_node_name}' 不存在")
-        for monitored_name, specification in self.epoch_monitor_nodes.items():
-            if not self.mhd_graph.get_node_by_name(monitored_name):
-                raise ValueError(f"Epoch Monitor 节点 '{monitored_name}' 不存在")
-            for node_name in specification["source_nodes"]:
-                if not self.mhd_graph.get_node_by_name(node_name):
-                    raise ValueError(f"Epoch Monitor 来源节点 '{node_name}' 不存在")
-            monitored_id = self.mhd_graph.get_node_by_name(monitored_name).id
-            produced = any(
-                bool(torch.any(
-                    self.mhd_graph.topo.role_matrices[level][:, monitored_id] > 0
-                ).item())
-                for level in specification["levels"]
-            )
-            if not produced:
-                raise ValueError(
-                    f"Epoch Monitor levels 未产生节点 '{monitored_name}'"
-                )
         for node_name in self.monitor.monitor_nodes:
             if not self.mhd_graph.get_node_by_name(node_name):
                 warnings.warn(f"监控节点 '{node_name}' 不存在")
@@ -1665,14 +1651,14 @@ class MHD_Trainer:
                 metrics[node_name] = scalar if np.isfinite(scalar) else 0.0
         return metrics
 
-    def _gather_epoch_tensors(
+    def _gather_eval_tensors(
         self,
         local_tensors: Mapping[str, Sequence[torch.Tensor]],
     ) -> Dict[str, torch.Tensor]:
         local = {}
         for node_name, values in local_tensors.items():
             if not values:
-                raise RuntimeError(f"Epoch Monitor 未收集到节点 {node_name}")
+                raise RuntimeError(f"Validation 未收集到 Criteria 输入节点 {node_name}")
             local[node_name] = torch.cat(tuple(values), dim=0).cpu()
         if self.context.distributed:
             gathered = [None] * self.context.world_size
@@ -1685,33 +1671,30 @@ class MHD_Trainer:
             )
             for node_name in local_tensors
         }
-        self.last_eval_epoch_tensors = complete
-        self.monitor.epoch_tensors = complete
+        self.last_eval_tensors = complete
         return complete
 
     @torch.no_grad()
-    def _run_epoch_monitor(
+    def _run_criteria(
         self,
-        node_name: str,
-        specification: Mapping[str, Sequence[Any]],
         complete_tensors: Mapping[str, torch.Tensor],
     ) -> float:
         for node in self.mhd_graph.nodes:
             node.reset()
-        for source_name in specification["source_nodes"]:
+        for source_name in self.criteria_source_nodes:
             value = complete_tensors[source_name]
             self.mhd_graph.get_node_by_name(
                 source_name
             ).feature_message.current_state = value.to(self.device, non_blocking=True)
-        self.mhd_graph.forward(levels=list(specification["levels"]))
+        self.mhd_graph.forward(levels=list(self.criteria_levels))
         value = self.mhd_graph.get_node_by_name(
-            node_name
+            self.criteria_node_name
         ).feature_message.current_state
         if value.numel() != 1:
-            raise RuntimeError(f"Epoch Monitor 节点 '{node_name}' 必须是标量")
+            raise RuntimeError(f"Criteria 节点 '{self.criteria_node_name}' 必须是标量")
         scalar = float(value.detach().float().item())
         if not np.isfinite(scalar):
-            raise RuntimeError(f"Epoch Monitor 节点 '{node_name}' 产生了非有限值")
+            raise RuntimeError(f"Criteria 节点 '{self.criteria_node_name}' 产生了非有限值")
         for node in self.mhd_graph.nodes:
             node.reset()
         return scalar
@@ -1825,7 +1808,8 @@ class MHD_Trainer:
                 self._optimizer_steps += 1
             self._accumulation_paths = None
         self._micro_step += 1
-        return self._collect_metrics(outputs, tuple(self.epoch_monitor_nodes))
+        excluded = (self.criteria_node_name,) if self.criteria_levels else tuple()
+        return self._collect_metrics(outputs, excluded)
 
     def _pipeline_train_step(self, input_dict: Dict[str, torch.Tensor]) -> Dict[str, float]:
         self.model.train()
@@ -1863,7 +1847,7 @@ class MHD_Trainer:
             local_value = outputs.get(self.loss_node_name)
             value = self.model.synchronize_last_stage_scalar(local_value)
             return {self.loss_node_name: float(value.item())}
-        excluded = tuple(self.epoch_monitor_nodes)
+        excluded = (self.criteria_node_name,) if self.criteria_levels else tuple()
         return self._collect_metrics(outputs, excluded)
 
     def _reduce_epoch_metrics(self, metric_sums: Mapping[str, float], steps: int) -> Dict[str, float]:
@@ -1922,43 +1906,35 @@ class MHD_Trainer:
     def eval_epoch(self, eval_data, epoch: int):
         self.monitor.reset()
         epoch_metrics_sum = defaultdict(float)
-        epoch_source_nodes = tuple(dict.fromkeys(
-            source_name
-            for specification in self.epoch_monitor_nodes.values()
-            for source_name in specification["source_nodes"]
-        ))
-        epoch_tensors = {name: [] for name in epoch_source_nodes}
+        eval_tensors = {name: [] for name in self.criteria_source_nodes}
         pbar = tqdm(eval_data, desc=f"Eval  Epoch {epoch+1}", leave=False, disable=not self.context.is_main)
         sample_count = 0
         for step, input_dict in enumerate(pbar):
-            if not self.epoch_monitor_nodes:
+            if not self.criteria_levels:
                 step_metrics = self.eval_step(input_dict)
             else:
                 outputs = self._eval_outputs(input_dict)
                 step_metrics = self._collect_metrics(
                     outputs,
-                    tuple(self.epoch_monitor_nodes),
+                    (self.criteria_node_name,),
                 )
-                for node_name in epoch_source_nodes:
+                for node_name in self.criteria_source_nodes:
                     value = outputs.get(node_name)
                     if value is None:
                         node = self.mhd_graph.get_node_by_name(node_name)
                         value = node.feature_message.current_state
-                    epoch_tensors[node_name].append(value.detach().cpu())
+                    eval_tensors[node_name].append(value.detach().cpu())
             batch_samples = self._pipeline_batch_size(input_dict)
             sample_count += batch_samples if step_metrics else 0
             for k, v in step_metrics.items():
                 epoch_metrics_sum[k] += v * batch_samples
             pbar.set_postfix({k: f"{v:.4f}" for k, v in step_metrics.items()})
         avg_metrics = self._reduce_epoch_metrics(epoch_metrics_sum, sample_count)
-        if self.epoch_monitor_nodes:
-            complete_tensors = self._gather_epoch_tensors(epoch_tensors)
-            for node_name, specification in self.epoch_monitor_nodes.items():
-                avg_metrics[node_name] = self._run_epoch_monitor(
-                    node_name,
-                    specification,
-                    complete_tensors,
-                )
+        if self.criteria_levels:
+            complete_tensors = self._gather_eval_tensors(eval_tensors)
+            avg_metrics[self.criteria_node_name] = self._run_criteria(
+                complete_tensors,
+            )
         self.history["eval"]["metrics"].append(avg_metrics)
 
         cur_loss = avg_metrics.get(self.loss_node_name)

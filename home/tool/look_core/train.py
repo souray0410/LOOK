@@ -109,11 +109,6 @@ def train_complete_model_ddp(
             "gradient_message.current_state",
         ),
     )
-    graph_monitor.register_epoch_node(
-        graph.criteria_node,
-        source_nodes=("fusion_logits", "label_gt"),
-        levels=graph.criteria_levels,
-    )
     trainer = MHD_Trainer(
         graph,
         optimizer,
@@ -121,6 +116,7 @@ def train_complete_model_ddp(
         forward_levels=graph.forward_levels,
         backward_levels=backward_levels,
         criteria_node=graph.criteria_node,
+        criteria_levels=graph.criteria_levels,
         criteria_mode="max",
         save_dir=str(run_dir),
         lr_scheduler=scheduler,
@@ -161,8 +157,8 @@ def train_complete_model_ddp(
             train_loader.dataset.set_epoch(epoch)
         train_metrics = trainer.train_epoch(train_loader, epoch)
         eval_metrics = trainer.eval_epoch(validation_loader, epoch)
-        complete_logits = trainer.last_eval_epoch_tensors["fusion_logits"]
-        complete_labels = trainer.last_eval_epoch_tensors["label_gt"]
+        complete_logits = trainer.last_eval_tensors["fusion_logits"]
+        complete_labels = trainer.last_eval_tensors["label_gt"]
         if len(complete_labels) != len(validation_loader.dataset):
             raise RuntimeError(
                 f"Distributed validation returned {len(complete_labels)} rows; "

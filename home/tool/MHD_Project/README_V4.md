@@ -299,17 +299,13 @@ trainer.train_step(
 显式指定。若两者恰好都是 loss，也仍写 `criteria_node="loss"`。Trainer 始终自动收集标量
 终点和 Criteria Node；`MHD_Monitor` 只需列出其余希望观察的节点，不必重复 Criteria 名称。
 
-当 Criteria 不能按 batch 求平均时，例如 Macro-F1、balanced accuracy 或整集统计量，由
-`MHD_Monitor` 注册整轮节点。Monitor 声明来源和 levels，Trainer 跨 rank 拼接完整
-validation split 并执行该监控 level 一次；随后仍从显式 `criteria_node` 判断并保存最佳模型：
+当 Criteria 不能按 batch 求平均时，例如 Macro-F1、balanced accuracy 或整集统计量，
+仍将其定义为普通 MHD Node、Edge 和独立 Levels。Trainer 从 Criteria Levels 的拓扑自动
+识别边界输入节点，跨 rank 拼接完整 validation split，执行该图路径一次，再按
+`criteria_node` 的节点值判断并保存最佳模型：
 
 ```python
 monitor = MHD_Monitor(["loss", "batch_accuracy"])
-monitor.register_epoch_node(
-    "validation_macro_f1",
-    source_nodes=["logits", "target"],
-    levels=[validation_metric_level],
-)
 
 trainer = MHD_Trainer(
     graph,
@@ -318,13 +314,15 @@ trainer = MHD_Trainer(
     forward_levels=train_forward_levels,
     backward_levels=train_backward_levels,
     criteria_node="validation_macro_f1",
+    criteria_levels=[validation_metric_level],
     criteria_mode="max",
 )
 ```
 
-整轮监控 levels 必须独立于训练 Forward/Backward levels。整集临时 Message 在读取监控节点
-后立即 reset，因此不会把动态 validation shape 写入 checkpoint。`best` 和 `last` 均由
-Trainer 保存；`last` 用于中断恢复，`best` 始终对应最优 Criteria。
+Monitor 只按名称观察 Node、Edge 和 Message，不负责 Criteria 生命周期或 checkpoint。
+Criteria Levels 必须独立于训练 Forward/Backward Levels；整集临时 Message 在读取
+Criteria Node 后立即 reset，因此不会把动态 validation shape 写入 checkpoint。`best` 和
+`last` 均由 Trainer 保存；`last` 用于中断恢复，`best` 始终对应最优 Criteria。
 
 Utils 内的私有 `_MHD_GraphAdapter` 只把标准 PyTorch 的输入/输出 dict 转换成 Node
 Message 读写，使 DDP/FSDP2/TP/`torch.compile` 能包装 MHD。它不转换模型、不保存第二份

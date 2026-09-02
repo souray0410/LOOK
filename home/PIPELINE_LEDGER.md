@@ -36,11 +36,12 @@ formal results are not overwritten.
 
 Classifier stages use `MHD_Trainer` for graph forward/backward, optimizer stepping,
 distributed checkpoints and model selection. The differentiable scalar endpoint is
-inferred automatically as the backward seed. `MHD_Monitor.register_epoch_node`
-collects full-validation logits and labels across ranks, executes the dedicated metric
-level once, and exposes `validation_macro_f1`; Trainer saves `best/` from this explicit
-criteria node in `max` mode. `last/` is the resumable canonical checkpoint, while
-`best.pt` is the portable graph-state export for frozen downstream evaluation.
+inferred automatically as the backward seed. The explicit Criteria Node and Criteria
+Levels remain part of the MHD graph. Trainer infers their boundary Node names from the
+topology, collects full-validation states across ranks, executes the Criteria Levels
+once, and saves `best/` from `validation_macro_f1` in `max` mode. Monitor only observes
+named Node, Edge and Message states. `last/` is the resumable canonical checkpoint,
+while `best.pt` is the portable graph-state export for frozen downstream evaluation.
 
 Dataset pruning steps use a stricter contract because they intentionally change derived
 data: inspect an allowlist, require `--execute`, then run the next verification gate.

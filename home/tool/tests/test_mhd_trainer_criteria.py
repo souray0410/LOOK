@@ -113,15 +113,10 @@ def _graph() -> MHD_Graph:
     )
 
 
-def test_epoch_monitor_uses_the_complete_validation_set_and_saves(tmp_path):
+def test_criteria_uses_the_complete_validation_set_and_saves(tmp_path):
     graph = _graph()
     optimizer = torch.optim.SGD(graph.parameters(), lr=0.1)
     monitor = MHD_Monitor(["batch_accuracy"])
-    monitor.register_epoch_node(
-        "validation_macro_f1",
-        source_nodes=["logits", "target"],
-        levels=[2],
-    )
     trainer = MHD_Trainer(
         graph,
         optimizer,
@@ -129,6 +124,7 @@ def test_epoch_monitor_uses_the_complete_validation_set_and_saves(tmp_path):
         forward_levels=[0, 1],
         backward_levels=[4, 3],
         criteria_node="validation_macro_f1",
+        criteria_levels=[2],
         criteria_mode="max",
         save_dir=str(tmp_path),
         input_nodes=["input", "target"],
@@ -137,22 +133,23 @@ def test_epoch_monitor_uses_the_complete_validation_set_and_saves(tmp_path):
     )
     evaluation = [
         {
-            "features": torch.tensor([[8.0, 0.0], [8.0, 0.0]]),
-            "labels": torch.tensor([0, 0]),
-            "participant_id": ["a", "b"],
+            "features": torch.tensor([[8.0, 0.0], [8.0, 0.0], [8.0, 0.0]]),
+            "labels": torch.tensor([0, 0, 0]),
+            "participant_id": ["a", "b", "c"],
         },
         {
-            "features": torch.tensor([[8.0, 0.0], [8.0, 0.0]]),
-            "labels": torch.tensor([1, 1]),
-            "participant_id": ["c", "d"],
+            "features": torch.tensor([[8.0, 0.0]]),
+            "labels": torch.tensor([1]),
+            "participant_id": ["d"],
         },
     ]
 
     metrics = trainer.eval_epoch(evaluation, epoch=0)
 
-    assert metrics["validation_macro_f1"] == torch.tensor(1 / 3).item()
+    assert metrics["validation_macro_f1"] == torch.tensor(3 / 7).item()
     assert trainer.history["best_epoch"] == 1
-    assert trainer.last_eval_epoch_tensors["logits"].shape == (4, 2)
+    assert trainer.criteria_source_nodes == ("logits", "target")
+    assert trainer.last_eval_tensors["logits"].shape == (4, 2)
     assert (tmp_path / "best").is_dir()
 
     trainer.save_last_checkpoint(1)
@@ -162,3 +159,30 @@ def test_epoch_monitor_uses_the_complete_validation_set_and_saves(tmp_path):
     restored_epoch = trainer.load_checkpoint(load_last=True)
     assert restored_epoch == 1
     assert torch.equal(next(graph.parameters()), expected)
+
+
+def test_forward_criteria_is_aggregated_without_separate_levels(tmp_path):
+    graph = _graph()
+    trainer = MHD_Trainer(
+        graph,
+        torch.optim.SGD(graph.parameters(), lr=0.1),
+        MHD_Monitor(["batch_accuracy"]),
+        forward_levels=[0, 1],
+        backward_levels=[4, 3],
+        criteria_node="loss",
+        criteria_mode="min",
+        save_dir=str(tmp_path),
+        input_nodes=["input", "target"],
+        input_mapping={"input": "features", "target": "labels"},
+        output_nodes=["logits", "loss", "batch_accuracy", "target"],
+    )
+    metrics = trainer.eval_epoch([
+        {
+            "features": torch.tensor([[8.0, 0.0], [0.0, 8.0]]),
+            "labels": torch.tensor([0, 1]),
+        }
+    ], epoch=0)
+
+    assert trainer.criteria_levels == tuple()
+    assert trainer.criteria_source_nodes == tuple()
+    assert metrics["loss"] < 0.001
