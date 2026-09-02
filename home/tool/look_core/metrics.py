@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict, Iterable, Optional, Tuple
 
 import numpy as np
+import torch
 from sklearn.metrics import (
     accuracy_score,
     balanced_accuracy_score,
@@ -13,6 +14,30 @@ from sklearn.metrics import (
     precision_score,
     roc_auc_score,
 )
+
+
+@torch.no_grad()
+def validation_macro_f1(graph) -> torch.Tensor:
+    """LOOK model-selection criterion computed from complete validation Nodes."""
+    logits = graph.get_node_by_name("fusion_logits").feature_message.current_state
+    labels = graph.get_node_by_name("label_gt").feature_message.current_state.long()
+    prediction = logits.argmax(dim=1)
+    values = []
+    for class_id in range(logits.shape[1]):
+        predicted = prediction == class_id
+        expected = labels == class_id
+        true_positive = torch.logical_and(predicted, expected).sum().float()
+        false_positive = torch.logical_and(predicted, ~expected).sum().float()
+        false_negative = torch.logical_and(~predicted, expected).sum().float()
+        denominator = 2 * true_positive + false_positive + false_negative
+        values.append(
+            torch.where(
+                denominator > 0,
+                2 * true_positive / denominator,
+                torch.zeros_like(denominator),
+            )
+        )
+    return torch.stack(values).mean()
 
 
 def expected_calibration_error(y_true: np.ndarray, probabilities: np.ndarray, bins: int = 15) -> float:

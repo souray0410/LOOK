@@ -74,11 +74,12 @@ def test_package_names_are_canonical() -> None:
     assert look_core.__name__ == "look_core"
 
 
-def test_mhd_core_file_is_the_reviewed_unchanged_version() -> None:
+def test_mhd_core_file_is_the_reviewed_compute_only_version() -> None:
     framework = PROJECT_ROOT / "tool/MHD_Project/MHD_Framework_V4.py"
     assert hashlib.sha256(framework.read_bytes()).hexdigest() == (
-        "939e61186871c2f5c9bfb8974cf65345c6caa6b4c4ec4bbff6a073e3398684ec"
+        "6f499046ff3068b76c01a69e25d11398f2d2c0ff3ebb18f2faf825ff0199e6ba"
     )
+    assert "generate_mermaid" not in framework.read_text(encoding="utf-8")
 
 
 def test_release_uses_only_v4_graph_training_contract() -> None:
@@ -89,8 +90,9 @@ def test_release_uses_only_v4_graph_training_contract() -> None:
     training = (PROJECT_ROOT / "tool/look_core/train.py").read_text(encoding="utf-8")
     assert "MHD_Trainer(" in training
     assert "register_" + "epoch_node" not in training
-    assert "criteria_levels=graph.criteria_levels" in training
-    assert "criteria_node=graph.criteria_node" in training
+    assert "criteria=validation_macro_f1" in training
+    assert "criteria_node" not in training
+    assert "criteria_levels" not in training
     assert "graph._backward(" not in training
     assert "scaler.scale(loss).backward()" not in training
 

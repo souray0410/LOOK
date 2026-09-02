@@ -36,10 +36,9 @@ formal results are not overwritten.
 
 Classifier stages use `MHD_Trainer` for graph forward/backward, optimizer stepping,
 distributed checkpoints and model selection. The differentiable scalar endpoint is
-inferred automatically as the backward seed. The explicit Criteria Node and Criteria
-Levels remain part of the MHD graph. Trainer infers their boundary Node names from the
-topology, collects full-validation states across ranks, executes the Criteria Levels
-once, and saves `best/` from `validation_macro_f1` in `max` mode. Monitor only observes
+inferred automatically as the backward seed. Trainer gathers complete validation
+outputs across ranks, temporarily exposes them through their existing Nodes, calls
+LOOK's PyTorch `validation_macro_f1(graph)`, and saves `best/` in `max` mode. Monitor only observes
 named Node, Edge and Message states. `last/` is the resumable canonical checkpoint,
 while `best.pt` is the portable graph-state export for frozen downstream evaluation.
 

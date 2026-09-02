@@ -11,9 +11,9 @@
       "sha256": "87c1d65a3413535f9097a7bd7662b3e6e2937d0702b7cdc1793e0032622f8019"
     },
     {
-      "bytes": 4209,
+      "bytes": 5009,
       "path": "CHANGELOG.md",
-      "sha256": "6fc5b0cbc0370aba2389a5fef47da6e54af4c29a399893f448cc1128e195b07d"
+      "sha256": "b3ea83949f0e9f4afb5bd4510a8377080bc5d7089c49f2a698137d3db4121475"
     },
     {
       "bytes": 33,
@@ -21,14 +21,14 @@
       "sha256": "5df91d926ddafbf557cd6401bda13fbed410bdc59a6d45fb70dd796c4849361b"
     },
     {
-      "bytes": 6297,
+      "bytes": 6216,
       "path": "PIPELINE_LEDGER.md",
-      "sha256": "f9e3c41399f428891876b19067f68a07a5fb8e9e8a51252cbc48df99803ab712"
+      "sha256": "26f6cd49502d4fb2b0dc8ee73f5b6352c1d32cc4943fda788822474efaf2c640"
     },
     {
-      "bytes": 12500,
+      "bytes": 12483,
       "path": "README.md",
-      "sha256": "3676ff5f3bdfaef0fdf504d08006bd5e954fcbb651133eb7b398dfadd49fa374"
+      "sha256": "4a594ff24cac9de998f27a446e63d2ab9a31bc9e5994fa9c888053b43481b88a"
     },
     {
       "bytes": 5532,
@@ -76,9 +76,9 @@
       "sha256": "8640f976a8b6b5ba5513e2ed3e095814bc0794422d5f935a195acb7700050c92"
     },
     {
-      "bytes": 10574,
+      "bytes": 10622,
       "path": "pipeline/18_UKB_LOOK_ResNet50_MHD.ipynb",
-      "sha256": "d2ba3ad8f1dc73635eb27fa5101cef4d7906e58e4ccfd47b399d7c7845dd1bab"
+      "sha256": "84d37d12829e7155e8e79c3013c7e3491b7a60a6480c706b22b7e101d48f73a4"
     },
     {
       "bytes": 3135,
@@ -146,19 +146,19 @@
       "sha256": "9f9c04091ef5ec12d7862fdb4671b7ce7a2ff0f00c50c802c7146f33543e1e0b"
     },
     {
-      "bytes": 60392,
+      "bytes": 57522,
       "path": "tool/MHD_Project/MHD_Framework_V4.py",
-      "sha256": "939e61186871c2f5c9bfb8974cf65345c6caa6b4c4ec4bbff6a073e3398684ec"
+      "sha256": "6f499046ff3068b76c01a69e25d11398f2d2c0ff3ebb18f2faf825ff0199e6ba"
     },
     {
-      "bytes": 106195,
+      "bytes": 106513,
       "path": "tool/MHD_Project/MHD_Utils_V4.py",
-      "sha256": "5926c471d7ef20e2741d14c8b3149db06d027bdba75203a11cbd019b8d404450"
+      "sha256": "e6c9e5732d6bead9230535ba2cf39c76dd9478c12531d9b2417a6d83a9e3f9b4"
     },
     {
-      "bytes": 19914,
+      "bytes": 19839,
       "path": "tool/MHD_Project/README_V4.md",
-      "sha256": "d59e1454c59fe07ccf909965cc96656a8d21a44994bd602a9db5d63bab9507a4"
+      "sha256": "05ee64f4773bcaa00d8f8c1924c9075a021c992ef60b1bb8dcf1b192a72ac5fc"
     },
     {
       "bytes": 164,
@@ -241,9 +241,9 @@
       "sha256": "2feff3da9a277c9ef84adc4d41e3143b082f49caf4e80672d4da4ada733e8089"
     },
     {
-      "bytes": 17667,
+      "bytes": 15195,
       "path": "tool/look_core/graph.py",
-      "sha256": "c1e0929ae5ff6ffb84c0bca4fe99492dd5f97bd8e93164335d7395fedb85430c"
+      "sha256": "26c361d36b729d0c366e3b8a8d676450fdbc520e370a59a5d0a32c58ed49efe2"
     },
     {
       "bytes": 15799,
@@ -256,9 +256,9 @@
       "sha256": "ec7a7063dc3c7b45ad1fed91b3d63e54e044edd6d5bcb3a7b9aa2639e25c3509"
     },
     {
-      "bytes": 5645,
+      "bytes": 6702,
       "path": "tool/look_core/metrics.py",
-      "sha256": "f555e69328b7e3b57c3c56c6bd63a81968dbfdd6e7d650f49f1a0323c04b77e1"
+      "sha256": "3d9dc861e3dcadd8f7f907dbf887272f309da2340c72a1f8efdbb16a8715c49a"
     },
     {
       "bytes": 10772,
@@ -291,9 +291,9 @@
       "sha256": "82967390513dba3cdda4e9e7d34d1ad5f37b1b22baa2799f8261a9dd73b204a5"
     },
     {
-      "bytes": 9898,
+      "bytes": 9834,
       "path": "tool/look_core/train.py",
-      "sha256": "8f4d376c7cecb38052d433556bebe29387b2d4fb02f0251d4513c6aa3d6878e1"
+      "sha256": "460bf608f45d7f69ba30e218154ac688146af65ff0190fe5591525e52df2cdf5"
     },
     {
       "bytes": 8114,
@@ -451,9 +451,9 @@
       "sha256": "55b3f662e879c486efadbaf98e8efe79bf5a8fb2dd1f9b6fb11c7acc8736e3c8"
     },
     {
-      "bytes": 2338,
+      "bytes": 2319,
       "path": "tool/tests/ddp_criteria_smoke.py",
-      "sha256": "e9eb9e562df807b256cc51339f65c6726c6ff239e8e7824e1c1a73f1f5a536b0"
+      "sha256": "b8da0b71d5aa53984659d0fd4555be1af193d5ca5389a6ef97dd0e48b30d38f1"
     },
     {
       "bytes": 9251,
@@ -471,9 +471,9 @@
       "sha256": "63f024da5ace4cc4a4887a42333adff3676a4f1b3e7aa4a8dfd1947cc35d7664"
     },
     {
-      "bytes": 6427,
+      "bytes": 6635,
       "path": "tool/tests/test_graph.py",
-      "sha256": "53409eedf89d76743e38af5897a4b34f61894a9282294eeb0467b776280ae05d"
+      "sha256": "4cecf388e80d94b56a98dfcccbc3bb40c10c1ef1835cc3d92c90f354383806a5"
     },
     {
       "bytes": 1319,
@@ -486,9 +486,9 @@
       "sha256": "4eba1a21414c0607af832abfc64d82d69cc56dbe33d07a1ced2b750b5b06aac1"
     },
     {
-      "bytes": 6145,
+      "bytes": 5441,
       "path": "tool/tests/test_mhd_trainer_criteria.py",
-      "sha256": "1e6437935c5cbd7c1e0997be6c8b99f950d875c8fc86740fd8b1dccd3e27d325"
+      "sha256": "ce761601abd63b39b37510f3f5070ba27f05c3e53734cce0e03bb45ca8e97018"
     },
     {
       "bytes": 2159,
@@ -501,9 +501,9 @@
       "sha256": "174a162cacc23a9dcf7cc97d1479e9d476a354c5f713a21d650cb788f78fb263"
     },
     {
-      "bytes": 4694,
+      "bytes": 4792,
       "path": "tool/tests/test_project_governance.py",
-      "sha256": "2aa3f710da48d84211ae1bb612225a797ccf3f0cf8ff7e740aad2083e9b76d8e"
+      "sha256": "f717ba9e08beed7d50505ccd40c21a663a1cd64661f1a96a46df99d5d07c38c9"
     },
     {
       "bytes": 2253,
@@ -516,12 +516,12 @@
       "sha256": "5c37ee25c313ffca06e8d6ba0350e84b02f7bbd60648697b4ec7689dc3eb9bfc"
     },
     {
-      "bytes": 3926,
+      "bytes": 3981,
       "path": "tool/tests/test_v4_backward.py",
-      "sha256": "50aab445f8dc8ec73b598ec64a49492bf9b13450b7390889fa3d976e63b5f248"
+      "sha256": "da57a8264ec36ac7d4b8372d88304bf965743d4aba78875da53e2fd12fe0f184"
     }
   ],
-  "generated_at_utc": "2026-09-02T17:59:01.378000+00:00",
+  "generated_at_utc": "2026-09-02T18:48:03.262505+00:00",
   "release_id": "2026_09_02_00_00_00",
   "schema_version": 2
 }

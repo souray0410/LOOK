@@ -14,7 +14,7 @@ from MHD_Project.MHD_Utils_V4 import (
     initialize_mhd_distributed,
     mhd_barrier,
 )
-from test_mhd_trainer_criteria import _graph
+from test_mhd_trainer_criteria import _graph, validation_macro_f1
 
 
 def main() -> None:
@@ -31,9 +31,8 @@ def main() -> None:
             optimizer,
             monitor,
             forward_levels=[0, 1],
-            backward_levels=[4, 3],
-            criteria_node="validation_macro_f1",
-            criteria_levels=[2],
+            backward_levels=[3, 2],
+            criteria=validation_macro_f1,
             criteria_mode="max",
             save_dir=str(args.output),
             input_nodes=["input", "target"],

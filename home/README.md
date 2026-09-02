@@ -9,10 +9,10 @@ This release uses MHD Framework V4. ResNet forward Feature Messages and backward
 Gradient Messages share the declared hypergraph topology. Classifier training enters
 the reverse computation through `MHD_Trainer` and its declared backward levels. The
 Trainer automatically finds the unique differentiable scalar endpoint (`loss`); no
-backward node or loss-node argument exists. `MHD_Monitor` evaluates the explicit
-`validation_macro_f1` node once from the complete validation split across all ranks,
-and the Trainer uses that node as its checkpoint criterion. AMP scaling, accumulation,
-optimizer updates, and DDP retain native PyTorch semantics. The independently trained
+backward node or loss-node argument exists. LOOK supplies a task-specific PyTorch
+`validation_macro_f1(graph)` callable, which reads complete cross-rank validation
+states by Node name and selects checkpoints. AMP scaling, accumulation, optimizer
+updates, and DDP retain native PyTorch semantics. The independently trained
 cGAN remains an ordinary PyTorch module because it is a filling baseline rather than
 the MHD study backbone.
 

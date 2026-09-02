@@ -57,13 +57,13 @@
     }
   ],
   "data_tree": "data",
-  "deployment_data_root": "/data/mengh/LOOK/2026_09_02_00_00_00",
+  "deployment_data_root": "/Users/mengh/Downloads/LOOK/2026_09_02_00_00_00/data",
   "home_tree": "home",
   "project": "LOOK",
   "release_id": "2026_09_02_00_00_00",
   "schema_version": 1,
   "source_manifest": {
     "path": "home/file_manifest.json",
-    "sha256": "9683531fbd77f1e6b9baa52baa4edb73583e4481501edaef886f83e6c140d316"
+    "sha256": "af89e600f33f62bdede9f025a94242f0acf4c601aac4c2d0ced383de13031739"
   }
 }

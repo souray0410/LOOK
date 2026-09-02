@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from MHD_Project.MHD_Framework_V4 import MHD_Edge, MHD_Graph, MHD_Node, MHD_Topo
+from MHD_Project.MHD_Utils_V4 import display_graph
 from look_core.distributed import module_state_sha256
 
 
@@ -102,9 +103,9 @@ def test_module_state_hash_covers_scalar_buffers_deterministically():
     assert module_state_sha256(first) != module_state_sha256(second)
 
 
-def test_mermaid_draws_explicit_global_levels_in_order():
+def test_display_graph_draws_explicit_global_levels_in_order():
     graph = _tiny_graph()
-    mermaid = graph.generate_mermaid(levels=[0, 1, 3, 2])
+    mermaid = display_graph(graph, levels=[0, 1, 3, 2])
     assert "#0:L0:S0" in mermaid
     assert "#2:L3:S0" in mermaid
     assert " -->|" in mermaid

@@ -96,35 +96,6 @@ class BatchAccuracy(nn.Module):
             return (logits.detach().argmax(dim=1) == labels.detach().long()).float()
 
 
-class ValidationMacroF1(nn.Module):
-    """Exact Macro-F1 computed by the graph's full-validation monitor level."""
-
-    def __init__(self, num_classes: int) -> None:
-        super().__init__()
-        self.num_classes = int(num_classes)
-
-    def forward(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        with torch.no_grad():
-            prediction = logits.detach().argmax(dim=1)
-            target = labels.detach().long()
-            values = []
-            for class_id in range(self.num_classes):
-                predicted = prediction == class_id
-                expected = target == class_id
-                true_positive = torch.logical_and(predicted, expected).sum().float()
-                false_positive = torch.logical_and(predicted, ~expected).sum().float()
-                false_negative = torch.logical_and(~predicted, expected).sum().float()
-                denominator = 2 * true_positive + false_positive + false_negative
-                values.append(
-                    torch.where(
-                        denominator > 0,
-                        2 * true_positive / denominator,
-                        torch.zeros_like(denominator),
-                    )
-                )
-            return torch.stack(values).mean()
-
-
 def _resnet_modules(
     model: nn.Module,
     num_classes: int,
@@ -207,11 +178,6 @@ def _build_topology(
         ["fusion_logits", "label_gt"],
         "batch_accuracy",
     )
-    connections["validation_macro_f1_edge"] = (
-        ["fusion_logits", "label_gt"],
-        "validation_macro_f1",
-    )
-
     role_matrices, sort_matrices = [], []
     for group in _active_edge_groups(fusion_position):
         role = torch.zeros((len(edges), len(nodes)), dtype=torch.int8, device=device)
@@ -228,17 +194,6 @@ def _build_topology(
         sort_matrices.append(sort)
     forward_roles = role_matrices
     forward_sorts = sort_matrices
-    criterion_role = torch.zeros(
-        (len(edges), len(nodes)), dtype=torch.int8, device=device
-    )
-    criterion_sort = torch.zeros_like(criterion_role)
-    criterion_edge_id = edge_ids["validation_macro_f1_edge"]
-    criterion_heads, criterion_tail = connections["validation_macro_f1_edge"]
-    for order, head in enumerate(criterion_heads):
-        criterion_role[criterion_edge_id, node_ids[head]] = -1
-        criterion_sort[criterion_edge_id, node_ids[head]] = order
-    criterion_role[criterion_edge_id, node_ids[criterion_tail]] = 1
-    criterion_sort[criterion_edge_id, node_ids[criterion_tail]] = len(criterion_heads)
     backward_roles = []
     for role in forward_roles:
         reverse = (-role).clone()
@@ -246,8 +201,8 @@ def _build_topology(
         backward_roles.append(reverse)
     backward_sorts = [sort.clone() for sort in forward_sorts]
     return MHD_Topo(
-        [*forward_roles, criterion_role, *backward_roles],
-        [*forward_sorts, criterion_sort, *backward_sorts],
+        [*forward_roles, *backward_roles],
+        [*forward_sorts, *backward_sorts],
     )
 
 
@@ -286,10 +241,6 @@ def build_resnet50_mhd_graph(
     nodes.append(_make_tensor_node(
         len(nodes), "batch_accuracy", torch.zeros(batch_size, device=device)
     ))
-    nodes.append(_make_tensor_node(
-        len(nodes), "validation_macro_f1", torch.zeros((), device=device)
-    ))
-
     edges: List[MHD_Edge] = []
     for branch in ("oct", "cfp", "fusion"):
         for stage in STAGES:
@@ -306,11 +257,6 @@ def build_resnet50_mhd_graph(
         _add_edge(edges, f"fuse_{position}_edge", operation)
     _add_edge(edges, "classification_loss_edge", ClassificationLoss())
     _add_edge(edges, "batch_accuracy_edge", BatchAccuracy())
-    _add_edge(
-        edges,
-        "validation_macro_f1_edge",
-        ValidationMacroF1(num_classes),
-    )
 
     topology = _build_topology(nodes, edges, fusion_position, device)
     graph = MHD_Graph(set(nodes), set(edges), {topology}, device=device)
@@ -319,9 +265,8 @@ def build_resnet50_mhd_graph(
     graph.fusion_position = fusion_position
     forward_count = len(_active_edge_groups(fusion_position))
     graph.forward_levels = list(range(forward_count))
-    graph.criteria_levels = [forward_count]
     graph.backward_levels = list(
-        range(2 * forward_count, forward_count, -1)
+        range(2 * forward_count - 1, forward_count - 1, -1)
     )
     graph.crt_backward_levels = graph.backward_levels[:2]
     start = FUSION_POSITIONS.index(fusion_position)
@@ -331,7 +276,6 @@ def build_resnet50_mhd_graph(
     graph.monitor_edges = ["fusion_classifier_edge"]
     graph.monitor_levels = [graph.forward_levels[-1]]
     graph.model_levels = graph.forward_levels[:-1]
-    graph.criteria_node = "validation_macro_f1"
     return graph
 
 
@@ -431,8 +375,6 @@ def graph_summary(graph: MHD_Graph) -> Dict[str, object]:
         "forward_levels": graph.forward_levels,
         "backward_levels": graph.backward_levels,
         "crt_backward_levels": graph.crt_backward_levels,
-        "criteria_levels": graph.criteria_levels,
-        "criteria_node": graph.criteria_node,
         "backward_topology": "explicit_global_levels",
         "backward_api": "MHD_Graph.backward",
         "correction_nodes": graph.correction_nodes,

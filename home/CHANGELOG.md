@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-02 callable Criteria and utility graph display
+
+- Kept parameter update in `MHD_Trainer` through the native PyTorch optimizer; update
+  is not represented as a graph level because it does not route Node Messages.
+- Replaced Criteria Node/Edge/Levels with a task-defined PyTorch `criteria(graph)`
+  callable evaluated once on complete cross-rank validation states.
+- Kept LOOK's `validation_macro_f1` in the task metrics module and cross-checked it
+  against the complete sklearn report used for publication outputs.
+- Moved Mermaid generation out of the Framework core into the Utils-level
+  `display_graph(graph, levels)` function.
+- Reset temporary complete-validation Node states before checkpointing so uneven final
+  batches cannot produce incompatible Message shapes during resume.
+
 ## 2026-09-02 cRT complete-modality baseline search
 
 - Synchronized the upstream V4 Mermaid phase/level visualization update while retaining

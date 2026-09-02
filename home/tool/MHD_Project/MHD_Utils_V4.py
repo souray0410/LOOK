@@ -1269,6 +1269,66 @@ class MHD_Monitor:
         return "\n".join(formatted)
 
 
+def display_graph(mhd_graph: MHD_Graph, levels: Sequence[int]) -> str:
+    """Display selected global levels as Mermaid source in the supplied order."""
+    levels = mhd_graph._validate_levels(levels, mhd_graph.num_levels, "Display")
+    mermaid = [
+        "flowchart TD",
+        "",
+        " classDef MHD_Node_Style fill:#fff7e6,stroke:#fa8c16,stroke-width:2px,rounded:1",
+        " classDef MHD_Edge_Style fill:#e6f7ff,stroke:#1890ff,stroke-width:2px,rounded:1",
+        "",
+    ]
+
+    def escape_label(value: str) -> str:
+        return value.replace("\\", "\\\\").replace('"', '\\"')
+
+    for node in sorted(mhd_graph.nodes, key=lambda item: item.id):
+        mermaid.append(
+            f' N{node.id}["{escape_label(node.name)}"]:::MHD_Node_Style'
+        )
+    for edge in sorted(mhd_graph.edges, key=lambda item: item.id):
+        connections: Dict[Tuple[int, int], List[Tuple[int, int, int]]] = defaultdict(list)
+        for execution_index, level in enumerate(levels):
+            role = mhd_graph.topo.role_matrices[level]
+            sort = mhd_graph.topo.sort_matrices[level]
+            for node_id, role_value in enumerate(role[edge.id].tolist()):
+                if role_value == 0:
+                    continue
+                if role_value < 0:
+                    source_id, target_id = node_id, -(edge.id + 1)
+                else:
+                    source_id, target_id = -(edge.id + 1), node_id
+                connections[(source_id, target_id)].append(
+                    (execution_index, level, int(sort[edge.id, node_id].item()))
+                )
+        if not connections:
+            continue
+        mermaid.append(
+            f' E{edge.id}["{escape_label(edge.name)}"]:::MHD_Edge_Style'
+        )
+        for (source_id, target_id), order_values in sorted(
+            connections.items(),
+            key=lambda item: (
+                0 if item[0][0] >= 0 else 1,
+                item[0][0],
+                item[0][1],
+            ),
+        ):
+            source = f"E{-source_id - 1}" if source_id < 0 else f"N{source_id}"
+            target = f"E{-target_id - 1}" if target_id < 0 else f"N{target_id}"
+            order_text = ", ".join(
+                f"#{execution_index}:L{level}:S{sort_value}"
+                for execution_index, level, sort_value in order_values
+            )
+            mermaid.append(f" {source} -->|{order_text}| {target}")
+        mermaid.append("")
+    mermaid_code = "\n".join(mermaid)
+    print("=== MHD Graph ===")
+    print(mermaid_code)
+    return mermaid_code
+
+
 # ===================== 训练器类 =====================
 
 def _infer_scalar_terminal_name(graph: MHD_Graph, levels: Sequence[int]) -> str:
@@ -1312,8 +1372,7 @@ class MHD_Trainer:
         monitor: MHD_Monitor,
         forward_levels: Sequence[int],
         backward_levels: Sequence[int],
-        criteria_node: str,
-        criteria_levels: Optional[Sequence[int]] = None,
+        criteria: Callable[[MHD_Graph], Union[torch.Tensor, float]],
         criteria_mode: str = 'min',
         save_dir: str = "./mhd_ckpts",
         grad_clip_norm: float = None,
@@ -1339,8 +1398,7 @@ class MHD_Trainer:
             monitor: 监控器
             forward_levels: 默认 Feature Message 执行序列
             backward_levels: 默认 Gradient Message 执行序列
-            criteria_node: 用于判断最佳模型的节点，必须显式指定
-            criteria_levels: 在完整验证集上产生 Criteria Node 的可选 Level 序列
+            criteria: 使用完整验证状态判断最佳模型的 PyTorch callable
             criteria_mode: 'min' 或 'max'，默认 'min'
             save_dir: 保存目录
             grad_clip_norm: 梯度裁剪阈值
@@ -1349,8 +1407,8 @@ class MHD_Trainer:
         """
         if criteria_mode not in {"min", "max"}:
             raise ValueError("criteria_mode 必须是 min 或 max")
-        if not isinstance(criteria_node, str) or not criteria_node:
-            raise ValueError("criteria_node 必须是非空节点名称")
+        if not callable(criteria):
+            raise TypeError("criteria 必须是 callable")
         if grad_accum_steps < 1:
             raise ValueError("grad_accum_steps 必须大于等于 1")
         if monitor_interval_steps < 1:
@@ -1367,26 +1425,8 @@ class MHD_Trainer:
         if overlap:
             raise ValueError(f"Trainer 前后向 levels 不得重叠: {overlap}")
         self.loss_node_name = _infer_scalar_terminal_name(mhd_graph, self.forward_levels)
-        self.criteria_node_name = criteria_node
-        if self.mhd_graph.get_node_by_name(self.criteria_node_name) is None:
-            raise ValueError(f"最佳判定节点 '{self.criteria_node_name}' 不存在")
-        self.criteria_levels = (
-            tuple(mhd_graph._validate_levels(
-                criteria_levels,
-                mhd_graph.num_levels,
-                "Trainer Criteria",
-            ))
-            if criteria_levels is not None
-            else tuple()
-        )
-        criteria_overlap = sorted(
-            set(self.criteria_levels).intersection(
-                {*self.forward_levels, *self.backward_levels}
-            )
-        )
-        if criteria_overlap:
-            raise ValueError(f"Trainer Criteria levels 必须独立于训练路径: {criteria_overlap}")
-        self.criteria_source_nodes = self._infer_criteria_source_nodes()
+        self.criteria = criteria
+        self.criteria_name = getattr(criteria, "__name__", criteria.__class__.__name__)
         self.criteria_mode = criteria_mode
         self.save_dir = save_dir
         self.grad_clip_norm = grad_clip_norm
@@ -1410,12 +1450,7 @@ class MHD_Trainer:
                 raise ValueError(f"input_mapping 包含未声明的输入节点 '{node_name}'")
             self.input_mapping[node_name] = batch_key
         requested_outputs = list(output_nodes or ())
-        for name in self.criteria_source_nodes:
-            if name not in requested_outputs:
-                requested_outputs.append(name)
         metric_outputs = [self.loss_node_name, *monitor.monitor_nodes]
-        if not self.criteria_levels:
-            metric_outputs.append(self.criteria_node_name)
         for name in metric_outputs:
             if name not in requested_outputs:
                 requested_outputs.append(name)
@@ -1489,33 +1524,10 @@ class MHD_Trainer:
             self.logger.info(f"设备={self.device} precision={self.precision} accum={self.grad_accum_steps}")
             self.logger.info(
                 f"Forward levels={list(self.forward_levels)} "
-                f"Criteria levels={list(self.criteria_levels)} "
                 f"Backward levels={list(self.backward_levels)} "
-                f"标量终点={self.loss_node_name} 判定节点={self.criteria_node_name}"
+                f"标量终点={self.loss_node_name} Criteria={self.criteria_name}"
             )
             self.logger.info("=" * 80)
-
-    def _infer_criteria_source_nodes(self) -> Tuple[str, ...]:
-        if not self.criteria_levels:
-            return tuple()
-        produced = set()
-        boundary = []
-        criterion_id = self.mhd_graph.get_node_by_name(self.criteria_node_name).id
-        criterion_produced = False
-        for level in self.criteria_levels:
-            for step in self.mhd_graph._execution_plan_per_level[level]:
-                for node_id in step.head_ids:
-                    if node_id not in produced and node_id not in boundary:
-                        boundary.append(node_id)
-                produced.update(step.tail_ids)
-                criterion_produced = criterion_produced or criterion_id in step.tail_ids
-        if not criterion_produced:
-            raise ValueError(
-                f"Criteria levels 未产生节点 '{self.criteria_node_name}'"
-            )
-        return tuple(
-            self.mhd_graph.get_node_by_id(node_id).name for node_id in boundary
-        )
 
     def _setup_logger(self, save_dir: str) -> logging.Logger:
         logger = logging.getLogger(f"mhd_train.rank{self.context.rank}")
@@ -1537,8 +1549,6 @@ class MHD_Trainer:
     def _validate_nodes(self):
         if not self.mhd_graph.get_node_by_name(self.loss_node_name):
             raise ValueError(f"标量终点 '{self.loss_node_name}' 不存在")
-        if not self.mhd_graph.get_node_by_name(self.criteria_node_name):
-            raise ValueError(f"最佳判定节点 '{self.criteria_node_name}' 不存在")
         for node_name in self.monitor.monitor_nodes:
             if not self.mhd_graph.get_node_by_name(node_name):
                 warnings.warn(f"监控节点 '{node_name}' 不存在")
@@ -1634,7 +1644,6 @@ class MHD_Trainer:
             dict.fromkeys(
                 (
                     self.loss_node_name,
-                    self.criteria_node_name,
                     *self.monitor.monitor_nodes,
                 )
             )
@@ -1658,7 +1667,7 @@ class MHD_Trainer:
         local = {}
         for node_name, values in local_tensors.items():
             if not values:
-                raise RuntimeError(f"Validation 未收集到 Criteria 输入节点 {node_name}")
+                continue
             local[node_name] = torch.cat(tuple(values), dim=0).cpu()
         if self.context.distributed:
             gathered = [None] * self.context.world_size
@@ -1669,7 +1678,7 @@ class MHD_Trainer:
             node_name: torch.cat(
                 tuple(part[node_name] for part in gathered), dim=0
             )
-            for node_name in local_tensors
+            for node_name in local
         }
         self.last_eval_tensors = complete
         return complete
@@ -1679,24 +1688,25 @@ class MHD_Trainer:
         self,
         complete_tensors: Mapping[str, torch.Tensor],
     ) -> float:
-        for node in self.mhd_graph.nodes:
-            node.reset()
-        for source_name in self.criteria_source_nodes:
-            value = complete_tensors[source_name]
-            self.mhd_graph.get_node_by_name(
-                source_name
-            ).feature_message.current_state = value.to(self.device, non_blocking=True)
-        self.mhd_graph.forward(levels=list(self.criteria_levels))
-        value = self.mhd_graph.get_node_by_name(
-            self.criteria_node_name
-        ).feature_message.current_state
-        if value.numel() != 1:
-            raise RuntimeError(f"Criteria 节点 '{self.criteria_node_name}' 必须是标量")
-        scalar = float(value.detach().float().item())
+        try:
+            for node_name, value in complete_tensors.items():
+                node = self.mhd_graph.get_node_by_name(node_name)
+                if node is not None:
+                    node.feature_message.current_state = value.to(
+                        self.device, non_blocking=True
+                    )
+            value = self.criteria(self.mhd_graph)
+        finally:
+            for node in self.mhd_graph.nodes:
+                node.reset()
+        if isinstance(value, torch.Tensor):
+            if value.numel() != 1:
+                raise RuntimeError(f"Criteria '{self.criteria_name}' 必须返回标量")
+            scalar = float(value.detach().float().item())
+        else:
+            scalar = float(value)
         if not np.isfinite(scalar):
-            raise RuntimeError(f"Criteria 节点 '{self.criteria_node_name}' 产生了非有限值")
-        for node in self.mhd_graph.nodes:
-            node.reset()
+            raise RuntimeError(f"Criteria '{self.criteria_name}' 产生了非有限值")
         return scalar
 
     def train_step(
@@ -1808,8 +1818,7 @@ class MHD_Trainer:
                 self._optimizer_steps += 1
             self._accumulation_paths = None
         self._micro_step += 1
-        excluded = (self.criteria_node_name,) if self.criteria_levels else tuple()
-        return self._collect_metrics(outputs, excluded)
+        return self._collect_metrics(outputs)
 
     def _pipeline_train_step(self, input_dict: Dict[str, torch.Tensor]) -> Dict[str, float]:
         self.model.train()
@@ -1847,8 +1856,7 @@ class MHD_Trainer:
             local_value = outputs.get(self.loss_node_name)
             value = self.model.synchronize_last_stage_scalar(local_value)
             return {self.loss_node_name: float(value.item())}
-        excluded = (self.criteria_node_name,) if self.criteria_levels else tuple()
-        return self._collect_metrics(outputs, excluded)
+        return self._collect_metrics(outputs)
 
     def _reduce_epoch_metrics(self, metric_sums: Mapping[str, float], steps: int) -> Dict[str, float]:
         names = sorted(metric_sums)
@@ -1906,43 +1914,37 @@ class MHD_Trainer:
     def eval_epoch(self, eval_data, epoch: int):
         self.monitor.reset()
         epoch_metrics_sum = defaultdict(float)
-        eval_tensors = {name: [] for name in self.criteria_source_nodes}
+        eval_tensors = defaultdict(list)
         pbar = tqdm(eval_data, desc=f"Eval  Epoch {epoch+1}", leave=False, disable=not self.context.is_main)
         sample_count = 0
         for step, input_dict in enumerate(pbar):
-            if not self.criteria_levels:
-                step_metrics = self.eval_step(input_dict)
-            else:
-                outputs = self._eval_outputs(input_dict)
-                step_metrics = self._collect_metrics(
-                    outputs,
-                    (self.criteria_node_name,),
-                )
-                for node_name in self.criteria_source_nodes:
-                    value = outputs.get(node_name)
-                    if value is None:
-                        node = self.mhd_graph.get_node_by_name(node_name)
-                        value = node.feature_message.current_state
-                    eval_tensors[node_name].append(value.detach().cpu())
             batch_samples = self._pipeline_batch_size(input_dict)
+            outputs = self._eval_outputs(input_dict)
+            step_metrics = self._collect_metrics(outputs)
+            for node_name in self.output_nodes:
+                value = outputs.get(node_name)
+                if value is None:
+                    node = self.mhd_graph.get_node_by_name(node_name)
+                    value = node.feature_message.current_state if node is not None else None
+                if not isinstance(value, torch.Tensor):
+                    continue
+                detached = value.detach()
+                if detached.ndim == 0:
+                    detached = detached.reshape(1).expand(batch_samples)
+                elif detached.shape[0] != batch_samples:
+                    continue
+                eval_tensors[node_name].append(detached.cpu())
             sample_count += batch_samples if step_metrics else 0
             for k, v in step_metrics.items():
                 epoch_metrics_sum[k] += v * batch_samples
             pbar.set_postfix({k: f"{v:.4f}" for k, v in step_metrics.items()})
         avg_metrics = self._reduce_epoch_metrics(epoch_metrics_sum, sample_count)
-        if self.criteria_levels:
-            complete_tensors = self._gather_eval_tensors(eval_tensors)
-            avg_metrics[self.criteria_node_name] = self._run_criteria(
-                complete_tensors,
-            )
+        complete_tensors = self._gather_eval_tensors(eval_tensors)
+        avg_metrics[self.criteria_name] = self._run_criteria(complete_tensors)
         self.history["eval"]["metrics"].append(avg_metrics)
 
         cur_loss = avg_metrics.get(self.loss_node_name)
-        cur_criteria = avg_metrics.get(self.criteria_node_name)
-
-        if cur_criteria is None:
-            self.logger.warning(f"最佳判定节点 {self.criteria_node_name} 不在指标中，无法判断最佳模型")
-            return
+        cur_criteria = avg_metrics[self.criteria_name]
 
         is_better = False
         if self.criteria_mode == 'min':
@@ -1958,11 +1960,11 @@ class MHD_Trainer:
             self.history["best_loss_value"] = cur_loss
             self._save_best_checkpoint()
             loss_str = f"{cur_loss:.6f}" if cur_loss is not None else "N/A"
-            self.logger.info(f"🏆 当下最佳模型 | Epoch {epoch+1} | {self.loss_node_name}: {loss_str} | {self.criteria_node_name}: {cur_criteria:.6f}")
+            self.logger.info(f"🏆 当下最佳模型 | Epoch {epoch+1} | {self.loss_node_name}: {loss_str} | {self.criteria_name}: {cur_criteria:.6f}")
         else:
             best_loss = self.history.get("best_loss_value")
             loss_str = f"{best_loss:.6f}" if best_loss is not None else "N/A"
-            self.logger.info(f"🏆 过往最佳模型 | Epoch {self.history['best_epoch']} | {self.loss_node_name}: {loss_str} | {self.criteria_node_name}: {self.history['best_eval_value']:.6f}")
+            self.logger.info(f"🏆 过往最佳模型 | Epoch {self.history['best_epoch']} | {self.loss_node_name}: {loss_str} | {self.criteria_name}: {self.history['best_eval_value']:.6f}")
 
         self.logger.info(f"📊 验证轮次 {epoch+1} 指标: {avg_metrics}")
         return avg_metrics
@@ -1985,6 +1987,8 @@ class MHD_Trainer:
                 "micro_step": self._micro_step,
                 "forward_levels": list(self.forward_levels),
                 "backward_levels": list(self.backward_levels),
+                "criteria_name": self.criteria_name,
+                "criteria_mode": self.criteria_mode,
             },
             "scheduler": self.lr_scheduler.state_dict() if self.lr_scheduler else {},
             "scaler": self.grad_scaler.state_dict(),
@@ -2116,6 +2120,16 @@ class MHD_Trainer:
                 node.feature_message = MHD_Node.Message(feature_initial, feature_current)
                 node.gradient_message = MHD_Node.Message(gradient_initial, gradient_current)
             self.history = state["trainer"]["history"]
+            saved_criteria_name = state["trainer"].get("criteria_name")
+            saved_criteria_mode = state["trainer"].get("criteria_mode")
+            if saved_criteria_name not in {None, self.criteria_name}:
+                raise ValueError(
+                    f"Checkpoint Criteria 为 {saved_criteria_name}，当前为 {self.criteria_name}"
+                )
+            if saved_criteria_mode not in {None, self.criteria_mode}:
+                raise ValueError(
+                    f"Checkpoint Criteria mode 为 {saved_criteria_mode}，当前为 {self.criteria_mode}"
+                )
             self._micro_step = int(state["trainer"].get("micro_step", 0))
             saved_forward = state["trainer"].get("forward_levels")
             saved_backward = state["trainer"].get("backward_levels")
@@ -2173,7 +2187,7 @@ class MHD_Trainer:
             best_loss = self.history.get("best_loss_value")
             loss_str = f"{best_loss:.6f}" if best_loss is not None else "N/A"
             self.logger.info(f"🏆 最佳 {self.loss_node_name}: {loss_str} (Epoch {self.history['best_epoch']})")
-            self.logger.info(f"🏆 最佳 {self.criteria_node_name}: {self.history['best_eval_value']:.6f} (Epoch {self.history['best_epoch']})")
+            self.logger.info(f"🏆 最佳 {self.criteria_name}: {self.history['best_eval_value']:.6f} (Epoch {self.history['best_epoch']})")
             self.logger.info(f"📝 所有结果已保存至: {self.save_dir}")
             self.logger.info("="*80)
         except Exception as e:

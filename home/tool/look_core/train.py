@@ -27,7 +27,7 @@ from .graph import (
     reset_and_forward,
     set_crt_train_mode,
 )
-from .metrics import classification_metrics
+from .metrics import classification_metrics, validation_macro_f1
 from .monitoring import TrainingMonitor
 from .reproducibility import sha256, write_json_atomic
 
@@ -115,8 +115,7 @@ def train_complete_model_ddp(
         graph_monitor,
         forward_levels=graph.forward_levels,
         backward_levels=backward_levels,
-        criteria_node=graph.criteria_node,
-        criteria_levels=graph.criteria_levels,
+        criteria=validation_macro_f1,
         criteria_mode="max",
         save_dir=str(run_dir),
         lr_scheduler=scheduler,
@@ -168,11 +167,11 @@ def train_complete_model_ddp(
         labels = complete_labels.long().numpy()
         metrics = classification_metrics(labels, probabilities)
         metrics["cross_entropy"] = float(eval_metrics[trainer.loss_node_name])
-        graph_score = float(eval_metrics[trainer.criteria_node_name])
+        graph_score = float(eval_metrics[trainer.criteria_name])
         score = float(metrics[config.primary_metric])
         if not np.isclose(graph_score, score, atol=1e-7, rtol=1e-6):
             raise RuntimeError(
-                f"Graph criterion {graph_score} does not match full validation "
+                f"PyTorch criterion {graph_score} does not match full validation "
                 f"{config.primary_metric} {score}"
             )
         record = {
@@ -180,7 +179,7 @@ def train_complete_model_ddp(
             "train_loss": float(train_metrics[trainer.loss_node_name]),
             "train_batch_accuracy": float(train_metrics["batch_accuracy"]),
             "validation": metrics,
-            "criteria_node": trainer.criteria_node_name,
+            "criteria": trainer.criteria_name,
             "criteria_value": graph_score,
             "learning_rates": [group["lr"] for group in trainer.optimizer.param_groups],
             "graph_monitor": trainer.last_monitor_metrics,
@@ -203,7 +202,7 @@ def train_complete_model_ddp(
             "architecture_id": graph.architecture_id,
             "epoch": best_epoch,
             "primary_metric": config.primary_metric,
-            "criteria_node": trainer.criteria_node_name,
+            "criteria": trainer.criteria_name,
             "criteria_mode": trainer.criteria_mode,
             "criteria_scope": "full_validation_distributed",
             "score": best_score,
@@ -226,7 +225,7 @@ def train_complete_model_ddp(
             "epochs_completed": epochs_completed,
             "best_epoch": best_epoch,
             "best_score": best_score,
-            "criteria_node": trainer.criteria_node_name,
+            "criteria": trainer.criteria_name,
             "criteria_mode": trainer.criteria_mode,
             "criteria_scope": "full_validation_distributed",
             "canonical_checkpoint": str(run_dir / "best"),
