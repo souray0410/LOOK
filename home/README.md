@@ -184,6 +184,14 @@ change creates a different content-fingerprinted run ID. After the 168 configura
 inspect the validation ranking before freezing any design or running the full
 filling/LOOK study.
 
+The mandatory post-search selection and evaluation order is defined in
+`tool/research/BASELINE_LOOK_EXPERIMENT_PROTOCOL.md`. Briefly, the 168-run single-seed
+screen is followed by a three-candidate, three-seed stability confirmation. The winning
+hyperparameter setting and all three seed-specific complete-modality checkpoints are
+then frozen before any formal missing-modality/LOOK comparison. The sealed UKB test is
+accessed only after those choices are fixed; external testing remains a separate evidence
+requirement.
+
 ## Resume And Outputs
 
 The same normalized configuration resolves to the same deterministic run ID. A rerun

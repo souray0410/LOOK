@@ -26,9 +26,9 @@
       "sha256": "208d2f3892772c78fcb8045b1c11b0056f3648c759be47e41672e3728fce5884"
     },
     {
-      "bytes": 11348,
+      "bytes": 11870,
       "path": "README.md",
-      "sha256": "210bdd412086d48a5b767d370c6171ed77b1ab6bb0777954b949fba6f1bd31b2"
+      "sha256": "4a3768f929f17e1c052d758f18e835733297b5ae797bfbe54d2c6e17688bf11f"
     },
     {
       "bytes": 5443,
@@ -331,6 +331,11 @@
       "sha256": "7a9c25486b0c5ff5293ca9ae74cdbee56b8ec96e682af7effdec1ec6ec85ec93"
     },
     {
+      "bytes": 6664,
+      "path": "tool/research/BASELINE_LOOK_EXPERIMENT_PROTOCOL.md",
+      "sha256": "e8d02377ae170bf980cb50cd233a28ae0b47ad2e5b8921c9b225b56fa031ce60"
+    },
+    {
       "bytes": 282465,
       "path": "tool/research/LOOK.pdf",
       "sha256": "47e7cb89bbcd671796afc2d5d5f059e847f195fd469d8c4893593a29ff7fbfb1"
@@ -506,7 +511,7 @@
       "sha256": "c139f8fea240ee2f051850b22249a0a2f7efeb035126ed60e6f5401dc43e6b36"
     }
   ],
-  "generated_at_utc": "2026-09-02T05:43:09.496309+00:00",
+  "generated_at_utc": "2026-09-02T05:45:53.083156+00:00",
   "release_id": "2026_09_02_00_00_00",
   "schema_version": 2
 }
