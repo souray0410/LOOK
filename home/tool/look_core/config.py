@@ -35,8 +35,7 @@ class ExperimentConfig:
     weight_decay: float = 1e-4
     warmup_epochs: int = 5
     sampling_strategy: str = "natural_without_replacement"
-    loss_name: str = "class_balanced_ce"
-    class_balance_beta: float = 0.999
+    loss_name: str = "balanced_softmax"
     label_smoothing: float = 0.0
     classifier_dropout: float = 0.1
     amp: bool = True
@@ -128,10 +127,8 @@ class ExperimentConfig:
             raise ValueError("effective_batch_size must be divisible by the global micro batch")
         if self.sampling_strategy != "natural_without_replacement":
             raise ValueError("Classifier search requires natural_without_replacement sampling")
-        if self.loss_name != "class_balanced_ce":
-            raise ValueError("Classifier search requires class_balanced_ce")
-        if not 0.0 <= self.class_balance_beta < 1.0:
-            raise ValueError("class_balance_beta must be in [0, 1)")
+        if self.loss_name != "balanced_softmax":
+            raise ValueError("Classifier search requires balanced_softmax")
         if not 0.0 <= self.label_smoothing < 1.0:
             raise ValueError("label_smoothing must be in [0, 1)")
         if not 0.0 <= self.classifier_dropout < 1.0:

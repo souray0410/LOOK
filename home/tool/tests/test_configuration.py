@@ -119,7 +119,7 @@ def test_study_grid_cases_use_singleton_axes_and_keep_existing_case_stable(tmp_p
     assert expanded[0].config.as_dict() == first.config.as_dict()
 
 
-def test_baseline_search_grid_has_168_classifier_only_cases(tmp_path):
+def test_baseline_search_grid_has_56_classifier_only_cases(tmp_path):
     dataset = tmp_path / "dataset"
     dataset.mkdir()
     (dataset / "reference_labels.csv").write_text("participant_id\n", encoding="utf-8")
@@ -133,13 +133,11 @@ def test_baseline_search_grid_has_168_classifier_only_cases(tmp_path):
         pipeline_root=tmp_path / "pipeline",
     )
     cases = expand_study_grid(baseline_search_grid(), paths, gpu_devices=(0, 1))
-    assert len(cases) == 168
-    assert len({case.selection.experiment_id for case in cases}) == 168
+    assert len(cases) == 56
+    assert len({case.selection.experiment_id for case in cases}) == 56
     assert all(not case.options.fit_look for case in cases)
     assert all(not case.options.evaluate_missing_baselines for case in cases)
-    assert all(case.config.loss_name == "class_balanced_ce" for case in cases)
-    assert {case.config.class_balance_beta for case in cases} == {0.9999, 0.99995, 0.99999}
-    assert cases[0].config.class_balance_beta == 0.99999
+    assert all(case.config.loss_name == "balanced_softmax" for case in cases)
     assert cases[0].config.pretrained_lr == 1e-4
     assert cases[0].config.new_layer_lr == 1e-3
 
@@ -148,14 +146,14 @@ def test_partial_search_diagnostics_retain_best_and_group_evidence():
     rows = [
         {
             "experiment_id": "a", "fusion_position": "feature",
-            "class_balance_beta": 0.999, "pretrained_lr": 3e-5,
+            "loss_name": "balanced_softmax", "pretrained_lr": 3e-5,
             "new_layer_lr": 3e-4, "classifier_dropout": 0.1,
             "label_smoothing": 0.0, "macro_f1": 0.41,
             "balanced_accuracy": 0.43, "macro_auroc_ovr": 0.71, "ece_15": 0.08,
         },
         {
             "experiment_id": "b", "fusion_position": "layer4",
-            "class_balance_beta": 0.9995, "pretrained_lr": 1e-4,
+            "loss_name": "balanced_softmax", "pretrained_lr": 1e-4,
             "new_layer_lr": 1e-3, "classifier_dropout": 0.3,
             "label_smoothing": 0.05, "macro_f1": 0.47,
             "balanced_accuracy": 0.46, "macro_auroc_ovr": 0.74, "ece_15": 0.06,

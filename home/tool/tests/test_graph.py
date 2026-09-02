@@ -3,7 +3,7 @@ import torch
 
 from look_core.graph import (
     FUSION_POSITIONS,
-    ClassificationLoss,
+    BalancedSoftmaxLoss,
     build_resnet50_mhd_graph,
     classification_loss_metadata,
     reset_and_forward,
@@ -47,24 +47,30 @@ def test_branch_weights_are_equal_but_not_shared_and_fusion_is_average_identity(
     assert not any(isinstance(module, (torch.nn.ReLU, torch.nn.GELU)) for module in projection.modules())
 
 
-def test_class_balanced_loss_weights_and_metadata_are_inside_loss_edge():
+def test_balanced_softmax_adjustment_and_metadata_are_inside_loss_edge():
     counts = [1000, 100, 50, 20, 10]
     graph = build_resnet50_mhd_graph(
         "feature",
         batch_size=1,
         pretrained=False,
         class_counts=counts,
-        class_balance_beta=0.999,
         label_smoothing=0.05,
     )
     operation = graph.get_edge_by_name("classification_loss_edge").edge_operations[0].function
-    assert isinstance(operation, ClassificationLoss)
-    expected = (1.0 - 0.999) / (1.0 - torch.pow(torch.full((5,), 0.999), torch.tensor(counts)))
-    expected = expected / expected.mean()
-    assert torch.allclose(operation.class_weights, expected)
+    assert isinstance(operation, BalancedSoftmaxLoss)
+    logits = torch.tensor([[1.0, -0.5, 0.25, 2.0, -1.0]])
+    labels = torch.tensor([3])
+    expected = torch.nn.functional.cross_entropy(
+        logits + torch.tensor(counts, dtype=logits.dtype).log(),
+        labels,
+        label_smoothing=0.05,
+    )
+    assert torch.allclose(operation(logits, labels), expected)
     metadata = classification_loss_metadata(graph)
+    assert metadata["name"] == "balanced_softmax"
     assert metadata["class_counts"] == counts
     assert metadata["label_smoothing"] == 0.05
+    assert metadata["inference"] == "raw_logits_standard_softmax"
 
 
 def test_graph_internal_loss_and_backward_messages_are_differentiable():

@@ -67,9 +67,9 @@ completed/total configurations, the newest saved epoch and validation metrics, G
 state, and recent log lines. These utilities do not alter the study grid.
 
 `tool/operations/start_detached_baseline_search.sh` selects Step 19
-`classifier-search` mode and the `look-baseline-search` tmux session. It executes 168
+`classifier-search` mode and the `look-baseline-search` tmux session. It executes 56
 complete-modality configurations and deliberately bypasses filling, cGAN, LOOK and test
 evaluation. After each configuration, rank zero atomically refreshes the full leaderboard
-and grouped diagnostics for fusion position, effective-number beta, learning rate,
-dropout and label smoothing. `check_detached_baseline_search.sh` exposes those summaries
+and grouped diagnostics for fusion position, loss name, learning rate, dropout and label
+smoothing. `check_detached_baseline_search.sh` exposes those summaries
 alongside the active run's full epoch and class-level evidence.

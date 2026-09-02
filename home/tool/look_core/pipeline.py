@@ -170,7 +170,6 @@ class ExperimentRunner:
             torch.device("cpu"),
             pretrained=False,
             class_counts=class_counts,
-            class_balance_beta=self.config.class_balance_beta,
             label_smoothing=self.config.label_smoothing,
             classifier_dropout=self.config.classifier_dropout,
         )
@@ -188,7 +187,6 @@ class ExperimentRunner:
             self.device,
             pretrained=False,
             class_counts=class_counts,
-            class_balance_beta=self.config.class_balance_beta,
             label_smoothing=self.config.label_smoothing,
             classifier_dropout=self.config.classifier_dropout,
         )
@@ -310,7 +308,6 @@ class ExperimentRunner:
             "warmup_epochs": self.config.warmup_epochs,
             "sampling_strategy": self.config.sampling_strategy,
             "loss_name": self.config.loss_name,
-            "class_balance_beta": self.config.class_balance_beta,
             "label_smoothing": self.config.label_smoothing,
             "classifier_dropout": self.config.classifier_dropout,
             "amp": self.config.amp,

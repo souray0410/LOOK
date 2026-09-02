@@ -151,11 +151,12 @@ complete-modality baseline search in a remote `tmux` session:
 ./tool/operations/check_detached_baseline_search.sh --follow
 ```
 
-This dedicated search runs 168 complete-pair classifier configurations on GPUs 0 and 1:
-seven fusion positions, three effective-number loss betas (`0.9999`, `0.99995`, and
-`0.99999`), two discriminative learning-
-rate profiles, two classifier dropouts, two label-smoothing values, and seed 3407. It
-uses natural sampling without replacement and class-balanced cross entropy. Fusion is
+This dedicated search runs 56 complete-pair classifier configurations on GPUs 0 and 1:
+seven fusion positions, two discriminative learning-rate profiles, two classifier
+dropouts, two label-smoothing values, and seed 3407. It uses natural sampling without
+replacement and Balanced Softmax. The training loss adjusts each class logit by the
+logarithm of its complete training-split count; inference uses the unadjusted logits.
+There is no manually tuned class-balance beta. Fusion is
 strictly `concatenate -> 1x1 Conv/Linear -> BatchNorm/LayerNorm`; the fusion operation
 contains no activation, attention, or gate. Filling, cGAN, LOOK, random missingness, and
 the sealed test split are not entered during this search. Attach with
@@ -181,12 +182,12 @@ runs/logs/look-baseline-search_<timestamp>.log
 
 The search can be resumed with the same start command. Completed valid configurations
 are reused, an interrupted classifier resumes from `last.pt`, and a scientific or code
-change creates a different content-fingerprinted run ID. After the 168 configurations,
+change creates a different content-fingerprinted run ID. After the 56 configurations,
 inspect the validation ranking before freezing any design or running the full
 filling/LOOK study.
 
 The mandatory post-search selection and evaluation order is defined in
-`tool/research/BASELINE_LOOK_EXPERIMENT_PROTOCOL.md`. Briefly, the 168-run single-seed
+`tool/research/BASELINE_LOOK_EXPERIMENT_PROTOCOL.md`. Briefly, the 56-run single-seed
 screen is followed by a three-candidate, three-seed stability confirmation. The winning
 hyperparameter setting and all three seed-specific complete-modality checkpoints are
 then frozen before any formal missing-modality/LOOK comparison. The sealed UKB test is

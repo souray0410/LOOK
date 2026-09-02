@@ -53,7 +53,6 @@ def run_classifier(payload: dict, context) -> None:
         "cpu",
         pretrained=not (run_dir / "last.pt").is_file(),
         class_counts=reference_training_class_counts(config.labels_csv, config.num_classes),
-        class_balance_beta=config.class_balance_beta,
         label_smoothing=config.label_smoothing,
         classifier_dropout=config.classifier_dropout,
     )

@@ -31,8 +31,7 @@ def _primary_classifier_profile() -> dict[str, Any]:
         "weight_decay": 1e-4,
         "warmup_epochs": 5,
         "sampling_strategy": "natural_without_replacement",
-        "loss_name": "class_balanced_ce",
-        "class_balance_beta": 0.99999,
+        "loss_name": "balanced_softmax",
         "label_smoothing": 0.05,
         "classifier_dropout": 0.1,
         "amp": True,
@@ -45,17 +44,15 @@ def classifier_search_profiles() -> list[dict[str, Any]]:
         "standard": (1e-4, 1e-3),
         "low": (3e-5, 3e-4),
     }
-    for beta, (lr_name, (pretrained_lr, new_layer_lr)), dropout, smoothing in itertools.product(
-        (0.99999, 0.99995, 0.9999),
+    for (lr_name, (pretrained_lr, new_layer_lr)), dropout, smoothing in itertools.product(
         learning_rates.items(),
         (0.1, 0.3),
         (0.0, 0.05),
     ):
-        beta_name = str(beta).replace(".", "p")
         dropout_name = str(dropout).replace(".", "p")
         smoothing_name = str(smoothing).replace(".", "p")
         profiles.append({
-            "name": f"cbce-b{beta_name}__lr-{lr_name}__drop-{dropout_name}__ls-{smoothing_name}",
+            "name": f"balanced-softmax__lr-{lr_name}__drop-{dropout_name}__ls-{smoothing_name}",
             "epochs": 50,
             "patience": 10,
             "effective_batch_size": 256,
@@ -66,8 +63,7 @@ def classifier_search_profiles() -> list[dict[str, Any]]:
             "weight_decay": 1e-4,
             "warmup_epochs": 5,
             "sampling_strategy": "natural_without_replacement",
-            "loss_name": "class_balanced_ce",
-            "class_balance_beta": beta,
+            "loss_name": "balanced_softmax",
             "label_smoothing": smoothing,
             "classifier_dropout": dropout,
             "amp": True,
@@ -140,7 +136,7 @@ def _search_diagnostics(leaderboard: list[dict[str, Any]]) -> dict[str, Any]:
     """Persist enough partial evidence to guide the next baseline adjustment."""
     axes = (
         "fusion_position",
-        "class_balance_beta",
+        "loss_name",
         "pretrained_lr",
         "new_layer_lr",
         "classifier_dropout",
@@ -363,7 +359,7 @@ def run_study_grid(
                 "current_configuration": {
                     "fusion_position": runner.selection.fusion_position,
                     "seed": runner.selection.seed,
-                    "class_balance_beta": runner.config.class_balance_beta,
+                    "loss_name": runner.config.loss_name,
                     "pretrained_lr": runner.config.pretrained_lr,
                     "new_layer_lr": runner.config.new_layer_lr,
                     "classifier_dropout": runner.config.classifier_dropout,
@@ -388,7 +384,7 @@ def run_study_grid(
             "backbone_id": result.get("checkpoint", {}).get("backbone_id"),
             "fusion_position": runner.selection.fusion_position,
             "seed": runner.selection.seed,
-            "class_balance_beta": runner.config.class_balance_beta,
+            "loss_name": runner.config.loss_name,
             "pretrained_lr": runner.config.pretrained_lr,
             "new_layer_lr": runner.config.new_layer_lr,
             "classifier_dropout": runner.config.classifier_dropout,
@@ -406,7 +402,7 @@ def run_study_grid(
         )
         columns = [
             "rank", "experiment_id", "backbone_id", "fusion_position", "seed",
-            "class_balance_beta", "pretrained_lr", "new_layer_lr",
+            "loss_name", "pretrained_lr", "new_layer_lr",
             "classifier_dropout", "label_smoothing", "macro_f1",
             "best_epoch", "started_at_utc", "completed_at_utc",
             "balanced_accuracy", "macro_auroc_ovr", "accuracy", "weighted_f1",

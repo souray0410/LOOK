@@ -4,20 +4,20 @@
 
 - Synchronized the upstream V4 Mermaid phase/level visualization update while retaining
   the verified LOOK multi-GPU utility implementation.
-- Replaced weighted replacement sampling with deterministic natural sampling without
-  replacement and moved effective-number class-balanced cross entropy into the MHD loss
-  hyperedge.
+- Uses deterministic natural sampling without replacement and places Balanced Softmax
+  directly in the MHD loss hyperedge. Its class correction is derived from complete
+  training-split counts; no class-balance beta is searched.
 - Defined activation-free fusion as concatenation, one linear projection, and
   normalization; classifier dropout remains outside the fusion operation.
-- Added a 168-configuration validation-only baseline search over all seven fusion
-  positions, class-balance beta, discriminative learning rates, dropout and label
-  smoothing. Filling, cGAN, LOOK and sealed-test evaluation are disabled in this stage.
+- Added a 56-configuration validation-only baseline search over all seven fusion
+  positions, discriminative learning rates, dropout and label smoothing. Filling, cGAN,
+  LOOK and sealed-test evaluation are disabled in this stage.
 - Added atomic partial leaderboards and grouped diagnostics, plus a detached checker that
   exposes current configuration, complete and per-class validation evidence, confusion
   matrix, best epoch, GPU state and recent logs.
-- Calibrated effective-number betas to the observed 113:1 training imbalance. The search
-  uses `0.9999`, `0.99995`, and `0.99999`; their normal-class shares of total weighted
-  training contribution are approximately 70%, 56%, and 29%, respectively.
+- Balanced Softmax replaces the earlier effective-number beta trials. Those incomplete
+  formal attempts are not part of the released evidence; effective-number loss is
+  reserved, if needed, for a later fixed-architecture loss ablation.
 - Explicitly releases parent-process CUDA cache between sequential configurations so
   rank-zero validation cannot reduce memory headroom for the next two-rank DDP stage.
 

@@ -81,33 +81,26 @@ class ClassificationHead(nn.Module):
         return self.linear(self.dropout(feature))
 
 
-class ClassificationLoss(nn.Module):
-    """Differentiable training objective represented as an MHD edge operation."""
+class BalancedSoftmaxLoss(nn.Module):
+    """Balanced Softmax training objective represented as an MHD edge operation."""
 
     def __init__(
         self,
         class_counts: Sequence[int],
-        beta: float,
         label_smoothing: float,
     ) -> None:
         super().__init__()
         counts = torch.as_tensor(class_counts, dtype=torch.float64)
         if counts.ndim != 1 or torch.any(counts <= 0):
             raise ValueError("class_counts must contain one positive count per class")
-        effective = 1.0 - torch.pow(torch.full_like(counts, beta), counts)
-        weights = (1.0 - beta) / effective
-        weights = (weights / weights.mean()).float()
         self.register_buffer("class_counts", counts.long())
-        self.register_buffer("class_weights", weights)
-        self.beta = float(beta)
+        self.register_buffer("log_class_counts", counts.log().float())
         self.label_smoothing = float(label_smoothing)
 
     def forward(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        adjusted_logits = logits + self.log_class_counts.to(dtype=logits.dtype)
         return nn.functional.cross_entropy(
-            logits,
-            labels.long(),
-            weight=self.class_weights,
-            label_smoothing=self.label_smoothing,
+            adjusted_logits, labels.long(), label_smoothing=self.label_smoothing
         )
 
 
@@ -229,7 +222,6 @@ def build_resnet50_mhd_graph(
     device: torch.device | str = "cpu",
     pretrained: bool = True,
     class_counts: Sequence[int] | None = None,
-    class_balance_beta: float = 0.999,
     label_smoothing: float = 0.0,
     classifier_dropout: float = 0.1,
 ) -> MHD_Graph:
@@ -278,7 +270,7 @@ def build_resnet50_mhd_graph(
     _add_edge(
         edges,
         "classification_loss_edge",
-        ClassificationLoss(resolved_counts, class_balance_beta, label_smoothing),
+        BalancedSoftmaxLoss(resolved_counts, label_smoothing),
     )
     _add_edge(edges, "batch_accuracy_edge", BatchAccuracy())
 
@@ -345,14 +337,15 @@ def optimizer_parameter_groups(graph: MHD_Graph, pretrained_lr: float, new_layer
 
 def classification_loss_metadata(graph: MHD_Graph) -> Dict[str, object]:
     operation = graph.get_edge_by_name("classification_loss_edge").edge_operations[0].function
-    if not isinstance(operation, ClassificationLoss):
-        raise TypeError("classification_loss_edge does not contain ClassificationLoss")
+    if not isinstance(operation, BalancedSoftmaxLoss):
+        raise TypeError("classification_loss_edge does not contain BalancedSoftmaxLoss")
     return {
-        "name": "class_balanced_ce",
-        "beta": operation.beta,
+        "name": "balanced_softmax",
         "label_smoothing": operation.label_smoothing,
         "class_counts": operation.class_counts.detach().cpu().tolist(),
-        "class_weights": operation.class_weights.detach().cpu().tolist(),
+        "log_class_counts": operation.log_class_counts.detach().cpu().tolist(),
+        "training_adjustment": "logits + log(class_counts)",
+        "inference": "raw_logits_standard_softmax",
     }
 
 

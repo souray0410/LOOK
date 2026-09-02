@@ -84,7 +84,7 @@ if leaderboards:
     print("leaderboard_top5:")
     for rank, row in enumerate(rows[:5], start=1):
         print(
-            f"  {rank}. fusion={row['fusion_position']} beta={row['class_balance_beta']} "
+            f"  {rank}. fusion={row['fusion_position']} loss={row['loss_name']} "
             f"lr={row['pretrained_lr']}/{row['new_layer_lr']} "
             f"dropout={row['classifier_dropout']} smoothing={row['label_smoothing']} "
             f"macro_f1={row.get('macro_f1')} balanced_accuracy={row.get('balanced_accuracy')} "
