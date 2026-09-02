@@ -11,7 +11,12 @@ import numpy as np
 import torch
 
 from .config import ExperimentConfig, ExperimentSelection
-from .data import UKBPairedEyeDataset, make_loader, validate_reference_table
+from .data import (
+    UKBPairedEyeDataset,
+    make_loader,
+    reference_training_class_counts,
+    validate_reference_table,
+)
 from .distributed import launch_ddp_stage
 from .evaluate import evaluate_missing
 from .filling import NormalizedMeanFiller, PairedCGANFiller
@@ -41,6 +46,7 @@ class PipelineOptions:
     train_if_missing: bool = True
     fit_look: bool = True
     evaluate_random_missing: bool = True
+    evaluate_missing_baselines: bool = True
     phase: str = "validation"
     frozen_manifest: Optional[str] = None
     look_load_only: bool = False
@@ -98,6 +104,7 @@ class ExperimentRunner:
             "selection": self.selection.as_dict(),
             "fit_look": self.options.fit_look,
             "evaluate_random_missing": self.options.evaluate_random_missing,
+            "evaluate_missing_baselines": self.options.evaluate_missing_baselines,
             "smoke_limit": self.options.smoke_limit,
             "bootstrap_iterations": self.options.bootstrap_iterations,
             "labels_sha256": self.data_hash,
@@ -152,6 +159,9 @@ class ExperimentRunner:
         write_json_atomic(manifest, self.experiment_dir / f"{self.options.phase}_manifest.json")
 
         loaders, datasets = self._build_loaders()
+        class_counts = reference_training_class_counts(
+            self.config.labels_csv, self.config.num_classes
+        )
         summary_graph = build_resnet50_mhd_graph(
             self.selection.fusion_position,
             self.config.num_classes,
@@ -159,6 +169,10 @@ class ExperimentRunner:
             self.config.image_size,
             torch.device("cpu"),
             pretrained=False,
+            class_counts=class_counts,
+            class_balance_beta=self.config.class_balance_beta,
+            label_smoothing=self.config.label_smoothing,
+            classifier_dropout=self.config.classifier_dropout,
         )
         structure = graph_summary(summary_graph)
         del summary_graph
@@ -173,6 +187,10 @@ class ExperimentRunner:
             self.config.image_size,
             self.device,
             pretrained=False,
+            class_counts=class_counts,
+            class_balance_beta=self.config.class_balance_beta,
+            label_smoothing=self.config.label_smoothing,
+            classifier_dropout=self.config.classifier_dropout,
         )
         if checkpoint["architecture_id"] != self.selection.architecture_id:
             raise RuntimeError("Checkpoint architecture does not match the selected experiment")
@@ -185,7 +203,13 @@ class ExperimentRunner:
         for parameter in graph.parameters():
             parameter.requires_grad_(False)
 
-        filler, filling_summary = self._prepare_filler(datasets)
+        filler = None
+        filling_summary = {
+            "strategy": "not_evaluated",
+            "reason": "complete_modality_classifier_search",
+        }
+        if self.options.fit_look or self.options.evaluate_missing_baselines:
+            filler, filling_summary = self._prepare_filler(datasets)
         validation_results = {}
         look_banks = {}
         look_summary = {"enabled": False, "banks": {}}
@@ -263,7 +287,7 @@ class ExperimentRunner:
                 self.config.num_workers,
                 train=name == "train",
                 seed=self.selection.seed,
-                sampler_power=self.config.sampler_power,
+                sampling_strategy=self.config.sampling_strategy,
             )
             for name, dataset in datasets.items()
         }
@@ -284,7 +308,11 @@ class ExperimentRunner:
             "new_layer_lr": self.config.new_layer_lr,
             "weight_decay": self.config.weight_decay,
             "warmup_epochs": self.config.warmup_epochs,
-            "sampler_power": self.config.sampler_power,
+            "sampling_strategy": self.config.sampling_strategy,
+            "loss_name": self.config.loss_name,
+            "class_balance_beta": self.config.class_balance_beta,
+            "label_smoothing": self.config.label_smoothing,
+            "classifier_dropout": self.config.classifier_dropout,
             "amp": self.config.amp,
             "world_size": self.config.world_size,
             "smoke_limit": self.options.smoke_limit,
@@ -506,10 +534,11 @@ class ExperimentRunner:
                 complete["labels"], complete["probabilities"]
             )
             results["complete"] = complete
-            for pattern in self.config.missing_patterns:
-                results[f"fill_{pattern}"] = evaluate_missing(
-                    graph, loader, self.device, fixed_pattern=pattern, filler=filler
-                )
+            if self.options.evaluate_missing_baselines:
+                for pattern in self.config.missing_patterns:
+                    results[f"fill_{pattern}"] = evaluate_missing(
+                        graph, loader, self.device, fixed_pattern=pattern, filler=filler
+                    )
         if look_banks:
             for pattern in self.config.missing_patterns:
                 results[f"look_after_fill_{pattern}"] = evaluate_missing(

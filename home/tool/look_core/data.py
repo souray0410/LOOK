@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import torch
 from PIL import Image
-from torch.utils.data import DataLoader, Dataset, Sampler, WeightedRandomSampler
+from torch.utils.data import DataLoader, Dataset, Sampler
 from torchvision.transforms import functional as TF
 from torchvision.transforms.functional import InterpolationMode
 
@@ -272,32 +272,30 @@ def validate_reference_table(labels_csv: Path, data_root: Path, check_paths: boo
     }
 
 
-def weighted_sampler(labels: Sequence[int], power: float = 0.5, seed: int = 0) -> WeightedRandomSampler:
-    labels_array = np.asarray(labels, dtype=np.int64)
-    counts = np.bincount(labels_array)
-    class_weights = np.power(counts, -power, where=counts > 0)
-    weights = torch.as_tensor(class_weights[labels_array], dtype=torch.double)
-    generator = torch.Generator().manual_seed(seed)
-    return WeightedRandomSampler(weights, len(weights), replacement=True, generator=generator)
+def reference_training_class_counts(labels_csv: Path, num_classes: int) -> list[int]:
+    """Return fixed class counts from the complete training split, never a smoke subset."""
+    frame = pd.read_csv(labels_csv, usecols=["split", "label_id"])
+    labels = frame.loc[frame["split"] == "train", "label_id"].astype(int).to_numpy()
+    counts = np.bincount(labels, minlength=num_classes).tolist()
+    if len(counts) != num_classes or any(count <= 0 for count in counts):
+        raise ValueError(f"The complete training split must contain all {num_classes} classes: {counts}")
+    return counts
 
 
-class DistributedWeightedSampler(Sampler[int]):
-    """Draw one deterministic weighted stream and shard positions without padding."""
+class DistributedShuffleSampler(Sampler[int]):
+    """Deterministically shuffle each sample once and shard without padding."""
 
-    def __init__(self, labels: Sequence[int], power: float, seed: int, rank: int, world_size: int):
-        self.labels = np.asarray(labels, dtype=np.int64)
-        counts = np.bincount(self.labels)
-        class_weights = np.power(counts, -power, where=counts > 0)
-        self.weights = torch.as_tensor(class_weights[self.labels], dtype=torch.double)
+    def __init__(self, size: int, seed: int, rank: int, world_size: int):
+        self.size = int(size)
         self.seed, self.rank, self.world_size, self.epoch = seed, rank, world_size, 0
-        self.global_size = (len(self.labels) // world_size) * world_size
+        self.global_size = (self.size // world_size) * world_size
 
     def set_epoch(self, epoch: int) -> None:
         self.epoch = int(epoch)
 
     def __iter__(self):
         generator = torch.Generator().manual_seed(self.seed + self.epoch)
-        indices = torch.multinomial(self.weights, self.global_size, True, generator=generator)
+        indices = torch.randperm(self.size, generator=generator)[:self.global_size]
         return iter(indices[self.rank:self.global_size:self.world_size].tolist())
 
     def __len__(self) -> int:
@@ -323,17 +321,17 @@ def make_loader(
     num_workers: int,
     train: bool,
     seed: int,
-    sampler_power: float = 0.5,
+    sampling_strategy: str = "natural_without_replacement",
     rank: int = 0,
     world_size: int = 1,
 ) -> DataLoader:
-    if world_size > 1:
-        sampler = (
-            DistributedWeightedSampler(dataset.labels, sampler_power, seed, rank, world_size)
-            if train else DistributedEvalSampler(len(dataset), rank, world_size)
-        )
-    else:
-        sampler = weighted_sampler(dataset.labels, sampler_power, seed) if train else None
+    if sampling_strategy != "natural_without_replacement":
+        raise ValueError(f"Unknown sampling strategy: {sampling_strategy}")
+    sampler = (
+        DistributedShuffleSampler(len(dataset), seed, rank, world_size)
+        if train
+        else DistributedEvalSampler(len(dataset), rank, world_size)
+    )
     return DataLoader(
         dataset,
         batch_size=batch_size,

@@ -34,7 +34,11 @@ class ExperimentConfig:
     new_layer_lr: float = 3e-3
     weight_decay: float = 1e-4
     warmup_epochs: int = 5
-    sampler_power: float = 0.5
+    sampling_strategy: str = "natural_without_replacement"
+    loss_name: str = "class_balanced_ce"
+    class_balance_beta: float = 0.999
+    label_smoothing: float = 0.0
+    classifier_dropout: float = 0.1
     amp: bool = True
     world_size: int = 1
     monitor_nodes: List[str] = field(
@@ -122,6 +126,16 @@ class ExperimentConfig:
             raise ValueError("world_size must be positive")
         if self.effective_batch_size % self.global_micro_batch_size:
             raise ValueError("effective_batch_size must be divisible by the global micro batch")
+        if self.sampling_strategy != "natural_without_replacement":
+            raise ValueError("Classifier search requires natural_without_replacement sampling")
+        if self.loss_name != "class_balanced_ce":
+            raise ValueError("Classifier search requires class_balanced_ce")
+        if not 0.0 <= self.class_balance_beta < 1.0:
+            raise ValueError("class_balance_beta must be in [0, 1)")
+        if not 0.0 <= self.label_smoothing < 1.0:
+            raise ValueError("label_smoothing must be in [0, 1)")
+        if not 0.0 <= self.classifier_dropout < 1.0:
+            raise ValueError("classifier_dropout must be in [0, 1)")
         if not self.monitor_nodes or self.monitor_interval_steps < 1:
             raise ValueError("Monitor nodes and a positive monitor interval are required")
         if not 0.0 < self.gan_validation_fraction < 0.5:

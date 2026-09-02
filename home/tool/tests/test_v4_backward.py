@@ -98,3 +98,12 @@ def test_module_state_hash_covers_scalar_buffers_deterministically():
     assert mhd_module_state_sha256(first) == mhd_module_state_sha256(second)
     second.num_batches_tracked.add_(1)
     assert mhd_module_state_sha256(first) != mhd_module_state_sha256(second)
+
+
+def test_mermaid_can_show_forward_and_backward_topologies_together():
+    graph = _tiny_graph()
+    mermaid = graph.generate_mermaid(phase="both")
+    assert "Feature L0:S0" in mermaid
+    assert "Gradient" in mermaid
+    assert " -->|Feature " in mermaid
+    assert " -. Gradient " in mermaid

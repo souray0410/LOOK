@@ -38,7 +38,8 @@ class PoolFlatten(nn.Module):
 class ConcatProjection(nn.Module):
     def __init__(self, channels: int) -> None:
         super().__init__()
-        self.projection = nn.Conv2d(2 * channels, channels, kernel_size=1, bias=True)
+        self.projection = nn.Conv2d(2 * channels, channels, kernel_size=1, bias=False)
+        self.normalization = nn.BatchNorm2d(channels)
         self._initialize_average()
 
     def _initialize_average(self) -> None:
@@ -48,32 +49,66 @@ class ConcatProjection(nn.Module):
             indices = torch.arange(channels)
             self.projection.weight[indices, indices, 0, 0] = 0.5
             self.projection.weight[indices, indices + channels, 0, 0] = 0.5
-            self.projection.bias.zero_()
 
     def forward(self, first: torch.Tensor, second: torch.Tensor) -> torch.Tensor:
-        return self.projection(torch.cat([first, second], dim=1))
+        fused = self.projection(torch.cat([first, second], dim=1))
+        return self.normalization(fused)
 
 
 class ConcatFeatureProjection(nn.Module):
     def __init__(self, features: int = 2048) -> None:
         super().__init__()
-        self.projection = nn.Linear(2 * features, features, bias=True)
+        self.projection = nn.Linear(2 * features, features, bias=False)
+        self.normalization = nn.LayerNorm(features)
         with torch.no_grad():
             self.projection.weight.zero_()
             indices = torch.arange(features)
             self.projection.weight[indices, indices] = 0.5
             self.projection.weight[indices, indices + features] = 0.5
-            self.projection.bias.zero_()
 
     def forward(self, first: torch.Tensor, second: torch.Tensor) -> torch.Tensor:
-        return self.projection(torch.cat([first, second], dim=1))
+        fused = self.projection(torch.cat([first, second], dim=1))
+        return self.normalization(fused)
+
+
+class ClassificationHead(nn.Module):
+    def __init__(self, in_features: int, num_classes: int, dropout: float) -> None:
+        super().__init__()
+        self.dropout = nn.Dropout(dropout)
+        self.linear = nn.Linear(in_features, num_classes)
+
+    def forward(self, feature: torch.Tensor) -> torch.Tensor:
+        return self.linear(self.dropout(feature))
 
 
 class ClassificationLoss(nn.Module):
     """Differentiable training objective represented as an MHD edge operation."""
 
+    def __init__(
+        self,
+        class_counts: Sequence[int],
+        beta: float,
+        label_smoothing: float,
+    ) -> None:
+        super().__init__()
+        counts = torch.as_tensor(class_counts, dtype=torch.float64)
+        if counts.ndim != 1 or torch.any(counts <= 0):
+            raise ValueError("class_counts must contain one positive count per class")
+        effective = 1.0 - torch.pow(torch.full_like(counts, beta), counts)
+        weights = (1.0 - beta) / effective
+        weights = (weights / weights.mean()).float()
+        self.register_buffer("class_counts", counts.long())
+        self.register_buffer("class_weights", weights)
+        self.beta = float(beta)
+        self.label_smoothing = float(label_smoothing)
+
     def forward(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        return nn.functional.cross_entropy(logits, labels.long())
+        return nn.functional.cross_entropy(
+            logits,
+            labels.long(),
+            weight=self.class_weights,
+            label_smoothing=self.label_smoothing,
+        )
 
 
 class BatchAccuracy(nn.Module):
@@ -84,7 +119,11 @@ class BatchAccuracy(nn.Module):
             return (logits.detach().argmax(dim=1) == labels.detach().long()).float().mean()
 
 
-def _resnet_modules(model: nn.Module, num_classes: int) -> Dict[str, nn.Module]:
+def _resnet_modules(
+    model: nn.Module,
+    num_classes: int,
+    classifier_dropout: float,
+) -> Dict[str, nn.Module]:
     return {
         "stem": nn.Sequential(model.conv1, model.bn1, model.relu, model.maxpool),
         "layer1": model.layer1,
@@ -92,7 +131,7 @@ def _resnet_modules(model: nn.Module, num_classes: int) -> Dict[str, nn.Module]:
         "layer3": model.layer3,
         "layer4": model.layer4,
         "feature": PoolFlatten(model.avgpool),
-        "classifier": nn.Linear(model.fc.in_features, num_classes),
+        "classifier": ClassificationHead(model.fc.in_features, num_classes, classifier_dropout),
     }
 
 
@@ -189,6 +228,10 @@ def build_resnet50_mhd_graph(
     image_size: int = 224,
     device: torch.device | str = "cpu",
     pretrained: bool = True,
+    class_counts: Sequence[int] | None = None,
+    class_balance_beta: float = 0.999,
+    label_smoothing: float = 0.0,
+    classifier_dropout: float = 0.1,
 ) -> MHD_Graph:
     if fusion_position not in FUSION_POSITIONS:
         raise ValueError(f"fusion_position must be one of {FUSION_POSITIONS}")
@@ -198,7 +241,10 @@ def build_resnet50_mhd_graph(
     weights = ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
     template = resnet50(weights=weights)
     models = {name: copy.deepcopy(template) for name in ("oct", "cfp", "fusion")}
-    modules = {name: _resnet_modules(model, num_classes) for name, model in models.items()}
+    modules = {
+        name: _resnet_modules(model, num_classes, classifier_dropout)
+        for name, model in models.items()
+    }
 
     nodes: List[MHD_Node] = []
     for branch in ("oct", "cfp", "fusion"):
@@ -226,7 +272,14 @@ def build_resnet50_mhd_graph(
             else ConcatProjection(channels[position])
         )
         _add_edge(edges, f"fuse_{position}_edge", operation)
-    _add_edge(edges, "classification_loss_edge", ClassificationLoss())
+    resolved_counts = list(class_counts) if class_counts is not None else [1] * num_classes
+    if len(resolved_counts) != num_classes:
+        raise ValueError("class_counts length must equal num_classes")
+    _add_edge(
+        edges,
+        "classification_loss_edge",
+        ClassificationLoss(resolved_counts, class_balance_beta, label_smoothing),
+    )
     _add_edge(edges, "batch_accuracy_edge", BatchAccuracy())
 
     topology = _build_topology(nodes, edges, fusion_position, device)
@@ -290,6 +343,19 @@ def optimizer_parameter_groups(graph: MHD_Graph, pretrained_lr: float, new_layer
     ]
 
 
+def classification_loss_metadata(graph: MHD_Graph) -> Dict[str, object]:
+    operation = graph.get_edge_by_name("classification_loss_edge").edge_operations[0].function
+    if not isinstance(operation, ClassificationLoss):
+        raise TypeError("classification_loss_edge does not contain ClassificationLoss")
+    return {
+        "name": "class_balanced_ce",
+        "beta": operation.beta,
+        "label_smoothing": operation.label_smoothing,
+        "class_counts": operation.class_counts.detach().cpu().tolist(),
+        "class_weights": operation.class_weights.detach().cpu().tolist(),
+    }
+
+
 def graph_summary(graph: MHD_Graph) -> Dict[str, object]:
     return {
         "framework_version": "MHD V4",
@@ -303,5 +369,8 @@ def graph_summary(graph: MHD_Graph) -> Dict[str, object]:
         "correction_nodes": graph.correction_nodes,
         "monitor_nodes": graph.monitor_nodes,
         "monitor_edges": graph.monitor_edges,
+        "fusion_operation": "concatenate_linear_projection_normalization",
+        "fusion_nonlinearity": False,
+        "classification_loss": classification_loss_metadata(graph),
         "parameters": sum(parameter.numel() for parameter in graph.parameters()),
     }

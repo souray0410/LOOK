@@ -8,7 +8,12 @@ from look_core.config import ExperimentConfig, ExperimentSelection
 from look_core.distributed import parse_gpu_devices
 from look_core.paths import ProjectPaths
 from look_core.pipeline import ExperimentRunner, PipelineOptions
-from look_core.study_grid import StudyGrid, expand_study_grid
+from look_core.study_grid import (
+    StudyGrid,
+    _search_diagnostics,
+    baseline_search_grid,
+    expand_study_grid,
+)
 
 
 def _config(tmp_path: Path, learning_rate: float = 1e-4) -> ExperimentConfig:
@@ -111,6 +116,51 @@ def test_study_grid_cases_use_singleton_axes_and_keep_existing_case_stable(tmp_p
     assert first.config.fusion_positions == ["feature"]
     assert first.config.filling_strategies == ["normalized_mean"]
     assert expanded[0].config.as_dict() == first.config.as_dict()
+
+
+def test_baseline_search_grid_has_168_classifier_only_cases(tmp_path):
+    dataset = tmp_path / "dataset"
+    dataset.mkdir()
+    (dataset / "reference_labels.csv").write_text("participant_id\n", encoding="utf-8")
+    paths = ProjectPaths(
+        project_root=tmp_path,
+        data_root=tmp_path,
+        dataset_root=dataset,
+        cache_root=tmp_path / "cache",
+        runs_root=tmp_path / "runs",
+        tool_root=tmp_path / "tool",
+        pipeline_root=tmp_path / "pipeline",
+    )
+    cases = expand_study_grid(baseline_search_grid(), paths, gpu_devices=(0, 1))
+    assert len(cases) == 168
+    assert len({case.selection.experiment_id for case in cases}) == 168
+    assert all(not case.options.fit_look for case in cases)
+    assert all(not case.options.evaluate_missing_baselines for case in cases)
+    assert all(case.config.loss_name == "class_balanced_ce" for case in cases)
+
+
+def test_partial_search_diagnostics_retain_best_and_group_evidence():
+    rows = [
+        {
+            "experiment_id": "a", "fusion_position": "feature",
+            "class_balance_beta": 0.999, "pretrained_lr": 3e-5,
+            "new_layer_lr": 3e-4, "classifier_dropout": 0.1,
+            "label_smoothing": 0.0, "macro_f1": 0.41,
+            "balanced_accuracy": 0.43, "macro_auroc_ovr": 0.71, "ece_15": 0.08,
+        },
+        {
+            "experiment_id": "b", "fusion_position": "layer4",
+            "class_balance_beta": 0.9995, "pretrained_lr": 1e-4,
+            "new_layer_lr": 1e-3, "classifier_dropout": 0.3,
+            "label_smoothing": 0.05, "macro_f1": 0.47,
+            "balanced_accuracy": 0.46, "macro_auroc_ovr": 0.74, "ece_15": 0.06,
+        },
+    ]
+    rows.sort(key=lambda row: -row["macro_f1"])
+    diagnostics = _search_diagnostics(rows)
+    assert diagnostics["completed_configurations"] == 2
+    assert diagnostics["best_overall"]["experiment_id"] == "b"
+    assert diagnostics["groups"]["fusion_position"]["feature"]["completed"] == 1
 
 
 def test_gpu_list_is_the_only_compute_selector_and_preserves_global_batches(tmp_path):

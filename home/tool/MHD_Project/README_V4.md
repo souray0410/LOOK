@@ -210,6 +210,18 @@ graph.backward({
 
 V4 没有公开的 `backend=`、`fast_path=` 或执行器选择。内部只在 Node Gradient、Parameter Gradient、共享参数及 optimizer step 都经数值测试证明等价时，透明使用 PyTorch 原生 autograd；非零 Gradient Initial State、自定义聚合、显式反向拓扑等情况自动使用通用超图路由。两者共享完全相同的公开接口和结果语义。
 
+Mermaid 可视化与前后向拓扑使用同一套 phase 写法：
+
+```python
+graph.generate_mermaid(phase="forward")   # Feature：实线
+graph.generate_mermaid(phase="backward")  # Gradient：虚线
+graph.generate_mermaid(phase="both")      # 在同一组 Node/Edge 上叠加来回路径
+```
+
+默认 phase 仍是 `forward`。Backward 图直接读取
+`backward_role_matrices/backward_sort_matrices`，每条连线标注
+`L{level}:S{sort}`；`levels=int/slice/list` 对三个 phase 使用同一筛选规则。
+
 ## 6. V3 与 V4 并排迁移
 
 ```python

@@ -16,6 +16,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     add_runtime_arguments(parser)
     parser.add_argument("--gpus", default="0,1", help="Physical GPU list, e.g. 0 or 0,1.")
+    parser.add_argument(
+        "--mode",
+        choices=("full-study", "classifier-search"),
+        default="full-study",
+    )
     parser.add_argument("--phase", choices=("validation", "freeze", "test"), default="validation")
     parser.add_argument("--frozen-manifest", type=Path)
     parser.add_argument(
@@ -40,16 +45,26 @@ def main() -> None:
 
     import torch
 
-    from look_core.study_grid import StudyGrid, freeze_study_grid, run_study_grid
+    from look_core.study_grid import (
+        StudyGrid,
+        baseline_search_grid,
+        freeze_study_grid,
+        run_study_grid,
+    )
 
     if not args.dry_run and not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for formal study execution")
     paths = resolve_runtime_arguments(args)
-    grid = StudyGrid(
-        fusion_positions=args.fusion_positions,
-        seeds=args.seeds,
-        filling_strategies=args.filling_strategies,
-    )
+    if args.mode == "classifier-search":
+        if args.phase != "validation":
+            raise ValueError("classifier-search is validation-only")
+        grid = baseline_search_grid()
+    else:
+        grid = StudyGrid(
+            fusion_positions=args.fusion_positions,
+            seeds=args.seeds,
+            filling_strategies=args.filling_strategies,
+        )
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     if args.phase == "freeze":
         if args.dry_run:
@@ -59,7 +74,9 @@ def main() -> None:
         result = run_study_grid(
             grid, paths, device, execute=not args.dry_run, phase=args.phase,
             frozen_manifest=args.frozen_manifest,
-            check_all_image_paths=not args.skip_full_path_audit,
+            check_all_image_paths=(
+                not args.skip_full_path_audit and args.mode == "full-study"
+            ),
             bootstrap_iterations=args.bootstrap_iterations,
             gpu_devices=gpu_devices,
         )

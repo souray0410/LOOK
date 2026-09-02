@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-09-02 complete-modality baseline search
+
+- Synchronized the upstream V4 Mermaid phase/level visualization update while retaining
+  the verified LOOK multi-GPU utility implementation.
+- Replaced weighted replacement sampling with deterministic natural sampling without
+  replacement and moved effective-number class-balanced cross entropy into the MHD loss
+  hyperedge.
+- Defined activation-free fusion as concatenation, one linear projection, and
+  normalization; classifier dropout remains outside the fusion operation.
+- Added a 168-configuration validation-only baseline search over all seven fusion
+  positions, class-balance beta, discriminative learning rates, dropout and label
+  smoothing. Filling, cGAN, LOOK and sealed-test evaluation are disabled in this stage.
+- Added atomic partial leaderboards and grouped diagnostics, plus a detached checker that
+  exposes current configuration, complete and per-class validation evidence, confusion
+  matrix, best epoch, GPU state and recent logs.
+
 ## 2026-09-02 data-loader and preprocessing calibration
 
 - Live profiling identified repeated paired PNG decoding, CFP ROI extraction, resizing,

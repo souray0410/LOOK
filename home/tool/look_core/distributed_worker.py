@@ -7,7 +7,7 @@ from pathlib import Path
 from MHD_Project.MHD_Utils_V4 import destroy_mhd_distributed, initialize_mhd_distributed
 
 from .config import ExperimentConfig
-from .data import UKBPairedEyeDataset, make_loader
+from .data import UKBPairedEyeDataset, make_loader, reference_training_class_counts
 from .graph import build_resnet50_mhd_graph
 from .gan import make_gan_loaders, train_paired_cgan_direction_ddp
 from .reproducibility import seed_everything
@@ -40,11 +40,11 @@ def run_classifier(payload: dict, context) -> None:
     validation_dataset = UKBPairedEyeDataset(split="validation", augment=False, **kwargs)
     train_loader = make_loader(
         train_dataset, config.per_device_micro_batch_size, config.num_workers, True,
-        seed, config.sampler_power, context.rank, context.world_size,
+        seed, config.sampling_strategy, context.rank, context.world_size,
     )
     validation_loader = make_loader(
         validation_dataset, config.per_device_micro_batch_size, config.num_workers, False,
-        seed, config.sampler_power, context.rank, context.world_size,
+        seed, config.sampling_strategy, context.rank, context.world_size,
     )
     run_dir = Path(payload["run_dir"])
     graph = build_resnet50_mhd_graph(
@@ -52,6 +52,10 @@ def run_classifier(payload: dict, context) -> None:
         config.image_size,
         "cpu",
         pretrained=not (run_dir / "last.pt").is_file(),
+        class_counts=reference_training_class_counts(config.labels_csv, config.num_classes),
+        class_balance_beta=config.class_balance_beta,
+        label_smoothing=config.label_smoothing,
+        classifier_dropout=config.classifier_dropout,
     )
     seed_everything(seed + context.rank)
     train_complete_model_ddp(graph, train_loader, validation_loader, config, run_dir, context)

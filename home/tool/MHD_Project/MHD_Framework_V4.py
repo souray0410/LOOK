@@ -1468,18 +1468,24 @@ class MHD_Graph(nn.Module):
         if not retain_graph:
             self._forward_trace = []
 
-    def generate_mermaid(self, levels: Union[int, slice, List[int], None] = None) -> str:
-        """
-        生成 Mermaid 可视化描述，可指定绘制层级范围
+    def generate_mermaid(
+        self,
+        levels: Union[int, slice, List[int], None] = None,
+        phase: str = "forward",
+    ) -> str:
+        """Generate a symmetric forward/backward Mermaid topology view.
 
         Args:
-            levels: 层级选择。默认为 None 表示全部；
-                    可为 int（单层）、slice 或 list。
-                    当为 list 时，按列表顺序（保持去重）绘制连接。
+            levels: ``None`` for all levels, or an int/slice/list selection.
+            phase: ``forward``, ``backward`` or ``both``. The default keeps the
+                V3/V4 forward-only call compatible.
 
         Returns:
-            Mermaid 图描述字符串
+            Mermaid flowchart source. Feature links are solid and Gradient
+            links are dotted; every link includes its level and sort value.
         """
+        if phase not in {"forward", "backward", "both"}:
+            raise ValueError("phase 必须是 forward、backward 或 both")
         if self.topo is None or self.num_levels == 0:
             levels_iter = []
         elif levels is None:
@@ -1493,47 +1499,100 @@ class MHD_Graph(nn.Module):
             levels_iter = list(dict.fromkeys(levels))
         else:
             raise TypeError("levels 参数类型应为 int / slice / list / None")
+        invalid_levels = [
+            level for level in levels_iter
+            if level < 0 or level >= self.num_levels
+        ]
+        if invalid_levels:
+            raise IndexError(
+                f"层级索引 {invalid_levels} 超出范围 [0, {self.num_levels - 1}]"
+            )
 
         mermaid = [
-            "graph TD",
+            "flowchart TD",
             "",
             " classDef MHD_Node_Style fill:#fff7e6,stroke:#fa8c16,stroke-width:2px,rounded:1",
             " classDef MHD_Edge_Style fill:#e6f7ff,stroke:#1890ff,stroke-width:2px,rounded:1",
             "",
         ]
 
-        # 添加节点
-        for node in sorted(self.nodes, key=lambda x: x.id):
-            mermaid.append(f" {node.name}:::MHD_Node_Style")
+        def escape_label(value: str) -> str:
+            return value.replace("\\", "\\\\").replace('"', '\\"')
 
-        # 添加边（合并选定层级中的连接，按 levels_iter 的顺序叠加）
+        for node in sorted(self.nodes, key=lambda x: x.id):
+            mermaid.append(
+                f' N{node.id}["{escape_label(node.name)}"]:::MHD_Node_Style'
+            )
+
+        phase_specs = []
+        if phase in {"forward", "both"}:
+            phase_specs.append(
+                (
+                    "forward",
+                    "Feature",
+                    self.topo.role_matrices,
+                    self.topo.sort_matrices,
+                )
+            )
+        if phase in {"backward", "both"}:
+            phase_specs.append(
+                (
+                    "backward",
+                    "Gradient",
+                    self.topo.backward_role_matrices,
+                    self.topo.backward_sort_matrices,
+                )
+            )
+
         for edge in sorted(self.edges, key=lambda x: x.id):
             edge_id = edge.id
-            head_names = set()
-            tail_names = set()
-            for lvl in levels_iter:
-                if lvl >= self.num_levels:
-                    continue
-                role = self.topo.role_matrices[lvl]
-                if edge_id >= role.shape[0]:
-                    continue
-                row = role[edge_id]
-                for nid in range(row.shape[0]):
-                    if row[nid] < 0:
-                        n = self.get_node_by_id(nid)
-                        if n:
-                            head_names.add(n.name)
-                    elif row[nid] > 0:
-                        n = self.get_node_by_id(nid)
-                        if n:
-                            tail_names.add(n.name)
-            if not head_names and not tail_names:
+            connections: Dict[
+                Tuple[str, int, int], List[Tuple[int, int]]
+            ] = defaultdict(list)
+            phase_labels: Dict[str, str] = {}
+            for phase_name, message_name, role_matrices, sort_matrices in phase_specs:
+                phase_labels[phase_name] = message_name
+                for level in levels_iter:
+                    role = role_matrices[level]
+                    sort = sort_matrices[level]
+                    if edge_id >= role.shape[0]:
+                        continue
+                    for node_id, role_value in enumerate(role[edge_id].tolist()):
+                        if role_value == 0:
+                            continue
+                        if role_value < 0:
+                            source_id, target_id = node_id, -(edge_id + 1)
+                        else:
+                            source_id, target_id = -(edge_id + 1), node_id
+                        connections[(phase_name, source_id, target_id)].append(
+                            (level, int(sort[edge_id, node_id].item()))
+                        )
+            if not connections:
                 continue
-            mermaid.append(f" {edge.name}:::MHD_Edge_Style")
-            for hn in sorted(head_names):
-                mermaid.append(f" {hn} --> {edge.name}")
-            for tn in sorted(tail_names):
-                mermaid.append(f" {edge.name} --> {tn}")
+            mermaid.append(
+                f' E{edge.id}["{escape_label(edge.name)}"]:::MHD_Edge_Style'
+            )
+            phase_order = {"forward": 0, "backward": 1}
+            for (phase_name, source_id, target_id), order_values in sorted(
+                connections.items(),
+                key=lambda item: (
+                    phase_order[item[0][0]],
+                    0 if item[0][1] >= 0 else 1,
+                    item[0][1],
+                    item[0][2],
+                ),
+            ):
+                source = f"E{-source_id - 1}" if source_id < 0 else f"N{source_id}"
+                target = f"E{-target_id - 1}" if target_id < 0 else f"N{target_id}"
+                order_text = ", ".join(
+                    f"L{level}:S{sort_value}"
+                    for level, sort_value in order_values
+                )
+                label = f"{phase_labels[phase_name]} {order_text}"
+                if phase_name == "forward":
+                    mermaid.append(f" {source} -->|{label}| {target}")
+                else:
+                    mermaid.append(f" {source} -. {label} .-> {target}")
             mermaid.append("")
 
         mermaid_code = "\n".join(mermaid)

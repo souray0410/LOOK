@@ -5,10 +5,11 @@ from PIL import Image
 
 from look_core.data import (
     DistributedEvalSampler,
-    DistributedWeightedSampler,
+    DistributedShuffleSampler,
     UKBPairedEyeDataset,
     apply_missingness,
     participant_missing_pattern,
+    reference_training_class_counts,
 )
 
 
@@ -79,10 +80,25 @@ def test_distributed_evaluation_shards_are_exact_and_nonoverlapping():
     )
 
 
-def test_distributed_weighted_sampler_is_deterministic_per_epoch():
-    labels = [0, 0, 1, 1, 2, 2, 3, 3]
-    first = DistributedWeightedSampler(labels, 0.5, 3407, 0, 2)
-    second = DistributedWeightedSampler(labels, 0.5, 3407, 0, 2)
-    assert list(first) == list(second)
+def test_distributed_shuffle_sampler_is_deterministic_nonoverlapping_and_without_replacement():
+    first = DistributedShuffleSampler(11, 3407, 0, 2)
+    second = DistributedShuffleSampler(11, 3407, 1, 2)
+    repeated = DistributedShuffleSampler(11, 3407, 0, 2)
+    first_values, second_values = list(first), list(second)
+    assert first_values == list(repeated)
+    assert len(set(first_values + second_values)) == 10
+    assert set(first_values).isdisjoint(second_values)
     first.set_epoch(1)
-    assert list(first) != list(second)
+    assert list(first) != first_values
+
+
+def test_class_counts_always_use_the_complete_training_split(tmp_path):
+    labels = tmp_path / "reference_labels.csv"
+    pd.DataFrame(
+        [
+            {"split": "train", "label_id": label}
+            for label in [0, 0, 1, 2, 3, 4]
+        ]
+        + [{"split": "validation", "label_id": 4}]
+    ).to_csv(labels, index=False)
+    assert reference_training_class_counts(labels, 5) == [2, 1, 1, 1, 1]

@@ -23,7 +23,7 @@ Original UKB volumes are read-only; destructive flags apply only to derived data
 | 16 | remote | Smoke-test MHD fusion topologies and monitor nodes | smoke result | Seven fusion positions; first selected GPU |
 | 17 | remote | Tiny dual-filling integration run | `runs/smoke/` | one- or two-GPU DDP; checkpoint resume |
 | 18 | remote | Interactive complete study entry | deterministic experiment runs | One config cell; GPU list; validation/freeze/test |
-| 19 | remote | Execute formal study grid | sweep plan/progress | Sequential configurations; DDP within training stage |
+| 19 | remote | Execute full study or baseline classifier search | sweep plan/progress/ranking/diagnostics | Sequential configurations; DDP within training stage |
 | 20 | remote/local | Aggregate matrix diagnostics | aggregate CSV | Reads completed runs; no model changes |
 
 ## State Machine
@@ -65,3 +65,11 @@ launcher writes an append-only log plus an atomic status file under `runs/logs/`
 `tool/operations/check_detached_validation.sh` reports session state, cache progress,
 completed/total configurations, the newest saved epoch and validation metrics, GPU
 state, and recent log lines. These utilities do not alter the study grid.
+
+`tool/operations/start_detached_baseline_search.sh` selects Step 19
+`classifier-search` mode and the `look-baseline-search` tmux session. It executes 168
+complete-modality configurations and deliberately bypasses filling, cGAN, LOOK and test
+evaluation. After each configuration, rank zero atomically refreshes the full leaderboard
+and grouped diagnostics for fusion position, effective-number beta, learning rate,
+dropout and label smoothing. `check_detached_baseline_search.sh` exposes those summaries
+alongside the active run's full epoch and class-level evidence.

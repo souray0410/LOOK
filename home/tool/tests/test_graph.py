@@ -1,7 +1,13 @@
 import pytest
 import torch
 
-from look_core.graph import FUSION_POSITIONS, ConcatProjection, build_resnet50_mhd_graph, reset_and_forward
+from look_core.graph import (
+    FUSION_POSITIONS,
+    ClassificationLoss,
+    build_resnet50_mhd_graph,
+    classification_loss_metadata,
+    reset_and_forward,
+)
 
 
 @pytest.mark.parametrize("position", FUSION_POSITIONS)
@@ -36,8 +42,29 @@ def test_branch_weights_are_equal_but_not_shared_and_fusion_is_average_identity(
     projection = graph.get_edge_by_name("fuse_layer1_edge").edge_operations[0].function
     first, second = torch.randn(2, 256, 4, 4), torch.randn(2, 256, 4, 4)
     with torch.no_grad():
-        output = projection(first, second)
-    assert torch.allclose(output, (first + second) / 2, atol=1e-6)
+        projected = projection.projection(torch.cat([first, second], dim=1))
+    assert torch.allclose(projected, (first + second) / 2, atol=1e-6)
+    assert not any(isinstance(module, (torch.nn.ReLU, torch.nn.GELU)) for module in projection.modules())
+
+
+def test_class_balanced_loss_weights_and_metadata_are_inside_loss_edge():
+    counts = [1000, 100, 50, 20, 10]
+    graph = build_resnet50_mhd_graph(
+        "feature",
+        batch_size=1,
+        pretrained=False,
+        class_counts=counts,
+        class_balance_beta=0.999,
+        label_smoothing=0.05,
+    )
+    operation = graph.get_edge_by_name("classification_loss_edge").edge_operations[0].function
+    assert isinstance(operation, ClassificationLoss)
+    expected = (1.0 - 0.999) / (1.0 - torch.pow(torch.full((5,), 0.999), torch.tensor(counts)))
+    expected = expected / expected.mean()
+    assert torch.allclose(operation.class_weights, expected)
+    metadata = classification_loss_metadata(graph)
+    assert metadata["class_counts"] == counts
+    assert metadata["label_smoothing"] == 0.05
 
 
 def test_graph_internal_loss_and_backward_messages_are_differentiable():
@@ -52,8 +79,8 @@ def test_graph_internal_loss_and_backward_messages_are_differentiable():
     assert not outputs["batch_accuracy"].requires_grad
     graph.backward({"loss": None})
     classifier = graph.get_edge_by_name("fusion_classifier_edge").edge_operations[0].function
-    assert classifier.weight.grad is not None
-    assert torch.isfinite(classifier.weight.grad).all()
+    assert classifier.linear.weight.grad is not None
+    assert torch.isfinite(classifier.linear.weight.grad).all()
     logits_gradient = graph.get_node_by_name("fusion_logits").gradient_message.current_state
     assert logits_gradient.shape == outputs["fusion_logits"].shape
     assert torch.isfinite(logits_gradient).all()

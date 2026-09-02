@@ -121,7 +121,7 @@ the read-only sources and are absent from the training-facing dataset root.
 
 ```text
 runs/backbones/<backbone_id>/
-|-- {last,best}.pt, history.json
+|-- run_config.json, {last,best}.pt, history.json, training_complete.json
 `-- monitor_history.jsonl, training_curves.{csv,png,pdf}
 
 runs/generators/<generator_id>/<direction>/
@@ -138,7 +138,10 @@ runs/experiments/<experiment_id>/
 
 runs/sweeps/<phase>__<plan_id>/
 |-- study_plan.json
-`-- progress.json
+|-- progress.json
+|-- leaderboard.csv
+|-- baseline_search_results.json
+`-- baseline_search_diagnostics.json
 
 runs/freezes/freeze__<freeze_id>/
 `-- frozen_configuration_manifest.json

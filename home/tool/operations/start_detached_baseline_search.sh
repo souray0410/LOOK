@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$SCRIPT_DIR/start_detached_validation.sh" \
+  --session look-baseline-search \
+  --skip-cache-warm \
+  -- \
+  --mode classifier-search \
+  --skip-full-path-audit \
+  "$@"

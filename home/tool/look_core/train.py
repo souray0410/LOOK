@@ -23,7 +23,7 @@ from MHD_Project.MHD_Utils_V4 import (
     unwrap_mhd_graph,
 )
 
-from .graph import optimizer_parameter_groups, reset_and_forward
+from .graph import classification_loss_metadata, optimizer_parameter_groups, reset_and_forward
 from .metrics import classification_metrics
 from .monitoring import TrainingMonitor
 from .reproducibility import sha256, write_json_atomic
@@ -159,6 +159,7 @@ def train_complete_model(
                     "framework_version": "MHD V4",
                     "backward_api": "MHD_Graph.backward",
                     "labels_sha256": sha256(config.labels_csv),
+                    "classification_loss": classification_loss_metadata(graph),
                 },
                 temporary,
             )
@@ -180,6 +181,7 @@ def train_complete_model(
                 "history": history,
                 "framework_version": "MHD V4",
                 "backward_api": "MHD_Graph.backward",
+                "classification_loss": classification_loss_metadata(graph),
             },
             temporary,
         )
@@ -197,6 +199,7 @@ def train_complete_model(
             "best_score": checkpoint["score"],
             "framework_version": "MHD V4",
             "backward_api": "MHD_Graph.backward",
+            "classification_loss": classification_loss_metadata(graph),
         },
         run_dir / "training_complete.json",
     )
@@ -375,6 +378,7 @@ def train_complete_model_ddp(
                     "initial_state_sha256": initial_state_sha256,
                     "labels_sha256": sha256(config.labels_csv),
                     "world_size": context.world_size,
+                    "classification_loss": classification_loss_metadata(raw_graph),
                 }, temporary)
                 temporary.replace(run_dir / "best.pt")
         else:
@@ -397,6 +401,7 @@ def train_complete_model_ddp(
                 "framework_version": "MHD V4",
                 "backward_api": "MHD_Graph.backward",
                 "initial_state_sha256": initial_state_sha256,
+                "classification_loss": classification_loss_metadata(raw_graph),
             }, temporary)
             temporary.replace(last_path)
             monitor.append({"event": "epoch", **record})
@@ -414,6 +419,7 @@ def train_complete_model_ddp(
             "framework_version": "MHD V4",
             "backward_api": "MHD_Graph.backward",
             "initial_state_sha256": initial_state_sha256,
+            "classification_loss": checkpoint["classification_loss"],
         }, run_dir / "training_complete.json")
         monitor.finalize()
     mhd_barrier(context)

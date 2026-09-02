@@ -77,7 +77,7 @@ def test_package_names_are_canonical() -> None:
 def test_mhd_core_file_is_the_reviewed_unchanged_version() -> None:
     framework = PROJECT_ROOT / "tool/MHD_Project/MHD_Framework_V4.py"
     assert hashlib.sha256(framework.read_bytes()).hexdigest() == (
-        "17e9d3c872583077bf1987cc25fe3317bc02ca5dbf652709045dd59858d9202f"
+        "f8c8ec266d75281dc3451b7d6e450a19311fe29cf0fc68e07afdc893af303a1f"
     )
 
 

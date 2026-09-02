@@ -93,8 +93,9 @@ OOM; record the measured per-rank peak with the experiment configuration.
 
 The current RTX 5000 Ada two-GPU profile was measured with real forward/backward and
 optimizer steps. The classifier uses effective global batch 256 and batch 128/GPU, with
-16.609 GiB peak allocation for worst-case feature fusion; AdamW rates use conservative square-root
-scaling to `3e-4` for pretrained parameters and `3e-3` for new layers. The paired cGAN
+16.609 GiB peak allocation for worst-case feature fusion. The baseline search compares
+two conservative discriminative-learning-rate profiles: `3e-5/3e-4` and `1e-4/1e-3`
+for ImageNet-pretrained/new parameters. The paired cGAN
 uses effective global batch 448 (224/GPU), with 13.858 GiB peak allocation and 18.170 GiB CUDA
 reservation; its Adam rate remains `2e-4` for adversarial stability.
 Both formal loaders use 16 workers per rank on the current 128-CPU host. Live profiling
@@ -128,7 +129,8 @@ freeze      hash the selected validation artifacts and emit a frozen manifest
 test        load that manifest and evaluate the sealed test split without training/fitting
 ```
 
-For command-line sweeps, Step 19 uses the same `StudyGrid` implementation:
+For command-line sweeps, Step 19 uses the same `StudyGrid` implementation. Its default
+`full-study` mode remains the complete filling/LOOK protocol:
 
 ```bash
 PY=/home/mengh/LOOK/2026_08_30_11_20_47/tool/environment/.venv/bin/python
@@ -141,22 +143,46 @@ $PY pipeline/20_aggregate_matrix_analysis.py
 ```
 
 For a run that must survive SSH disconnection or a sleeping client computer, start the
-full default validation grid in a remote `tmux` session:
+complete-modality baseline search in a remote `tmux` session:
 
 ```bash
-./tool/operations/start_detached_validation.sh
-./tool/operations/check_detached_validation.sh
-./tool/operations/check_detached_validation.sh --follow
+./tool/operations/start_detached_baseline_search.sh
+./tool/operations/check_detached_baseline_search.sh
+./tool/operations/check_detached_baseline_search.sh --follow
 ```
 
-The default detached grid is the complete Step 19 validation study: seven fusion
-positions, three seeds, and two filling strategies (42 experiment configurations) on
-GPUs 0 and 1. Before the GPU sweep it resumes or completes the deterministic
-preprocessing cache with 64 CPU workers; `state=warming_cache` is expected during that
-one-time stage. It then resumes valid checkpoints and completed configurations. Attach
-to the live terminal with `tmux attach -t look-validation`; detach without stopping the
-job by pressing `Ctrl-b`, then `d`. Logs and launcher state are stored under
-`runs/logs/`.
+This dedicated search runs 168 complete-pair classifier configurations on GPUs 0 and 1:
+seven fusion positions, three effective-number loss betas, two discriminative learning-
+rate profiles, two classifier dropouts, two label-smoothing values, and seed 3407. It
+uses natural sampling without replacement and class-balanced cross entropy. Fusion is
+strictly `concatenate -> 1x1 Conv/Linear -> BatchNorm/LayerNorm`; the fusion operation
+contains no activation, attention, or gate. Filling, cGAN, LOOK, random missingness, and
+the sealed test split are not entered during this search. Attach with
+`tmux attach -t look-baseline-search`; detach without stopping by pressing `Ctrl-b`, then
+`d`. The 46 GiB deterministic preprocessing cache is reused rather than rebuilt.
+
+The check command is intentionally diagnostic rather than merely a process heartbeat.
+At any time it reports the exact active hyperparameters, epoch, train loss/accuracy,
+complete validation metrics, per-class F1/sensitivity, confusion matrix, best epoch so
+far, top-five completed configurations, grouped hyperparameter summaries, GPU load and
+memory, disk space, and recent logs. The underlying evidence remains available after an
+interruption in:
+
+```text
+runs/backbones/<backbone_id>/run_config.json
+runs/backbones/<backbone_id>/history.json
+runs/backbones/<backbone_id>/{last.pt,best.pt,training_complete.json}
+runs/sweeps/validation__<plan_id>/{study_plan.json,progress.json}
+runs/sweeps/validation__<plan_id>/{leaderboard.csv,baseline_search_results.json}
+runs/sweeps/validation__<plan_id>/baseline_search_diagnostics.json
+runs/logs/look-baseline-search_<timestamp>.log
+```
+
+The search can be resumed with the same start command. Completed valid configurations
+are reused, an interrupted classifier resumes from `last.pt`, and a scientific or code
+change creates a different content-fingerprinted run ID. After the 168 configurations,
+inspect the validation ranking before freezing any design or running the full
+filling/LOOK study.
 
 ## Resume And Outputs
 
@@ -172,7 +198,7 @@ run. Sweep progress is saved after every configuration.
     |-- backbones/<backbone_id>/       checkpoints, history, graph monitor, curves
     |-- generators/<generator_id>/     cGAN checkpoints, monitor, curves
     |-- experiments/<experiment_id>/   predictions, metrics, LOOK and matrix analysis
-    |-- sweeps/<phase>__<plan_id>/      plan and progress
+    |-- sweeps/<phase>__<plan_id>/      plan, progress, ranking and diagnostics
     `-- freezes/freeze__<id>/           sealed configuration manifest
 ```
 

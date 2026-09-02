@@ -107,7 +107,7 @@ if tmux has-session -t "$SESSION" 2>/dev/null; then
   exit 1
 fi
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-LOG_FILE="$LOG_DIR/full_validation_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/${SESSION}_${TIMESTAMP}.log"
 COMMAND=(
   "$SCRIPT_PATH" --worker --project-root "$PROJECT_ROOT" --session "$SESSION"
   --gpus "$GPUS" --cache-workers "$CACHE_WORKERS" --python "$PYTHON"

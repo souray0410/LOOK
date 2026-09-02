@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import itertools
+import csv
+import io
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -12,7 +14,7 @@ from .artifacts import build_file_manifest, validate_file_manifest
 from .config import ExperimentConfig, ExperimentSelection
 from .paths import ProjectPaths
 from .pipeline import ExperimentRunner, PipelineOptions
-from .state import atomic_write_json, stable_hash, utc_now
+from .state import atomic_write_json, atomic_write_text, stable_hash, utc_now
 
 
 def _primary_classifier_profile() -> dict[str, Any]:
@@ -23,13 +25,53 @@ def _primary_classifier_profile() -> dict[str, Any]:
         "effective_batch_size": 256,
         "micro_batch_size": 128,
         "num_workers": 16,
-        "pretrained_lr": 3e-4,
-        "new_layer_lr": 3e-3,
+        "pretrained_lr": 1e-4,
+        "new_layer_lr": 1e-3,
         "weight_decay": 1e-4,
         "warmup_epochs": 5,
-        "sampler_power": 0.5,
+        "sampling_strategy": "natural_without_replacement",
+        "loss_name": "class_balanced_ce",
+        "class_balance_beta": 0.9995,
+        "label_smoothing": 0.05,
+        "classifier_dropout": 0.1,
         "amp": True,
     }
+
+
+def classifier_search_profiles() -> list[dict[str, Any]]:
+    profiles: list[dict[str, Any]] = []
+    learning_rates = {
+        "low": (3e-5, 3e-4),
+        "standard": (1e-4, 1e-3),
+    }
+    for beta, (lr_name, (pretrained_lr, new_layer_lr)), dropout, smoothing in itertools.product(
+        (0.999, 0.9995, 0.9999),
+        learning_rates.items(),
+        (0.1, 0.3),
+        (0.0, 0.05),
+    ):
+        beta_name = str(beta).replace(".", "p")
+        dropout_name = str(dropout).replace(".", "p")
+        smoothing_name = str(smoothing).replace(".", "p")
+        profiles.append({
+            "name": f"cbce-b{beta_name}__lr-{lr_name}__drop-{dropout_name}__ls-{smoothing_name}",
+            "epochs": 50,
+            "patience": 10,
+            "effective_batch_size": 256,
+            "micro_batch_size": 128,
+            "num_workers": 16,
+            "pretrained_lr": pretrained_lr,
+            "new_layer_lr": new_layer_lr,
+            "weight_decay": 1e-4,
+            "warmup_epochs": 5,
+            "sampling_strategy": "natural_without_replacement",
+            "loss_name": "class_balanced_ce",
+            "class_balance_beta": beta,
+            "label_smoothing": smoothing,
+            "classifier_dropout": dropout,
+            "amp": True,
+        })
+    return profiles
 
 
 def _primary_gan_profile() -> dict[str, Any]:
@@ -62,6 +104,74 @@ def _primary_look_profile() -> dict[str, Any]:
         "alpha_grid": [0.0, 1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0],
         "primary_metric": "macro_f1",
     }
+
+
+def _disabled_look_profile() -> dict[str, Any]:
+    return {
+        "name": "disabled",
+        "enabled": False,
+        "evaluate_random_missing": False,
+        "evaluate_missing_baselines": False,
+    }
+
+
+def baseline_search_grid() -> "StudyGrid":
+    return StudyGrid(
+        fusion_positions=["feature", "layer4", "layer3", "layer2", "layer1", "stem", "input"],
+        seeds=[3407],
+        filling_strategies=["normalized_mean"],
+        classifier_profiles=classifier_search_profiles(),
+        gan_profiles=[{"name": "not_applicable"}],
+        look_profiles=[_disabled_look_profile()],
+    )
+
+
+def _ranking_key(row: dict[str, Any]) -> tuple[float, float, float, float]:
+    return (
+        -float(row.get("macro_f1", -1.0)),
+        -float(row.get("balanced_accuracy", -1.0)),
+        -float(row.get("macro_auroc_ovr", -1.0)),
+        float(row.get("ece_15", float("inf"))),
+    )
+
+
+def _search_diagnostics(leaderboard: list[dict[str, Any]]) -> dict[str, Any]:
+    """Persist enough partial evidence to guide the next baseline adjustment."""
+    axes = (
+        "fusion_position",
+        "class_balance_beta",
+        "pretrained_lr",
+        "new_layer_lr",
+        "classifier_dropout",
+        "label_smoothing",
+    )
+    diagnostics: dict[str, Any] = {
+        "completed_configurations": len(leaderboard),
+        "ranking_rule": [
+            "macro_f1_desc",
+            "balanced_accuracy_desc",
+            "macro_auroc_ovr_desc",
+            "ece_15_asc",
+        ],
+        "best_overall": leaderboard[0] if leaderboard else None,
+        "groups": {},
+    }
+    for axis in axes:
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        for row in leaderboard:
+            grouped.setdefault(str(row[axis]), []).append(row)
+        diagnostics["groups"][axis] = {
+            value: {
+                "completed": len(rows),
+                "mean_macro_f1": float(sum(float(row["macro_f1"]) for row in rows) / len(rows)),
+                "mean_balanced_accuracy": float(
+                    sum(float(row["balanced_accuracy"]) for row in rows) / len(rows)
+                ),
+                "best": sorted(rows, key=_ranking_key)[0],
+            }
+            for value, rows in sorted(grouped.items())
+        }
+    return diagnostics
 
 
 @dataclass
@@ -134,7 +244,12 @@ def expand_study_grid(
             config_values = {
                 **_without_control_keys(classifier),
                 **_without_control_keys(gan),
-                **_without_control_keys(look_profile, "enabled", "evaluate_random_missing"),
+                **_without_control_keys(
+                    look_profile,
+                    "enabled",
+                    "evaluate_random_missing",
+                    "evaluate_missing_baselines",
+                ),
             }
             config = ExperimentConfig(
                 data_root=paths.dataset_root,
@@ -153,6 +268,9 @@ def expand_study_grid(
                 train_if_missing=phase == "validation",
                 fit_look=bool(look_profile.get("enabled", True)),
                 evaluate_random_missing=bool(look_profile.get("evaluate_random_missing", True)),
+                evaluate_missing_baselines=bool(
+                    look_profile.get("evaluate_missing_baselines", True)
+                ),
                 phase=phase,
                 frozen_manifest=str(frozen_manifest) if frozen_manifest else None,
                 look_load_only=phase == "test",
@@ -221,7 +339,31 @@ def run_study_grid(
     if not execute:
         return {**plan, "status": "dry_run"}
     completed: list[dict[str, str]] = []
+    leaderboard: list[dict[str, Any]] = []
     for index, runner in enumerate(runners, start=1):
+        configuration_started_at = utc_now()
+        atomic_write_json(
+            {
+                **plan,
+                "status": "running",
+                "completed_count": len(completed),
+                "current_index": index,
+                "current_experiment_id": runner.experiment_id,
+                "current_backbone_id": runner._backbone_id(),
+                "current_started_at_utc": configuration_started_at,
+                "current_configuration": {
+                    "fusion_position": runner.selection.fusion_position,
+                    "seed": runner.selection.seed,
+                    "class_balance_beta": runner.config.class_balance_beta,
+                    "pretrained_lr": runner.config.pretrained_lr,
+                    "new_layer_lr": runner.config.new_layer_lr,
+                    "classifier_dropout": runner.config.classifier_dropout,
+                    "label_smoothing": runner.config.label_smoothing,
+                },
+                "completed": completed,
+            },
+            sweep_dir / "progress.json",
+        )
         result = runner.run()
         completed.append(
             {
@@ -230,6 +372,49 @@ def run_study_grid(
                 "completed_at_utc": str(result["completed_at_utc"]),
             }
         )
+        metrics = result.get("validation", {}).get("complete", {})
+        leaderboard.append({
+            "experiment_id": runner.experiment_id,
+            "backbone_id": result.get("checkpoint", {}).get("backbone_id"),
+            "fusion_position": runner.selection.fusion_position,
+            "seed": runner.selection.seed,
+            "class_balance_beta": runner.config.class_balance_beta,
+            "pretrained_lr": runner.config.pretrained_lr,
+            "new_layer_lr": runner.config.new_layer_lr,
+            "classifier_dropout": runner.config.classifier_dropout,
+            "label_smoothing": runner.config.label_smoothing,
+            "best_epoch": result.get("checkpoint", {}).get("epoch"),
+            "started_at_utc": result.get("started_at_utc"),
+            "completed_at_utc": result.get("completed_at_utc"),
+            **metrics,
+        })
+        leaderboard.sort(key=_ranking_key)
+        atomic_write_json(leaderboard, sweep_dir / "baseline_search_results.json")
+        atomic_write_json(
+            _search_diagnostics(leaderboard),
+            sweep_dir / "baseline_search_diagnostics.json",
+        )
+        columns = [
+            "rank", "experiment_id", "backbone_id", "fusion_position", "seed",
+            "class_balance_beta", "pretrained_lr", "new_layer_lr",
+            "classifier_dropout", "label_smoothing", "macro_f1",
+            "best_epoch", "started_at_utc", "completed_at_utc",
+            "balanced_accuracy", "macro_auroc_ovr", "accuracy", "weighted_f1",
+            "cohen_kappa", "cross_entropy", "ece_15", "multiclass_brier",
+            "precision_per_class", "sensitivity_per_class", "specificity_per_class",
+            "f1_per_class", "confusion_matrix",
+        ]
+        buffer = io.StringIO()
+        writer = csv.DictWriter(buffer, fieldnames=columns)
+        writer.writeheader()
+        for rank, row in enumerate(leaderboard, start=1):
+            serialized = {
+                key: json.dumps(value) if isinstance(value, (list, dict)) else value
+                for key, value in row.items()
+                if key in columns
+            }
+            writer.writerow({"rank": rank, **serialized})
+        atomic_write_text(buffer.getvalue(), sweep_dir / "leaderboard.csv")
         atomic_write_json(
             {**plan, "status": "running", "completed_count": index, "completed": completed},
             sweep_dir / "progress.json",
