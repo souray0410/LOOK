@@ -77,7 +77,7 @@ def test_package_names_are_canonical() -> None:
 def test_mhd_core_file_is_the_reviewed_unchanged_version() -> None:
     framework = PROJECT_ROOT / "tool/MHD_Project/MHD_Framework_V4.py"
     assert hashlib.sha256(framework.read_bytes()).hexdigest() == (
-        "32223d6aa83c7d92ee7f06391bfa3f31b27c5d69de7f421f36b620a3d21dd403"
+        "939e61186871c2f5c9bfb8974cf65345c6caa6b4c4ec4bbff6a073e3398684ec"
     )
 
 
@@ -87,8 +87,10 @@ def test_release_uses_only_v4_graph_training_contract() -> None:
     assert not (package / "MHD_Utils_V3.py").exists()
     assert not (package / "MHD_Compatibility_V3_to_V4.py").exists()
     training = (PROJECT_ROOT / "tool/look_core/train.py").read_text(encoding="utf-8")
-    assert "graph._backward(" in training
-    assert "levels=list(backward_levels)" in training
+    assert "MHD_Trainer(" in training
+    assert ".register_epoch_node(" in training
+    assert "criteria_node=graph.criteria_node" in training
+    assert "graph._backward(" not in training
     assert "scaler.scale(loss).backward()" not in training
 
 

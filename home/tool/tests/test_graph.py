@@ -7,11 +7,13 @@ import look_core.graph as graph_module
 from look_core.graph import (
     FUSION_POSITIONS,
     ClassificationLoss,
+    ValidationMacroF1,
     build_resnet50_mhd_graph,
     classification_loss_metadata,
     prepare_graph_for_crt,
     reset_and_forward,
 )
+from look_core.metrics import classification_metrics
 
 
 @pytest.mark.parametrize("position", FUSION_POSITIONS)
@@ -86,6 +88,24 @@ def test_cross_entropy_and_metadata_are_inside_loss_edge():
     assert metadata["inference"] == "raw_logits_standard_softmax"
 
 
+def test_validation_macro_f1_is_an_exact_full_split_graph_criterion():
+    metric = ValidationMacroF1(num_classes=5)
+    logits = torch.tensor([
+        [8.0, 0.0, 0.0, 0.0, 0.0],
+        [8.0, 0.0, 0.0, 0.0, 0.0],
+        [8.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 8.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 8.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 8.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 8.0],
+    ])
+    labels = torch.tensor([0, 0, 1, 1, 2, 3, 4])
+    expected = classification_metrics(
+        labels.numpy(), torch.softmax(logits, dim=1).numpy()
+    )["macro_f1"]
+    assert metric(logits, labels).item() == pytest.approx(expected)
+
+
 def test_graph_internal_loss_and_backward_messages_are_differentiable():
     graph = build_resnet50_mhd_graph("feature", batch_size=1, pretrained=False, device="cpu")
     outputs = reset_and_forward(
@@ -96,7 +116,11 @@ def test_graph_internal_loss_and_backward_messages_are_differentiable():
     )
     assert outputs["loss"].requires_grad
     assert not outputs["batch_accuracy"].requires_grad
+    assert outputs["batch_accuracy"].shape == (1,)
     assert set(graph.forward_levels).isdisjoint(graph.backward_levels)
+    assert set(graph.criteria_levels).isdisjoint(
+        {*graph.forward_levels, *graph.backward_levels}
+    )
     graph.backward(levels=graph.backward_levels)
     classifier = graph.get_edge_by_name("fusion_classifier_edge").edge_operations[0].function
     assert classifier.linear.weight.grad is not None

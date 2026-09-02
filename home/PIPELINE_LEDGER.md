@@ -23,7 +23,7 @@ Original UKB volumes are read-only; destructive flags apply only to derived data
 | 16 | remote | Smoke-test MHD fusion topologies and monitor nodes | smoke result | Seven fusion positions; first selected GPU |
 | 17 | remote | Tiny dual-filling integration run | `runs/smoke/` | one- or two-GPU DDP; checkpoint resume |
 | 18 | remote | Interactive complete study entry | deterministic experiment runs | One config cell; GPU list; validation/freeze/test |
-| 19 | remote | Execute full study or cRT fusion search | sweep plan/progress/ranking/diagnostics | Sequential configurations; DDP within each cRT stage |
+| 19 | remote | Execute full study or cRT fusion search | sweep plan/progress/ranking/diagnostics | Sequential configurations; MHD Trainer and DDP within each cRT stage |
 | 20 | remote/local | Aggregate matrix diagnostics | aggregate CSV | Reads completed runs; no model changes |
 
 ## State Machine
@@ -33,6 +33,14 @@ fingerprints; acquire one process lock; verify completed outputs by size and SHA
 resume from progress or `last` checkpoint; write new files atomically; and quarantine
 invalid artifacts. A changed fingerprint creates a distinct run ID. Existing valid
 formal results are not overwritten.
+
+Classifier stages use `MHD_Trainer` for graph forward/backward, optimizer stepping,
+distributed checkpoints and model selection. The differentiable scalar endpoint is
+inferred automatically as the backward seed. `MHD_Monitor.register_epoch_node`
+collects full-validation logits and labels across ranks, executes the dedicated metric
+level once, and exposes `validation_macro_f1`; Trainer saves `best/` from this explicit
+criteria node in `max` mode. `last/` is the resumable canonical checkpoint, while
+`best.pt` is the portable graph-state export for frozen downstream evaluation.
 
 Dataset pruning steps use a stricter contract because they intentionally change derived
 data: inspect an allowlist, require `--execute`, then run the next verification gate.

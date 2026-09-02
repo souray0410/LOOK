@@ -59,7 +59,8 @@ def run_classifier(payload: dict, context) -> None:
         payload["fusion_position"], config.num_classes, config.per_device_micro_batch_size,
         config.image_size,
         "cpu",
-        pretrained=not (representation_dir / "last.pt").is_file()
+        pretrained=not (representation_dir / "last").is_dir()
+        and not (representation_dir / "best").is_dir()
         and not (representation_dir / "best.pt").is_file(),
         classifier_dropout=config.classifier_dropout,
     )

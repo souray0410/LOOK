@@ -33,7 +33,7 @@ V4 只增加两个嵌套辅助类型：`MHD_Node.Message` 与
 | Backward 根 | 用户取得 loss 后调用 Tensor `.backward()` | `graph.backward(levels=[...])` 自动寻找本次 Forward 唯一可微标量终点 |
 | Backward 路径 | 完整 PyTorch 图 | level 序列选择真实 Forward trace 的反向子路径；底层仍只做一次原生 autograd |
 | 参数梯度 | 原生 autograd | 仍是原生 autograd；未选路径被 hook 屏蔽，未选参数 `.grad=None` |
-| Trainer | `backward_node` | 删除 `backward_node`，保存显式 `forward_levels/backward_levels` |
+| Trainer | `backward_node`；Criteria 可默认复用它 | 删除 `backward_node`；自动寻找标量终点；`criteria_node` 必填；保存显式 `forward_levels/backward_levels` |
 | Checkpoint | 两个 Node State | 两类 Message 下四个 State，并保存 Trainer 的 level 序列 |
 | Merge | 合并两个 State | 分别合并四个 State，并检查 aggregation、Operation 与全局 Topo |
 | Monitor | 默认读取 `current_state` | 旧指标名不变，可选监控四种 Message State |
@@ -231,14 +231,13 @@ V4 用轻量 autograd hook 直接写入 Gradient Current State，不对每个中
 ## Mermaid
 
 ```python
-diagram = graph.generate_mermaid(
-    forward_levels=[0, 1, 0],
-    backward_levels=[3, 2],
-)
+diagram = graph.generate_mermaid(levels=[0, 1, 0, 3, 2])
 ```
 
-Feature 路径为实线，Gradient 路径为虚线；标签同时显示列表位置、全局 level 和 Sort
-值，因此重复执行不会被合并成无法区分的一次调用。
+Mermaid 不区分 Forward/Backward 样式，只按传入 levels 的原顺序读取 Role/Sort Matrix，
+并把矩阵定义的箭头全部画为实线。只传 Forward levels 就得到前向图，只传 Backward
+levels 就得到反向图；混合传入时也按同一个列表处理。标签显示列表位置、全局 level 和
+Sort 值，因此重复执行不会丢失顺序信息。
 
 ## 传统网络、Transformer 与图/超图网络
 
@@ -277,7 +276,9 @@ trainer = MHD_Trainer(
     MHD_Monitor(["loss"]),
     forward_levels=[0, 1, 2],
     backward_levels=[3, 4, 5],
+    criteria_node="loss",
     input_nodes=["input", "target"],
+    input_mapping={"input": "image", "target": "label"},
     output_nodes=["loss"],
 )
 
@@ -288,6 +289,42 @@ trainer.train_step(
     backward_levels=[5, 3],
 )
 ```
+
+`input_nodes` 使用图中的 Node 名称；当 DataLoader 字段名不同，用可选的
+`input_mapping` 显式映射。未写映射的节点默认读取同名字段，批次中的 participant ID 等
+非图输入元数据会被保留在批次中，但不会写入 Graph。
+
+`criteria_node` 与反向起点不是一回事：反向起点由 Forward trace 自动寻找唯一可微标量
+终点；`criteria_node` 决定最佳 checkpoint，可能是 loss、accuracy 或 AUC，因此必须由用户
+显式指定。若两者恰好都是 loss，也仍写 `criteria_node="loss"`。Trainer 始终自动收集标量
+终点和 Criteria Node；`MHD_Monitor` 只需列出其余希望观察的节点，不必重复 Criteria 名称。
+
+当 Criteria 不能按 batch 求平均时，例如 Macro-F1、balanced accuracy 或整集统计量，由
+`MHD_Monitor` 注册整轮节点。Monitor 声明来源和 levels，Trainer 跨 rank 拼接完整
+validation split 并执行该监控 level 一次；随后仍从显式 `criteria_node` 判断并保存最佳模型：
+
+```python
+monitor = MHD_Monitor(["loss", "batch_accuracy"])
+monitor.register_epoch_node(
+    "validation_macro_f1",
+    source_nodes=["logits", "target"],
+    levels=[validation_metric_level],
+)
+
+trainer = MHD_Trainer(
+    graph,
+    optimizer,
+    monitor,
+    forward_levels=train_forward_levels,
+    backward_levels=train_backward_levels,
+    criteria_node="validation_macro_f1",
+    criteria_mode="max",
+)
+```
+
+整轮监控 levels 必须独立于训练 Forward/Backward levels。整集临时 Message 在读取监控节点
+后立即 reset，因此不会把动态 validation shape 写入 checkpoint。`best` 和 `last` 均由
+Trainer 保存；`last` 用于中断恢复，`best` 始终对应最优 Criteria。
 
 Utils 内的私有 `_MHD_GraphAdapter` 只把标准 PyTorch 的输入/输出 dict 转换成 Node
 Message 读写，使 DDP/FSDP2/TP/`torch.compile` 能包装 MHD。它不转换模型、不保存第二份
@@ -390,7 +427,7 @@ Tensor hook 屏蔽未选 stage/Edge contribution，并写回本 rank 可见的 G
 截至 README 最后更新，本地机器没有 PyTorch；实际数值与 GPU 测试在 `ws` 的 LOOK
 虚拟环境完成，环境为 PyTorch 2.8.0+cu128、两张 RTX 5000 Ada：
 
-- 32 个 CPU/状态/迁移测试（Message、Operation、aggregation、任意/重复 level、完整与
+- 34 个 CPU/状态/迁移测试（Message、Operation、aggregation、任意/重复 level、完整与
   部分路径、共享参数、额外 seed、retain graph、Merge、Monitor、checkpoint、Prune、V3
   migration）通过；
 - GPU 合成 ResNet、Transformer、循环超图网络与原生参考输出/梯度等价；

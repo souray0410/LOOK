@@ -236,6 +236,8 @@ def _build_device_mesh(
         if config.tensor_parallel_size > 1 or config.pipeline_size > 1:
             raise ValueError("单进程不能启用 TP 或 PP")
         return None, 1
+    if config.data_parallel == "ddp":
+        return None, context.world_size
     if config.data_parallel != "none":
         dimension_name, requested_size = "dp", context.world_size
         data_parallel_size = context.world_size
@@ -1178,6 +1180,30 @@ class MHD_Monitor:
             raise ValueError(f"未知统计量: {sorted(unknown_statistics)}")
         self.records = defaultdict(list)
         self.step_counter = 0
+        self.epoch_nodes: Dict[str, Dict[str, Tuple[Any, ...]]] = {}
+        self.epoch_tensors: Dict[str, torch.Tensor] = {}
+
+    def register_epoch_node(
+        self,
+        node_name: str,
+        *,
+        source_nodes: Sequence[str],
+        levels: Sequence[int],
+    ) -> "MHD_Monitor":
+        """Register a graph node that must be evaluated from a complete split."""
+        sources = tuple(source_nodes)
+        active_levels = tuple(levels)
+        if not isinstance(node_name, str) or not node_name:
+            raise ValueError("Epoch Monitor node_name 必须是非空节点名称")
+        if not sources or len(set(sources)) != len(sources):
+            raise ValueError("Epoch Monitor source_nodes 必须非空且不得重复")
+        if not active_levels:
+            raise ValueError("Epoch Monitor levels 不得为空")
+        self.epoch_nodes[node_name] = {
+            "source_nodes": sources,
+            "levels": active_levels,
+        }
+        return self
 
     def reset(self):
         self.records = defaultdict(list)
@@ -1310,7 +1336,7 @@ class MHD_Trainer:
         monitor: MHD_Monitor,
         forward_levels: Sequence[int],
         backward_levels: Sequence[int],
-        criteria_node: Optional[str] = None,
+        criteria_node: str,
         criteria_mode: str = 'min',
         save_dir: str = "./mhd_ckpts",
         grad_clip_norm: float = None,
@@ -1318,11 +1344,14 @@ class MHD_Trainer:
         save_interval: int = 0,
         *,
         input_nodes: Optional[Sequence[str]] = None,
+        input_mapping: Optional[Mapping[str, str]] = None,
         output_nodes: Optional[Sequence[str]] = None,
         parallel: Optional[MHD_ParallelConfig] = None,
         distributed_context: Optional[MHD_DistributedContext] = None,
         precision: str = "fp32",
         grad_accum_steps: int = 1,
+        train_mode_setter: Optional[Callable[[MHD_Graph], None]] = None,
+        monitor_interval_steps: int = 1,
     ):
         """
         初始化训练器
@@ -1333,7 +1362,7 @@ class MHD_Trainer:
             monitor: 监控器
             forward_levels: 默认 Feature Message 执行序列
             backward_levels: 默认 Gradient Message 执行序列
-            criteria_node: 用于判断最佳模型的监控节点，默认使用标量终点
+            criteria_node: 用于判断最佳模型的节点，必须显式指定
             criteria_mode: 'min' 或 'max'，默认 'min'
             save_dir: 保存目录
             grad_clip_norm: 梯度裁剪阈值
@@ -1342,8 +1371,12 @@ class MHD_Trainer:
         """
         if criteria_mode not in {"min", "max"}:
             raise ValueError("criteria_mode 必须是 min 或 max")
+        if not isinstance(criteria_node, str) or not criteria_node:
+            raise ValueError("criteria_node 必须是非空节点名称")
         if grad_accum_steps < 1:
             raise ValueError("grad_accum_steps 必须大于等于 1")
+        if monitor_interval_steps < 1:
+            raise ValueError("monitor_interval_steps 必须大于等于 1")
         self.mhd_graph = mhd_graph
         self.monitor = monitor
         self.forward_levels = tuple(
@@ -1356,7 +1389,7 @@ class MHD_Trainer:
         if overlap:
             raise ValueError(f"Trainer 前后向 levels 不得重叠: {overlap}")
         self.loss_node_name = _infer_scalar_terminal_name(mhd_graph, self.forward_levels)
-        self.criteria_node_name = criteria_node if criteria_node is not None else self.loss_node_name
+        self.criteria_node_name = criteria_node
         self.criteria_mode = criteria_mode
         self.save_dir = save_dir
         self.grad_clip_norm = grad_clip_norm
@@ -1366,10 +1399,43 @@ class MHD_Trainer:
         self.save_interval = save_interval
         self.precision = precision.lower()
         self.grad_accum_steps = grad_accum_steps
+        self.train_mode_setter = train_mode_setter
+        self.monitor_interval_steps = monitor_interval_steps
+        self.last_monitor_metrics: Dict[str, float] = {}
         self._micro_step = 0
+        self._optimizer_steps = 0
         self._accumulation_paths: Optional[Tuple[Tuple[int, ...], Tuple[int, ...]]] = None
+        self.last_eval_epoch_tensors: Dict[str, torch.Tensor] = {}
         self.input_nodes = tuple(input_nodes or ())
+        self.input_mapping = {name: name for name in self.input_nodes}
+        for node_name, batch_key in dict(input_mapping or {}).items():
+            if node_name not in self.input_mapping:
+                raise ValueError(f"input_mapping 包含未声明的输入节点 '{node_name}'")
+            self.input_mapping[node_name] = batch_key
         requested_outputs = list(output_nodes or ())
+        self.epoch_monitor_nodes: Dict[str, Dict[str, Tuple[Any, ...]]] = {}
+        for node_name, specification in monitor.epoch_nodes.items():
+            criterion_levels = tuple(mhd_graph._validate_levels(
+                specification["levels"],
+                mhd_graph.num_levels,
+                f"Epoch Monitor {node_name}",
+            ))
+            overlap = sorted(
+                set(criterion_levels).intersection(
+                    {*self.forward_levels, *self.backward_levels}
+                )
+            )
+            if overlap:
+                raise ValueError(
+                    f"Epoch Monitor levels 必须独立于训练路径: {overlap}"
+                )
+            self.epoch_monitor_nodes[node_name] = {
+                "source_nodes": tuple(specification["source_nodes"]),
+                "levels": criterion_levels,
+            }
+            for name in specification["source_nodes"]:
+                if name not in requested_outputs:
+                    requested_outputs.append(name)
         for name in [self.loss_node_name, self.criteria_node_name, *monitor.monitor_nodes]:
             if name not in requested_outputs:
                 requested_outputs.append(name)
@@ -1470,15 +1536,41 @@ class MHD_Trainer:
             raise ValueError(f"标量终点 '{self.loss_node_name}' 不存在")
         if not self.mhd_graph.get_node_by_name(self.criteria_node_name):
             raise ValueError(f"最佳判定节点 '{self.criteria_node_name}' 不存在")
+        for monitored_name, specification in self.epoch_monitor_nodes.items():
+            if not self.mhd_graph.get_node_by_name(monitored_name):
+                raise ValueError(f"Epoch Monitor 节点 '{monitored_name}' 不存在")
+            for node_name in specification["source_nodes"]:
+                if not self.mhd_graph.get_node_by_name(node_name):
+                    raise ValueError(f"Epoch Monitor 来源节点 '{node_name}' 不存在")
+            monitored_id = self.mhd_graph.get_node_by_name(monitored_name).id
+            produced = any(
+                bool(torch.any(
+                    self.mhd_graph.topo.role_matrices[level][:, monitored_id] > 0
+                ).item())
+                for level in specification["levels"]
+            )
+            if not produced:
+                raise ValueError(
+                    f"Epoch Monitor levels 未产生节点 '{monitored_name}'"
+                )
         for node_name in self.monitor.monitor_nodes:
             if not self.mhd_graph.get_node_by_name(node_name):
                 warnings.warn(f"监控节点 '{node_name}' 不存在")
 
     def _pipeline_batch_size(self, input_dict: dict) -> int:
+        names = self.input_nodes or tuple(
+            name for name, value in input_dict.items() if isinstance(value, torch.Tensor)
+        )
         batch_sizes = []
-        for tensor in input_dict.values():
+        for name in names:
+            batch_key = self.input_mapping.get(name, name)
+            if batch_key not in input_dict:
+                raise KeyError(f"输入节点 '{name}' 缺少批次字段 '{batch_key}'")
+            tensor = input_dict[batch_key]
             if not isinstance(tensor, torch.Tensor) or tensor.dim() < 1:
-                raise ValueError("输入必须是至少一维的 Tensor，首维表示 batch")
+                raise ValueError(
+                    f"输入节点 '{name}' 对应字段 '{batch_key}' 必须是至少一维 Tensor"
+                )
             batch_sizes.append(tensor.shape[0])
         if not batch_sizes:
             raise ValueError("空输入")
@@ -1497,7 +1589,20 @@ class MHD_Trainer:
         input_dict: Dict[str, torch.Tensor],
         forward_levels: Sequence[int],
     ) -> Dict[str, torch.Tensor]:
-        moved = {name: tensor.to(self.device, non_blocking=True) for name, tensor in input_dict.items()}
+        names = self.input_nodes or tuple(
+            name for name, value in input_dict.items() if isinstance(value, torch.Tensor)
+        )
+        moved = {}
+        for name in names:
+            batch_key = self.input_mapping.get(name, name)
+            if batch_key not in input_dict:
+                raise KeyError(f"输入节点 '{name}' 缺少批次字段 '{batch_key}'")
+            tensor = input_dict[batch_key]
+            if not isinstance(tensor, torch.Tensor):
+                raise TypeError(
+                    f"输入节点 '{name}' 对应字段 '{batch_key}' 必须是 Tensor"
+                )
+            moved[name] = tensor.to(self.device, non_blocking=True)
         if self.model is self.mhd_graph:
             for node in self.mhd_graph.nodes:
                 node.reset()
@@ -1532,9 +1637,25 @@ class MHD_Trainer:
         adapter_inputs = {name: moved[name] for name in self.input_nodes}
         return self.model(adapter_inputs)
 
-    def _collect_metrics(self, outputs: Mapping[str, torch.Tensor]) -> Dict[str, float]:
+    def _collect_metrics(
+        self,
+        outputs: Mapping[str, torch.Tensor],
+        excluded_nodes: Sequence[str] = (),
+    ) -> Dict[str, float]:
         metrics: Dict[str, float] = {}
-        for node_name in self.monitor.monitor_nodes:
+        excluded = set(excluded_nodes)
+        metric_nodes = tuple(
+            dict.fromkeys(
+                (
+                    self.loss_node_name,
+                    self.criteria_node_name,
+                    *self.monitor.monitor_nodes,
+                )
+            )
+        )
+        for node_name in metric_nodes:
+            if node_name in excluded:
+                continue
             value = outputs.get(node_name)
             if value is None:
                 node = self.mhd_graph.get_node_by_name(node_name)
@@ -1543,6 +1664,57 @@ class MHD_Trainer:
                 scalar = float(value.detach().float().mean().item())
                 metrics[node_name] = scalar if np.isfinite(scalar) else 0.0
         return metrics
+
+    def _gather_epoch_tensors(
+        self,
+        local_tensors: Mapping[str, Sequence[torch.Tensor]],
+    ) -> Dict[str, torch.Tensor]:
+        local = {}
+        for node_name, values in local_tensors.items():
+            if not values:
+                raise RuntimeError(f"Epoch Monitor 未收集到节点 {node_name}")
+            local[node_name] = torch.cat(tuple(values), dim=0).cpu()
+        if self.context.distributed:
+            gathered = [None] * self.context.world_size
+            dist.all_gather_object(gathered, local)
+        else:
+            gathered = [local]
+        complete = {
+            node_name: torch.cat(
+                tuple(part[node_name] for part in gathered), dim=0
+            )
+            for node_name in local_tensors
+        }
+        self.last_eval_epoch_tensors = complete
+        self.monitor.epoch_tensors = complete
+        return complete
+
+    @torch.no_grad()
+    def _run_epoch_monitor(
+        self,
+        node_name: str,
+        specification: Mapping[str, Sequence[Any]],
+        complete_tensors: Mapping[str, torch.Tensor],
+    ) -> float:
+        for node in self.mhd_graph.nodes:
+            node.reset()
+        for source_name in specification["source_nodes"]:
+            value = complete_tensors[source_name]
+            self.mhd_graph.get_node_by_name(
+                source_name
+            ).feature_message.current_state = value.to(self.device, non_blocking=True)
+        self.mhd_graph.forward(levels=list(specification["levels"]))
+        value = self.mhd_graph.get_node_by_name(
+            node_name
+        ).feature_message.current_state
+        if value.numel() != 1:
+            raise RuntimeError(f"Epoch Monitor 节点 '{node_name}' 必须是标量")
+        scalar = float(value.detach().float().item())
+        if not np.isfinite(scalar):
+            raise RuntimeError(f"Epoch Monitor 节点 '{node_name}' 产生了非有限值")
+        for node in self.mhd_graph.nodes:
+            node.reset()
+        return scalar
 
     def train_step(
         self,
@@ -1575,6 +1747,8 @@ class MHD_Trainer:
                 raise ValueError("Pipeline stage 已固定，train_step 不支持临时覆盖 level 路径")
             return self._pipeline_train_step(input_dict)
         self.model.train()
+        if self.train_mode_setter is not None:
+            self.train_mode_setter(self.mhd_graph)
         if self._micro_step % self.grad_accum_steps == 0:
             self.optimizer.zero_grad(set_to_none=True)
             self._accumulation_paths = (active_forward, active_backward)
@@ -1603,6 +1777,10 @@ class MHD_Trainer:
                     raise RuntimeError("训练终点必须是标量 Tensor")
             if not loss_value.requires_grad:
                 raise RuntimeError("标量终点无梯度")
+            if self.grad_scaler.is_enabled():
+                # Initialize GradScaler's public optimizer state; MHD backward
+                # applies the same scale through the terminal gradient seed.
+                self.grad_scaler.scale(loss_value)
             scale = (
                 float(self.grad_scaler.get_scale())
                 if self.grad_scaler.is_enabled()
@@ -1621,15 +1799,33 @@ class MHD_Trainer:
                     current = node.gradient_message.current_state
                     node.gradient_message.current_state = current / scale
 
+        should_monitor = (
+            (self._micro_step + 1) % self.monitor_interval_steps == 0
+            or _force_step
+        )
+        if should_monitor:
+            self.monitor.monitor_node(self.mhd_graph, prefix="node/")
         if should_step:
             self.grad_scaler.unscale_(self.optimizer)
             if self.grad_clip_norm and self.grad_clip_norm > 0:
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip_norm)
+            if should_monitor:
+                self.monitor.monitor_edge(
+                    self.mhd_graph,
+                    prefix="edge/",
+                    train_mode=True,
+                )
+            scale_before_update = float(self.grad_scaler.get_scale())
             self.grad_scaler.step(self.optimizer)
             self.grad_scaler.update()
+            if (
+                not self.grad_scaler.is_enabled()
+                or float(self.grad_scaler.get_scale()) >= scale_before_update
+            ):
+                self._optimizer_steps += 1
             self._accumulation_paths = None
         self._micro_step += 1
-        return self._collect_metrics(outputs)
+        return self._collect_metrics(outputs, tuple(self.epoch_monitor_nodes))
 
     def _pipeline_train_step(self, input_dict: Dict[str, torch.Tensor]) -> Dict[str, float]:
         self.model.train()
@@ -1655,15 +1851,20 @@ class MHD_Trainer:
         return {self.loss_node_name: float(loss.item())}
 
     @torch.no_grad()
-    def eval_step(self, input_dict: dict) -> dict:
+    def _eval_outputs(self, input_dict: dict) -> Dict[str, torch.Tensor]:
         self.model.eval()
         with self._autocast_context():
-            outputs = self._forward_graph(input_dict, self.forward_levels)
+            return self._forward_graph(input_dict, self.forward_levels)
+
+    @torch.no_grad()
+    def eval_step(self, input_dict: dict) -> dict:
+        outputs = self._eval_outputs(input_dict)
         if isinstance(self.model, _MHD_PipelineModel):
             local_value = outputs.get(self.loss_node_name)
             value = self.model.synchronize_last_stage_scalar(local_value)
             return {self.loss_node_name: float(value.item())}
-        return self._collect_metrics(outputs)
+        excluded = tuple(self.epoch_monitor_nodes)
+        return self._collect_metrics(outputs, excluded)
 
     def _reduce_epoch_metrics(self, metric_sums: Mapping[str, float], steps: int) -> Dict[str, float]:
         names = sorted(metric_sums)
@@ -1679,6 +1880,7 @@ class MHD_Trainer:
 
     def train_epoch(self, train_data, epoch: int):
         self.monitor.reset()
+        optimizer_steps_before = self._optimizer_steps
         epoch_metrics_sum = defaultdict(float)
         if hasattr(getattr(train_data, "sampler", None), "set_epoch"):
             train_data.sampler.set_epoch(epoch)
@@ -1694,30 +1896,69 @@ class MHD_Trainer:
                 _force_step=force_step,
                 _loss_divisor=loss_divisor,
             )
-            batch_samples = int(next(iter(input_dict.values())).shape[0])
+            batch_samples = self._pipeline_batch_size(input_dict)
             sample_count += batch_samples if step_metrics else 0
             for k, v in step_metrics.items():
                 epoch_metrics_sum[k] += v * batch_samples
             pbar.set_postfix({k: f"{v:.4f}" for k, v in step_metrics.items()})
         avg_metrics = self._reduce_epoch_metrics(epoch_metrics_sum, sample_count)
+        local_monitor = self.monitor.get_mean_metrics()
+        if self.context.distributed:
+            gathered_monitor = [None] * self.context.world_size
+            dist.all_gather_object(gathered_monitor, local_monitor)
+        else:
+            gathered_monitor = [local_monitor]
+        monitor_names = sorted({name for item in gathered_monitor for name in item})
+        self.last_monitor_metrics = {
+            name: float(np.mean([item[name] for item in gathered_monitor if name in item]))
+            for name in monitor_names
+        }
         self.history["train"]["metrics"].append(avg_metrics)
-        if self.lr_scheduler is not None:
+        if self.lr_scheduler is not None and self._optimizer_steps > optimizer_steps_before:
             self.lr_scheduler.step()
         self.logger.info(f"\n📈 训练轮次 {epoch+1} 指标: {avg_metrics}")
+        return avg_metrics
 
     def eval_epoch(self, eval_data, epoch: int):
         self.monitor.reset()
         epoch_metrics_sum = defaultdict(float)
+        epoch_source_nodes = tuple(dict.fromkeys(
+            source_name
+            for specification in self.epoch_monitor_nodes.values()
+            for source_name in specification["source_nodes"]
+        ))
+        epoch_tensors = {name: [] for name in epoch_source_nodes}
         pbar = tqdm(eval_data, desc=f"Eval  Epoch {epoch+1}", leave=False, disable=not self.context.is_main)
         sample_count = 0
         for step, input_dict in enumerate(pbar):
-            step_metrics = self.eval_step(input_dict)
-            batch_samples = int(next(iter(input_dict.values())).shape[0])
+            if not self.epoch_monitor_nodes:
+                step_metrics = self.eval_step(input_dict)
+            else:
+                outputs = self._eval_outputs(input_dict)
+                step_metrics = self._collect_metrics(
+                    outputs,
+                    tuple(self.epoch_monitor_nodes),
+                )
+                for node_name in epoch_source_nodes:
+                    value = outputs.get(node_name)
+                    if value is None:
+                        node = self.mhd_graph.get_node_by_name(node_name)
+                        value = node.feature_message.current_state
+                    epoch_tensors[node_name].append(value.detach().cpu())
+            batch_samples = self._pipeline_batch_size(input_dict)
             sample_count += batch_samples if step_metrics else 0
             for k, v in step_metrics.items():
                 epoch_metrics_sum[k] += v * batch_samples
             pbar.set_postfix({k: f"{v:.4f}" for k, v in step_metrics.items()})
         avg_metrics = self._reduce_epoch_metrics(epoch_metrics_sum, sample_count)
+        if self.epoch_monitor_nodes:
+            complete_tensors = self._gather_epoch_tensors(epoch_tensors)
+            for node_name, specification in self.epoch_monitor_nodes.items():
+                avg_metrics[node_name] = self._run_epoch_monitor(
+                    node_name,
+                    specification,
+                    complete_tensors,
+                )
         self.history["eval"]["metrics"].append(avg_metrics)
 
         cur_loss = avg_metrics.get(self.loss_node_name)
@@ -1748,6 +1989,7 @@ class MHD_Trainer:
             self.logger.info(f"🏆 过往最佳模型 | Epoch {self.history['best_epoch']} | {self.loss_node_name}: {loss_str} | {self.criteria_node_name}: {self.history['best_eval_value']:.6f}")
 
         self.logger.info(f"📊 验证轮次 {epoch+1} 指标: {avg_metrics}")
+        return avg_metrics
 
     def _checkpoint_state(
         self,
@@ -1815,6 +2057,9 @@ class MHD_Trainer:
     def save_checkpoint(self, epoch: int):
         self._save_distributed_checkpoint(f"epoch_{epoch}", epoch)
 
+    def save_last_checkpoint(self, epoch: int):
+        self._save_distributed_checkpoint("last", epoch)
+
     def _save_distributed_checkpoint(self, name: str, epoch: int) -> None:
         try:
             from torch.distributed import checkpoint as dcp
@@ -1831,11 +2076,23 @@ class MHD_Trainer:
             self.logger.error(f"❌ 保存检查点失败: {str(e)}")
             raise
 
-    def load_checkpoint(self, load_best: bool = False, epoch: int = None):
+    def load_checkpoint(
+        self,
+        load_best: bool = False,
+        load_last: bool = False,
+        epoch: int = None,
+    ) -> int:
         try:
-            name = "best" if load_best else f"epoch_{epoch}" if epoch is not None else None
-            if name is None:
-                raise ValueError("必须指定 epoch 或 load_best=True")
+            selected = sum((bool(load_best), bool(load_last), epoch is not None))
+            if selected != 1:
+                raise ValueError("必须且只能指定 best、last 或一个 epoch")
+            name = (
+                "best"
+                if load_best
+                else "last"
+                if load_last
+                else f"epoch_{epoch}"
+            )
             checkpoint_path = os.path.join(self.save_dir, name)
             if not os.path.exists(checkpoint_path):
                 raise FileNotFoundError(f"检查点不存在: {checkpoint_path}")
@@ -1905,6 +2162,7 @@ class MHD_Trainer:
             if state["scaler"]:
                 self.grad_scaler.load_state_dict(state["scaler"])
             self.logger.info("✅ 权重加载完成")
+            return int(state["trainer"].get("epoch", epoch or 0))
         except Exception as e:
             self.logger.error(f"❌ 加载权重失败: {str(e)}")
             raise
@@ -1926,6 +2184,7 @@ class MHD_Trainer:
                 self.logger.info(f"\n--- Epoch {epoch+1}/{epochs} ---")
                 self.train_epoch(train_data, epoch)
                 self.eval_epoch(eval_data, epoch)   # 内部只更新最佳模型
+                self.save_last_checkpoint(epoch + 1)
 
                 cur_ep = epoch + 1
                 if self.save_interval > 0 and cur_ep % self.save_interval == 0:

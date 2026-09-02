@@ -7,10 +7,14 @@ there is no missing-input classifier fine-tuning.
 
 This release uses MHD Framework V4. ResNet forward Feature Messages and backward
 Gradient Messages share the declared hypergraph topology. Classifier training enters
-the reverse computation exclusively through `MHD_Graph.backward(...)`; AMP scaling,
-gradient accumulation, optimizer updates, and DDP synchronization retain their native
-PyTorch semantics. The independently trained cGAN remains an ordinary PyTorch module
-because it is a filling baseline rather than the MHD study backbone.
+the reverse computation through `MHD_Trainer` and its declared backward levels. The
+Trainer automatically finds the unique differentiable scalar endpoint (`loss`); no
+backward node or loss-node argument exists. `MHD_Monitor` evaluates the explicit
+`validation_macro_f1` node once from the complete validation split across all ranks,
+and the Trainer uses that node as its checkpoint criterion. AMP scaling, accumulation,
+optimizer updates, and DDP retain native PyTorch semantics. The independently trained
+cGAN remains an ordinary PyTorch module because it is a filling baseline rather than
+the MHD study backbone.
 
 ## Default Paths
 
@@ -173,8 +177,8 @@ interruption in:
 
 ```text
 runs/backbones/<backbone_id>/run_config.json
-runs/backbones/<backbone_id>/representation/{history.json,last.pt,best.pt,training_complete.json}
-runs/backbones/<backbone_id>/crt/{history.json,last.pt,best.pt,training_complete.json}
+runs/backbones/<backbone_id>/representation/{history.json,last/,best/,best.pt,training_complete.json}
+runs/backbones/<backbone_id>/crt/{history.json,last/,best/,best.pt,training_complete.json}
 runs/backbones/<backbone_id>/training_complete.json
 runs/sweeps/validation__<plan_id>/{study_plan.json,progress.json}
 runs/sweeps/validation__<plan_id>/{leaderboard.csv,baseline_search_results.json}
@@ -183,7 +187,8 @@ runs/logs/look-baseline-search_<timestamp>.log
 ```
 
 The search can be resumed with the same start command. Completed valid configurations
-are reused, an interrupted classifier resumes from `last.pt`, and a scientific or code
+are reused, an interrupted classifier resumes from the canonical MHD Trainer `last/`
+checkpoint, and a scientific or code
 change creates a different content-fingerprinted run ID. After the seven configurations,
 inspect the validation ranking before freezing any design or running the full
 filling/LOOK study.

@@ -102,10 +102,9 @@ def test_module_state_hash_covers_scalar_buffers_deterministically():
     assert module_state_sha256(first) != module_state_sha256(second)
 
 
-def test_mermaid_can_show_forward_and_backward_topologies_together():
+def test_mermaid_draws_explicit_global_levels_in_order():
     graph = _tiny_graph()
-    mermaid = graph.generate_mermaid(forward_levels=[0, 1], backward_levels=[3, 2])
-    assert "Feature #0:L0:S0" in mermaid
-    assert "Gradient" in mermaid
-    assert " -->|Feature " in mermaid
-    assert " -. Gradient " in mermaid
+    mermaid = graph.generate_mermaid(levels=[0, 1, 3, 2])
+    assert "#0:L0:S0" in mermaid
+    assert "#2:L3:S0" in mermaid
+    assert " -->|" in mermaid

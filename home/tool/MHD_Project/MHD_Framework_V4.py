@@ -1153,19 +1153,10 @@ class MHD_Graph(nn.Module):
 
     def generate_mermaid(
         self,
-        forward_levels: Sequence[int],
-        backward_levels: Sequence[int],
+        levels: Sequence[int],
     ) -> str:
-        """Draw explicit Feature and Gradient execution sequences together."""
-        forward_levels = self._validate_levels(
-            forward_levels, self.num_levels, "Mermaid Forward"
-        )
-        backward_levels = self._validate_levels(
-            backward_levels, self.num_levels, "Mermaid Backward"
-        )
-        overlap = sorted(set(forward_levels).intersection(backward_levels))
-        if overlap:
-            raise ValueError(f"Mermaid 前后向 levels 不得重叠: {overlap}")
+        """Draw the supplied global levels exactly in their listed order."""
+        levels = self._validate_levels(levels, self.num_levels, "Mermaid")
 
         mermaid = [
             "flowchart TD",
@@ -1183,47 +1174,37 @@ class MHD_Graph(nn.Module):
                 f' N{node.id}["{escape_label(node.name)}"]:::MHD_Node_Style'
             )
 
-        phase_specs = [
-            ("forward", "Feature", forward_levels),
-            ("backward", "Gradient", backward_levels),
-        ]
-
         for edge in sorted(self.edges, key=lambda x: x.id):
             edge_id = edge.id
-            connections: Dict[
-                Tuple[str, int, int], List[Tuple[int, int, int]]
-            ] = defaultdict(list)
-            phase_labels: Dict[str, str] = {}
-            for phase_name, message_name, phase_levels in phase_specs:
-                phase_labels[phase_name] = message_name
-                for execution_index, level in enumerate(phase_levels):
-                    role = self.topo.role_matrices[level]
-                    sort = self.topo.sort_matrices[level]
-                    if edge_id >= role.shape[0]:
+            connections: Dict[Tuple[int, int], List[Tuple[int, int, int]]] = (
+                defaultdict(list)
+            )
+            for execution_index, level in enumerate(levels):
+                role = self.topo.role_matrices[level]
+                sort = self.topo.sort_matrices[level]
+                if edge_id >= role.shape[0]:
+                    continue
+                for node_id, role_value in enumerate(role[edge_id].tolist()):
+                    if role_value == 0:
                         continue
-                    for node_id, role_value in enumerate(role[edge_id].tolist()):
-                        if role_value == 0:
-                            continue
-                        if role_value < 0:
-                            source_id, target_id = node_id, -(edge_id + 1)
-                        else:
-                            source_id, target_id = -(edge_id + 1), node_id
-                        connections[(phase_name, source_id, target_id)].append(
-                            (execution_index, level, int(sort[edge_id, node_id].item()))
-                        )
+                    if role_value < 0:
+                        source_id, target_id = node_id, -(edge_id + 1)
+                    else:
+                        source_id, target_id = -(edge_id + 1), node_id
+                    connections[(source_id, target_id)].append(
+                        (execution_index, level, int(sort[edge_id, node_id].item()))
+                    )
             if not connections:
                 continue
             mermaid.append(
                 f' E{edge.id}["{escape_label(edge.name)}"]:::MHD_Edge_Style'
             )
-            phase_order = {"forward": 0, "backward": 1}
-            for (phase_name, source_id, target_id), order_values in sorted(
+            for (source_id, target_id), order_values in sorted(
                 connections.items(),
                 key=lambda item: (
-                    phase_order[item[0][0]],
-                    0 if item[0][1] >= 0 else 1,
+                    0 if item[0][0] >= 0 else 1,
+                    item[0][0],
                     item[0][1],
-                    item[0][2],
                 ),
             ):
                 source = f"E{-source_id - 1}" if source_id < 0 else f"N{source_id}"
@@ -1232,11 +1213,7 @@ class MHD_Graph(nn.Module):
                     f"#{execution_index}:L{level}:S{sort_value}"
                     for execution_index, level, sort_value in order_values
                 )
-                label = f"{phase_labels[phase_name]} {order_text}"
-                if phase_name == "forward":
-                    mermaid.append(f" {source} -->|{label}| {target}")
-                else:
-                    mermaid.append(f" {source} -. {label} .-> {target}")
+                mermaid.append(f" {source} -->|{order_text}| {target}")
             mermaid.append("")
 
         mermaid_code = "\n".join(mermaid)
