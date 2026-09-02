@@ -113,6 +113,10 @@ PY
 
 echo "gpu:"
 nvidia-smi --query-gpu=index,name,utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw --format=csv,noheader
+echo "gpu_processes:"
+nvidia-smi pmon -c 1
+echo "host_load:"
+uptime
 echo "disk:"
 df -h "$RUNS_ROOT" | tail -1
 
