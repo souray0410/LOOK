@@ -34,7 +34,13 @@ if histories:
     rows = json.loads(histories[-1].read_text())
     if rows:
         print(f"latest_backbone={histories[-1].parent.name}")
-        print(json.dumps(rows[-1], indent=2))
+        record = rows[-1]
+        for key in ("epoch", "train_loss", "train_batch_accuracy"):
+            print(f"{key}={record.get(key)}")
+        metrics = record.get("validation", {})
+        for key in ("macro_auroc_ovr", "macro_f1", "balanced_accuracy", "ece_15", "cross_entropy"):
+            print(f"validation_{key}={metrics.get(key)}")
+print("GPU index, utilization, memory used, memory total:", flush=True)
 subprocess.run(["nvidia-smi", "--query-gpu=index,utilization.gpu,memory.used,memory.total", "--format=csv,noheader"])
 logs = sorted((runs / "logs").glob(f"{args.session}_*.log"), key=lambda p: p.stat().st_mtime)
 if logs:
