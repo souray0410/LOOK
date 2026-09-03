@@ -21,9 +21,9 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 971,
+      "bytes": 1090,
       "path": "data/data_manifest.example.json",
-      "sha256": "2dd72586f21e35553686eb7794012830f6a4c3df2b4a760ad6bdceeac6f62a23"
+      "sha256": "0dbe2c503552a673540f012a112672cd0c9e5b24e4c6d1cee5aecefad2a10615"
     },
     {
       "bytes": 1,
@@ -82,20 +82,20 @@
   "project": "LOOK",
   "release_documents": [
     {
-      "bytes": 1120,
+      "bytes": 1370,
       "path": "README.md",
-      "sha256": "722776ac48d14680f63df11f3dc562c76cc7133f3eb83af8f181c38c07499019"
+      "sha256": "15729b8fd32a94dde6ceb46ebdb8589b53a7c31345f2bcf31598863b72af01f7"
     },
     {
-      "bytes": 6170,
+      "bytes": 7103,
       "path": "GENERAL_PROJECT_STANDARD.md",
-      "sha256": "ffda32c8a5a5785a8fa09114be0deb52f5e4ce03332ad421551e1af020254a6c"
+      "sha256": "bd0d9e72b789d2f71019a6620ab55f8283ba47e8f3b3f2062215d59056a7fab4"
     }
   ],
   "release_id": "2026_09_03_19_35_04",
   "schema_version": 2,
   "source_manifest": {
     "path": "home/file_manifest.json",
-    "sha256": "4e40aa6c4567e2d3c70f42baeb42fc1b1c92bcc383c4b3a18fc6c1bb0e1f177d"
+    "sha256": "4965e8d3d7c00e26377761ab3b022be512df9f67f1d1780f3225ea79d6fb61d0"
   }
 }
