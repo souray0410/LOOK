@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ukb-look"
+version = "2026.9.3"
+description = "Reproducible single- or multi-GPU four-class CFP-OCT LOOK study"
+requires-python = ">=3.10,<3.14"
+
+[tool.setuptools]
+package-dir = {"" = "tool"}
+
+[tool.setuptools.packages.find]
+where = ["tool"]
+include = ["look_core*", "MHD_Project*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tool/tests"]
+addopts = "-ra -p no:cacheprovider"
