@@ -82,20 +82,25 @@
   "project": "LOOK",
   "release_documents": [
     {
-      "bytes": 1370,
+      "bytes": 1812,
       "path": "README.md",
-      "sha256": "15729b8fd32a94dde6ceb46ebdb8589b53a7c31345f2bcf31598863b72af01f7"
+      "sha256": "a83210ef82849b904e095094061255dcb0b79281025a76245bcd85010990bbb4"
     },
     {
-      "bytes": 7103,
+      "bytes": 7842,
       "path": "GENERAL_PROJECT_STANDARD.md",
-      "sha256": "bd0d9e72b789d2f71019a6620ab55f8283ba47e8f3b3f2062215d59056a7fab4"
+      "sha256": "c441fdee21d90106271eb976f07e768f60f64a76b9721179213968a75b6093eb"
+    },
+    {
+      "bytes": 3886,
+      "path": "PROJECT_TIMELINE.md",
+      "sha256": "c1b2d7e2715d6e5e211e0f7c3010e6cdf77c1b97e234dd808655f46b70dd38c6"
     }
   ],
   "release_id": "2026_09_03_19_35_04",
   "schema_version": 2,
   "source_manifest": {
     "path": "home/file_manifest.json",
-    "sha256": "4965e8d3d7c00e26377761ab3b022be512df9f67f1d1780f3225ea79d6fb61d0"
+    "sha256": "d77272ba9f4f355829584cfbaebf6c786d2f6cada4c185fc1ffe665ebb97ca41"
   }
 }

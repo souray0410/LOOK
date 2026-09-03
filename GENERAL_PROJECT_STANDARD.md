@@ -114,16 +114,25 @@ wrappers and obsolete runtime branches remain forbidden.
 
 ## 9. Source-Control And Deployment Flow
 
-- Treat the reviewed local source tree as the editing authority.
-- Commit every accepted scientific or engineering change before deployment.
+- Treat the private remote Git repository as the canonical source of truth while a
+  study is unpublished. A workstation is a deployment, not the only source archive.
+- Make changes in a clean clone or worktree, whether temporary or persistent. Commit
+  every accepted scientific or engineering change before deployment.
 - Tag reproducible milestones with their release timestamp or declared study milestone.
 - Push source, configuration, tests, documentation and empty data schemas to a private
   remote repository while a study is unpublished.
+- Preserve each released timestamp as a `snapshot/<YYYY_MM_DD_HH_MM_SS>` branch and a
+  matching immutable tag. Keep `main` on the latest reviewed release; snapshot branches
+  are archival and must not be merged back into `main`.
 - Never commit controlled data, extracted participant labels, secrets, environments,
   caches, checkpoints, predictions or runtime logs.
-- Deploy committed source to compute servers in one direction; do not silently replace
-  reviewed local source with ad hoc remote edits.
-- Before a formal run, compare local, repository and compute-server identities by commit
-  and source manifest.
-- Finish each update as one transaction: edit locally, test, commit/tag, push, deploy,
-  verify hashes, then start or resume computation.
+- Deploy committed source from the canonical repository to compute servers. If an urgent
+  server-side edit is necessary, commit it on a branch and push it before treating the
+  deployment as reviewed.
+- Before a formal run, compare repository and compute-server identities by commit and
+  source manifest. Compare a local clone too when one is being used.
+- Finish each update as one transaction: edit in a clean clone/worktree, test,
+  commit/tag, push, deploy, verify hashes, then start or resume computation.
+- Local clones may be removed after push and independent fresh-clone verification. Their
+  removal does not replace the need to back up controlled data and irreplaceable runtime
+  artifacts outside Git.

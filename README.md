@@ -31,4 +31,12 @@ by overriding their project, data, source-image, phenotype, and cache paths.
 
 See [home/README.md](home/README.md) for commands and
 [GENERAL_PROJECT_STANDARD.md](GENERAL_PROJECT_STANDARD.md) for the reusable engineering
-standard.
+standard. [PROJECT_TIMELINE.md](PROJECT_TIMELINE.md) records the purpose and outcome of
+every timestamped snapshot.
+
+## Version Control
+
+The private GitHub repository is the canonical source of truth. `main` contains the
+current release; each historical source tree is preserved as both
+`snapshot/<YYYY_MM_DD_HH_MM_SS>` and a matching timestamp tag. Compute servers are
+deployments of committed GitHub source. Local clones are optional and disposable.

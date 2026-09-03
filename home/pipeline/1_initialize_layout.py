@@ -81,6 +81,7 @@ def release_manifest(project_root: Path, data_root: Path, source_manifest_path: 
         path for path in (
             bundle_root / "README.md",
             bundle_root / "GENERAL_PROJECT_STANDARD.md",
+            bundle_root / "PROJECT_TIMELINE.md",
         )
         if path.is_file()
     ]
