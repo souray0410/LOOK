@@ -46,7 +46,8 @@
         |-- 28_run_study_sweep.py
         |-- 29_aggregate_matrix_analysis.py
         |-- 30_run_task_scout.py
-        `-- 31_summarize_task_scout.py
+        |-- 31_summarize_task_scout.py
+        `-- 32_select_formal_task.py
 ```
 
 Author runtime:
@@ -58,10 +59,12 @@ Author runtime:
 |   |-- phenotypes/
 |   `-- cohorts/
 |       |-- ukb_record_glaucoma_binary_bilateral/
-|       `-- task_scout/
-|           |-- participant_split_manifest.csv
-|           |-- <task-profile>/{primary,natural,incident}/
-|           `-- task_bank_verification.json
+|       |-- task_scout/
+|       |   |-- participant_split_manifest.csv
+|       |   |-- <task-profile>/{primary,natural,incident}/
+|       |   `-- task_bank_verification.json
+|       `-- task_selection/
+|           `-- selected_task_manifest.json
 |-- cache/
 |   |-- pipeline_state/
 |   |-- partial/

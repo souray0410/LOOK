@@ -25,6 +25,7 @@
 | 29 | Matrix analysis | aggregate CSV and figures | selected LOOK banks only |
 | 30 | Validation-only task scout | task leaderboard and resumable checkpoints | seven prespecified profiles, no test/LOOK access |
 | 31 | Summarize task usability | JSON and Markdown audit | validation evidence, phenotype caveats and no automatic winner |
+| 32 | Select formal task | hash-checked selected-task manifest | explicit review; validation-only evidence; test remains sealed |
 
 Pipeline numbers are append-only. Superseded executed steps move to the timestamped
 history directory; active replacements receive new numbers and are never renumbered.
@@ -39,17 +40,22 @@ history directory; active replacements receive new numbers and are never renumbe
 6. Review performance jointly with case count, evidence quality, balance and modality gain.
 7. Promote an eligible task explicitly before the full baseline state machine begins.
 
+The current reviewed selection is `glaucoma_all_evidence`: 925 prevalent cases and 925
+matched controls, with train/validation/test case counts of 632/148/145. Step 32 records
+the decision but does not qualify the baseline or authorize LOOK.
+
 ## Baseline State Machine
 
-1. Calibrate three pretrained/new-layer LR pairs and dropout 0.0/0.2 at feature fusion.
-2. Train OCT-only and CFP-only references under the selected profile.
-3. Search seven linear fusion positions at seed 3407.
-4. Confirm the top three at seeds 3407, 3408, and 3409.
-5. Rank by mean AUROC, then Macro-F1, balanced accuracy, ECE, and AUROC stability.
-6. Require AUROC 0.80, Macro-F1 0.70, sensitivity/specificity 0.65, and no multimodal
+1. Verify the Step 32 task manifest and label hashes.
+2. Calibrate three pretrained/new-layer LR pairs and dropout 0.0/0.2 at feature fusion.
+3. Train OCT-only and CFP-only references under the selected profile.
+4. Search seven linear fusion positions at seed 3407.
+5. Confirm the top three at seeds 3407, 3408, and 3409.
+6. Rank by mean AUROC, then Macro-F1, balanced accuracy, ECE, and AUROC stability.
+7. Require AUROC 0.80, Macro-F1 0.70, sensitivity/specificity 0.65, and no multimodal
    AUROC deficit.
-7. Require explicit approval before LOOK.
-8. Freeze all validation-selected artifacts before any test access.
+8. Require explicit approval before LOOK.
+9. Freeze all validation-selected artifacts before any test access.
 
 ## Recovery Contract
 

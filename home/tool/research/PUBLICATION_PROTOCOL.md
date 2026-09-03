@@ -11,7 +11,7 @@
 
 ## Locked Order
 
-1. Verify evidence timing, high-confidence rules, matching, image references, and splits.
+1. Verify all-evidence timing rules, evidence strata, matching, image references, and splits.
 2. Select a conventional complete-modality baseline using validation only.
 3. Require three-seed stability, unimodal references, quality gates, and explicit review.
 4. Freeze the baseline before training filling generators or fitting LOOK.
@@ -43,3 +43,7 @@ The primary cohort requires at least 500 cases, 350 training cases, and 100 case
 validation and internal test. These transparent project thresholds are not journal
 acceptance rules. Expert grading and an independent external clinical test are
 unavailable, so clinical-deployment claims remain out of scope.
+
+The selected cohort has 925 cases (632/148/145 across train/validation/test) and satisfies
+these internal adequacy thresholds. Its task-scout performance is feasibility evidence
+only; all publication-facing baseline claims require the full protocol and sealed test.

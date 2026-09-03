@@ -1,20 +1,23 @@
-# LOOK UK Biobank Task Scout And Glaucoma Benchmark
+# LOOK UK Biobank All-Evidence Glaucoma Benchmark
 
 ## Scientific Contract
 
-The task is participant-level binary classification of `Normal` and `Glaucoma`.
+The selected task is participant-level binary classification of `Normal` and `Glaucoma`.
 Each sample contains left/right CFP and one central 2D OCT B-scan from the earliest
-complete bilateral visit. The primary cohort uses high-confidence record-derived
-phenotypes; it is not an expert image-grading gold standard.
+complete bilateral visit. The primary cohort uses all eligible prevalent record-derived
+glaucoma evidence; it is not an expert image-grading gold standard.
 
-The primary cohort contains 716 prevalent glaucoma cases and 716 deterministic 1:1
-matched strict controls. Cases require pre-imaging HES ICD evidence, glaucoma-specific
-treatment/procedure evidence, or concordant 6148 and 20002 self-report. A frozen-model
-natural-prevalence test provides sensitivity analysis for the broader UKB definition.
+The primary cohort contains 925 prevalent glaucoma cases and 925 deterministic 1:1
+matched strict controls. Evidence may be pre-imaging HES ICD, glaucoma-specific
+treatment/procedure, concordant self-report, or a single eligible self-report source.
+Evidence provenance is retained for subgroup sensitivity analysis. A frozen-model
+natural-prevalence test evaluates the selected definition without matched controls.
 
-Before committing the full project to that task, this release also builds a prespecified
-validation-only task bank. It tests evidence quality against available sample size without
-opening any test split. The scout is for task selection, not a paper result.
+A prespecified validation-only task scout compared seven candidate definitions without
+opening any test split. `glaucoma_all_evidence` ranked first among eligible profiles
+(AUROC 0.6948, Macro-F1 0.6402; one seed, 12-epoch budget) and is now selected for a
+full conventional baseline search. These scout values are not paper-level baseline or
+test results.
 
 ## Default Paths
 
@@ -23,6 +26,8 @@ project root      /home/mengh/LOOK/2026_09_03_19_35_04
 data root         /data/mengh/LOOK/2026_09_03_19_35_04
 image root        /data/mengh/LOOK/2026_09_03_08_30_00/dataset
 cohort root       /data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/ukb_record_glaucoma_binary_bilateral
+primary labels    /data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/task_scout/glaucoma_all_evidence/primary/reference_labels.csv
+natural labels    /data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/task_scout/glaucoma_all_evidence/natural/reference_labels.csv
 preprocess cache  /data/mengh/LOOK/2026_09_03_08_30_00/cache/preprocessed_pairs
 environment       /home/mengh/LOOK/2026_08_30_11_20_47/tool/environment/.venv
 ```
@@ -95,6 +100,19 @@ After all candidates finish, Step 31 writes `task_usability_summary.json` and
 `task_usability_summary.md`. These combine sample size, phenotype definition, validation
 signal and limitations; they deliberately do not select or freeze a task automatically.
 
+The completed scout selected the all-evidence glaucoma profile. Record that reviewed
+decision once with Step 32:
+
+```bash
+python pipeline/32_select_formal_task.py \
+  --profile glaucoma_all_evidence --scout-id 8cc4833841be \
+  --reviewer-note "Selected after reviewing sample size, phenotype provenance and validation-only task-scout performance." \
+  --execute
+```
+
+This creates a small, hash-checked selection manifest. It neither trains a model nor
+accesses test data.
+
 ## Verify Code And MHD
 
 ```bash
@@ -109,23 +127,16 @@ recovery, and sealed-test protection.
 
 ## Select The Formal Task And Baseline
 
-Review `runs/task_scout/*/leaderboard.csv`, label provenance, case counts, SMD and
-unimodal plausibility together. Do not automatically choose the numerically highest task.
-The desired benchmark has a credible complete-modality baseline, useful signal in both
-modalities, a reproducible missing-modality deficit, and enough headroom to measure
-recovery. It is never weakened deliberately to make LOOK appear stronger.
-After selecting an eligible profile, pass its two reference tables explicitly to every
-formal Step 28 call, for example:
+The selected profile is now the default in `project.json`; Step 28 refuses a formal run
+unless the Step 32 manifest points to the same label files and SHA-256 hashes. Start the
+formal baseline search with no label-path overrides:
 
 ```bash
-PROFILE=glaucoma_high_confidence
-PRIMARY=/data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/task_scout/$PROFILE/primary/reference_labels.csv
-NATURAL=/data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/task_scout/$PROFILE/natural/reference_labels.csv
 python pipeline/28_run_study_sweep.py --mode baseline-selection --phase validation \
-  --gpus 0,1 --labels-csv "$PRIMARY" --natural-labels-csv "$NATURAL"
+  --gpus 0,1
 ```
 
-The original high-confidence glaucoma default can still use the detached helper:
+For lid-independent execution, use the detached helper:
 
 ```bash
 bash tool/operations/start_detached_validation.sh \
@@ -173,10 +184,10 @@ python pipeline/28_run_study_sweep.py --mode full-study --phase test --gpus 0,1 
 python pipeline/29_aggregate_matrix_analysis.py
 ```
 
-Step 27 is the interactive equivalent. Its default mode is `task_scout`; its only
-configuration cell lists every scout and study axis. After formal task selection, switch
-the mode and pass the selected label paths through the documented path controls. A
-singleton list runs one configuration; longer lists expand deterministically.
+Step 27 is the interactive equivalent. Its default mode is `baseline_selection`; its only
+configuration cell lists every scout and study axis. The selected label paths resolve
+from `project.json`. A singleton list runs one configuration; longer lists expand
+deterministically.
 Completed artifacts are validated and reused, incomplete stages resume from `last/`,
 and changed scientific parameters produce a new run ID.
 

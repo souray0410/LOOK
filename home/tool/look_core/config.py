@@ -19,7 +19,7 @@ class ExperimentConfig:
     preprocess_cache_root: Path = field(default_factory=lambda: _default_paths().preprocess_cache_root)
     output_root: Path = field(default_factory=lambda: _default_paths().runs_root)
     cache_root: Path = field(default_factory=lambda: _default_paths().cache_root)
-    label_profile: str = "ukb_record_glaucoma_binary_bilateral"
+    label_profile: str = "ukb_record_glaucoma_all_evidence_binary_bilateral"
     class_names: List[str] = field(default_factory=lambda: ["normal", "glaucoma"])
     sample_unit: str = "participant_earliest_complete_bilateral_visit"
     num_classes: int = 2

@@ -1,7 +1,7 @@
 # LOOK 2026_09_03_19_35_04
 
-Portable two-tree release for UK Biobank bilateral CFP/OCT task scouting and the
-candidate glaucoma benchmark.
+Portable two-tree release for the selected UK Biobank bilateral CFP/OCT
+all-evidence glaucoma benchmark and LOOK missing-modality study.
 Controlled UK Biobank data are not distributed.
 
 ```text
@@ -20,6 +20,10 @@ data/ -> /data/mengh/LOOK/2026_09_03_19_35_04
 The new runtime stores cohort manifests, state, checkpoints, and analyses only. It
 references the existing immutable image export and preprocessing cache through explicit
 paths in `home/project.json`; no 346 GB image copy or symlink is created.
+
+The validation-only task scout selected `glaucoma_all_evidence` (925 cases and 925
+matched controls) for formal baseline qualification. Selection does not freeze a
+baseline, approve LOOK, or open either sealed test cohort.
 
 Path precedence is explicit CLI argument, `LOOK_*` environment variable, then the
 author defaults in `project.json`. Other authorized users can reproduce the workflow

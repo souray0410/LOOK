@@ -13,6 +13,8 @@ from look_core.distributed import parse_gpu_devices
 
 
 def require_verified_data(paths) -> None:
+    from look_core.task_selection import validate_selected_task
+
     manifest_path = paths.data_root / "data_manifest.json"
     if not manifest_path.is_file():
         raise RuntimeError("Run Step 22 before formal study execution")
@@ -22,6 +24,7 @@ def require_verified_data(paths) -> None:
         raise RuntimeError("The data integrity manifest is not PASS")
     if not readiness.get("method_development_and_internal_testing_ready", False):
         raise RuntimeError("The cohort does not pass the protocol data-adequacy gate")
+    validate_selected_task(paths)
     task_bank_root = paths.dataset_root / "cohorts" / "task_scout"
     try:
         profile_id = paths.labels_csv.relative_to(task_bank_root).parts[0]

@@ -7,8 +7,10 @@
   "author_preprocess_cache_root": "/data/mengh/LOOK/2026_09_03_08_30_00/cache/preprocessed_pairs",
   "expected_primary_cohort": {
     "reference_standard": "record_derived_glaucoma_phenotype",
-    "high_confidence_glaucoma": 716,
-    "matched_controls": 716,
+    "selected_profile": "glaucoma_all_evidence",
+    "all_evidence_glaucoma": 925,
+    "matched_controls": 925,
+    "split_case_counts": {"train": 632, "validation": 148, "test": 145},
     "participant_split_leakage": 0
   },
   "expected_task_scout": {

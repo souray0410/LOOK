@@ -111,3 +111,19 @@ Before an expensive architecture sweep, require a baseline qualification stage:
 The active source tree contains current code only. Superseded entrypoints may remain in
 an explicitly non-executable history area for provenance; compatibility imports, aliases,
 wrappers and obsolete runtime branches remain forbidden.
+
+## 9. Source-Control And Deployment Flow
+
+- Treat the reviewed local source tree as the editing authority.
+- Commit every accepted scientific or engineering change before deployment.
+- Tag reproducible milestones with their release timestamp or declared study milestone.
+- Push source, configuration, tests, documentation and empty data schemas to a private
+  remote repository while a study is unpublished.
+- Never commit controlled data, extracted participant labels, secrets, environments,
+  caches, checkpoints, predictions or runtime logs.
+- Deploy committed source to compute servers in one direction; do not silently replace
+  reviewed local source with ad hoc remote edits.
+- Before a formal run, compare local, repository and compute-server identities by commit
+  and source manifest.
+- Finish each update as one transaction: edit locally, test, commit/tag, push, deploy,
+  verify hashes, then start or resume computation.

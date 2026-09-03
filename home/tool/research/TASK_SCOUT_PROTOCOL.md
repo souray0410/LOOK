@@ -1,5 +1,13 @@
 # UK Biobank Task Scout Protocol
 
+## Reviewed Outcome
+
+The completed validation-only scout selected `glaucoma_all_evidence` for formal
+baseline qualification. It used 925 cases and ranked first among eligible candidates
+with AUROC 0.6948 and Macro-F1 0.6402 under the fixed one-seed, 12-epoch budget.
+These values are preliminary task-usability evidence, not final baseline or test results.
+Step 32 records the selection and immutable label hashes; it does not authorize LOOK.
+
 ## Purpose
 
 This scout answers one question before expensive LOOK experiments: which available UKB

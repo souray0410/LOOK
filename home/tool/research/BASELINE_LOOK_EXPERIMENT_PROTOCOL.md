@@ -2,9 +2,11 @@
 
 ## Cohorts
 
-- Primary: 716 high-confidence prevalent glaucoma cases and 716 matched strict controls.
-- Secondary: all eligible glaucoma definitions and strict controls in the held-out
+- Primary: 925 all-evidence prevalent glaucoma cases and 925 matched strict controls.
+- Secondary: the same all-evidence definition and all strict controls in the held-out
   natural-prevalence test split.
+- Evidence sensitivity: objective, concordant self-report, single-source self-report,
+  and the nested 716-case high-confidence subset are reported separately where feasible.
 - Auxiliary: post-imaging incident glaucoma, excluded from model selection.
 - One sample is one participant's earliest complete bilateral CFP/OCT visit.
 
@@ -37,6 +39,7 @@
 
 ## Freeze Boundaries
 
-The baseline must pass its validation gate and receive explicit approval. LOOK
+Step 32 first locks the selected task and label hashes. The baseline must then pass its
+validation gate and receive explicit approval. LOOK
 validation artifacts are then hashed into a frozen manifest. Primary and natural tests
 reject any unlisted or changed configuration.

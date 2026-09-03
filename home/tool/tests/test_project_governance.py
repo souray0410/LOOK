@@ -27,12 +27,18 @@ def test_required_project_contract_is_declared() -> None:
         "schema_version",
         "project_name",
         "release_id",
+        "selected_task_profile",
+        "task_selection_manifest",
         "deployment_defaults",
         "management_standard",
         "directories",
         "compute",
     }
     assert required <= config.keys()
+    assert config["selected_task_profile"] == "glaucoma_all_evidence"
+    defaults = config["deployment_defaults"]
+    assert "/task_scout/glaucoma_all_evidence/primary/" in defaults["labels_csv"]
+    assert "/task_scout/glaucoma_all_evidence/natural/" in defaults["natural_labels_csv"]
     standard = (PROJECT_ROOT / config["management_standard"]["document"]).resolve()
     assert standard.is_file()
     assert "Acceptance Gates" in standard.read_text(encoding="utf-8")
@@ -50,7 +56,7 @@ def test_pipeline_numbering_preserves_shared_steps_and_new_iteration_range() -> 
         match = re.fullmatch(r"(\d+)_[A-Za-z0-9_]+\.(?:py|sh|ipynb)", path.name)
         assert match, f"Unnumbered or invalid pipeline entry: {path.name}"
         numbered.append(int(match.group(1)))
-    assert sorted(numbered) == [*range(1, 12), *range(21, 32)]
+    assert sorted(numbered) == [*range(1, 12), *range(21, 33)]
     assert len(numbered) == len(set(numbered))
     history = PROJECT_ROOT / "pipeline/history/2026_09_03_08_30_00"
     assert sorted(int(path.name.split("_", 1)[0]) for path in history.glob("[0-9]*_*")) == list(range(12, 21))
