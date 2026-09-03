@@ -8,7 +8,7 @@ from pathlib import Path
 
 import torch
 
-from look_core.data import UKBPairedEyeDataset, make_loader
+from look_core.data import UKBBilateralVisitDataset, make_loader
 from look_core.graph import build_resnet50_mhd_graph
 from look_core.look import greedy_fit_look, validate_global_factor_bank
 from look_core.paths import ProjectPaths
@@ -27,8 +27,8 @@ def main() -> None:
         "limit": 8,
         "preprocess_cache_root": paths.preprocess_cache_root,
     }
-    train = UKBPairedEyeDataset(split="train", augment=False, **dataset_kwargs)
-    validation = UKBPairedEyeDataset(
+    train = UKBBilateralVisitDataset(split="train", augment=False, **dataset_kwargs)
+    validation = UKBBilateralVisitDataset(
         split="validation", augment=False, **dataset_kwargs
     )
     train_loader = make_loader(train, 2, 0, False, 3407)

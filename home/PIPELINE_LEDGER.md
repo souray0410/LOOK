@@ -1,46 +1,56 @@
 # Pipeline Ledger
 
-| Step | Purpose | Primary input | Durable output | Resume/integrity rule |
-|---:|---|---|---|---|
-| 1 | Initialize declared roots | `project.json` or CLI roots | runtime skeleton/manifests | create missing directories; never replace data |
-| 2 | Sync source to server | local `home/` | remote source tree | rsync source only; exclude data/env/results |
-| 3 | Verify or create environment/kernel | Python path and requirements | package install, lock, LOOK kernel | reuse valid venv; install missing/inconsistent packages |
-| 4 | Verify source mounts | source UUID/mount arguments | mount audit | read-only requirement before data work |
-| 5 | Export CFP and central OCT | authorized image media | image tree and export manifest | file-level completion; original media unchanged |
-| 6 | Verify export | export manifest/images | verification | count/readability/reference checks |
-| 7 | Audit paired observations | exported image tree | pairing report | deterministic pairing keys |
-| 8 | Remove unpaired derived files | pairing allowlist | paired derived tree | dry-run plus `--execute`; source media excluded |
-| 9 | Verify paired data | paired tree | paired verification | exact pair and leakage checks |
-| 10 | Extract phenotypes | authorized CSVs + paired IDs | matched phenotype table | input hashes and schema |
-| 11 | Audit weak eye labels | matched phenotypes | five-class weak-reference table | exclude ambiguous/multilabel rows; preserve provenance |
-| 12 | Build four-class cohorts | source weak-reference table | balanced/natural CSVs and flow | deterministic SHA-256 Normal sampling; no image copy |
-| 13 | Verify cohorts | cohort CSVs + image root | verification JSON | class mapping, counts, references, duplicates, leakage |
-| 14 | Clean derived intermediates | PASS verification | compact dataset root | fixed allowlist, dry-run, explicit execute |
-| 15 | Unit tests | source + tiny fixtures | test report | no formal run on failure |
-| 16 | Graph smoke | balanced validation subset | topology smoke output | seven fusion + two true unimodal graphs, four logits |
-| 17 | Pipeline smoke | tiny balanced subset | two filling/LOOK smoke runs | DDP, resume, frozen classifier and sealed-test checks |
-| 18 | Interactive experiment | one config cell | same artifacts as library runners | no notebook-only scientific logic |
-| 19 | Baseline/formal sweep | validated cohorts and profiles | checkpoints, predictions, rankings, freezes | deterministic IDs, best/last resume, test requires freeze |
-| 20 | Matrix aggregation | completed LOOK banks | aggregate CSV/figures | selected banks only |
+| Step | Purpose | Durable output | Integrity and recovery |
+|---:|---|---|---|
+| 1 | Resolve and initialize roots | runtime skeleton | create missing directories, never replace data |
+| 2 | Sync source | remote source tree | source only; exclude datasets, environments and runs |
+| 3 | Verify/create environment and kernel | package install and lock | reuse a valid environment, fill missing dependencies |
+| 4 | Verify source mounts | mount audit | require read-only image and phenotype media |
+| 5 | Export CFP and central OCT | four image directories | per-file resume; original media unchanged |
+| 6 | Verify export | export verification | counts, readability and manifest references |
+| 7 | Audit CFP/OCT pairs | strict paired/unpaired reports | deterministic participant/instance/eye keys |
+| 8 | Remove unpaired derived files | paired derived image tree | allowlist, dry-run and explicit `--execute` |
+| 9 | Verify paired images | paired verification | exact pair counts and no extra derived images |
+| 10 | Extract selected phenotypes | bilateral visit map and selected columns | source read-only check, schema and hashes |
+| 11 | Build record phenotypes | evidence-level candidate table | preserve source, code, timing and exclusion reason |
+| 12 | Build four-class cohorts | balanced/natural/incident manifests | deterministic participant split and matched Normal sampling |
+| 13 | Verify cohorts | verification, analysis readiness and data manifest | bilateral paths, mapping, ratio, uniqueness, zero leakage, protocol sample-size gates and test precision |
+| 14 | Clean derived intermediates | compact canonical dataset | only after PASS; allowlist and explicit `--execute` |
+| 15 | Run tests | test report | formal execution blocked on failure |
+| 16 | Run MHD graph smoke | topology evidence | seven fusion plus two unimodal graphs; forward/backward |
+| 17 | Run pipeline smoke | tiny two-filling LOOK runs | DDP, resume, frozen backbone and sealed-test checks |
+| 18 | Interactive experiment | standard runner artifacts | one configuration cell; no notebook-only science |
+| 19 | Baseline and LOOK sweep | checkpoints, predictions, rankings and freezes | deterministic IDs, best/last resume, frozen test gate |
+| 20 | Matrix analysis | aggregate tables and figures | selected LOOK banks only |
 
-## Step 19 Baseline State Machine
+## Phenotype Rules
 
-1. Six feature-fusion LR/dropout calibration configurations.
-2. Seven fusion positions at seed 3407 with selected profile.
-3. Top-three positions at three seeds.
-4. OCT-only and CFP-only references.
-5. Three-seed ranking and 0.70 Macro-F1 validation quality gate.
-6. If failed, persist label/image/confusion audit and stop.
-7. If passed, require a reviewer note before frozen baseline creation.
-8. Only then permit filling, paired cGAN and LOOK validation.
-9. Freeze all selected validation artifacts before balanced/natural test access.
+- The analysis unit is one participant at the earliest complete bilateral visit.
+- Prevalent disease requires evidence available at or before imaging.
+- Post-imaging first evidence is incident-only and cannot enter model selection.
+- Undated target evidence is excluded from the prevalent/control task.
+- Target comorbidity and competing eye disease are excluded from the primary task.
+- Normal requires explicit no-eye-disease self-report and no target evidence in follow-up.
+- Labels are named `record_derived_clinical_phenotype`, never gold standard.
+
+## Baseline State Machine
+
+1. Calibrate three pretrained/new-layer LR pairs and dropout 0.0/0.2 at feature fusion.
+2. Apply the selected profile to all seven linear fusion positions at seed 3407.
+3. Re-run the top three positions with seeds 3407, 3408 and 3409.
+4. Train OCT-only and CFP-only references with the same profile.
+5. Rank by mean Macro-F1, balanced accuracy, Macro-AUROC, ECE and stability.
+6. Require mean Macro-F1 `>=0.65`, each mean class F1 `>=0.45`, and no multimodal deficit.
+7. Persist an audit on failure; require explicit reviewer approval on success.
+8. Only an approved baseline may enter filling and LOOK validation.
+9. Freeze all validation-selected artifacts before balanced/natural test access.
 
 ## Recovery Contract
 
-- Complete outputs are reused only when their identifiers and manifests match.
-- Incomplete training resumes from `last/`; best model is preserved separately.
-- Each configuration is committed to progress before the next begins.
-- New labels, LR, dropout, fusion, seed or relevant code produce a new run ID.
-- Validation and test prediction filenames are disjoint.
-- Natural-distribution test is secondary and cannot affect selection.
-- Cleanup may remove only declared derived/runtime paths and never mounted source media.
+- Reuse only outputs whose configuration, code, input and artifact manifests validate.
+- Resume incomplete training from `last/`; preserve `best/` independently.
+- Commit one sweep case before starting the next.
+- A changed label table or scientific parameter creates a new deterministic run ID.
+- Validation and test predictions use disjoint files and directories.
+- Natural and incident cohorts cannot influence hyperparameter selection.
+- Cleanup never targets mounted source media.

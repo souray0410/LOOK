@@ -2,11 +2,13 @@
 
 ## Cohorts
 
-- Primary: balanced four-class weak-reference cohort.
+- Primary: balanced four-class record-derived prevalent phenotype cohort.
 - Secondary: same four classes at natural observed prevalence.
+- Auxiliary only: post-imaging incident phenotype cohort, excluded from selection.
 - Classes: Normal, diabetes-related eye disease, Glaucoma, macular degeneration.
 - Cataract is outside the current formal task.
-- Train/validation/test retain the pre-existing participant-level split.
+- One row is the earliest complete bilateral CFP/OCT visit for one participant.
+- Participant-level 70/15/15 splits are deterministic and test remains sealed.
 
 ## Baseline
 
@@ -19,6 +21,8 @@
 - Calibration: LR pairs `3e-5/3e-4`, `1e-4/1e-3`, `3e-4/3e-3`; dropout `0.0/0.2`.
 - Stage A: seven positions at seed 3407. Stage B: top three at 3407/3408/3409.
 - OCT-only and CFP-only use true single active branches under the same profile.
+- Left/right eyes share modality weights and are aggregated by a parameter-free MHD
+  bilateral-mean Edge before the classifier.
 
 ## LOOK Controls
 

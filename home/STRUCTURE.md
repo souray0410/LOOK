@@ -18,9 +18,9 @@
 |   |-- 8_remove_unpaired_ophthalmology.py
 |   |-- 9_verify_paired_ophthalmology.py
 |   |-- 10_extract_matched_phenotypes.py
-|   |-- 11_audit_eye_labels.py
-|   |-- 12_build_balanced_4class_dataset.py
-|   |-- 13_verify_balanced_4class_dataset.py
+|   |-- 11_build_record_phenotypes.py
+|   |-- 12_build_record_4class_dataset.py
+|   |-- 13_verify_record_4class_dataset.py
 |   |-- 14_clean_intermediates.py
 |   |-- 15_run_tests.sh
 |   |-- 16_run_graph_smoke.py
@@ -29,64 +29,65 @@
 |   |-- 19_run_study_sweep.py
 |   `-- 20_aggregate_matrix_analysis.py
 `-- tool/
-    |-- look_core/          reusable task and pipeline package
-    |-- MHD_Project/       MHD Framework/Utils V4
-    |-- tests/
-    |-- environment/       requirements and environment lock, not the shared venv
-    |-- operations/        detached launch/status and approval helpers
-    `-- research/          protocol, slides, papers and compact result summaries
+    |-- look_core/          reusable phenotype, data, graph and experiment package
+    |-- MHD_Project/       MHD Framework and Utils V4
+    |-- tests/             unit, topology, DDP and recovery tests
+    |-- environment/       requirements and lock; shared venv is external
+    |-- operations/        launch, status, cache and approval helpers
+    `-- research/          preregistered protocols and compact study records
 ```
 
 ```text
 /data/<user>/LOOK/<timestamp>/
 |-- dataset/
-|   |-- 21015/             left/right CFP exports
-|   |-- 21016/
-|   |-- 21017/             left/right central OCT slices
-|   |-- 21018/
-|   |-- reference_labels.csv       source five-class weak-reference table
-|   `-- cohorts/ukb_retinal_4class_weak/
+|   |-- 21015/  21016/                 left/right CFP
+|   |-- 21017/  21018/                 left/right central OCT slices
+|   |-- paired_eye_manifest.csv         earliest complete bilateral visit
+|   |-- phenotypes/
+|   |   |-- extraction_manifest.json
+|   |   |-- matched_fields/             selected source fields only
+|   |   |-- record_phenotype_candidates.csv
+|   |   `-- record_phenotype_candidates.audit.json
+|   `-- cohorts/ukb_record_prevalent_4class_bilateral/
 |       |-- cohort_manifest.json
 |       |-- cohort_flow.json
+|       |-- cohort_characteristics.csv
+|       |-- evidence_source_counts.json
+|       |-- analysis_readiness.json
 |       |-- verification.json
-|       |-- balanced/
-|       |   |-- reference_labels.csv
-|       |   `-- class_mapping.json
-|       `-- natural/
-|           |-- reference_labels.csv
-|           `-- class_mapping.json
+|       |-- balanced/{reference_labels.csv,class_mapping.json}
+|       |-- natural/{reference_labels.csv,class_mapping.json}
+|       `-- incident/{reference_labels.csv,class_mapping.json}
 |-- cache/
 |   |-- preprocessed_pairs/
 |   |-- pipeline_state/
 |   |-- partial/
 |   `-- quarantine/
-`-- runs/
-    |-- backbones/
-    |-- baseline_selection/
-    |-- experiments/
-    |-- generators/
-    |-- sweeps/
-    |-- freezes/
-    |-- logs/
-    `-- legacy_pilot/      compact provenance only
+|-- runs/
+|   |-- backbones/
+|   |-- baseline_selection/
+|   |-- experiments/
+|   |-- generators/
+|   |-- sweeps/
+|   |-- freezes/
+|   `-- logs/
+`-- data_manifest.json
 ```
 
-Scientific code refers to images by paths relative to `image_root`. `image_root`, cohort
-CSV paths, cache and runs may live anywhere and are resolved through explicit arguments,
-environment variables or `project.json`.
-
-## Structure Transitions
+## Data Flow
 
 ```text
-authorized read-only media
-  -> Steps 5-9: paired CFP and central OCT export
-  -> Steps 10-11: matched weak-reference eye labels
-  -> Steps 12-13: balanced primary + natural secondary four-class manifests
-  -> Steps 15-17: code, graph/DDP and tiny end-to-end verification
-  -> Step 19 baseline selection: calibration -> fusion -> multi-seed -> review
-  -> Step 19 formal study: filling -> LOOK -> freeze -> sealed tests
-  -> Step 20: cross-experiment correction-matrix analysis
+authorized read-only image media
+  -> Steps 5-9: CFP export + central OCT extraction + strict eye pairing
+  -> Step 10: earliest complete bilateral visit + selected phenotype fields
+  -> Step 11: prevalent/incident/uncertain evidence classification
+  -> Steps 12-13: balanced development + natural secondary + incident manifests
+  -> Steps 15-17: unit, MHD graph/DDP and tiny end-to-end verification
+  -> Step 19 baseline: calibration -> seven fusions -> three seeds -> unimodal review
+  -> Step 19 LOOK: filling -> correction -> freeze -> sealed tests
+  -> Step 20: correction-matrix and cross-experiment analysis
 ```
 
-Data are stored physically once. A timestamp update changes source and run identity, not
-the number of copies of the processed image collection.
+Images exist once. Cohorts are CSV references. Internal imports are relative to the
+installed source tree; deployment paths are supplied through CLI, environment variables,
+or `project.json`.

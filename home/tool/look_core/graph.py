@@ -17,7 +17,8 @@ UNIMODAL_POSITIONS = ("oct_only", "cfp_only")
 ARCHITECTURE_POSITIONS = (*FUSION_POSITIONS, *UNIMODAL_POSITIONS)
 STAGES = ("stem", "layer1", "layer2", "layer3", "layer4", "feature")
 NODE_SHAPES = {
-    "input": (3, 224, 224),
+    "input": (2, 3, 224, 224),
+    "eye_input": (3, 224, 224),
     "stem": (64, 56, 56),
     "layer1": (256, 56, 56),
     "layer2": (512, 28, 28),
@@ -35,6 +36,24 @@ class PoolFlatten(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.flatten(self.pool(x), 1)
+
+
+class FlattenEyeBatch(nn.Module):
+    """Map [participant, eye, channel, height, width] to an eye batch."""
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if x.ndim != 5 or x.shape[1] != 2:
+            raise ValueError(f"Expected [B,2,C,H,W], got {tuple(x.shape)}")
+        return x.reshape(x.shape[0] * 2, *x.shape[2:])
+
+
+class BilateralMean(nn.Module):
+    """Aggregate adjacent left/right eye features to one participant feature."""
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if x.ndim != 2 or x.shape[0] % 2:
+            raise ValueError(f"Expected an even [2B,F] eye-feature tensor, got {tuple(x.shape)}")
+        return x.reshape(x.shape[0] // 2, 2, x.shape[1]).mean(dim=1)
 
 
 class ConcatProjection(nn.Module):
@@ -141,18 +160,21 @@ def _add_edge(edges: List[MHD_Edge], name: str, operation: nn.Module) -> None:
 def _active_edge_groups(fusion_position: str) -> List[List[str]]:
     if fusion_position in UNIMODAL_POSITIONS:
         branch = fusion_position.removesuffix("_only")
-        groups = [[f"{branch}_{stage}_edge"] for stage in STAGES]
+        groups = [[f"{branch}_flatten_eyes_edge"]]
+        groups.extend([[f"{branch}_{stage}_edge"] for stage in STAGES])
+        groups.append([f"{branch}_bilateral_mean_edge"])
         groups.append(["fusion_classifier_edge"])
         groups.append(["classification_loss_edge", "batch_accuracy_edge"])
         return groups
     fusion_index = FUSION_POSITIONS.index(fusion_position)
-    groups: List[List[str]] = []
+    groups: List[List[str]] = [["oct_flatten_eyes_edge", "cfp_flatten_eyes_edge"]]
     prefix = STAGES[:fusion_index]
     for stage in prefix:
         groups.append([f"oct_{stage}_edge", f"cfp_{stage}_edge"])
     groups.append([f"fuse_{fusion_position}_edge"])
     for stage in STAGES[fusion_index:]:
         groups.append([f"fusion_{stage}_edge"])
+    groups.append(["fusion_bilateral_mean_edge"])
     groups.append(["fusion_classifier_edge"])
     groups.append(["classification_loss_edge", "batch_accuracy_edge"])
     return groups
@@ -167,18 +189,25 @@ def _build_topology(
     node_ids = {node.name: node.id for node in nodes}
     edge_ids = {edge.name: edge.id for edge in edges}
     connections: Dict[str, Tuple[List[str], str]] = {}
+    for branch in ("oct", "cfp"):
+        connections[f"{branch}_flatten_eyes_edge"] = ([f"{branch}_input"], f"{branch}_eye_input")
     for branch in ("oct", "cfp", "fusion"):
-        previous = f"{branch}_input"
+        previous = f"{branch}_eye_input" if branch != "fusion" else f"{branch}_input"
         for stage in STAGES:
             connections[f"{branch}_{stage}_edge"] = ([previous], f"{branch}_{stage}")
             previous = f"{branch}_{stage}"
-        connections[f"{branch}_classifier_edge"] = ([previous], f"{branch}_logits")
+        connections[f"{branch}_bilateral_mean_edge"] = ([previous], f"{branch}_participant_feature")
+        connections[f"{branch}_classifier_edge"] = ([f"{branch}_participant_feature"], f"{branch}_logits")
     if fusion_position in UNIMODAL_POSITIONS:
         branch = fusion_position.removesuffix("_only")
-        connections["fusion_classifier_edge"] = ([f"{branch}_feature"], "fusion_logits")
+        connections["fusion_classifier_edge"] = ([f"{branch}_participant_feature"], "fusion_logits")
+    else:
+        connections["fusion_classifier_edge"] = (["fusion_participant_feature"], "fusion_logits")
     for position in FUSION_POSITIONS:
+        oct_head = "oct_eye_input" if position == "input" else f"oct_{position}"
+        cfp_head = "cfp_eye_input" if position == "input" else f"cfp_{position}"
         connections[f"fuse_{position}_edge"] = (
-            [f"oct_{position}", f"cfp_{position}"],
+            [oct_head, cfp_head],
             f"fusion_{position}",
         )
     connections["classification_loss_edge"] = (
@@ -240,11 +269,18 @@ def build_resnet50_mhd_graph(
     }
 
     nodes: List[MHD_Node] = []
-    for branch in ("oct", "cfp", "fusion"):
-        for stage in ("input", *STAGES, "logits"):
-            nodes.append(
-                _make_node(len(nodes), f"{branch}_{stage}", stage, batch_size, device, num_classes)
-            )
+    for branch in ("oct", "cfp"):
+        nodes.append(_make_node(len(nodes), f"{branch}_input", "input", batch_size, device, num_classes))
+        nodes.append(_make_node(len(nodes), f"{branch}_eye_input", "eye_input", batch_size * 2, device, num_classes))
+        for stage in STAGES:
+            nodes.append(_make_node(len(nodes), f"{branch}_{stage}", stage, batch_size * 2, device, num_classes))
+        nodes.append(_make_node(len(nodes), f"{branch}_participant_feature", "feature", batch_size, device, num_classes))
+        nodes.append(_make_node(len(nodes), f"{branch}_logits", "logits", batch_size, device, num_classes))
+    for stage in ("input", *STAGES):
+        eye_batch_size = batch_size * 2
+        nodes.append(_make_node(len(nodes), f"fusion_{stage}", stage, eye_batch_size, device, num_classes))
+    nodes.append(_make_node(len(nodes), "fusion_participant_feature", "feature", batch_size, device, num_classes))
+    nodes.append(_make_node(len(nodes), "fusion_logits", "logits", batch_size, device, num_classes))
     nodes.append(_make_tensor_node(
         len(nodes), "label_gt", torch.zeros(batch_size, dtype=torch.long, device=device)
     ))
@@ -253,10 +289,13 @@ def build_resnet50_mhd_graph(
         len(nodes), "batch_accuracy", torch.zeros(batch_size, device=device)
     ))
     edges: List[MHD_Edge] = []
+    for branch in ("oct", "cfp"):
+        _add_edge(edges, f"{branch}_flatten_eyes_edge", FlattenEyeBatch())
     for branch in ("oct", "cfp", "fusion"):
         for stage in STAGES:
             _add_edge(edges, f"{branch}_{stage}_edge", modules[branch][stage])
         _add_edge(edges, f"{branch}_classifier_edge", modules[branch]["classifier"])
+        _add_edge(edges, f"{branch}_bilateral_mean_edge", BilateralMean())
 
     channels = {"input": 3, "stem": 64, "layer1": 256, "layer2": 512, "layer3": 1024, "layer4": 2048}
     for position in FUSION_POSITIONS:
@@ -286,7 +325,10 @@ def build_resnet50_mhd_graph(
     )
     if fusion_position in FUSION_POSITIONS:
         start = FUSION_POSITIONS.index(fusion_position)
-        graph.correction_nodes = [f"fusion_{name}" for name in FUSION_POSITIONS[start:]]
+        graph.correction_nodes = [
+            *[f"fusion_{name}" for name in FUSION_POSITIONS[start:]],
+            "fusion_participant_feature",
+        ]
     else:
         graph.correction_nodes = []
     graph.node_level_map = active_node_levels(graph)
@@ -378,7 +420,7 @@ def graph_summary(graph: MHD_Graph) -> Dict[str, object]:
         "correction_nodes": graph.correction_nodes,
         "monitor_nodes": graph.monitor_nodes,
         "monitor_edges": graph.monitor_edges,
-        "fusion_operation": "concatenate_linear_projection_normalization",
+        "fusion_operation": "concatenate_linear_projection_normalization_then_bilateral_mean",
         "fusion_nonlinearity": False,
         "classification_loss": classification_loss_metadata(graph),
         "parameters": sum(parameter.numel() for parameter in graph.parameters()),

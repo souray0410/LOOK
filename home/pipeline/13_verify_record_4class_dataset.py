@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify balanced and natural four-class cohort manifests and image references."""
+"""Step 13: verify participant-level cohorts and publish the data manifest."""
 
 from __future__ import annotations
 
@@ -22,22 +22,24 @@ def main() -> None:
         paths.image_root,
         check_images=not args.skip_image_check,
     )
-    source_labels = paths.image_root / "reference_labels.csv"
-    adoption = paths.cache_root / "pipeline_state" / "data_tree_adoption.json"
     project = json.loads((paths.project_root / "project.json").read_text(encoding="utf-8"))
+    candidate = paths.dataset_root / "phenotypes/record_phenotype_candidates.csv"
+    paired = paths.dataset_root / "paired_eye_manifest.csv"
     data_manifest = {
-        "schema_version": 2,
+        "schema_version": 3,
         "release_id": project["release_id"],
         "status": report["status"],
         "reference_standard": report["reference_standard"],
+        "unit_of_analysis": report["unit_of_analysis"],
         "data_root": str(paths.data_root),
         "dataset_root": str(paths.dataset_root),
         "image_root": str(paths.image_root),
         "cohort_root": str(paths.cohort_root),
         "preprocess_cache_root": str(paths.preprocess_cache_root),
-        "source_reference_labels_sha256": sha256(source_labels),
+        "paired_eye_manifest_sha256": sha256(paired),
+        "phenotype_candidates_sha256": sha256(candidate),
         "cohorts": report["cohorts"],
-        "adoption_manifest": str(adoption) if adoption.is_file() else None,
+        "analysis_readiness": report["analysis_readiness"],
     }
     write_json_atomic(data_manifest, paths.data_root / "data_manifest.json")
     print(json.dumps(report, indent=2))

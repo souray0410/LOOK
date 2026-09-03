@@ -5,6 +5,7 @@ from torchvision.models import ResNet50_Weights, resnet50
 import look_core.graph as graph_module
 
 from look_core.graph import (
+    BilateralMean,
     FUSION_POSITIONS,
     UNIMODAL_POSITIONS,
     ClassificationLoss,
@@ -21,7 +22,7 @@ def test_topology_output_and_pruned_state(position):
     graph.eval()
     with torch.no_grad():
         logits = reset_and_forward(
-            graph, torch.randn(1, 3, 224, 224), torch.randn(1, 3, 224, 224)
+            graph, torch.randn(1, 2, 3, 224, 224), torch.randn(1, 2, 3, 224, 224)
         )
     assert logits.shape == (1, 4)
     active_modules = {
@@ -50,6 +51,16 @@ def test_branch_weights_are_equal_but_not_shared_and_fusion_is_average_identity(
         projected = projection.projection(torch.cat([first, second], dim=1))
     assert torch.allclose(projected, (first + second) / 2, atol=1e-6)
     assert not any(isinstance(module, (torch.nn.ReLU, torch.nn.GELU)) for module in projection.modules())
+
+
+def test_bilateral_mean_is_parameter_free_and_propagates_to_both_eyes():
+    operation = BilateralMean()
+    eyes = torch.tensor([[1.0, 3.0], [3.0, 5.0], [2.0, 4.0], [6.0, 8.0]], requires_grad=True)
+    participants = operation(eyes)
+    assert torch.equal(participants, torch.tensor([[2.0, 4.0], [4.0, 6.0]]))
+    participants.sum().backward()
+    assert torch.equal(eyes.grad, torch.full_like(eyes, 0.5))
+    assert list(operation.parameters()) == []
 
 
 def test_imagenet_template_weights_are_requested_and_mapped_into_hyperedges(monkeypatch):
@@ -110,8 +121,8 @@ def test_graph_internal_loss_and_backward_messages_are_differentiable():
     graph = build_resnet50_mhd_graph("feature", batch_size=1, pretrained=False, device="cpu")
     outputs = reset_and_forward(
         graph,
-        torch.randn(1, 3, 224, 224),
-        torch.randn(1, 3, 224, 224),
+        torch.randn(1, 2, 3, 224, 224),
+        torch.randn(1, 2, 3, 224, 224),
         torch.tensor([2]),
     )
     assert outputs["loss"].requires_grad
@@ -140,6 +151,6 @@ def test_unimodal_reference_uses_one_pretrained_branch(position):
     assert graph.get_edge_by_name("fusion_classifier_edge") is not None
     with torch.no_grad():
         logits = reset_and_forward(
-            graph, torch.randn(1, 3, 224, 224), torch.randn(1, 3, 224, 224)
+            graph, torch.randn(1, 2, 3, 224, 224), torch.randn(1, 2, 3, 224, 224)
         )
     assert logits.shape == (1, 4)

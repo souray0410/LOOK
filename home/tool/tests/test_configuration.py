@@ -231,7 +231,7 @@ def test_gpu_list_is_only_compute_selector(tmp_path):
     multi = expand_study_grid(grid, _paths(tmp_path / "multi"), gpu_devices=(0, 1))[0]
     assert single.config.world_size == 1
     assert multi.config.world_size == 2
-    assert single.config.micro_batch_size == multi.config.micro_batch_size == 128
+    assert single.config.micro_batch_size == multi.config.micro_batch_size == 64
 
 
 def test_sequential_sweep_releases_parent_cuda_cache(monkeypatch):

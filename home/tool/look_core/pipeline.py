@@ -12,7 +12,7 @@ import torch
 
 from .config import ExperimentConfig, ExperimentSelection
 from .data import (
-    UKBPairedEyeDataset,
+    UKBBilateralVisitDataset,
     make_loader,
     validate_reference_table,
 )
@@ -332,15 +332,15 @@ class ExperimentRunner:
             "preprocess_cache_root": self.config.preprocess_cache_root,
         }
         datasets = {
-            "train": UKBPairedEyeDataset(split="train", augment=True, **kwargs),
-            "look_train": UKBPairedEyeDataset(split="train", augment=False, **kwargs),
-            "validation": UKBPairedEyeDataset(split="validation", augment=False, **kwargs),
+            "train": UKBBilateralVisitDataset(split="train", augment=True, **kwargs),
+            "look_train": UKBBilateralVisitDataset(split="train", augment=False, **kwargs),
+            "validation": UKBBilateralVisitDataset(split="validation", augment=False, **kwargs),
         }
         if self.options.phase == "test":
-            datasets["balanced_test"] = UKBPairedEyeDataset(
+            datasets["balanced_test"] = UKBBilateralVisitDataset(
                 split="test", augment=False, **kwargs
             )
-            datasets["natural_test"] = UKBPairedEyeDataset(
+            datasets["natural_test"] = UKBBilateralVisitDataset(
                 labels_csv=self.config.natural_labels_csv,
                 data_root=self.config.image_root,
                 split="test",

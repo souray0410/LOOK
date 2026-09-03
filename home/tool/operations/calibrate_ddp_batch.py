@@ -71,7 +71,7 @@ def classifier_steps(args, context) -> dict:
     torch.cuda.reset_peak_memory_stats(context.device)
     for step in range(args.steps):
         optimizer.zero_grad(set_to_none=True)
-        oct_tensor = torch.randn(args.per_device_batch, 3, 224, 224, device=context.device)
+        oct_tensor = torch.randn(args.per_device_batch, 2, 3, 224, 224, device=context.device)
         cfp_tensor = torch.randn_like(oct_tensor)
         labels = torch.randint(0, 4, (args.per_device_batch,), device=context.device)
         with torch.amp.autocast("cuda", enabled=True):

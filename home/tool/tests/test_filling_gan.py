@@ -21,8 +21,8 @@ def test_normalized_mean_fill_zeros_only_the_missing_modality():
 
 def test_paired_cgan_filler_preserves_observed_modality_and_shape():
     filler = PairedCGANFiller(IdentityGenerator(), IdentityGenerator(), torch.device("cpu"))
-    oct_tensor = torch.randn(2, 3, 8, 8)
-    cfp_tensor = torch.randn(2, 3, 8, 8)
+    oct_tensor = torch.randn(2, 2, 3, 8, 8)
+    cfp_tensor = torch.randn(2, 2, 3, 8, 8)
     generated_oct, kept_cfp = filler.fill(oct_tensor, cfp_tensor, "oct_missing")
     assert generated_oct.shape == oct_tensor.shape
     assert torch.equal(kept_cfp, cfp_tensor)

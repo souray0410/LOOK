@@ -69,7 +69,7 @@ class ProjectPaths:
         images = Path(
             image_root or env.get("LOOK_IMAGE_ROOT") or defaults.get("image_root", dataset)
         )
-        default_cohort = dataset / "cohorts" / "ukb_retinal_4class_weak"
+        default_cohort = dataset / "cohorts" / "ukb_record_prevalent_4class_bilateral"
         cohort = Path(
             cohort_root
             or env.get("LOOK_COHORT_ROOT")
@@ -119,6 +119,7 @@ class ProjectPaths:
             self.dataset_root,
             self.cohort_root / "balanced",
             self.cohort_root / "natural",
+            self.cohort_root / "incident",
             self.cache_root / "pipeline_state",
             self.cache_root / "partial",
             self.cache_root / "quarantine",

@@ -112,6 +112,14 @@ def _to_gan_range(tensor: torch.Tensor) -> torch.Tensor:
     return ((tensor * std + mean).clamp(0, 1) * 2) - 1
 
 
+def _flatten_bilateral(tensor: torch.Tensor) -> torch.Tensor:
+    if tensor.ndim == 4:
+        return tensor
+    if tensor.ndim != 5 or tensor.shape[1] != 2:
+        raise ValueError(f"Expected [B,2,C,H,W] or [B,C,H,W], got {tuple(tensor.shape)}")
+    return tensor.reshape(tensor.shape[0] * 2, *tensor.shape[2:])
+
+
 def gan_internal_split_indices(frame, validation_fraction: float, seed: int):
     participants = frame["participant_id"].astype(str)
     unique_participants = sorted(participants.unique())
@@ -188,8 +196,8 @@ def _validation_l1(generator, loader, source_key: str, target_key: str, device):
     generator.eval()
     total, count = 0.0, 0
     for batch in loader:
-        source = _to_gan_range(batch[source_key].to(device, non_blocking=True))
-        target = _to_gan_range(batch[target_key].to(device, non_blocking=True))
+        source = _to_gan_range(_flatten_bilateral(batch[source_key].to(device, non_blocking=True)))
+        target = _to_gan_range(_flatten_bilateral(batch[target_key].to(device, non_blocking=True)))
         generated = generator(source)
         total += torch.nn.functional.l1_loss(generated, target, reduction="sum").item()
         count += target.numel()
@@ -238,8 +246,8 @@ def train_paired_cgan_direction(
             group_start = (step // accumulation) * accumulation
             group_size = min(accumulation, len(train_loader) - group_start)
             should_step = step - group_start + 1 == group_size
-            source = _to_gan_range(batch[source_key].to(device, non_blocking=True))
-            target = _to_gan_range(batch[target_key].to(device, non_blocking=True))
+            source = _to_gan_range(_flatten_bilateral(batch[source_key].to(device, non_blocking=True)))
+            target = _to_gan_range(_flatten_bilateral(batch[target_key].to(device, non_blocking=True)))
             generated = generator(source)
 
             real_logits = discriminator(source, target)
@@ -338,8 +346,8 @@ def _validation_l1_ddp(generator, loader, source_key, target_key, context):
     generator.eval()
     totals = torch.zeros(2, dtype=torch.float64, device=context.device)
     for batch in loader:
-        source = _to_gan_range(batch[source_key].to(context.device, non_blocking=True))
-        target = _to_gan_range(batch[target_key].to(context.device, non_blocking=True))
+        source = _to_gan_range(_flatten_bilateral(batch[source_key].to(context.device, non_blocking=True)))
+        target = _to_gan_range(_flatten_bilateral(batch[target_key].to(context.device, non_blocking=True)))
         generated = generator(source)
         totals[0] += torch.nn.functional.l1_loss(generated, target, reduction="sum").double()
         totals[1] += target.numel()
@@ -408,8 +416,8 @@ def train_paired_cgan_direction_ddp(
             should_step = step - group_start + 1 == group_size
             generator_sync = generator.no_sync() if not should_step and hasattr(generator, "no_sync") else nullcontext()
             discriminator_sync = discriminator.no_sync() if not should_step and hasattr(discriminator, "no_sync") else nullcontext()
-            source = _to_gan_range(batch[source_key].to(context.device, non_blocking=True))
-            target = _to_gan_range(batch[target_key].to(context.device, non_blocking=True))
+            source = _to_gan_range(_flatten_bilateral(batch[source_key].to(context.device, non_blocking=True)))
+            target = _to_gan_range(_flatten_bilateral(batch[target_key].to(context.device, non_blocking=True)))
             with generator_sync:
                 generated = generator(source)
                 with discriminator_sync:

@@ -12,7 +12,7 @@ from MHD_Project.MHD_Utils_V4 import (
     destroy_mhd_distributed,
     initialize_mhd_distributed,
 )
-from look_core.data import UKBPairedEyeDataset, make_loader
+from look_core.data import UKBBilateralVisitDataset, make_loader
 from look_core.paths import ProjectPaths
 
 
@@ -26,7 +26,7 @@ def main() -> None:
     paths = ProjectPaths.load(args.project_root)
     context = initialize_mhd_distributed()
     try:
-        dataset = UKBPairedEyeDataset(
+        dataset = UKBBilateralVisitDataset(
             paths.labels_csv,
             paths.image_root,
             "train",

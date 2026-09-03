@@ -22,7 +22,8 @@ from .state import atomic_write_json, atomic_write_text, stable_hash, utc_now
 
 FUSION_POSITIONS = ["input", "stem", "layer1", "layer2", "layer3", "layer4", "feature"]
 CONFIRMATION_SEEDS = [3407, 3408, 3409]
-BASELINE_GATE = 0.70
+BASELINE_GATE = 0.65
+MIN_CLASS_F1_GATE = 0.45
 
 
 def classifier_profile(
@@ -36,7 +37,7 @@ def classifier_profile(
         "epochs": 100,
         "patience": 15,
         "effective_batch_size": 256,
-        "micro_batch_size": 128,
+        "micro_batch_size": 64,
         "num_workers": 8,
         "pretrained_lr": pretrained_lr,
         "new_layer_lr": new_layer_lr,
@@ -49,6 +50,7 @@ def classifier_profile(
         "training_strategy": "end_to_end_finetuning",
         "amp": True,
         "baseline_macro_f1_target": BASELINE_GATE,
+        "baseline_min_class_f1": MIN_CLASS_F1_GATE,
     }
 
 
@@ -81,7 +83,7 @@ def _primary_gan_profile() -> dict[str, Any]:
         "gan_epochs": 100,
         "gan_patience": 10,
         "gan_effective_batch_size": 448,
-        "gan_batch_size": 224,
+        "gan_batch_size": 112,
         "gan_num_workers": 8,
         "gan_learning_rate": 2e-4,
         "gan_beta1": 0.5,
@@ -597,20 +599,37 @@ def run_baseline_selection(
             "mean_macro_f1_desc", "mean_balanced_accuracy_desc",
             "mean_macro_auroc_ovr_desc", "mean_ece_15_asc", "std_macro_f1_asc",
         ],
-        "quality_gate": BASELINE_GATE,
+        "quality_gate": {
+            "mean_macro_f1": BASELINE_GATE,
+            "minimum_mean_class_f1": MIN_CLASS_F1_GATE,
+            "multimodal_not_worse_than_best_unimodal": True,
+        },
         "winner": winner, "ranking": ranking,
         "unimodal_references": reference_rows,
         "artifacts": build_file_manifest(artifact_paths),
     }
     selection_id = stable_hash(identity)[:12]
     destination = paths.runs_root / "baseline_selection" / "candidates" / f"baseline_candidate__{selection_id}.json"
-    passed = float(winner["mean_macro_f1"]) >= BASELINE_GATE
+    class_f1 = [
+        statistics.fmean(float(row["f1_per_class"][index]) for row in winner_rows)
+        for index in range(4)
+    ]
+    best_unimodal_macro_f1 = max(float(row["macro_f1"]) for row in reference_rows)
+    gate_checks = {
+        "mean_macro_f1": float(winner["mean_macro_f1"]) >= BASELINE_GATE,
+        "minimum_class_f1": min(class_f1) >= MIN_CLASS_F1_GATE,
+        "multimodal_not_worse_than_best_unimodal": float(winner["mean_macro_f1"]) >= best_unimodal_macro_f1,
+    }
+    passed = all(gate_checks.values())
     audit_path = None if passed else _quality_gate_audit(paths, winner, winner_rows)
     payload = {
         **identity, "selection_id": selection_id, "selected_at_utc": utc_now(),
         "status": "candidate_selected" if passed else "quality_gate_failed",
         "decision": "scientific_review_required" if passed else "data_and_model_audit_required",
         "quality_gate_passed": passed,
+        "quality_gate_checks": gate_checks,
+        "mean_f1_per_class": class_f1,
+        "best_unimodal_macro_f1": best_unimodal_macro_f1,
         "quality_audit": str(audit_path) if audit_path else None,
         "manifest_path": str(destination),
     }

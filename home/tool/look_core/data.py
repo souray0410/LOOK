@@ -159,8 +159,8 @@ def _geometric_transform(image: Image.Image, aug: PairedAugmentation) -> Image.I
     )
 
 
-class UKBPairedEyeDataset(Dataset):
-    """One item is a laterality-specific CFP/OCT eye-visit pair."""
+class UKBBilateralVisitDataset(Dataset):
+    """One item is one participant's earliest complete bilateral CFP/OCT visit."""
 
     def __init__(
         self,
@@ -200,10 +200,15 @@ class UKBPairedEyeDataset(Dataset):
         self.image_size = image_size
         self.augment = augment
         self.labels = frame["label_id"].astype(int).to_numpy()
-        self.fundus_paths = frame["fundus_path"].astype(str).tolist()
-        self.oct_paths = frame["oct_path"].astype(str).tolist()
+        self.fundus_paths = {
+            eye: frame[f"{eye}_fundus_path"].astype(str).tolist()
+            for eye in ("left", "right")
+        }
+        self.oct_paths = {
+            eye: frame[f"{eye}_oct_path"].astype(str).tolist()
+            for eye in ("left", "right")
+        }
         self.participant_ids = frame["participant_id"].astype(str).tolist()
-        self.eyes = frame["eye"].astype(str).tolist()
         self.instances = frame["instance"].astype(int).to_numpy()
         self.base_seed = int(base_seed)
         self.preprocess_cache_root = (
@@ -219,36 +224,36 @@ class UKBPairedEyeDataset(Dataset):
 
     def __getitem__(self, index: int) -> Dict[str, object]:
         participant_id = self.participant_ids[index]
-        eye = self.eyes[index]
         instance = int(self.instances[index])
-        cfp, oct_image = _cached_preprocess_pair(
-            self.data_root,
-            self.fundus_paths[index],
-            self.oct_paths[index],
-            self.image_size,
-            self.preprocess_cache_root,
-        )
-
-        if self.augment:
-            identity = f"{self.base_seed}:{self.epoch}:{participant_id}:{eye}:{instance}"
-            sample_seed = int.from_bytes(hashlib.sha256(identity.encode()).digest()[:8], "big")
-            aug = PairedAugmentation.sample(random.Random(sample_seed))
-            cfp = _geometric_transform(cfp, aug)
-            oct_image = _geometric_transform(oct_image, aug)
-            cfp = TF.adjust_brightness(cfp, aug.brightness)
-            cfp = TF.adjust_contrast(cfp, aug.contrast)
-            cfp = TF.adjust_saturation(cfp, aug.saturation)
-            oct_image = TF.adjust_brightness(oct_image, aug.brightness)
-            oct_image = TF.adjust_contrast(oct_image, aug.contrast)
-
-        cfp_tensor = TF.normalize(TF.to_tensor(cfp), IMAGENET_MEAN, IMAGENET_STD)
-        oct_tensor = TF.normalize(TF.to_tensor(oct_image), IMAGENET_MEAN, IMAGENET_STD)
+        cfp_tensors, oct_tensors = [], []
+        for eye in ("left", "right"):
+            cfp, oct_image = _cached_preprocess_pair(
+                self.data_root,
+                self.fundus_paths[eye][index],
+                self.oct_paths[eye][index],
+                self.image_size,
+                self.preprocess_cache_root,
+            )
+            if self.augment:
+                identity = f"{self.base_seed}:{self.epoch}:{participant_id}:{eye}:{instance}"
+                sample_seed = int.from_bytes(hashlib.sha256(identity.encode()).digest()[:8], "big")
+                aug = PairedAugmentation.sample(random.Random(sample_seed))
+                cfp = _geometric_transform(cfp, aug)
+                oct_image = _geometric_transform(oct_image, aug)
+                cfp = TF.adjust_saturation(
+                    TF.adjust_contrast(TF.adjust_brightness(cfp, aug.brightness), aug.contrast),
+                    aug.saturation,
+                )
+                oct_image = TF.adjust_contrast(
+                    TF.adjust_brightness(oct_image, aug.brightness), aug.contrast
+                )
+            cfp_tensors.append(TF.normalize(TF.to_tensor(cfp), IMAGENET_MEAN, IMAGENET_STD))
+            oct_tensors.append(TF.normalize(TF.to_tensor(oct_image), IMAGENET_MEAN, IMAGENET_STD))
         return {
-            "oct": oct_tensor,
-            "cfp": cfp_tensor,
+            "oct": torch.stack(oct_tensors, dim=0),
+            "cfp": torch.stack(cfp_tensors, dim=0),
             "label": int(self.labels[index]),
             "participant_id": participant_id,
-            "eye": eye,
             "instance": instance,
         }
 
@@ -256,8 +261,9 @@ class UKBPairedEyeDataset(Dataset):
 def validate_reference_table(labels_csv: Path, data_root: Path, check_paths: bool = False) -> Dict[str, object]:
     frame = pd.read_csv(labels_csv, dtype={"participant_id": str})
     required = {
-        "participant_id", "instance", "eye", "fundus_path", "oct_path",
-        "label_id", "label_name", "split", "reference_source",
+        "participant_id", "instance", "left_fundus_path", "left_oct_path",
+        "right_fundus_path", "right_oct_path", "label_id", "label_name",
+        "split", "reference_source", "reference_standard_type",
     }
     missing = required - set(frame.columns)
     if missing:
@@ -267,12 +273,13 @@ def validate_reference_table(labels_csv: Path, data_root: Path, check_paths: boo
     )
     if observed != EXPECTED_CLASSES:
         raise ValueError(f"Unexpected class mapping: {observed}")
-    participant_splits = frame.groupby("participant_id")["split"].nunique()
-    if int(participant_splits.max()) != 1:
-        raise ValueError("Participant leakage detected across splits")
+    if frame["participant_id"].duplicated().any():
+        raise ValueError("Each participant must occur exactly once")
     missing_paths = []
     if check_paths:
-        for column in ("fundus_path", "oct_path"):
+        for column in (
+            "left_fundus_path", "left_oct_path", "right_fundus_path", "right_oct_path"
+        ):
             for relative in frame[column]:
                 if not (Path(data_root) / relative).is_file():
                     missing_paths.append(relative)
@@ -333,7 +340,7 @@ class DistributedEvalSampler(Sampler[int]):
 
 
 def make_loader(
-    dataset: UKBPairedEyeDataset,
+    dataset: UKBBilateralVisitDataset,
     batch_size: int,
     num_workers: int,
     train: bool,

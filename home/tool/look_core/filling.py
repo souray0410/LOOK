@@ -60,14 +60,29 @@ class PairedCGANFiller(MissingModalityFiller):
         std = image.new_tensor(IMAGENET_STD)[None, :, None, None]
         return (image - mean) / std
 
+    @staticmethod
+    def _flatten_eyes(tensor: torch.Tensor) -> tuple[torch.Tensor, tuple[int, ...]]:
+        shape = tuple(tensor.shape)
+        if tensor.ndim == 4:
+            return tensor, shape
+        if tensor.ndim != 5 or tensor.shape[1] != 2:
+            raise ValueError(f"Expected [B,2,C,H,W] or [B,C,H,W], got {shape}")
+        return tensor.reshape(tensor.shape[0] * 2, *tensor.shape[2:]), shape
+
+    @staticmethod
+    def _restore_eyes(tensor: torch.Tensor, shape: tuple[int, ...]) -> torch.Tensor:
+        return tensor if len(shape) == 4 else tensor.reshape(shape)
+
     @torch.no_grad()
     def fill(self, oct_tensor, cfp_tensor, missing_pattern):
         if missing_pattern == "oct_missing":
-            generated = self.generators["cfp_to_oct"](self._classifier_to_gan(cfp_tensor))
-            return self._gan_to_classifier(generated), cfp_tensor
+            eye_batch, shape = self._flatten_eyes(cfp_tensor)
+            generated = self.generators["cfp_to_oct"](self._classifier_to_gan(eye_batch))
+            return self._restore_eyes(self._gan_to_classifier(generated), shape), cfp_tensor
         if missing_pattern == "cfp_missing":
-            generated = self.generators["oct_to_cfp"](self._classifier_to_gan(oct_tensor))
-            return oct_tensor, self._gan_to_classifier(generated)
+            eye_batch, shape = self._flatten_eyes(oct_tensor)
+            generated = self.generators["oct_to_cfp"](self._classifier_to_gan(eye_batch))
+            return oct_tensor, self._restore_eyes(self._gan_to_classifier(generated), shape)
         if missing_pattern == "complete":
             return oct_tensor, cfp_tensor
         raise ValueError(f"Unknown missing pattern: {missing_pattern}")

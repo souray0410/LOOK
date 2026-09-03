@@ -12,7 +12,7 @@ from .state import atomic_write_json, utc_now
 
 
 def _sample_key(row: pd.Series, seed: str) -> str:
-    value = f"{seed}:{row['participant_id']}:{row['instance']}:{row['eye']}"
+    value = f"{seed}:{row['participant_id']}:{row['instance']}"
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
@@ -43,9 +43,7 @@ def generate_baseline_quality_audit(
     seed: str = "look-quality-audit-v1",
 ) -> Path:
     frame = pd.read_csv(labels_csv, dtype={"participant_id": str})
-    key_columns = ["participant_id", "instance", "eye"]
-    if "array" in frame.columns:
-        key_columns.insert(2, "array")
+    key_columns = ["participant_id"]
     sampled_frames = []
     for (_, _), group in frame.groupby(["split", "label_name"], sort=True):
         group = group.copy()
@@ -54,9 +52,16 @@ def generate_baseline_quality_audit(
             group.sort_values("_sample_key", kind="stable").head(samples_per_class)
         )
     sampled = pd.concat(sampled_frames, ignore_index=True)
-    image_records: dict[str, list[dict[str, Any]]] = {"cfp": [], "oct": []}
+    image_records: dict[str, list[dict[str, Any]]] = {
+        "left_cfp": [], "left_oct": [], "right_cfp": [], "right_oct": []
+    }
     for row in sampled.itertuples(index=False):
-        for modality, column in (("cfp", "fundus_path"), ("oct", "oct_path")):
+        for modality, column in (
+            ("left_cfp", "left_fundus_path"),
+            ("left_oct", "left_oct_path"),
+            ("right_cfp", "right_fundus_path"),
+            ("right_oct", "right_oct_path"),
+        ):
             relative = str(getattr(row, column))
             record = _image_record(Path(image_root) / relative)
             image_records[modality].append(
@@ -83,7 +88,7 @@ def generate_baseline_quality_audit(
     payload = {
         "status": "REVIEW_REQUIRED",
         "created_at_utc": utc_now(),
-        "reason": "balanced_validation_macro_f1_below_gate",
+        "reason": "baseline_compound_quality_gate_failed",
         "winner": winner,
         "per_seed_model_evidence": winner_rows,
         "label_audit": {
@@ -93,19 +98,19 @@ def generate_baseline_quality_audit(
                 f"{split}:{label}": int(count)
                 for (split, label), count in frame.groupby(["split", "label_name"]).size().items()
             },
-            "duplicate_eye_visit_rows": int(frame.duplicated(key_columns).sum()),
+            "duplicate_participant_rows": int(frame.duplicated(key_columns).sum()),
             "participant_split_leakage": int(
                 (frame.groupby("participant_id")["split"].nunique() > 1).sum()
             ),
             "participants_with_multiple_labels": int(
                 (frame.groupby("participant_id")["label_name"].nunique() > 1).sum()
             ),
-            "reference_standard": "weak_reference_self_report",
+            "reference_standard": "record_derived_clinical_phenotype",
         },
         "image_quality_summary": image_summary,
         "sampled_image_records": image_records,
         "review_order": [
-            "label_consistency_and_weak_reference_noise",
+            "phenotype_source_timing_and_record_noise",
             "per_class_confusion_and_error_distribution",
             "image_readability_and_modality_visibility",
             "preprocessing_and_ImageNet_weight_mapping",

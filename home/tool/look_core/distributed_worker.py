@@ -7,7 +7,7 @@ from pathlib import Path
 from MHD_Project.MHD_Utils_V4 import destroy_mhd_distributed, initialize_mhd_distributed
 
 from .config import ExperimentConfig
-from .data import UKBPairedEyeDataset, make_loader
+from .data import UKBBilateralVisitDataset, make_loader
 from .graph import build_resnet50_mhd_graph
 from .gan import make_gan_loaders, train_paired_cgan_direction_ddp
 from .reproducibility import seed_everything
@@ -36,8 +36,8 @@ def run_classifier(payload: dict, context) -> None:
         "base_seed": seed,
         "preprocess_cache_root": config.preprocess_cache_root,
     }
-    train_dataset = UKBPairedEyeDataset(split="train", augment=True, **kwargs)
-    validation_dataset = UKBPairedEyeDataset(split="validation", augment=False, **kwargs)
+    train_dataset = UKBBilateralVisitDataset(split="train", augment=True, **kwargs)
+    validation_dataset = UKBBilateralVisitDataset(split="validation", augment=False, **kwargs)
     train_loader = make_loader(
         train_dataset, config.per_device_micro_batch_size, config.num_workers, True,
         seed, config.sampling_strategy, context.rank, context.world_size,
@@ -83,8 +83,8 @@ def run_gan(payload: dict, context) -> None:
         "base_seed": seed,
         "preprocess_cache_root": config.preprocess_cache_root,
     }
-    train_aug = UKBPairedEyeDataset(split="train", augment=True, **kwargs)
-    train_clean = UKBPairedEyeDataset(split="train", augment=False, **kwargs)
+    train_aug = UKBBilateralVisitDataset(split="train", augment=True, **kwargs)
+    train_clean = UKBBilateralVisitDataset(split="train", augment=False, **kwargs)
     train_loader, validation_loader, _ = make_gan_loaders(
         train_aug, train_clean, config, seed, int(payload["direction_seed"]),
         context.rank, context.world_size,

@@ -19,6 +19,8 @@ class ExperimentConfig:
     preprocess_cache_root: Path = field(default_factory=lambda: _default_paths().preprocess_cache_root)
     output_root: Path = field(default_factory=lambda: _default_paths().runs_root)
     cache_root: Path = field(default_factory=lambda: _default_paths().cache_root)
+    label_profile: str = "ukb_record_prevalent_4class_bilateral"
+    sample_unit: str = "participant_earliest_complete_bilateral_visit"
     num_classes: int = 4
     backbone_name: str = "resnet50"
     image_size: int = 224
@@ -31,7 +33,7 @@ class ExperimentConfig:
     epochs: int = 100
     patience: int = 15
     effective_batch_size: int = 256
-    micro_batch_size: int = 128
+    micro_batch_size: int = 64
     num_workers: int = 8
     pretrained_lr: float = 3e-4
     new_layer_lr: float = 3e-3
@@ -56,7 +58,7 @@ class ExperimentConfig:
     gan_epochs: int = 100
     gan_patience: int = 10
     gan_effective_batch_size: int = 448
-    gan_batch_size: int = 224
+    gan_batch_size: int = 112
     gan_num_workers: int = 8
     gan_learning_rate: float = 2e-4
     gan_beta1: float = 0.5
@@ -72,7 +74,8 @@ class ExperimentConfig:
         default_factory=lambda: [0.0, 1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0]
     )
     primary_metric: str = "macro_f1"
-    baseline_macro_f1_target: float = 0.70
+    baseline_macro_f1_target: float = 0.65
+    baseline_min_class_f1: float = 0.45
 
     def architecture_id(self, fusion_position: str) -> str:
         if fusion_position in {"oct_only", "cfp_only"}:
@@ -129,6 +132,10 @@ class ExperimentConfig:
     def validate(self) -> None:
         if self.num_classes != 4:
             raise ValueError("The primary cohort contract requires exactly four classes")
+        if self.label_profile != "ukb_record_prevalent_4class_bilateral":
+            raise ValueError("Unexpected label_profile for the current preregistered study")
+        if self.sample_unit != "participant_earliest_complete_bilateral_visit":
+            raise ValueError("The primary analysis unit must be one bilateral participant visit")
         if self.backbone_name != "resnet50":
             raise ValueError("LOOK currently supports backbone_name='resnet50'")
         if self.image_size != 224:
@@ -179,6 +186,8 @@ class ExperimentConfig:
                 raise FileNotFoundError(path)
         if not 0.0 < self.baseline_macro_f1_target <= 1.0:
             raise ValueError("baseline_macro_f1_target must be in (0, 1]")
+        if not 0.0 < self.baseline_min_class_f1 <= 1.0:
+            raise ValueError("baseline_min_class_f1 must be in (0, 1]")
 
 
 @dataclass(frozen=True)

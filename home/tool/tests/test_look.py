@@ -47,8 +47,8 @@ def test_inference_stops_at_logits_before_label_monitor_level():
     with torch.no_grad():
         logits = forward_with_look(
             graph,
-            torch.randn(1, 3, 224, 224),
-            torch.randn(1, 3, 224, 224),
+            torch.randn(1, 2, 3, 224, 224),
+            torch.randn(1, 2, 3, 224, 224),
         )
     assert logits.shape == (1, 4)
 

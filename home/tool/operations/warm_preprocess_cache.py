@@ -38,8 +38,20 @@ def main() -> None:
         raise ValueError("workers and image-size must be positive")
     paths = resolve_runtime_arguments(args)
     labels_csv = paths.labels_csv
-    frame = pd.read_csv(labels_csv, usecols=["split", "fundus_path", "oct_path"])
-    pairs = frame.drop_duplicates(["fundus_path", "oct_path"], keep="first")
+    columns = [
+        "split", "left_fundus_path", "left_oct_path",
+        "right_fundus_path", "right_oct_path",
+    ]
+    frame = pd.read_csv(labels_csv, usecols=columns)
+    pairs = pd.concat(
+        [
+            frame[["split", f"{eye}_fundus_path", f"{eye}_oct_path"]].rename(
+                columns={f"{eye}_fundus_path": "fundus_path", f"{eye}_oct_path": "oct_path"}
+            )
+            for eye in ("left", "right")
+        ],
+        ignore_index=True,
+    ).drop_duplicates(["fundus_path", "oct_path"], keep="first")
     cache_root = paths.preprocess_cache_root
     tasks = (
         (

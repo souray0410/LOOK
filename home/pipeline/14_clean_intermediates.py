@@ -19,11 +19,8 @@ KEEP = {
     "21016",
     "21017",
     "21018",
-    "reference_labels.csv",
-    "class_mapping.json",
-    "cohort_flow.json",
-    "cohort_exclusions.csv.gz",
-    "verification.json",
+    "paired_eye_manifest.csv",
+    "phenotypes",
     "cohorts",
 }
 REMOVABLE = {
@@ -38,6 +35,8 @@ REMOVABLE = {
     "ophthalmology_verification.log",
     "ophthalmology_verification.txt",
 }
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     add_runtime_arguments(parser)
@@ -75,6 +74,10 @@ def main() -> int:
     if unexpected:
         raise SystemExit(f"Unexpected top-level paths; refusing cleanup: {unexpected}")
     targets = sorted(actual & REMOVABLE)
+    cohorts_root = ROOT / "cohorts"
+    cohort_names = {path.name for path in cohorts_root.iterdir() if path.is_dir()}
+    if cohort_names != {paths.cohort_root.name}:
+        raise SystemExit(f"Unexpected cohort directories; refusing cleanup: {cohort_names}")
     print(json.dumps({"execute": args.execute, "remove": targets}, indent=2))
     if not args.execute:
         print("Dry run only. Re-run with --execute after reviewing the allowlist.")
@@ -87,7 +90,10 @@ def main() -> int:
             path.unlink()
     remaining = {path.name for path in ROOT.iterdir()}
     if remaining != KEEP:
-        raise RuntimeError(f"Unexpected final root contents: {remaining}")
+        raise RuntimeError(f"Unexpected final dataset-root contents: {remaining}")
+    remaining_cohorts = {path.name for path in cohorts_root.iterdir() if path.is_dir()}
+    if remaining_cohorts != {paths.cohort_root.name}:
+        raise RuntimeError(f"Unexpected final cohort directories: {remaining_cohorts}")
     print(json.dumps({"status": "PASS", "remaining": sorted(remaining)}, indent=2))
     return 0
 

@@ -6,7 +6,7 @@ from PIL import Image
 from look_core.data import (
     DistributedEvalSampler,
     DistributedShuffleSampler,
-    UKBPairedEyeDataset,
+    UKBBilateralVisitDataset,
     apply_missingness,
     make_loader,
     participant_missing_pattern,
@@ -33,22 +33,24 @@ def test_preprocess_cache_is_lossless_atomic_and_self_repairing(tmp_path):
     labels = tmp_path / "reference_labels.csv"
     pd.DataFrame([{
         "participant_id": "1001",
-        "eye": "left",
         "instance": 0,
         "split": "train",
         "label_id": 0,
-        "fundus_path": "fundus.png",
-        "oct_path": "oct.png",
+        "left_fundus_path": "fundus.png",
+        "left_oct_path": "oct.png",
+        "right_fundus_path": "fundus.png",
+        "right_oct_path": "oct.png",
     }]).to_csv(labels, index=False)
 
-    uncached = UKBPairedEyeDataset(labels, image_root, "train", image_size=16)[0]
+    uncached = UKBBilateralVisitDataset(labels, image_root, "train", image_size=16)[0]
     cache_root = tmp_path / "cache"
-    dataset = UKBPairedEyeDataset(
+    dataset = UKBBilateralVisitDataset(
         labels, image_root, "train", image_size=16, preprocess_cache_root=cache_root
     )
     cached = dataset[0]
     assert torch.equal(cached["cfp"], uncached["cfp"])
     assert torch.equal(cached["oct"], uncached["oct"])
+    assert cached["cfp"].shape == (2, 3, 16, 16)
     cache_files = list(cache_root.rglob("*.npy"))
     assert len(cache_files) == 1
     assert not list(cache_root.rglob("*.partial.*"))

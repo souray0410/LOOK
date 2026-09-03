@@ -3,8 +3,10 @@
 ## Status And Claims
 
 - Target venues: IEEE TMI / Medical Image Analysis standard of evidence.
-- Current labels are laterality-aware doctor-informed self-report and must be called a
-  weak reference. They are not expert image-grading gold standard.
+- Current labels are record-derived clinical phenotypes based on available self-report,
+  hospital ICD timing and procedure evidence. They are not expert image-grading gold
+  standards.
+- The unit of analysis is one participant's earliest complete bilateral CFP/OCT visit.
 - The balanced primary cohort supports controlled method comparison, not prevalence
   estimation. Natural-distribution evaluation is reported separately.
 - LOOK remains an offline linear/affine latent correction fitted on training features;
@@ -12,7 +14,7 @@
 
 ## Locked Experimental Order
 
-1. Verify participant-level splits and four-class cohort manifests.
+1. Verify phenotype timing, bilateral participant-level splits and cohort manifests.
 2. Select a conventional complete-modality baseline using validation only.
 3. Require three-seed stability, unimodal references and explicit scientific review.
 4. Freeze the baseline before fitting filling or LOOK components.
@@ -34,7 +36,20 @@ settings. Negative and below-gate results remain auditable.
 
 ## Quality Gate
 
-Balanced validation `Macro-F1 >= 0.70` permits review but does not guarantee publication
-quality. A lower score triggers label consistency, confusion, image quality, modality
-visibility, preprocessing and weight-mapping audits. Test data may not be consulted to
-raise the score.
+Review requires three-seed mean Macro-F1 `>=0.65`, every mean class F1 `>=0.45`, stable
+training and multimodal performance no worse than the best unimodal reference. A failure
+triggers phenotype-source/timing, confusion, image quality, modality visibility,
+preprocessing and weight-mapping audits. Test data may not be consulted to raise scores.
+
+## Data Adequacy Gate
+
+Before baseline search, require at least 2,000 balanced participants, 400 total and 250
+training participants per disease class, and 60 participants per class in validation and
+internal test. Save class-specific Wilson 95% interval precision. These project thresholds
+guard against an obviously underpowered pilot; they are not journal acceptance criteria.
+
+Follow CLAIM 2024 terminology: use `reference standard`, `validation` only for tuning,
+`internal test` for the sealed UKB split, and `external test` only for an independent data
+source. Report cohort flow, inclusion/exclusion, acquisition context, class prevalence,
+demographics, missingness, all partitions, calibration and uncertainty. State explicitly
+that expert image grading and external clinical testing are unavailable in this release.

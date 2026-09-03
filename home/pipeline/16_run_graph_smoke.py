@@ -19,7 +19,7 @@ def main() -> None:
 
     import torch
     from look_core.config import ExperimentConfig
-    from look_core.data import UKBPairedEyeDataset, make_loader, validate_reference_table
+    from look_core.data import UKBBilateralVisitDataset, make_loader, validate_reference_table
     from look_core.graph import FUSION_POSITIONS, build_resnet50_mhd_graph, graph_summary, reset_and_forward
     paths = resolve_runtime_arguments(args)
     config = ExperimentConfig(
@@ -36,7 +36,7 @@ def main() -> None:
     )
     audit = validate_reference_table(config.labels_csv, config.image_root, check_paths=False)
     print("Data audit:", audit)
-    dataset = UKBPairedEyeDataset(
+    dataset = UKBBilateralVisitDataset(
         config.labels_csv, config.image_root, "validation", image_size=224, limit=2,
         preprocess_cache_root=config.preprocess_cache_root,
     )
