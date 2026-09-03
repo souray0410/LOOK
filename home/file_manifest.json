@@ -26,9 +26,9 @@
       "sha256": "14346050021de47c5a6673d98a69bf755f7d094b6f4985bc2612ab4d54c76d83"
     },
     {
-      "bytes": 8660,
+      "bytes": 8986,
       "path": "README.md",
-      "sha256": "0d89fae4a9d8c86f0379d582f9eeea5f628a25132578d999d838b2bab064afef"
+      "sha256": "fe2f5ff47db23511591d1fbd18fea79d8363faf67668f74e3dc4f8bbc274eb47"
     },
     {
       "bytes": 2307,
@@ -561,7 +561,7 @@
       "sha256": "da57a8264ec36ac7d4b8372d88304bf965743d4aba78875da53e2fd12fe0f184"
     }
   ],
-  "generated_at_utc": "2026-09-03T20:01:15.137196+00:00",
+  "generated_at_utc": "2026-09-03T20:02:34.035913+00:00",
   "release_id": "2026_09_03_19_35_04",
   "schema_version": 2
 }

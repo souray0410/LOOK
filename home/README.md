@@ -19,6 +19,13 @@ opening any test split. `glaucoma_all_evidence` ranked first among eligible prof
 full conventional baseline search. These scout values are not paper-level baseline or
 test results.
 
+## Source Control
+
+The canonical source is the private GitHub repository
+`https://github.com/souray0410/LOOK`. This directory is a compute deployment of a
+reviewed commit. Update it from GitHub and verify `file_manifest.json` before starting
+formal computation; do not treat uncommitted server edits as authoritative source.
+
 ## Default Paths
 
 ```text
