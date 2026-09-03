@@ -1,0 +1,5 @@
+{
+  "python.defaultInterpreterPath": "/home/mengh/LOOK/2026_08_30_11_20_47/tool/environment/.venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "jupyter.notebookFileRoot": "${workspaceFolder}"
+}

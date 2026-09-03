@@ -1,0 +1,101 @@
+{
+  "data_skeleton": [
+    {
+      "bytes": 1,
+      "path": "data/cache/partial/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/cache/pipeline_state/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/cache/preprocessed_pairs/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/cache/quarantine/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 971,
+      "path": "data/data_manifest.example.json",
+      "sha256": "2dd72586f21e35553686eb7794012830f6a4c3df2b4a760ad6bdceeac6f62a23"
+    },
+    {
+      "bytes": 1,
+      "path": "data/dataset/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/backbones/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/baseline_selection/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/experiments/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/freezes/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/generators/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/logs/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/smoke/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 1,
+      "path": "data/runs/sweeps/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 0,
+      "path": "data/runs/task_scout/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "data_tree": "data",
+  "deployment_data_root": "/Users/mengh/Downloads/MHD_Project-main/.look_2026_09_03_19_35_04/data",
+  "home_tree": "home",
+  "project": "LOOK",
+  "release_documents": [
+    {
+      "bytes": 1120,
+      "path": "README.md",
+      "sha256": "722776ac48d14680f63df11f3dc562c76cc7133f3eb83af8f181c38c07499019"
+    },
+    {
+      "bytes": 6170,
+      "path": "GENERAL_PROJECT_STANDARD.md",
+      "sha256": "ffda32c8a5a5785a8fa09114be0deb52f5e4ce03332ad421551e1af020254a6c"
+    }
+  ],
+  "release_id": "2026_09_03_19_35_04",
+  "schema_version": 2,
+  "source_manifest": {
+    "path": "home/file_manifest.json",
+    "sha256": "20f5207b978a4e0fad28be275d0c4a35a88d0f26b905462651996a1fb5898651"
+  }
+}

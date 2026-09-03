@@ -1,0 +1,28 @@
+{
+  "schema_version": 4,
+  "release_id": "2026_09_03_19_35_04",
+  "status": "DATA_NOT_INCLUDED",
+  "dataset_included": false,
+  "author_image_root": "/data/mengh/LOOK/2026_09_03_08_30_00/dataset",
+  "author_preprocess_cache_root": "/data/mengh/LOOK/2026_09_03_08_30_00/cache/preprocessed_pairs",
+  "expected_primary_cohort": {
+    "reference_standard": "record_derived_glaucoma_phenotype",
+    "high_confidence_glaucoma": 716,
+    "matched_controls": 716,
+    "participant_split_leakage": 0
+  },
+  "expected_task_scout": {
+    "global_participant_split": "70/15/15",
+    "selection_data": "validation_only",
+    "sealed_test_access": false,
+    "profiles": {
+      "glaucoma_high_confidence": 716,
+      "glaucoma_all_evidence": 925,
+      "any_target_eye_disease_high_confidence": 1052,
+      "any_target_eye_disease": 1945,
+      "glaucoma_objective_only": 236,
+      "diabetic_eye_disease_all_evidence": 449,
+      "macular_degeneration_all_evidence": 436
+    }
+  }
+}
