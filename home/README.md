@@ -91,6 +91,10 @@ This runs 12 epochs with patience 4, one fixed ImageNet V2 feature-fusion baseli
 seed 3407 per task. It ranks only from validation AUROC and Macro-F1. It does not run
 test, LOOK, GAN, fusion-stage search, or three-seed confirmation.
 
+After all candidates finish, Step 31 writes `task_usability_summary.json` and
+`task_usability_summary.md`. These combine sample size, phenotype definition, validation
+signal and limitations; they deliberately do not select or freeze a task automatically.
+
 ## Verify Code And MHD
 
 ```bash

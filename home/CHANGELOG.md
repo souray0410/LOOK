@@ -18,6 +18,8 @@
 - Preserved MHD Framework V4 unchanged and retained single- or two-GPU execution through
   one GPU-list setting.
 - Preserved superseded Steps 12-20 in a timestamped, non-executable history area and
-  continued active development at Steps 21-30.
+  continued active development at Steps 21-31.
 - Added seven validation-only task candidates spanning evidence quality and sample size,
   with a fixed short feature-fusion scout before any formal baseline commitment.
+- Added a validation-only UKB data/task usability summary and explicit parent-process
+  CUDA cleanup between scout candidates.

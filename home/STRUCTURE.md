@@ -45,7 +45,8 @@
         |-- 27_UKB_LOOK_Glaucoma_ResNet50_MHD.ipynb
         |-- 28_run_study_sweep.py
         |-- 29_aggregate_matrix_analysis.py
-        `-- 30_run_task_scout.py
+        |-- 30_run_task_scout.py
+        `-- 31_summarize_task_scout.py
 ```
 
 Author runtime:

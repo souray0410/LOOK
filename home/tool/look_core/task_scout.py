@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import json
 import os
 from pathlib import Path
@@ -144,6 +145,13 @@ def _write_csv(frame: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     partial = path.with_suffix(path.suffix + ".partial")
     frame.to_csv(partial, index=False)
+    os.replace(partial, path)
+
+
+def _write_text(text: str, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    partial = path.with_suffix(path.suffix + ".partial")
+    partial.write_text(text, encoding="utf-8")
     os.replace(partial, path)
 
 
@@ -470,6 +478,10 @@ def run_task_scout(
             )
             write_json_atomic(rows, scout_root / "leaderboard.json")
             _write_csv(pd.DataFrame(rows), scout_root / "leaderboard.csv")
+            del result, runner
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
     final = {
         **plan,
         "status": "complete",
@@ -481,3 +493,95 @@ def run_task_scout(
     }
     write_json_atomic(final, scout_root / "progress.json")
     return final
+
+
+def summarize_task_scout(
+    scout_root: Path,
+    bank_root: Path,
+) -> dict[str, Any]:
+    """Create a cautious data/task usability report from validation-only scout results."""
+    scout_root = Path(scout_root).resolve()
+    bank_root = Path(bank_root).resolve()
+    plan = json.loads((scout_root / "plan.json").read_text(encoding="utf-8"))
+    progress = json.loads((scout_root / "progress.json").read_text(encoding="utf-8"))
+    rows = json.loads((scout_root / "leaderboard.json").read_text(encoding="utf-8"))
+    bank = json.loads((bank_root / "task_bank_manifest.json").read_text(encoding="utf-8"))
+
+    ranked: list[dict[str, Any]] = []
+    for rank, row in enumerate(rows, start=1):
+        auroc = float(row["macro_auroc_ovr"])
+        if auroc >= 0.75:
+            signal_band = "strong_preliminary_signal"
+        elif auroc >= 0.65:
+            signal_band = "promising_preliminary_signal"
+        elif auroc >= 0.55:
+            signal_band = "weak_preliminary_signal"
+        else:
+            signal_band = "inconclusive_near_chance"
+        profile = bank["profiles"][row["task_profile"]]
+        ranked.append(
+            {
+                "rank": rank,
+                **row,
+                "case_rule": profile["case_rule"],
+                "split_counts": profile["split_counts"],
+                "signal_band": signal_band,
+            }
+        )
+
+    report_status = "complete" if progress.get("status") == "complete" else "preliminary"
+    report = {
+        "schema_version": 1,
+        "status": report_status,
+        "purpose": "internal_ukb_cfp_oct_task_usability_audit",
+        "scout_id": plan["scout_id"],
+        "completed_configurations": len(ranked),
+        "planned_configurations": plan["configuration_count"],
+        "selection_data": "validation_only",
+        "sealed_test_access": False,
+        "automatic_task_selection": False,
+        "ranked_profiles": ranked,
+        "interpretation_contract": [
+            "Signal bands summarize one-seed short-budget validation results only.",
+            "A larger cohort is not preferred when phenotype validity is materially weaker.",
+            "No profile is promoted without unimodal, missing-modality, fusion-stage, and multi-seed review.",
+            "Record-derived phenotypes are not expert image-grading gold standards.",
+        ],
+        "generated_at_utc": utc_now(),
+    }
+    write_json_atomic(report, scout_root / "task_usability_summary.json")
+
+    lines = [
+        "# UK Biobank CFP/OCT Task Usability Summary",
+        "",
+        f"Status: **{report_status}** ({len(ranked)}/{plan['configuration_count']} candidates complete).",
+        "",
+        "This is a validation-only internal audit of record-derived phenotype definitions. "
+        "It is not a test result or an expert-label accuracy claim.",
+        "",
+        "| Rank | Task profile | Cases | Eligible | AUROC | Macro-F1 | Sensitivity | Specificity | Interpretation |",
+        "|---:|---|---:|:---:|---:|---:|---:|---:|---|",
+    ]
+    for row in ranked:
+        sensitivity = row.get("sensitivity_per_class", [None, None])[1]
+        specificity = row.get("specificity_per_class", [None, None])[1]
+        lines.append(
+            f"| {row['rank']} | `{row['task_profile']}` | {row['prevalent_cases']} | "
+            f"{str(bool(row['final_task_eligible']))} | {float(row['macro_auroc_ovr']):.4f} | "
+            f"{float(row['macro_f1']):.4f} | {float(sensitivity):.4f} | "
+            f"{float(specificity):.4f} | `{row['signal_band']}` |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Interpretation Boundary",
+            "",
+            "- Prefer a defensible quality-volume trade-off, not the largest cohort or highest number alone.",
+            "- Require formal unimodal, missing-modality, seven-stage fusion and three-seed checks before LOOK.",
+            "- Keep all test splits sealed until the task, baseline and LOOK configuration are frozen.",
+            "- Report record-derived phenotype limitations explicitly in any manuscript.",
+            "",
+        ]
+    )
+    _write_text("\n".join(lines), scout_root / "task_usability_summary.md")
+    return report

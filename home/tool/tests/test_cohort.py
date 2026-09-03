@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 from PIL import Image
 
@@ -7,7 +9,11 @@ from look_core.cohort import (
     is_high_confidence_glaucoma,
     verify_glaucoma_cohorts,
 )
-from look_core.task_scout import build_task_cohort_bank, verify_task_cohort_bank
+from look_core.task_scout import (
+    build_task_cohort_bank,
+    summarize_task_scout,
+    verify_task_cohort_bank,
+)
 
 
 def _row(participant, status, label, evidence, offset):
@@ -117,3 +123,47 @@ def test_task_scout_uses_one_global_split_and_matched_controls(tmp_path):
         bank_root / "participant_split_manifest.csv", dtype={"participant_id": str}
     ).set_index("participant_id")["split"]
     assert primary["split"].eq(primary["participant_id"].map(split_map)).all()
+
+
+def test_task_scout_summary_is_validation_only_and_does_not_select_winner(tmp_path):
+    scout_root = tmp_path / "runs/task_scout/scout__example"
+    bank_root = tmp_path / "dataset/cohorts/task_scout"
+    scout_root.mkdir(parents=True)
+    bank_root.mkdir(parents=True)
+    (scout_root / "plan.json").write_text(
+        json.dumps({"scout_id": "example", "configuration_count": 1})
+    )
+    (scout_root / "progress.json").write_text(json.dumps({"status": "complete"}))
+    (scout_root / "leaderboard.json").write_text(
+        json.dumps(
+            [
+                {
+                    "task_profile": "glaucoma_high_confidence",
+                    "prevalent_cases": 716,
+                    "final_task_eligible": True,
+                    "macro_auroc_ovr": 0.72,
+                    "macro_f1": 0.66,
+                    "sensitivity_per_class": [0.70, 0.62],
+                    "specificity_per_class": [0.62, 0.70],
+                }
+            ]
+        )
+    )
+    (bank_root / "task_bank_manifest.json").write_text(
+        json.dumps(
+            {
+                "profiles": {
+                    "glaucoma_high_confidence": {
+                        "case_rule": "objective_or_concordant_self_report",
+                        "split_counts": {},
+                    }
+                }
+            }
+        )
+    )
+    report = summarize_task_scout(scout_root, bank_root)
+    assert report["status"] == "complete"
+    assert report["sealed_test_access"] is False
+    assert report["automatic_task_selection"] is False
+    assert report["ranked_profiles"][0]["signal_band"] == "promising_preliminary_signal"
+    assert (scout_root / "task_usability_summary.md").is_file()

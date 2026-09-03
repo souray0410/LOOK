@@ -101,6 +101,11 @@ if [[ "$WORKER" -eq 1 ]]; then
       --project-root "$PROJECT_ROOT" "${RUNTIME_ARGS[@]}" \
       --gpus "$GPUS" --execute "${EXTRA_ARGS[@]}" 2>&1 | tee -a "$LOG_FILE"
     EXIT_CODE=${PIPESTATUS[0]}
+    if [[ "$EXIT_CODE" -eq 0 ]]; then
+      "$PYTHON" "$PROJECT_ROOT/pipeline/31_summarize_task_scout.py" \
+        --project-root "$PROJECT_ROOT" "${RUNTIME_ARGS[@]}" 2>&1 | tee -a "$LOG_FILE"
+      EXIT_CODE=${PIPESTATUS[0]}
+    fi
   else
     "$PYTHON" "$PROJECT_ROOT/pipeline/28_run_study_sweep.py" \
       --project-root "$PROJECT_ROOT" "${RUNTIME_ARGS[@]}" \

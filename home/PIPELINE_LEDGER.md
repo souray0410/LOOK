@@ -24,6 +24,7 @@
 | 28 | Baseline/LOOK sweep | checkpoints, rankings and freezes | deterministic IDs and last/best resume |
 | 29 | Matrix analysis | aggregate CSV and figures | selected LOOK banks only |
 | 30 | Validation-only task scout | task leaderboard and resumable checkpoints | seven prespecified profiles, no test/LOOK access |
+| 31 | Summarize task usability | JSON and Markdown audit | validation evidence, phenotype caveats and no automatic winner |
 
 Pipeline numbers are append-only. Superseded executed steps move to the timestamped
 history directory; active replacements receive new numbers and are never renumbered.
