@@ -21,19 +21,19 @@
       "sha256": "5df91d926ddafbf557cd6401bda13fbed410bdc59a6d45fb70dd796c4849361b"
     },
     {
-      "bytes": 4846,
+      "bytes": 5090,
       "path": "PIPELINE_LEDGER.md",
-      "sha256": "14346050021de47c5a6673d98a69bf755f7d094b6f4985bc2612ab4d54c76d83"
+      "sha256": "2ee830f70aa19fefb2d7be6ebf5e33d8c24d0edcda1434bfc536cb8673ac41e9"
     },
     {
-      "bytes": 8986,
+      "bytes": 11295,
       "path": "README.md",
-      "sha256": "fe2f5ff47db23511591d1fbd18fea79d8363faf67668f74e3dc4f8bbc274eb47"
+      "sha256": "a1f575297cfaba6c39a629955a2d09ef35f004ffc05fc6619d627601a376484a"
     },
     {
-      "bytes": 2307,
+      "bytes": 2445,
       "path": "STRUCTURE.md",
-      "sha256": "a4d4efb02df4af5f41782baf4d649ed28d9851382d4ea15f016b730162be3727"
+      "sha256": "9401a64f1a78704c5a40a76fb6e6d1becd56ec851aba76df1d95ddda6c0fffb2"
     },
     {
       "bytes": 3498,
@@ -114,6 +114,11 @@
       "bytes": 1064,
       "path": "pipeline/32_select_formal_task.py",
       "sha256": "472134431f2301df88e4dbe5d3bbf0fc08a82277b922e0522689a90d7fa36b63"
+    },
+    {
+      "bytes": 12208,
+      "path": "pipeline/33_run_overnight_validation.py",
+      "sha256": "65ad346341796d1b8abccbe7bf7e51d906cada783ee827a0f715ca67cce98a83"
     },
     {
       "bytes": 6674,
@@ -406,6 +411,11 @@
       "sha256": "7be5c450354749521661502428a9d9023d70df189c6483bff4a2a8580ace5f48"
     },
     {
+      "bytes": 2314,
+      "path": "tool/operations/check_overnight_validation.py",
+      "sha256": "5c3c6a71b004412f42b101952b8affd9a1de4d40cd0756dbb8dca8b295d37513"
+    },
+    {
       "bytes": 2455,
       "path": "tool/operations/diagnose_ddp_prepare.py",
       "sha256": "77b94ab77816167f0ec1a768d9d0e4f92dcd9e143f49439b7befd9915f2e7430"
@@ -414,6 +424,11 @@
       "bytes": 5105,
       "path": "tool/operations/start_detached_validation.sh",
       "sha256": "706aa17979b7d5814bd205634e8f62dcffad6057f040416662e81886c47edf57"
+    },
+    {
+      "bytes": 1345,
+      "path": "tool/operations/start_overnight_validation.sh",
+      "sha256": "2ec413798ac95497ae0fed6061f4c9a59be66055440329460483cf01b3d1199b"
     },
     {
       "bytes": 3042,
@@ -521,6 +536,11 @@
       "sha256": "d07953fe76297690afcc943cc5a8dcba94fe47886f06bea6755548b35753689f"
     },
     {
+      "bytes": 8870,
+      "path": "tool/tests/test_overnight.py",
+      "sha256": "c2d358dc2a9d5254bde789ffc460241cee7ed922f43720b2486768a9a7f5b250"
+    },
+    {
       "bytes": 2836,
       "path": "tool/tests/test_paths_state.py",
       "sha256": "174a162cacc23a9dcf7cc97d1479e9d476a354c5f713a21d650cb788f78fb263"
@@ -533,7 +553,7 @@
     {
       "bytes": 5873,
       "path": "tool/tests/test_project_governance.py",
-      "sha256": "7f2fcd12e5543798730b4cefff1870ffdadbe195f398e35ff28af8b1f3278a22"
+      "sha256": "483cbaa176a8a39dd9e82c3d1a6a6b4cd07c7690eae506e0b9cb2a21f55efea8"
     },
     {
       "bytes": 2253,
@@ -561,7 +581,7 @@
       "sha256": "da57a8264ec36ac7d4b8372d88304bf965743d4aba78875da53e2fd12fe0f184"
     }
   ],
-  "generated_at_utc": "2026-09-03T20:02:34.035913+00:00",
+  "generated_at_utc": "2026-09-03T21:09:37.857756+00:00",
   "release_id": "2026_09_03_19_35_04",
   "schema_version": 2
 }

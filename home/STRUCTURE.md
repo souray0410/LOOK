@@ -4,6 +4,7 @@
 2026_09_03_19_35_04/
 |-- README.md
 |-- GENERAL_PROJECT_STANDARD.md
+|-- PROJECT_TIMELINE.md
 |-- release_manifest.json
 |-- data/
 |   |-- dataset/
@@ -47,7 +48,8 @@
         |-- 29_aggregate_matrix_analysis.py
         |-- 30_run_task_scout.py
         |-- 31_summarize_task_scout.py
-        `-- 32_select_formal_task.py
+        |-- 32_select_formal_task.py
+        `-- 33_run_overnight_validation.py
 ```
 
 Author runtime:
@@ -72,6 +74,7 @@ Author runtime:
 `-- runs/
     |-- backbones/
     |-- baseline_selection/
+    |-- overnight/<fingerprint>/{summary.json,SUMMARY.md,started.json}
     |-- experiments/
     |-- generators/
     |-- freezes/

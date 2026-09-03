@@ -26,6 +26,7 @@
 | 30 | Validation-only task scout | task leaderboard and resumable checkpoints | seven prespecified profiles, no test/LOOK access |
 | 31 | Summarize task usability | JSON and Markdown audit | validation evidence, phenotype caveats and no automatic winner |
 | 32 | Select formal task | hash-checked selected-task manifest | explicit review; validation-only evidence; test remains sealed |
+| 33 | Bounded overnight continuation | `runs/overnight/<fingerprint>/summary.json`, grids and checkpoints | waits for successful predecessor; six regularization profiles at most; resume by scientific IDs; machine-gated validation pilot only |
 
 Pipeline numbers are append-only. Superseded executed steps move to the timestamped
 history directory; active replacements receive new numbers and are never renumbered.

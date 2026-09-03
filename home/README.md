@@ -19,7 +19,44 @@ opening any test split. `glaucoma_all_evidence` ranked first among eligible prof
 full conventional baseline search. These scout values are not paper-level baseline or
 test results.
 
-## Source Control
+## Unattended Validation Follow-Up
+
+Step 33 waits for the specified baseline session to finish successfully, then reads the
+candidate from the exact confirmation plan. It never stops a running predecessor.
+If the unchanged baseline gates fail, it evaluates six bounded regularization profiles:
+weight decay `[1e-3, 1e-2]` crossed with label smoothing `[0, 0.05, 0.1]`. LR, dropout,
+labels, architecture, split and seed remain fixed during this feature-fusion calibration.
+If none improves the original calibration ranking, it reports failure and stops.
+Otherwise the selected full profile (including weight decay) is used uniformly for
+unimodal references, all seven fusion positions and Top-3 three-seed confirmation.
+
+This is an exploratory follow-up on the same validation split, not independent evidence
+or retrospective preregistration. All old results are retained. There is no automatic
+threshold relaxation, label editing or indefinite tuning.
+
+With `--auto-look-validation`, passing candidates receive explicitly machine-gated,
+validation-pilot-only approval. The pilot uses seed 3407, raw-zero and normalized-mean
+filling, then LOOK with global factors `[4,8,16]`. No GAN, formal test freeze, or sealed
+test is scheduled by Step 33. A manual scientific review is still needed before final
+publication claims and test access. There is an eight-hour soft budget: an active stage
+finishes and saves checkpoints, but no subsequent stage starts after the deadline.
+
+```bash
+bash tool/operations/start_overnight_validation.sh \
+  --confirmation-plan 9761ee03da42 --wait-session look-glaucoma-baseline \
+  --gpus 0,1 --max-hours 8 --auto-look-validation --execute
+python3 tool/operations/check_overnight_validation.py
+```
+
+Add `--follow` to monitor the log. The durable morning summary is
+`runs/overnight/<fingerprint>/summary.json` (also `SUMMARY.md`); per-case training and
+evaluation still use the standard runs directories. Rerun the same command to reuse
+validated checkpoints/results. Extending `--max-hours` starts a new orchestration budget
+while still reusing identical scientific configurations. Failure or interruption of the
+predecessor is reported, never mistaken for completion. Runtime root overrides are
+forwarded to Step 33; use `--runs-root` with the monitor for a custom runtime.
+
+## Canonical Repository
 
 The canonical source is the private GitHub repository
 `https://github.com/souray0410/LOOK`. This directory is a compute deployment of a

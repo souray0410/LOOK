@@ -60,6 +60,10 @@ the corresponding snapshot.
 
 ## Current Direction
 
+- Added Step 33 as a bounded overnight continuation: six regularization profiles only
+  when baseline gates fail, uniform stage comparison if improved, and an optional
+  single-seed zero/mean LOOK validation pilot if unchanged gates pass. No test access.
+
 `2026_09_03_19_35_04` is active. Task selection is complete and formal baseline
 qualification is running. LOOK starts only after explicit review and baseline freeze;
 balanced and natural sealed tests remain unavailable until then.
