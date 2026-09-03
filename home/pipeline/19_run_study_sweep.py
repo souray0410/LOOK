@@ -12,6 +12,18 @@ from look_core.cli import add_runtime_arguments, resolve_runtime_arguments
 from look_core.distributed import parse_gpu_devices
 
 
+def require_verified_data(data_root: Path) -> None:
+    manifest_path = data_root / "data_manifest.json"
+    if not manifest_path.is_file():
+        raise RuntimeError("Run Step 13 before formal study execution")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    readiness = manifest.get("analysis_readiness", {})
+    if manifest.get("status") != "PASS":
+        raise RuntimeError("The data integrity manifest is not PASS")
+    if not readiness.get("method_development_and_internal_testing_ready", False):
+        raise RuntimeError("The cohort does not pass the protocol data-adequacy gate")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     add_runtime_arguments(parser)
@@ -57,6 +69,8 @@ def main() -> None:
     if not args.dry_run and not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for formal study execution")
     paths = resolve_runtime_arguments(args)
+    if not args.dry_run:
+        require_verified_data(paths.data_root)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     if args.mode == "baseline-selection":
         if args.phase != "validation":
