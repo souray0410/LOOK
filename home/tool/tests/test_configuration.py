@@ -111,14 +111,16 @@ def test_filling_strategy_changes_experiment_but_not_backbone_identity(tmp_path)
     assert mean._backbone_id() == gan._backbone_id()
 
 
-def test_calibration_grid_has_six_lr_dropout_profiles(tmp_path):
+def test_calibration_grid_has_eight_regularized_profiles(tmp_path):
     cases = expand_study_grid(
         baseline_calibration_grid(), _paths(tmp_path), gpu_devices=(0, 1)
     )
-    assert len(cases) == 6
-    assert {case.config.pretrained_lr for case in cases} == {3e-5, 1e-4, 3e-4}
-    assert {case.config.new_layer_lr for case in cases} == {3e-4, 1e-3, 3e-3}
+    assert len(cases) == 8
+    assert {case.config.pretrained_lr for case in cases} == {3e-5, 1e-4}
+    assert {case.config.new_layer_lr for case in cases} == {3e-4, 1e-3}
     assert {case.config.classifier_dropout for case in cases} == {0.0, 0.2}
+    assert {case.config.label_smoothing for case in cases} == {0.0, 0.1}
+    assert {case.config.effective_batch_size for case in cases} == {128}
     assert all(case.config.training_strategy == "end_to_end_finetuning" for case in cases)
     assert all(case.config.sampling_strategy == "natural_without_replacement" for case in cases)
     assert all(not case.options.fit_look for case in cases)

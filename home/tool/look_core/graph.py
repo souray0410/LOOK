@@ -25,6 +25,7 @@ NODE_SHAPES = {
     "layer3": (1024, 14, 14),
     "layer4": (2048, 7, 7),
     "feature": (2048,),
+    "participant_feature": (4096,),
     "logits": None,
 }
 
@@ -47,13 +48,19 @@ class FlattenEyeBatch(nn.Module):
         return x.reshape(x.shape[0] * 2, *x.shape[2:])
 
 
-class BilateralMean(nn.Module):
-    """Aggregate adjacent left/right eye features to one participant feature."""
+class BilateralMeanMax(nn.Module):
+    """Permutation-invariant MIL pooling for bilateral participant labels.
+
+    The mean retains bilateral burden while the maximum preserves evidence that
+    is visible in only one eye.  The operation is parameter free and is applied
+    after modality fusion, so the modality-fusion operator remains linear.
+    """
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if x.ndim != 2 or x.shape[0] % 2:
             raise ValueError(f"Expected an even [2B,F] eye-feature tensor, got {tuple(x.shape)}")
-        return x.reshape(x.shape[0] // 2, 2, x.shape[1]).mean(dim=1)
+        eyes = x.reshape(x.shape[0] // 2, 2, x.shape[1])
+        return torch.cat((eyes.mean(dim=1), eyes.max(dim=1).values), dim=1)
 
 
 class ConcatProjection(nn.Module):
@@ -105,8 +112,16 @@ class ClassificationHead(nn.Module):
 class ClassificationLoss(nn.Module):
     """Unweighted cross-entropy for single-stage end-to-end fine-tuning."""
 
+    def __init__(self, label_smoothing: float = 0.0) -> None:
+        super().__init__()
+        self.label_smoothing = float(label_smoothing)
+
     def forward(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        return nn.functional.cross_entropy(logits, labels.long())
+        return nn.functional.cross_entropy(
+            logits,
+            labels.long(),
+            label_smoothing=self.label_smoothing,
+        )
 
 
 class BatchAccuracy(nn.Module):
@@ -129,7 +144,11 @@ def _resnet_modules(
         "layer3": model.layer3,
         "layer4": model.layer4,
         "feature": PoolFlatten(model.avgpool),
-        "classifier": ClassificationHead(model.fc.in_features, num_classes, classifier_dropout),
+        "classifier": ClassificationHead(
+            2 * model.fc.in_features,
+            num_classes,
+            classifier_dropout,
+        ),
     }
 
 
@@ -162,7 +181,7 @@ def _active_edge_groups(fusion_position: str) -> List[List[str]]:
         branch = fusion_position.removesuffix("_only")
         groups = [[f"{branch}_flatten_eyes_edge"]]
         groups.extend([[f"{branch}_{stage}_edge"] for stage in STAGES])
-        groups.append([f"{branch}_bilateral_mean_edge"])
+        groups.append([f"{branch}_bilateral_pool_edge"])
         groups.append(["fusion_classifier_edge"])
         groups.append(["classification_loss_edge", "batch_accuracy_edge"])
         return groups
@@ -174,7 +193,7 @@ def _active_edge_groups(fusion_position: str) -> List[List[str]]:
     groups.append([f"fuse_{fusion_position}_edge"])
     for stage in STAGES[fusion_index:]:
         groups.append([f"fusion_{stage}_edge"])
-    groups.append(["fusion_bilateral_mean_edge"])
+    groups.append(["fusion_bilateral_pool_edge"])
     groups.append(["fusion_classifier_edge"])
     groups.append(["classification_loss_edge", "batch_accuracy_edge"])
     return groups
@@ -196,7 +215,7 @@ def _build_topology(
         for stage in STAGES:
             connections[f"{branch}_{stage}_edge"] = ([previous], f"{branch}_{stage}")
             previous = f"{branch}_{stage}"
-        connections[f"{branch}_bilateral_mean_edge"] = ([previous], f"{branch}_participant_feature")
+        connections[f"{branch}_bilateral_pool_edge"] = ([previous], f"{branch}_participant_feature")
         connections[f"{branch}_classifier_edge"] = ([f"{branch}_participant_feature"], f"{branch}_logits")
     if fusion_position in UNIMODAL_POSITIONS:
         branch = fusion_position.removesuffix("_only")
@@ -254,6 +273,7 @@ def build_resnet50_mhd_graph(
     device: torch.device | str = "cpu",
     pretrained: bool = True,
     classifier_dropout: float = 0.0,
+    label_smoothing: float = 0.0,
 ) -> MHD_Graph:
     if fusion_position not in ARCHITECTURE_POSITIONS:
         raise ValueError(f"fusion_position must be one of {ARCHITECTURE_POSITIONS}")
@@ -274,12 +294,26 @@ def build_resnet50_mhd_graph(
         nodes.append(_make_node(len(nodes), f"{branch}_eye_input", "eye_input", batch_size * 2, device, num_classes))
         for stage in STAGES:
             nodes.append(_make_node(len(nodes), f"{branch}_{stage}", stage, batch_size * 2, device, num_classes))
-        nodes.append(_make_node(len(nodes), f"{branch}_participant_feature", "feature", batch_size, device, num_classes))
+        nodes.append(_make_node(
+            len(nodes),
+            f"{branch}_participant_feature",
+            "participant_feature",
+            batch_size,
+            device,
+            num_classes,
+        ))
         nodes.append(_make_node(len(nodes), f"{branch}_logits", "logits", batch_size, device, num_classes))
     for stage in ("input", *STAGES):
         eye_batch_size = batch_size * 2
         nodes.append(_make_node(len(nodes), f"fusion_{stage}", stage, eye_batch_size, device, num_classes))
-    nodes.append(_make_node(len(nodes), "fusion_participant_feature", "feature", batch_size, device, num_classes))
+    nodes.append(_make_node(
+        len(nodes),
+        "fusion_participant_feature",
+        "participant_feature",
+        batch_size,
+        device,
+        num_classes,
+    ))
     nodes.append(_make_node(len(nodes), "fusion_logits", "logits", batch_size, device, num_classes))
     nodes.append(_make_tensor_node(
         len(nodes), "label_gt", torch.zeros(batch_size, dtype=torch.long, device=device)
@@ -295,7 +329,7 @@ def build_resnet50_mhd_graph(
         for stage in STAGES:
             _add_edge(edges, f"{branch}_{stage}_edge", modules[branch][stage])
         _add_edge(edges, f"{branch}_classifier_edge", modules[branch]["classifier"])
-        _add_edge(edges, f"{branch}_bilateral_mean_edge", BilateralMean())
+        _add_edge(edges, f"{branch}_bilateral_pool_edge", BilateralMeanMax())
 
     channels = {"input": 3, "stem": 64, "layer1": 256, "layer2": 512, "layer3": 1024, "layer4": 2048}
     for position in FUSION_POSITIONS:
@@ -305,7 +339,11 @@ def build_resnet50_mhd_graph(
             else ConcatProjection(channels[position])
         )
         _add_edge(edges, f"fuse_{position}_edge", operation)
-    _add_edge(edges, "classification_loss_edge", ClassificationLoss())
+    _add_edge(
+        edges,
+        "classification_loss_edge",
+        ClassificationLoss(label_smoothing=label_smoothing),
+    )
     _add_edge(edges, "batch_accuracy_edge", BatchAccuracy())
 
     topology = _build_topology(nodes, edges, fusion_position, device)
@@ -400,7 +438,7 @@ def classification_loss_metadata(graph: MHD_Graph) -> Dict[str, object]:
         raise TypeError("classification_loss_edge does not contain ClassificationLoss")
     return {
         "name": "cross_entropy",
-        "label_smoothing": 0.0,
+        "label_smoothing": operation.label_smoothing,
         "class_weights": None,
         "inference": "raw_logits_standard_softmax",
     }
@@ -420,8 +458,9 @@ def graph_summary(graph: MHD_Graph) -> Dict[str, object]:
         "correction_nodes": graph.correction_nodes,
         "monitor_nodes": graph.monitor_nodes,
         "monitor_edges": graph.monitor_edges,
-        "fusion_operation": "concatenate_linear_projection_normalization_then_bilateral_mean",
+        "fusion_operation": "concatenate_linear_projection_normalization",
         "fusion_nonlinearity": False,
+        "participant_pooling": "bilateral_mean_max_parameter_free",
         "classification_loss": classification_loss_metadata(graph),
         "parameters": sum(parameter.numel() for parameter in graph.parameters()),
     }

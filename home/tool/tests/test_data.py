@@ -47,6 +47,9 @@ def test_preprocess_cache_is_lossless_atomic_and_self_repairing(tmp_path):
     dataset = UKBBilateralVisitDataset(
         labels, image_root, "train", image_size=16, preprocess_cache_root=cache_root
     )
+    assert dataset._epoch_state.is_shared()
+    dataset.set_epoch(7)
+    assert dataset.epoch == 7
     cached = dataset[0]
     assert torch.equal(cached["cfp"], uncached["cfp"])
     assert torch.equal(cached["oct"], uncached["oct"])
@@ -120,3 +123,10 @@ def test_multiworker_loader_uses_spawn_to_avoid_inherited_cuda_context():
         _TinyDataset(), 2, 2, True, 3407, rank=0, world_size=1
     )
     assert loader.multiprocessing_context.get_start_method() == "spawn"
+    assert loader.persistent_workers is True
+
+
+def test_training_loader_keeps_ddp_safe_partial_batch():
+    dataset = torch.utils.data.TensorDataset(torch.arange(10))
+    loader = make_loader(dataset, 4, 0, True, 3407, rank=0, world_size=2)
+    assert [len(batch[0]) for batch in loader] == [4, 1]

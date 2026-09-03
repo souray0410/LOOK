@@ -29,3 +29,13 @@
   the new cohort passed integrity verification.
 - Verified 83 tests, two-GPU criteria aggregation, nine MHD graph topologies, the complete
   filling/LOOK/sealed-test smoke, and exact ImageNet V2 mapping to 12 active branch edges.
+- Invalidated the first baseline search after all fusion positions showed rapid training
+  memorization and low validation Macro-F1. The audit confirmed aligned labels/predictions,
+  correct image pairing, exact ImageNet mapping, and correct MHD metrics/backward behavior.
+- Fixed stale epoch-conditioned augmentation by sharing epoch state with persistent
+  data-loader workers, retained the final DDP-safe partial training batch, and reduced
+  effective batch size from 256 to 128 to double optimizer updates per epoch.
+- Replaced bilateral mean-only aggregation with parameter-free mean-plus-max pooling to
+  preserve unilateral disease evidence without changing the linear modality-fusion rule.
+- Added label-smoothing calibration and per-run evidence-strength diagnostics; removed
+  the aggressively overfitting `3e-4/3e-3` learning-rate profile.

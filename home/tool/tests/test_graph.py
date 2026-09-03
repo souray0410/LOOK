@@ -5,7 +5,7 @@ from torchvision.models import ResNet50_Weights, resnet50
 import look_core.graph as graph_module
 
 from look_core.graph import (
-    BilateralMean,
+    BilateralMeanMax,
     FUSION_POSITIONS,
     UNIMODAL_POSITIONS,
     ClassificationLoss,
@@ -53,13 +53,19 @@ def test_branch_weights_are_equal_but_not_shared_and_fusion_is_average_identity(
     assert not any(isinstance(module, (torch.nn.ReLU, torch.nn.GELU)) for module in projection.modules())
 
 
-def test_bilateral_mean_is_parameter_free_and_propagates_to_both_eyes():
-    operation = BilateralMean()
+def test_bilateral_mean_max_is_parameter_free_permutation_invariant_and_propagates():
+    operation = BilateralMeanMax()
     eyes = torch.tensor([[1.0, 3.0], [3.0, 5.0], [2.0, 4.0], [6.0, 8.0]], requires_grad=True)
     participants = operation(eyes)
-    assert torch.equal(participants, torch.tensor([[2.0, 4.0], [4.0, 6.0]]))
+    assert torch.equal(
+        participants,
+        torch.tensor([[2.0, 4.0, 3.0, 5.0], [4.0, 6.0, 6.0, 8.0]]),
+    )
+    swapped = operation(eyes.reshape(2, 2, 2).flip(1).reshape(4, 2))
+    assert torch.equal(participants, swapped)
     participants.sum().backward()
-    assert torch.equal(eyes.grad, torch.full_like(eyes, 0.5))
+    assert torch.isfinite(eyes.grad).all()
+    assert torch.all(eyes.grad > 0)
     assert list(operation.parameters()) == []
 
 
@@ -84,17 +90,19 @@ def test_imagenet_template_weights_are_requested_and_mapped_into_hyperedges(monk
 
 
 def test_cross_entropy_and_metadata_are_inside_loss_edge():
-    graph = build_resnet50_mhd_graph("feature", batch_size=1, pretrained=False)
+    graph = build_resnet50_mhd_graph(
+        "feature", batch_size=1, pretrained=False, label_smoothing=0.1
+    )
     operation = graph.get_edge_by_name("classification_loss_edge").edge_operations[0].function
     assert isinstance(operation, ClassificationLoss)
     logits = torch.tensor([[1.0, -0.5, 0.25, 2.0]])
     labels = torch.tensor([3])
-    expected = torch.nn.functional.cross_entropy(logits, labels)
+    expected = torch.nn.functional.cross_entropy(logits, labels, label_smoothing=0.1)
     assert torch.allclose(operation(logits, labels), expected)
     metadata = classification_loss_metadata(graph)
     assert metadata["name"] == "cross_entropy"
     assert metadata["class_weights"] is None
-    assert metadata["label_smoothing"] == 0.0
+    assert metadata["label_smoothing"] == 0.1
     assert metadata["inference"] == "raw_logits_standard_softmax"
 
 

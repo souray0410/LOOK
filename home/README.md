@@ -32,8 +32,10 @@ and natural test splits remain sealed until the study is frozen.
 
 - ImageNet V2 pretrained ResNet50 branches with shared weights across left/right eyes.
 - Seven CFP/OCT fusion positions using linear projection plus normalization only.
-- A parameter-free MHD bilateral-mean Edge creates one participant feature before the head.
-- Unweighted cross-entropy, natural shuffle without replacement, AdamW and cosine decay.
+- A parameter-free MHD bilateral mean-plus-max Edge preserves bilateral burden and
+  unilateral evidence before the participant head.
+- Unweighted cross-entropy, natural shuffle without replacement, AdamW and cosine decay;
+  label smoothing is calibrated as a conventional regularizer.
 - Five warm-up epochs, at most 100 epochs, patience 15, single GPU or DDP from one GPU list.
 - OCT-only and CFP-only references use the same training profile.
 
@@ -118,8 +120,11 @@ bash tool/operations/check_detached_validation.sh --session look-bilateral-basel
 ```
 
 Use `--follow` for live logs and `--attach` for tmux. Detach with `Ctrl-b`, then `d`.
-Baseline selection performs six LR/dropout calibration runs, seven fusion runs at seed
-3407, top-three confirmation at seeds 3407/3408/3409, and two unimodal references.
+Baseline selection performs eight LR/dropout/label-smoothing calibration runs, two
+unimodal references, seven fusion runs at seed 3407, and top-three confirmation at
+seeds 3407/3408/3409. Effective batch size is 128 on one or two GPUs. Epoch-conditioned
+augmentation state is shared with persistent data-loader workers, and the final partial
+batch is retained so almost every training participant contributes each epoch.
 
 A passing candidate still requires explicit approval:
 
@@ -156,8 +161,9 @@ participant bootstrap 95% confidence intervals, and paired corrected-vs-fill tes
 
 Completed artifacts are reused only after fingerprint and manifest validation. Training
 resumes from `last/`, preserves `best/`, and writes each configuration before advancing.
-Changing labels, fusion, LR, dropout, seed, filling, or LOOK parameters creates a new
-deterministic run ID. The author server launcher defaults to `NCCL_P2P_DISABLE=1` for its
+Changing labels, fusion, LR, dropout, label smoothing, seed, filling, or LOOK parameters
+creates a new deterministic run ID. The author server launcher defaults to
+`NCCL_P2P_DISABLE=1` for its
 known transport constraint; this changes transport only, not the scientific computation.
 
 ## Data Restriction

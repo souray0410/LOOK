@@ -35,10 +35,12 @@
 
 ## Baseline State Machine
 
-1. Calibrate three pretrained/new-layer LR pairs and dropout 0.0/0.2 at feature fusion.
-2. Apply the selected profile to all seven linear fusion positions at seed 3407.
-3. Re-run the top three positions with seeds 3407, 3408 and 3409.
-4. Train OCT-only and CFP-only references with the same profile.
+1. Calibrate two conservative pretrained/new-layer LR pairs, dropout 0.0/0.2 and label
+   smoothing 0.0/0.1 at feature fusion, with effective batch size 128.
+2. Train OCT-only and CFP-only references with the selected profile before interpreting
+   multimodal fusion results.
+3. Apply the selected profile to all seven linear modality-fusion positions at seed 3407.
+4. Re-run the top three positions with seeds 3407, 3408 and 3409.
 5. Rank by mean Macro-F1, balanced accuracy, Macro-AUROC, ECE and stability.
 6. Require mean Macro-F1 `>=0.65`, each mean class F1 `>=0.45`, and no multimodal deficit.
 7. Persist an audit on failure; require explicit reviewer approval on success.
@@ -50,6 +52,8 @@
 - Reuse only outputs whose configuration, code, input and artifact manifests validate.
 - Resume incomplete training from `last/`; preserve `best/` independently.
 - Commit one sweep case before starting the next.
+- Share epoch state with persistent data-loader workers so deterministic augmentation
+  actually changes without worker restart; retain the equal-sized final DDP batch.
 - A changed label table or scientific parameter creates a new deterministic run ID.
 - Validation and test predictions use disjoint files and directories.
 - Natural and incident cohorts cannot influence hyperparameter selection.

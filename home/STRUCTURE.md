@@ -83,7 +83,7 @@ authorized read-only image media
   -> Step 11: prevalent/incident/uncertain evidence classification
   -> Steps 12-13: balanced development + natural secondary + incident manifests
   -> Steps 15-17: unit, MHD graph/DDP and tiny end-to-end verification
-  -> Step 19 baseline: calibration -> seven fusions -> three seeds -> unimodal review
+  -> Step 19 baseline: calibration -> unimodal controls -> seven fusions -> three seeds
   -> Step 19 LOOK: filling -> correction -> freeze -> sealed tests
   -> Step 20: correction-matrix and cross-experiment analysis
 ```

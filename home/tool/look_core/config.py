@@ -32,18 +32,18 @@ class ExperimentConfig:
     )
     epochs: int = 100
     patience: int = 15
-    effective_batch_size: int = 256
+    effective_batch_size: int = 128
     micro_batch_size: int = 64
     num_workers: int = 8
-    pretrained_lr: float = 3e-4
-    new_layer_lr: float = 3e-3
+    pretrained_lr: float = 1e-4
+    new_layer_lr: float = 1e-3
     weight_decay: float = 1e-4
     warmup_epochs: int = 5
     training_strategy: str = "end_to_end_finetuning"
     sampling_strategy: str = "natural_without_replacement"
     loss_name: str = "cross_entropy"
     label_smoothing: float = 0.0
-    classifier_dropout: float = 0.0
+    classifier_dropout: float = 0.2
     amp: bool = True
     world_size: int = 1
     monitor_nodes: List[str] = field(

@@ -62,6 +62,11 @@ UK Biobank, a particular account, server, model, or timestamp.
 - Verify initial model state across ranks and aggregate the complete validation split
   before checkpoint selection.
 - Preserve model, optimizer, scheduler, scaler, epoch and best/last state for recovery.
+- Verify that epoch-dependent dataset state reaches worker processes. Persistent workers
+  must use shared state; otherwise deterministic augmentation can silently repeat across
+  every epoch. Recreating workers is a correct but slower fallback.
+- Account for every training row. If distributed sharding or `drop_last` excludes rows,
+  report the count and justify it; retain an equal-sized final partial batch when safe.
 - Treat collective timeout as a symptom; inspect the first failed rank or worker.
 - Keep host-specific NCCL transport fallbacks explicit, recorded and environment-
   overridable; verify them first with a minimal native PyTorch DDP test.
@@ -87,6 +92,18 @@ Before a formal run:
 4. Confirm local and remote source manifests match.
 5. Confirm cleanup cannot target source data or paths outside the declared runtime.
 6. Confirm documentation commands work from a fresh checkout with explicit paths.
+
+Before an expensive architecture sweep, require a baseline qualification stage:
+
+1. Demonstrate that a small subset can be intentionally overfit and that held-out metrics
+   are independently reproduced from saved predictions.
+2. Verify pretrained parameter mapping and compare framework gradients/updates with native
+   autograd on a representative path.
+3. Run unimodal controls before interpreting multimodal fusion gains.
+4. Inspect train-validation gaps and evidence-defined subgroups to distinguish optimization
+   failure from label/input mismatch.
+5. Change one scientifically meaningful component at a time and invalidate prior artifacts
+   through code/config fingerprints.
 
 The final release contains current code only. Superseded implementations and historical
 compatibility code belong outside the clean reproducibility root.

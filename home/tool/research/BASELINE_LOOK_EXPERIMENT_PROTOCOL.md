@@ -18,11 +18,18 @@
   activation or nonlinear attention.
 - One-stage end-to-end AdamW fine-tuning with unweighted cross-entropy and natural
   sampling without replacement.
-- Calibration: LR pairs `3e-5/3e-4`, `1e-4/1e-3`, `3e-4/3e-3`; dropout `0.0/0.2`.
+- Effective batch size 128, retaining the equal-sized DDP partial batch. Augmentation is
+  epoch-conditioned through shared state visible to persistent data-loader workers.
+- Calibration: LR pairs `3e-5/3e-4`, `1e-4/1e-3`; dropout `0.0/0.2`; label smoothing
+  `0.0/0.1`. The previously overfitting `3e-4/3e-3` profile is excluded.
 - Stage A: seven positions at seed 3407. Stage B: top three at 3407/3408/3409.
 - OCT-only and CFP-only use true single active branches under the same profile.
-- Left/right eyes share modality weights and are aggregated by a parameter-free MHD
-  bilateral-mean Edge before the classifier.
+- Left/right eyes share modality weights and are aggregated by a parameter-free,
+  permutation-invariant MHD bilateral mean-plus-max Edge before the classifier. Mean
+  represents bilateral burden and max retains evidence visible in only one eye.
+- Every validation result stores evidence-stratified recall and true-class probability
+  for strict controls, assessment self-report-only cases, and corroborated/non-screen
+  records. This diagnostic cannot filter labels or choose a checkpoint.
 
 ## LOOK Controls
 

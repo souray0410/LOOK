@@ -11,6 +11,82 @@ from PIL import Image, UnidentifiedImageError
 from .state import atomic_write_json, utc_now
 
 
+def evidence_stratified_validation(
+    labels_csv: Path,
+    labels: np.ndarray,
+    probabilities: np.ndarray,
+    participant_ids: np.ndarray,
+    *,
+    require_complete_split: bool = True,
+) -> dict[str, Any]:
+    """Report image predictability by record-evidence strength.
+
+    This diagnostic never changes labels, selects a checkpoint, or filters a
+    validation/test set.
+    """
+    frame = pd.read_csv(
+        labels_csv,
+        dtype={"participant_id": str},
+        usecols=["participant_id", "split", "label_id", "label_name", "evidence_sources"],
+    )
+    frame = frame.loc[frame["split"] == "validation"].set_index("participant_id")
+    ids = [str(value) for value in participant_ids]
+    valid_coverage = (
+        set(ids) == set(frame.index)
+        if require_complete_split
+        else set(ids).issubset(set(frame.index))
+    )
+    if len(ids) != len(set(ids)) or not valid_coverage:
+        raise ValueError("Validation predictions and phenotype rows are not one-to-one")
+    aligned = frame.loc[ids].reset_index()
+    expected = aligned["label_id"].astype(int).to_numpy()
+    if not np.array_equal(expected, labels.astype(int)):
+        raise ValueError("Validation predictions are not aligned to phenotype labels")
+    predicted = probabilities.argmax(axis=1)
+    true_probability = probabilities[np.arange(len(labels)), labels.astype(int)]
+    rows = []
+    for index, row in aligned.iterrows():
+        raw_sources = "" if pd.isna(row["evidence_sources"]) else str(row["evidence_sources"])
+        sources = {item for item in raw_sources.split(";") if item}
+        if int(row["label_id"]) == 0:
+            evidence_group = "strict_normal_control"
+        elif sources == {"6148"}:
+            evidence_group = "assessment_self_report_only"
+        else:
+            evidence_group = "corroborated_or_non_screen_record"
+        rows.append({
+            "label_id": int(row["label_id"]),
+            "label_name": str(row["label_name"]),
+            "evidence_group": evidence_group,
+            "correct": int(predicted[index] == labels[index]),
+            "true_class_probability": float(true_probability[index]),
+            "confidence": float(probabilities[index].max()),
+        })
+    diagnostic = pd.DataFrame(rows)
+    groups = []
+    for (label_id, label_name, evidence_group), group in diagnostic.groupby(
+        ["label_id", "label_name", "evidence_group"], sort=True
+    ):
+        groups.append({
+            "label_id": int(label_id),
+            "label_name": str(label_name),
+            "evidence_group": str(evidence_group),
+            "participants": int(len(group)),
+            "class_recall": float(group["correct"].mean()),
+            "mean_true_class_probability": float(group["true_class_probability"].mean()),
+            "mean_confidence": float(group["confidence"].mean()),
+        })
+    return {
+        "purpose": "diagnostic_only_no_model_or_label_selection",
+        "prediction_rows": len(ids),
+        "complete_split_required": require_complete_split,
+        "complete_split_rows": len(frame),
+        "unique_participants": len(set(ids)),
+        "label_mismatches": 0,
+        "groups": groups,
+    }
+
+
 def _sample_key(row: pd.Series, seed: str) -> str:
     value = f"{seed}:{row['participant_id']}:{row['instance']}"
     return hashlib.sha256(value.encode("utf-8")).hexdigest()

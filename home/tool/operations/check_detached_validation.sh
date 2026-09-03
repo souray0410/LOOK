@@ -79,6 +79,10 @@ if histories:
         best = max(history, key=lambda item: float(item.get('validation', {}).get('macro_f1', -1.0)))
         print(f"best_epoch_so_far={best.get('epoch')}")
         print(f"best_macro_f1_so_far={best.get('validation', {}).get('macro_f1')}")
+        print(
+            "best_train_validation_gap="
+            f"{best.get('train_batch_accuracy', 0.0) - best.get('validation', {}).get('balanced_accuracy', 0.0)}"
+        )
 leaderboards = sorted((runs / "sweeps").glob("validation__*/baseline_search_results.json"), key=lambda p: p.stat().st_mtime)
 if leaderboards:
     rows = json.loads(leaderboards[-1].read_text())
@@ -87,7 +91,8 @@ if leaderboards:
         print(
             f"  {rank}. fusion={row['fusion_position']} strategy={row['training_strategy']} "
             f"lr={row['pretrained_lr']}/{row['new_layer_lr']} "
-            f"dropout={row['classifier_dropout']} "
+            f"dropout={row['classifier_dropout']} smooth={row.get('label_smoothing')} "
+            f"effective_batch={row.get('effective_batch_size')} "
             f"macro_f1={row.get('macro_f1')} balanced_accuracy={row.get('balanced_accuracy')} "
             f"macro_auroc={row.get('macro_auroc_ovr')} f1_per_class={row.get('f1_per_class')}"
         )
@@ -110,6 +115,20 @@ if diagnostics:
             for value, values in ordered
         ]
         print(f"diagnostic_{axis}={json.dumps(compact)}")
+evidence = sorted(
+    (runs / "experiments").glob("*/validation_evidence_diagnostics.json"),
+    key=lambda p: p.stat().st_mtime,
+)
+if evidence:
+    report = json.loads(evidence[-1].read_text())
+    print(f"evidence_diagnostics={evidence[-1]}")
+    for row in report.get("groups", []):
+        print(
+            "  evidence_group="
+            f"{row['label_name']}:{row['evidence_group']} "
+            f"n={row['participants']} recall={row['class_recall']:.4f} "
+            f"true_probability={row['mean_true_class_probability']:.4f}"
+        )
 PY
 
 echo "gpu:"

@@ -29,6 +29,7 @@ from .metrics import (
     paired_participant_bootstrap,
     participant_cluster_bootstrap,
 )
+from .quality_audit import evidence_stratified_validation
 from .reproducibility import (
     backbone_implementation_sha256,
     environment_manifest,
@@ -218,6 +219,7 @@ class ExperimentRunner:
             torch.device("cpu"),
             pretrained=False,
             classifier_dropout=self.config.classifier_dropout,
+            label_smoothing=self.config.label_smoothing,
         )
         structure = graph_summary(summary_graph)
         del summary_graph
@@ -233,6 +235,7 @@ class ExperimentRunner:
             self.device,
             pretrained=False,
             classifier_dropout=self.config.classifier_dropout,
+            label_smoothing=self.config.label_smoothing,
         )
         if checkpoint["architecture_id"] != self.selection.architecture_id:
             raise RuntimeError("Checkpoint architecture does not match the selected experiment")
@@ -273,6 +276,21 @@ class ExperimentRunner:
                         graph, loaders["validation"], "validation", filler, look_banks, look_only=True
                     )
                 )
+
+        validation_diagnostics: Dict[str, object] = {}
+        if self.options.phase == "validation" and "complete" in validation_results:
+            complete = validation_results["complete"]
+            validation_diagnostics = evidence_stratified_validation(
+                self.config.labels_csv,
+                complete["labels"],
+                complete["probabilities"],
+                complete["participant_ids"],
+                require_complete_split=self.options.smoke_limit is None,
+            )
+            write_json_atomic(
+                validation_diagnostics,
+                self.experiment_dir / "validation_evidence_diagnostics.json",
+            )
 
         test_results: Dict[str, object] = {}
         statistics: Dict[str, object] = {"status": "test_sealed"}
@@ -315,6 +333,7 @@ class ExperimentRunner:
             "filling": filling_summary,
             "look": look_summary,
             "validation": {name: item["metrics"] for name, item in validation_results.items()},
+            "validation_diagnostics": validation_diagnostics,
             "test": {name: item["metrics"] for name, item in test_results.items()},
             "statistics": statistics,
             "prediction_directory": str(self.prediction_dir),
@@ -379,6 +398,7 @@ class ExperimentRunner:
             "warmup_epochs": self.config.warmup_epochs,
             "sampling_strategy": self.config.sampling_strategy,
             "loss_name": self.config.loss_name,
+            "label_smoothing": self.config.label_smoothing,
             "classifier_dropout": self.config.classifier_dropout,
             "training_strategy": self.config.training_strategy,
             "amp": self.config.amp,

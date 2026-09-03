@@ -214,10 +214,16 @@ class UKBBilateralVisitDataset(Dataset):
         self.preprocess_cache_root = (
             Path(preprocess_cache_root) if preprocess_cache_root is not None else None
         )
-        self.epoch = 0
+        # Persistent workers receive this tensor through shared memory, so a
+        # parent-process epoch update is visible without rebuilding workers.
+        self._epoch_state = torch.zeros((), dtype=torch.int64).share_memory_()
 
     def set_epoch(self, epoch: int) -> None:
-        self.epoch = int(epoch)
+        self._epoch_state.fill_(int(epoch))
+
+    @property
+    def epoch(self) -> int:
+        return int(self._epoch_state.item())
 
     def __len__(self) -> int:
         return len(self.frame)
@@ -364,7 +370,10 @@ def make_loader(
         pin_memory=True,
         persistent_workers=num_workers > 0,
         multiprocessing_context="spawn" if num_workers > 0 else None,
-        drop_last=train,
+        # The sampler gives every rank the same number of rows, so the final
+        # partial batch is DDP-safe. Keeping it avoids discarding 6% of this
+        # comparatively small participant cohort on every epoch.
+        drop_last=False,
     )
 
 

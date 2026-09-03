@@ -31,12 +31,13 @@ def classifier_profile(
     pretrained_lr: float,
     new_layer_lr: float,
     classifier_dropout: float,
+    label_smoothing: float,
 ) -> dict[str, Any]:
     return {
         "name": name,
         "epochs": 100,
         "patience": 15,
-        "effective_batch_size": 256,
+        "effective_batch_size": 128,
         "micro_batch_size": 64,
         "num_workers": 8,
         "pretrained_lr": pretrained_lr,
@@ -45,7 +46,7 @@ def classifier_profile(
         "warmup_epochs": 5,
         "sampling_strategy": "natural_without_replacement",
         "loss_name": "cross_entropy",
-        "label_smoothing": 0.0,
+        "label_smoothing": label_smoothing,
         "classifier_dropout": classifier_dropout,
         "training_strategy": "end_to_end_finetuning",
         "amp": True,
@@ -59,21 +60,28 @@ def calibration_classifier_profiles() -> list[dict[str, Any]]:
     for pretrained_lr, new_layer_lr in (
         (3e-5, 3e-4),
         (1e-4, 1e-3),
-        (3e-4, 3e-3),
     ):
         for dropout in (0.0, 0.2):
-            name = (
-                f"lr-{pretrained_lr:.0e}-{new_layer_lr:.0e}"
-                f"__dropout-{dropout:.1f}"
-            )
-            profiles.append(
-                classifier_profile(name, pretrained_lr, new_layer_lr, dropout)
-            )
+            for label_smoothing in (0.0, 0.1):
+                name = (
+                    f"lr-{pretrained_lr:.0e}-{new_layer_lr:.0e}"
+                    f"__dropout-{dropout:.1f}"
+                    f"__smooth-{label_smoothing:.1f}"
+                )
+                profiles.append(
+                    classifier_profile(
+                        name,
+                        pretrained_lr,
+                        new_layer_lr,
+                        dropout,
+                        label_smoothing,
+                    )
+                )
     return profiles
 
 
 def _primary_classifier_profile() -> dict[str, Any]:
-    return classifier_profile("primary", 1e-4, 1e-3, 0.0)
+    return classifier_profile("primary", 1e-4, 1e-3, 0.2, 0.1)
 
 
 def _primary_gan_profile() -> dict[str, Any]:
@@ -326,7 +334,8 @@ def _write_leaderboard(rows: list[dict[str, Any]], destination: Path) -> None:
     columns = [
         "rank", "experiment_id", "backbone_id", "fusion_position", "seed",
         "classifier_profile", "training_strategy", "pretrained_lr", "new_layer_lr",
-        "classifier_dropout", "macro_f1", "balanced_accuracy", "macro_auroc_ovr",
+        "classifier_dropout", "label_smoothing", "effective_batch_size",
+        "macro_f1", "balanced_accuracy", "macro_auroc_ovr",
         "macro_auprc_ovr", "ece_15", "accuracy", "weighted_f1", "cohen_kappa",
         "best_epoch", "f1_per_class", "sensitivity_per_class",
         "specificity_per_class", "auroc_per_class", "auprc_per_class",
@@ -439,6 +448,8 @@ def run_study_grid(
                     "pretrained_lr": runner.config.pretrained_lr,
                     "new_layer_lr": runner.config.new_layer_lr,
                     "classifier_dropout": runner.config.classifier_dropout,
+                    "label_smoothing": runner.config.label_smoothing,
+                    "effective_batch_size": runner.config.effective_batch_size,
                 },
                 "completed": completed,
             },
@@ -466,6 +477,8 @@ def run_study_grid(
                 "pretrained_lr": runner.config.pretrained_lr,
                 "new_layer_lr": runner.config.new_layer_lr,
                 "classifier_dropout": runner.config.classifier_dropout,
+                "label_smoothing": runner.config.label_smoothing,
+                "effective_batch_size": runner.config.effective_batch_size,
                 "best_epoch": result.get("checkpoint", {}).get("epoch"),
                 "started_at_utc": result.get("started_at_utc"),
                 "completed_at_utc": result.get("completed_at_utc"),
@@ -494,7 +507,7 @@ def _profile_from_row(row: dict[str, Any]) -> dict[str, Any]:
     profile_name = str(row["classifier_profile"])
     return classifier_profile(
         profile_name, float(row["pretrained_lr"]), float(row["new_layer_lr"]),
-        float(row["classifier_dropout"]),
+        float(row["classifier_dropout"]), float(row["label_smoothing"]),
     )
 
 
@@ -555,12 +568,18 @@ def run_baseline_selection(
     if not execute:
         return {
             "status": "dry_run", "protocol": "balanced_four_class_baseline_selection",
-            "calibration": calibration, "stage_a_fusions": list(FUSION_POSITIONS),
-            "stage_b_top_k": 3, "stage_b_seeds": list(CONFIRMATION_SEEDS),
+            "calibration": calibration,
             "unimodal_references": ["oct_only", "cfp_only"],
+            "stage_a_fusions": list(FUSION_POSITIONS),
+            "stage_b_top_k": 3, "stage_b_seeds": list(CONFIRMATION_SEEDS),
         }
     calibration_rows = _rows(paths, calibration)
     selected_profile = _profile_from_row(calibration_rows[0])
+    reference = run_study_grid(
+        unimodal_reference_grid(selected_profile), paths, device, execute=True,
+        check_all_image_paths=False, gpu_devices=gpu_devices,
+    )
+    reference_rows = _rows(paths, reference)
     stage_a = run_study_grid(
         baseline_search_grid(selected_profile), paths, device, execute=True,
         check_all_image_paths=False, gpu_devices=gpu_devices,
@@ -574,11 +593,6 @@ def run_baseline_selection(
     stage_b_rows = _rows(paths, stage_b)
     ranking = _aggregate_confirmation(stage_b_rows)
     winner = ranking[0]
-    reference = run_study_grid(
-        unimodal_reference_grid(selected_profile), paths, device, execute=True,
-        check_all_image_paths=False, gpu_devices=gpu_devices,
-    )
-    reference_rows = _rows(paths, reference)
     winner_rows = [row for row in stage_b_rows if row["fusion_position"] == winner["fusion_position"]]
     artifact_paths: list[Path] = []
     for row in winner_rows:

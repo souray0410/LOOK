@@ -55,6 +55,7 @@ def run_classifier(payload: dict, context) -> None:
         and not (run_dir / "best").is_dir()
         and not (run_dir / "best.pt").is_file(),
         classifier_dropout=config.classifier_dropout,
+        label_smoothing=config.label_smoothing,
     )
     seed_everything(seed + context.rank)
     if not (run_dir / "training_complete.json").is_file():
