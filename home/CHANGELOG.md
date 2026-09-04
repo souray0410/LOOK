@@ -26,3 +26,10 @@
   matched controls; scout AUROC 0.6948 and Macro-F1 0.6402 under the fixed short budget.
 - Added a hash-checked Step 32 selection manifest. The decision does not freeze a
   baseline, approve LOOK, or access sealed test data.
+
+## 2026-09-04: Step 36 joint LOOK
+
+Joint input-through-layer3 correction, optional sequential acceptance, stable logit metrics,
+shared per-channel PCA and atomic decision recovery replace the old protocol.
+Preserve exact backbone training identity and checkpoints; add scoped cleanup and
+real-checkpoint verification. See JOINT_LOOK_PROTOCOL.md and migration evidence.

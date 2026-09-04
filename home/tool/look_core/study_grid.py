@@ -6,7 +6,7 @@ import io
 import itertools
 import json
 import statistics
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -428,6 +428,7 @@ def run_study_grid(
     check_all_image_paths: bool = False,
     bootstrap_iterations: int = 2000,
     gpu_devices: tuple[int, ...] = (0,),
+    strict_backbone_reuse: bool = False,
 ) -> dict[str, Any]:
     cases = expand_study_grid(
         grid, paths, phase=phase, frozen_manifest=frozen_manifest, resume=resume,
@@ -435,7 +436,7 @@ def run_study_grid(
         check_all_image_paths=check_all_image_paths,
         bootstrap_iterations=bootstrap_iterations, gpu_devices=gpu_devices,
     )
-    runners = [ExperimentRunner(case.config, case.selection, case.options, device) for case in cases]
+    runners = [ExperimentRunner(case.config, case.selection, replace(case.options, strict_backbone_reuse=strict_backbone_reuse), device) for case in cases]
     frozen_payload = None
     if phase == "test":
         frozen_payload = json.loads(Path(frozen_manifest).read_text(encoding="utf-8"))

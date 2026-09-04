@@ -18,6 +18,7 @@ from tqdm.auto import tqdm
 from .filling import MissingModalityFiller, NormalizedMeanFiller
 from .reproducibility import write_json_atomic
 from .state import PipelineState, file_sha256, quarantine, stable_hash
+from .joint import PROTOCOL, members, member_shapes, read_site, write_site, site_level
 
 
 @dataclass
@@ -35,6 +36,10 @@ class FullFeaturePCA:
     fit_seconds: float
     peak_rss_bytes: int
     source_id: str
+    member_names: tuple = ()
+    member_shapes: tuple = ()
+    protocol: str = PROTOCOL
+    split_rule: str = "channel_split_and_restore_member_shapes_v1"
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -69,6 +74,10 @@ class LOOKArtifact:
     pca_fit_seconds: float = 0.0
     pca_peak_rss_bytes: int = 0
     pca_source_id: str = ''
+    member_names: tuple = ()
+    member_shapes: tuple = ()
+    protocol: str = PROTOCOL
+    split_rule: str = "channel_split_and_restore_member_shapes_v1"
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -82,11 +91,29 @@ class LOOKArtifact:
 
 
 def load_selected_bank(output_dir: Path) -> List[LOOKArtifact]:
-    selected_dir = Path(output_dir) / "selected"
-    paths = sorted(selected_dir.glob("*.pt"))
-    if not paths:
-        raise FileNotFoundError(f"No selected LOOK artifacts found in {selected_dir}")
-    return [LOOKArtifact.load(path) for path in paths]
+    root = Path(output_dir)
+    manifest = json.loads((root / 'selected_manifest.json').read_text())
+    if manifest['protocol'] != PROTOCOL:
+        raise ValueError('LOOK protocol mismatch')
+    result = []
+    for record in manifest['artifacts']:
+        path = root / record['path']
+        if path.parent != root / 'selected' or path.is_symlink() or file_sha256(path) != record['sha256']:
+            raise ValueError('Invalid selected artifact')
+        result.append(LOOKArtifact.load(path))
+    return result
+
+
+def save_selected_bank(artifacts, output_dir):
+    root = Path(output_dir)
+    (root / 'selected').mkdir(parents=True, exist_ok=True)
+    records = []
+    for i, artifact in enumerate(artifacts):
+        path = root / 'selected' / f'{i + 1:02d}_{artifact.node_name}.pt'
+        artifact.save(path)
+        records.append(dict(path=str(path.relative_to(root)), sha256=file_sha256(path)))
+    write_json_atomic(dict(protocol=PROTOCOL, artifacts=records), root / 'selected_manifest.json')
+    return records
 
 
 class StreamingMoments:
@@ -147,7 +174,8 @@ def downsample_flatten(feature: torch.Tensor, factor: int) -> Tuple[torch.Tensor
         raise ValueError(f"Expected 2D or 4D feature tensor, got {feature.shape}")
     height = max(1, feature.shape[-2] // factor)
     width = max(1, feature.shape[-1] // factor)
-    downsampled = F.adaptive_avg_pool2d(feature, (height, width))
+    downsampled = F.interpolate(feature, size=(height, width), mode='bilinear',
+                               align_corners=False, antialias=False)
     return downsampled.flatten(1), tuple(downsampled.shape[1:])
 
 
@@ -199,17 +227,23 @@ def forward_with_look(
 ) -> torch.Tensor:
     _reset_inputs(graph, oct_tensor, cfp_tensor)
     by_node = {artifact.node_name: artifact for artifact in artifacts}
+    if len(by_node) != len(artifacts):
+        raise ValueError('Duplicate LOOK sites')
     target = stop_node or "fusion_logits"
-    stop_level = graph.node_level_map[target]
-    for level in range(stop_level + 1):
-        graph.forward(levels=[level])
+    stop_level = site_level(graph, target)
+    for level in range(-1, stop_level + 1):
+        if level >= 0:
+            graph.forward(levels=[level])
         for node_name, artifact in by_node.items():
-            if graph.node_level_map[node_name] == level:
-                node = graph.get_node_by_name(node_name)
-                node.feature_message.current_state = apply_artifact(
-                    node.feature_message.current_state, artifact
-                )
-    return graph.get_node_by_name(target).feature_message.current_state
+            if site_level(graph, node_name) == level:
+                if artifact.protocol != PROTOCOL or artifact.split_rule != "channel_split_and_restore_member_shapes_v1":
+                    raise ValueError("LOOK protocol or split rule mismatch")
+                if artifact.member_names and tuple(artifact.member_names) != members(node_name):
+                    raise ValueError('LOOK member order mismatch')
+                if artifact.member_shapes and tuple(map(tuple, artifact.member_shapes)) != member_shapes(graph, node_name):
+                    raise ValueError('LOOK member shape mismatch')
+                write_site(graph, node_name, apply_artifact(read_site(graph, node_name), artifact))
+    return read_site(graph, target)
 
 
 @torch.no_grad()
@@ -290,13 +324,23 @@ def fit_complete_pca(graph, loader, node_name, factor, max_rank, device, source_
 
     moments = StreamingMoments()
     feature_shape = down_shape = None
+    samples = 0
     for full, feature_shape, down_shape in tqdm(features(), desc=f'PCA stats {node_name} x{factor}'):
-        moments.update(full)
+        samples += len(full)
+        if len(down_shape) == 3:
+            values = full.reshape(-1, *down_shape).permute(0, 2, 3, 1).reshape(-1, down_shape[0])
+        else:
+            values = full
+        moments.update(values)
     mean, std = moments.finalize()
-    rank = min(max_rank, moments.count - 1, mean.numel())
+    if len(down_shape) == 3:
+        # Persist the channel statistics broadcast to flattened PCA coordinates.
+        spatial = int(np.prod(down_shape[1:]))
+        mean, std = mean.repeat_interleave(spatial), std.repeat_interleave(spatial)
+    rank = min(max_rank, samples - 1, mean.numel())
     started = time.perf_counter()
     pca = _fit_incremental_pca(features, mean, std, rank)
-    if pca.n_samples_seen_ != moments.count:
+    if pca.n_samples_seen_ != samples:
         raise RuntimeError('PCA must consume every complete training feature')
     return FullFeaturePCA(
         node_name=node_name, factor=factor, feature_shape=feature_shape,
@@ -304,8 +348,9 @@ def fit_complete_pca(graph, loader, node_name, factor, max_rank, device, source_
         pca_mean=torch.from_numpy(pca.mean_).float(),
         components=torch.from_numpy(pca.components_).float(),
         explained_variance_ratio=torch.from_numpy(pca.explained_variance_ratio_).float(),
-        sample_count=moments.count, fit_seconds=time.perf_counter() - started,
+        sample_count=samples, fit_seconds=time.perf_counter() - started,
         peak_rss_bytes=_process_peak_rss_bytes(), source_id=source_id,
+        member_names=members(node_name), member_shapes=member_shapes(graph, node_name),
     )
 
 
@@ -319,7 +364,9 @@ def prepare_complete_pca_bank(
         raise ValueError('Shared PCA requires the unaugmented training split')
     if getattr(loader, 'drop_last', False):
         raise ValueError('Shared PCA cannot drop training samples')
-    identity = dict(identity, max_rank=max_rank, pca_code_sha256=file_sha256(Path(__file__)))
+    identity = dict(identity, max_rank=max_rank, protocol=PROTOCOL,
+                    joint_code_sha256=file_sha256(Path(__file__).with_name('joint.py')),
+                    pca_code_sha256=file_sha256(Path(__file__)))
     bank_id = stable_hash(identity)[:16]
     output = Path(pca_root) / bank_id
     graph.eval()
@@ -328,7 +375,7 @@ def prepare_complete_pca_bank(
         forward_with_look(graph, first['oct'].to(device), first['cfp'].to(device))
     entries = []
     for node in correction_nodes:
-        shape = graph.get_node_by_name(node).feature_message.current_state.shape
+        shape = read_site(graph, node).shape
         node_factors = [1] if len(shape) == 2 else list(dict.fromkeys(factors))
         entries.extend((node, int(factor)) for factor in node_factors)
     state_config = dict(identity, requested_entries=entries)
@@ -467,6 +514,7 @@ def fit_look_node(
             pca_fit_seconds=pca.fit_seconds,
             pca_peak_rss_bytes=pca.peak_rss_bytes,
             pca_source_id=pca.source_id,
+            member_names=pca.member_names, member_shapes=pca.member_shapes,
         )
     return artifacts
 
@@ -478,19 +526,10 @@ def validate_global_factor_bank(
     *,
     allow_prefix: bool = False,
 ) -> None:
-    if not allow_prefix and len(artifacts) != len(correction_nodes):
-        raise ValueError(
-            f"LOOK bank x{factor} has {len(artifacts)} artifacts; "
-            f"expected {len(correction_nodes)}"
-        )
-    if len(artifacts) > len(correction_nodes):
-        raise ValueError(f"LOOK bank x{factor} contains too many artifacts")
-    for artifact, expected_node in zip(artifacts, correction_nodes):
-        if artifact.node_name != expected_node:
-            raise ValueError(
-                f"LOOK bank x{factor} expected node {expected_node!r}, "
-                f"found {artifact.node_name!r}"
-            )
+    names = [a.node_name for a in artifacts]
+    if len(set(names)) != len(names) or names != [n for n in correction_nodes if n in names]:
+        raise ValueError('LOOK bank must be an ordered subset of correction sites')
+    for artifact in artifacts:
         expected_factor = 1 if len(artifact.feature_shape) == 1 else factor
         if artifact.factor != expected_factor:
             raise ValueError(
@@ -525,30 +564,47 @@ def _fit_factor_bank(
     resume: bool = True,
 ) -> Tuple[List[LOOKArtifact], List[Dict[str, object]], Dict[str, object]]:
     """Fit one node-wise LOOK bank with a single shared spatial factor."""
-    from .evaluate import evaluate_missing
-    from .matrix_analysis import analyze_look_bank
+    from .evaluate import evaluate_missing, save_prediction_bundle
+    from .matrix_analysis import analyze_look_bank, analyze_correction_matrix
 
     output_dir.mkdir(parents=True, exist_ok=True)
     selected_dir = output_dir / "selected"
     completion_path = output_dir / "bank_complete.json"
     history_path = output_dir / "search_history.json"
-    if resume and completion_path.is_file():
-        selected = load_selected_bank(output_dir)
-        validate_global_factor_bank(selected, correction_nodes, factor)
-        completion = json.loads(completion_path.read_text(encoding="utf-8"))
-        return selected, _read_search_history(history_path), completion
-
-    selected = load_selected_bank(output_dir) if resume and selected_dir.exists() else []
-    validate_global_factor_bank(
-        selected, correction_nodes, factor, allow_prefix=True
-    )
-    search_history = _read_search_history(history_path) if resume else []
-    for node_name in correction_nodes[len(selected):]:
+    selected, decisions, search_history = [], [], []
+    decision_dir = output_dir / 'decisions'
+    decision_dir.mkdir(exist_ok=True)
+    for site_index, node_name in enumerate(correction_nodes):
+        basis = next(p for (name, _), p in pca_bank.items() if name == node_name)
+        node_factor = 1 if len(basis.feature_shape) == 1 else factor
+        pca = pca_bank[(node_name, node_factor)]
+        decision_path = decision_dir / f'{site_index + 1:02d}_{node_name}.json'
+        decision_identity = dict(protocol=PROTOCOL, node=node_name, site_index=site_index,
+            factor=factor, latent_dims=list(latent_dims), pca_source_id=pca.source_id,
+            missing_pattern=missing_pattern, filling=(filler or NormalizedMeanFiller()).name,
+            primary_metric=primary_metric, upstream_decisions_sha256=stable_hash(decisions))
+        if resume and decision_path.exists():
+            decision = json.loads(decision_path.read_text())
+            if decision['identity'] != decision_identity:
+                raise ValueError(f'Decision identity mismatch: {decision_path}')
+            if decision['enabled']:
+                path = output_dir / decision['artifact']['path']
+                if path.parent != output_dir / 'candidates' or path.is_symlink() or file_sha256(path) != decision['artifact']['sha256']:
+                    raise ValueError('Accepted decision artifact mismatch')
+                selected.append(LOOKArtifact.load(path))
+            decisions.append(decision)
+            search_history.extend(decision['candidates'])
+            continue
+        baseline = evaluate_missing(graph, validation_loader, device,
+            fixed_pattern=missing_pattern, artifact_banks={missing_pattern: selected}, filler=filler)
+        baseline_path = output_dir / 'predictions' / f'{site_index + 1:02d}_{node_name}_off.npz'
+        save_prediction_bundle(baseline, baseline_path)
+        baseline_score = float(baseline['metrics'][primary_metric])
+        if not np.isfinite(baseline_score):
+            raise ValueError('Non-finite baseline selection score')
         node_best = None
         node_best_score = -float("inf")
         node_records = []
-        node_state = graph.get_node_by_name(node_name).feature_message.current_state
-        node_factor = 1 if node_state.ndim == 2 else factor
         candidates = fit_look_node(
             graph=graph,
             loader=train_loader,
@@ -562,7 +618,7 @@ def _fit_factor_bank(
             upstream_artifacts=selected,
             filler=filler,
         )
-        for latent_dim, candidate in candidates.items():
+        for latent_dim, candidate in sorted(candidates.items()):
             candidate.save(
                 output_dir / "candidates" /
                 f"{node_name}_x{node_factor}_d{latent_dim}.pt"
@@ -575,7 +631,11 @@ def _fit_factor_bank(
                 artifact_banks={missing_pattern: [*selected, candidate]},
                 filler=filler,
             )
+            prediction_path = output_dir / "predictions" / f"{site_index + 1:02d}_{node_name}_d{latent_dim}.npz"
+            save_prediction_bundle(result, prediction_path)
             score = float(result["metrics"][primary_metric])
+            if not np.isfinite(score):
+                raise ValueError('Non-finite candidate selection score')
             record = {
                 "bank_factor": factor,
                 "node": node_name,
@@ -584,6 +644,9 @@ def _fit_factor_bank(
                 "ridge_lambda": candidate.ridge_lambda,
                 "primary_metric": primary_metric,
                 "primary_score": score,
+                "metrics": result["metrics"],
+                "prediction_path": str(prediction_path),
+                "prediction_sha256": file_sha256(prediction_path),
             }
             node_records.append(record)
             if score > node_best_score:
@@ -591,12 +654,30 @@ def _fit_factor_bank(
                 node_best = candidate
         if node_best is None:
             raise RuntimeError(f"No valid LOOK candidate for {node_name}")
-        selected.append(node_best)
-        node_best.save(output_dir / "selected" / f"{len(selected):02d}_{node_name}.pt")
+        enabled = node_best_score > baseline_score
+        artifact_path = output_dir / 'candidates' / f'{node_name}_x{node_factor}_d{node_best.latent_dim}.pt'
+        decision = dict(identity=decision_identity, baseline_score=baseline_score, baseline_metrics=baseline["metrics"],
+            baseline_prediction=dict(path=str(baseline_path), sha256=file_sha256(baseline_path)),
+            best_candidate_score=node_best_score, enabled=enabled,
+            best_dimension=node_best.latent_dim,
+            selected_score=node_best_score if enabled else baseline_score,
+            reason='strict_improvement' if enabled else 'no_strict_improvement',
+            artifact=dict(path=str(artifact_path.relative_to(output_dir)), sha256=file_sha256(artifact_path)),
+            candidates=node_records,
+            best_candidate_matrix_diagnostics=analyze_correction_matrix(node_best))
+        write_json_atomic(decision, decision_path)
+        decisions.append(decision)
+        if enabled:
+            selected.append(node_best)
         search_history.extend(node_records)
         write_json_atomic(search_history, history_path)
+        print(f'LOOK {node_name} x{factor}: baseline={baseline_score:.6f} '
+              f'candidate={node_best_score:.6f} enabled={enabled}', flush=True)
 
     validate_global_factor_bank(selected, correction_nodes, factor)
+    if resume and completion_path.exists():
+        load_selected_bank(output_dir)
+        return selected, search_history, json.loads(completion_path.read_text())
     validation = evaluate_missing(
         graph,
         validation_loader,
@@ -605,6 +686,7 @@ def _fit_factor_bank(
         artifact_banks={missing_pattern: selected},
         filler=filler,
     )["metrics"]
+    save_selected_bank(selected, output_dir)
     matrix_records = analyze_look_bank(selected, output_dir)
     selected_paths = sorted(selected_dir.glob("*.pt"))
     completion = {
@@ -615,6 +697,8 @@ def _fit_factor_bank(
         "primary_score": float(validation[primary_metric]),
         "validation_metrics": validation,
         "artifacts": len(selected),
+        "decisions": decisions,
+        "evaluated_sites": len(decisions),
         "artifact_bytes": sum(path.stat().st_size for path in selected_paths),
         "compression": [
             {
@@ -663,6 +747,7 @@ def greedy_fit_look(
     best_artifacts: List[LOOKArtifact] | None = None
     best_score = -float("inf")
     best_factor = -1
+    best_count = float('inf')
     for factor in unique_factors:
         factor_dir = output_dir / "factors" / f"x{factor}"
         artifacts, history, completion = _fit_factor_bank(
@@ -684,8 +769,9 @@ def greedy_fit_look(
         score = float(completion["primary_score"])
         factor_records.append(completion)
         all_history.extend(history)
-        if (score, factor) > (best_score, best_factor):
+        if (score, -len(artifacts), factor) > (best_score, -best_count, best_factor):
             best_score, best_factor = score, factor
+            best_count = len(artifacts)
             best_artifacts = artifacts
 
     if best_artifacts is None:
@@ -694,14 +780,13 @@ def greedy_fit_look(
     selected_dir.mkdir(parents=True, exist_ok=True)
     for stale in selected_dir.glob("*.pt"):
         stale.unlink()
-    for index, artifact in enumerate(best_artifacts, start=1):
-        artifact.save(selected_dir / f"{index:02d}_{artifact.node_name}.pt")
+    save_selected_bank(best_artifacts, output_dir)
     selection = {
         "status": "selected",
         "selection_scope": "one_global_spatial_factor_per_artifact_bank",
         "vector_node_factor": 1,
         "primary_metric": primary_metric,
-        "tie_break": "larger_factor_for_lower_spatial_cost",
+        "tie_break": "fewer_active_sites_then_larger_factor",
         "selected_factor": best_factor,
         "selected_primary_score": best_score,
         "factor_banks": factor_records,

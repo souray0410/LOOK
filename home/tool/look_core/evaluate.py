@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 from .data import participant_missing_pattern
 from .filling import MissingModalityFiller, NormalizedMeanFiller
 from .look import LOOKArtifact, forward_with_look
-from .metrics import classification_metrics
+from .stable_metrics import logit_metrics, probabilities_from_logits
 
 
 def save_prediction_bundle(result: Dict[str, object], path: Path) -> None:
@@ -19,6 +19,8 @@ def save_prediction_bundle(result: Dict[str, object], path: Path) -> None:
         path,
         labels=result["labels"],
         probabilities=result["probabilities"],
+        logits=result["logits"],
+        scores=result["scores"],
         participant_ids=result["participant_ids"],
         patterns=result["patterns"],
     )
@@ -40,7 +42,7 @@ def evaluate_missing(
     graph.eval()
     artifact_banks = artifact_banks or {}
     filler = filler or NormalizedMeanFiller()
-    all_labels, all_probabilities, all_participants, all_patterns = [], [], [], []
+    all_labels, all_logits, all_participants, all_patterns = [], [], [], []
     for batch in tqdm(loader, desc="Missing-modality evaluation", leave=False):
         oct_tensor = batch["oct"].to(device, non_blocking=True)
         cfp_tensor = batch["cfp"].to(device, non_blocking=True)
@@ -50,7 +52,7 @@ def evaluate_missing(
             if fixed_pattern is not None
             else [participant_missing_pattern(pid, random_ratio, random_seed) for pid in participants]
         )
-        batch_probabilities = torch.empty(
+        batch_logits = torch.empty(
             (len(participants), int(graph.num_classes)), device=device
         )
         for pattern in sorted(set(patterns)):
@@ -65,17 +67,20 @@ def evaluate_missing(
                 pattern_cfp,
                 artifacts=artifact_banks.get(pattern, ()),
             )
-            batch_probabilities[index_tensor] = torch.softmax(logits, dim=1)
+            batch_logits[index_tensor] = logits
         all_labels.append(batch["label"].numpy())
-        all_probabilities.append(batch_probabilities.cpu().numpy())
+        all_logits.append(batch_logits.cpu().numpy())
         all_participants.extend(participants)
         all_patterns.extend(patterns)
     labels = np.concatenate(all_labels)
-    probabilities = np.concatenate(all_probabilities)
+    logits = np.concatenate(all_logits).astype(np.float64)
+    probabilities = probabilities_from_logits(logits)
     return {
         "labels": labels,
         "probabilities": probabilities,
+        "logits": logits,
+        "scores": logits[:, 1] - logits[:, 0],
         "participant_ids": np.asarray(all_participants),
         "patterns": np.asarray(all_patterns),
-        "metrics": classification_metrics(labels, probabilities),
+        "metrics": logit_metrics(labels, logits),
     }

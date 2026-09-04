@@ -96,3 +96,13 @@ snapshot/<YYYY_MM_DD_HH_MM_SS>
 
 `main` always points to the latest reviewed source release. Snapshot branches are
 read-only historical records and do not require pull requests or merging.
+
+## 2026-09-04 — Joint LOOK protocol replacement
+
+Souray approved replacing fusion-only mandatory correction with joint sequential
+optional sites, retaining layer3 checkpoints and sealed tests. Step 36 schedules
+9 main filling/seed cases and 2 ablations. Study e6d740a884be was stopped; scoped
+cleanup preserves negative aggregates and all baseline/data/generator evidence.
+See home/JOINT_LOOK_PROTOCOL.md and home/docs/joint_migration_evidence.json for
+implementation, acceptance, deployment and live-state snapshot. Per-level weight
+offloading was discussed as a possible implementation advantage, not implemented.

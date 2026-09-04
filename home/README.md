@@ -353,3 +353,7 @@ accuracy, sensitivity, specificity, ECE, confusion matrices, participant bootstr
 intervals, and paired LOOK-versus-fill comparisons. Claims are restricted to controlled
 internal method validation because expert image grades and an external clinical test are
 not available.
+
+## Current LOOK protocol
+
+Step 36 replaces the Step 34 study after explicit review. Read [JOINT_LOOK_PROTOCOL.md](JOINT_LOOK_PROTOCOL.md) and [HANDOFF.md](HANDOFF.md) before execution.

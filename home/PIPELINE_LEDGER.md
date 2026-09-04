@@ -30,6 +30,10 @@
 | 34 | Reviewed fixed-backbone LOOK study | `runs/pca/<bank_id>/`, `runs/reviewed_look/<fingerprint>/`, 2 quick + 9 full cases | shared complete-train PCs first per stage; independent Dmax/list/range; exact backbone reuse; validation-only; failed gates retained; incremental PCA-entry and correction-bank resume |
 | 35 | Clean superseded reviewed LOOK outputs | `runs/maintenance/cleanup_look__<id>.json` | maintenance only: stopped study manifest allowlist, dry-run then execute; preserve baselines/data/cache; rerun Step 34 afterward |
 
+| 36 | Joint sequential optional LOOK | `runs/joint_look/<id>/`, 9 main cases + 2 ablations | frozen exact layer3 checkpoints; shared full-train PCA; logit ranking; atomic on/off decisions; both tests sealed; see JOINT_LOOK_PROTOCOL.md |
+
+Steps 34 and 35 are retained historical entries; the active replacement is Step 36.
+
 Pipeline numbers are append-only. Superseded executed steps move to the timestamped
 history directory; active replacements receive new numbers and are never renumbered.
 

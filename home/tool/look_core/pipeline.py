@@ -23,11 +23,11 @@ from .gan import load_generator, make_gan_loaders, train_paired_cgan_direction
 from .graph import build_resnet50_mhd_graph, graph_summary
 from .look import greedy_fit_look, load_selected_bank, prepare_complete_pca_bank, validate_global_factor_bank
 from .matrix_analysis import analyze_look_bank
+from .joint import resolve_sites, correction_sites
+from .stable_metrics import paired_participant_bootstrap, participant_cluster_bootstrap
 from .metrics import (
     classification_metrics,
     holm_adjust,
-    paired_participant_bootstrap,
-    participant_cluster_bootstrap,
 )
 from .quality_audit import evidence_stratified_validation
 from .reproducibility import (
@@ -45,6 +45,7 @@ from .train import predict
 @dataclass(frozen=True)
 class PipelineOptions:
     train_if_missing: bool = True
+    strict_backbone_reuse: bool = False
     fit_look: bool = True
     evaluate_random_missing: bool = True
     evaluate_missing_baselines: bool = True
@@ -273,6 +274,10 @@ class ExperimentRunner:
 
         test_results: Dict[str, object] = {}
         statistics: Dict[str, object] = {"status": "test_sealed"}
+        if self.options.phase == "validation" and look_banks:
+            statistics["development_validation"] = dict(
+                self._statistics(validation_results),
+                interpretation="conditional on validation-selected nodes and dimensions; exploratory, not confirmatory")
         if self.options.phase == "test":
             primary_test = self._evaluate_split(
                 graph, loaders["primary_test"], "primary_test", filler, look_banks
@@ -392,10 +397,13 @@ class ExperimentRunner:
         return f"{self.selection.architecture_id}__complete_modalities__seed{self.selection.seed}__{fingerprint}"
 
     def _train_or_resume(self) -> Path:
+        can_train_backbone = self.options.train_if_missing and not getattr(self.options, "strict_backbone_reuse", False)
         run_dir = Path(self.config.output_root) / "backbones" / self._backbone_id()
         checkpoint_path = run_dir / "best.pt"
         completion = run_dir / "training_complete.json"
         if self.options.restart and run_dir.exists():
+            if not can_train_backbone:
+                raise RuntimeError("Strict checkpoint reuse forbids restarting a backbone")
             quarantine(
                 run_dir,
                 Path(self.config.cache_root) / "quarantine",
@@ -417,24 +425,30 @@ class ExperimentRunner:
                 valid = False
             if valid:
                 return checkpoint_path
+            if not can_train_backbone:
+                raise RuntimeError("Strict checkpoint reuse: completion identity/hash mismatch")
             quarantine(
                 completion,
                 Path(self.config.cache_root) / "quarantine",
                 "classifier completion metadata or checkpoint hash mismatch",
             )
         elif completion.is_file():
+            if not can_train_backbone:
+                raise RuntimeError("Strict checkpoint reuse: checkpoint missing")
             quarantine(
                 completion,
                 Path(self.config.cache_root) / "quarantine",
                 "classifier completion exists without portable checkpoint",
             )
         elif checkpoint_path.is_file() and not (run_dir / "last").is_dir():
+            if not can_train_backbone:
+                raise RuntimeError("Strict checkpoint reuse: completion missing")
             quarantine(
                 checkpoint_path,
                 Path(self.config.cache_root) / "quarantine",
                 "portable checkpoint exists without completion or resumable state",
             )
-        if not self.options.train_if_missing:
+        if not can_train_backbone:
             raise FileNotFoundError(checkpoint_path)
         write_json_atomic(
             {
@@ -589,7 +603,7 @@ class ExperimentRunner:
         return graph, checkpoint
 
     def _prepare_shared_pca(self, graph, train_loader, checkpoint_path):
-        nodes = graph.correction_nodes if self.config.correction_nodes == ['all_available'] else self.config.correction_nodes
+        nodes = correction_sites(graph)
         identity = dict(backbone_id=self._backbone_id(), checkpoint_sha256=sha256(checkpoint_path),
             labels_sha256=self.data_hash, feature_implementation_sha256=self.backbone_implementation_hash,
             image_size=self.config.image_size, feature_batch_size=self.config.micro_batch_size,
@@ -615,14 +629,7 @@ class ExperimentRunner:
 
     def _fit_or_load_look(self, graph, train_loader, validation_loader, filler, pca_bank):
         banks, summary = {}, {"enabled": True, "banks": {}}
-        correction_nodes = (
-            graph.correction_nodes
-            if self.config.correction_nodes == ["all_available"]
-            else self.config.correction_nodes
-        )
-        unknown_nodes = set(correction_nodes) - set(graph.correction_nodes)
-        if unknown_nodes:
-            raise ValueError(f"Unavailable correction nodes: {sorted(unknown_nodes)}")
+        correction_nodes = resolve_sites(graph, self.config.correction_nodes)
         for pattern in self.config.missing_patterns:
             output_dir = self.experiment_dir / "look" / pattern
             selected_dir = output_dir / "selected"
@@ -711,10 +718,7 @@ class ExperimentRunner:
     ):
         results = {}
         if not look_only:
-            complete = predict(graph, loader, self.device)
-            complete["metrics"] = classification_metrics(
-                complete["labels"], complete["probabilities"]
-            )
+            complete = evaluate_missing(graph, loader, self.device, fixed_pattern="complete")
             results["complete"] = complete
             if self.options.evaluate_missing_baselines:
                 for pattern in self.config.missing_patterns:
@@ -763,6 +767,8 @@ class ExperimentRunner:
                 handle,
                 labels=result["labels"],
                 probabilities=result["probabilities"],
+                logits=result["logits"],
+                scores=result["scores"],
                 participant_ids=result["participant_ids"],
                 patterns=result.get("patterns", np.asarray(["complete"] * len(result["labels"]))),
             )
@@ -777,7 +783,7 @@ class ExperimentRunner:
             corrected, filled = test_results[look_key], test_results[fill_key]
             primary_ci = participant_cluster_bootstrap(
                 corrected["labels"],
-                corrected["probabilities"],
+                corrected["logits"],
                 corrected["participant_ids"],
                 metric=self.config.primary_metric,
                 iterations=self.options.bootstrap_iterations,
@@ -785,7 +791,7 @@ class ExperimentRunner:
             )
             macro_f1_ci = participant_cluster_bootstrap(
                 corrected["labels"],
-                corrected["probabilities"],
+                corrected["logits"],
                 corrected["participant_ids"],
                 metric="macro_f1",
                 iterations=self.options.bootstrap_iterations,
@@ -793,8 +799,8 @@ class ExperimentRunner:
             )
             paired = paired_participant_bootstrap(
                 corrected["labels"],
-                corrected["probabilities"],
-                filled["probabilities"],
+                corrected["logits"],
+                filled["logits"],
                 corrected["participant_ids"],
                 metric=self.config.primary_metric,
                 iterations=self.options.bootstrap_iterations,
@@ -802,8 +808,8 @@ class ExperimentRunner:
             )
             paired_macro_f1 = paired_participant_bootstrap(
                 corrected["labels"],
-                corrected["probabilities"],
-                filled["probabilities"],
+                corrected["logits"],
+                filled["logits"],
                 corrected["participant_ids"],
                 metric="macro_f1",
                 iterations=self.options.bootstrap_iterations,

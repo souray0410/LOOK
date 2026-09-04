@@ -56,7 +56,7 @@ def test_pipeline_numbering_preserves_shared_steps_and_new_iteration_range() -> 
         match = re.fullmatch(r"(\d+)_[A-Za-z0-9_]+\.(?:py|sh|ipynb)", path.name)
         assert match, f"Unnumbered or invalid pipeline entry: {path.name}"
         numbered.append(int(match.group(1)))
-    assert sorted(numbered) == [*range(1, 12), *range(21, 36)]
+    assert sorted(numbered) == [*range(1, 12), *range(21, 37)]
     assert len(numbered) == len(set(numbered))
     history = PROJECT_ROOT / "pipeline/history/2026_09_03_08_30_00"
     assert sorted(int(path.name.split("_", 1)[0]) for path in history.glob("[0-9]*_*")) == list(range(12, 21))
@@ -78,6 +78,7 @@ def test_release_has_no_deprecated_package_or_compatibility_paths() -> None:
             or {"__pycache__", ".venv", ".pytest_cache"}.intersection(path.parts)
             or path.suffix in {".pdf", ".png", ".pptx", ".pyc"}
             or path.name == "file_manifest.json"
+            or path == PROJECT_ROOT / "references/260810_source.txt"
         ):
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
@@ -136,3 +137,9 @@ def test_vscode_and_kernel_configuration_are_canonical() -> None:
     for option in ("--python", "--venv-path", "--kernel-name", "--kernel-display-name"):
         assert option in setup
     assert 'KERNEL_NAME="look"' in setup
+
+
+def test_notebook_reference_is_verbatim_and_hash_checked():
+    root = PROJECT_ROOT / "references"
+    manifest = json.loads((root / "260810_manifest.json").read_text())
+    assert hashlib.sha256((root / "260810_source.txt").read_bytes()).hexdigest() == manifest["sha256"]
