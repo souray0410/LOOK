@@ -195,8 +195,10 @@ def _prepare_inputs(
 def _reset_inputs(graph, oct_tensor: torch.Tensor, cfp_tensor: torch.Tensor) -> None:
     for node in graph.nodes:
         node.reset()
-    graph.get_node_by_name("oct_input").feature_message.current_state = oct_tensor
-    graph.get_node_by_name("cfp_input").feature_message.current_state = cfp_tensor
+    for name, tensor in (("oct_input", oct_tensor), ("cfp_input", cfp_tensor)):
+        node = graph.get_node_by_name(name)
+        if node is not None:
+            node.feature_message.current_state = tensor
 
 
 def apply_artifact(feature: torch.Tensor, artifact: LOOKArtifact) -> torch.Tensor:

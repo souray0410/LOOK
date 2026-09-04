@@ -1,0 +1,87 @@
+{
+  "checkpoint": {
+    "backbone_id": "resnet50_oct_only__complete_modalities__seed3407__cf5c281f453a",
+    "best_epoch": 28,
+    "criteria": "validation_macro_f1",
+    "macro_f1": 0.670639518210496,
+    "path": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/backbones/resnet50_oct_only__complete_modalities__seed3407__cf5c281f453a/best.pt",
+    "sha256": "4d8252057d1fec8e6fe66048603816f07a614a9daf5d4a531b5cced14b5f68db",
+    "validation_precision": "fp32"
+  },
+  "checkpoint_sha256_after": "4d8252057d1fec8e6fe66048603816f07a614a9daf5d4a531b5cced14b5f68db",
+  "full_pipeline_evaluation_complete": true,
+  "implementation_sha256": "60e9189e9e74a674f2ad648f9cd86506de1dbcc0c0ae65e4cb81110fe96e4128",
+  "metrics": {
+    "accuracy": 0.6722972972972973,
+    "auprc_per_class": [
+      0.6687470213277462,
+      0.679484340534551
+    ],
+    "auroc_per_class": [
+      0.6934349890430972,
+      0.6934349890430971
+    ],
+    "balanced_accuracy": 0.6722972972972973,
+    "cohen_kappa": 0.3445945945945946,
+    "confusion_matrix": [
+      [
+        110,
+        38
+      ],
+      [
+        59,
+        89
+      ]
+    ],
+    "ece_15": 0.2517510452961485,
+    "f1_per_class": [
+      0.694006309148265,
+      0.6472727272727272
+    ],
+    "macro_auprc_ovr": 0.6741156809311486,
+    "macro_auroc_ovr": 0.6934349890430971,
+    "macro_f1": 0.670639518210496,
+    "multiclass_brier": 0.5692322273493026,
+    "negative_log_likelihood": 1.544992570168018,
+    "precision_per_class": [
+      0.650887573964497,
+      0.7007874015748031
+    ],
+    "probability_saturation": {
+      "max_abs_logit_difference": 20.578194618225098,
+      "rows_float32": 1,
+      "rows_float64": 0,
+      "total_rows": 296
+    },
+    "ranking_score": "logit_1_minus_logit_0",
+    "sensitivity_per_class": [
+      0.7432432432432432,
+      0.6013513513513513
+    ],
+    "specificity_per_class": [
+      0.6013513513513513,
+      0.7432432432432432
+    ],
+    "weighted_f1": 0.670639518210496
+  },
+  "original_forward_logits_exact": true,
+  "position": "oct_only",
+  "prediction_sha256": "7dc98f1f304aa0422ec29720b0f50438346fecb62d1d2a1515ccdeb904413009",
+  "seed": 3407,
+  "status": "passed",
+  "test_access": false,
+  "training_invocations": 0,
+  "validation_count": 296,
+  "unit_tests_passed": 144,
+  "regression_before": {
+    "fusion_passed": 7,
+    "unimodal_failed": 2
+  },
+  "joint_smoke_report": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/macro_f1_joint_smoke/e1b6eb566533/verification.json",
+  "three_fill_smoke": "passed",
+  "failed_evaluation_cleanup_bytes_planned": 22084,
+  "old_study_id": "042ba0e49137",
+  "old_source_commit": "9d2f021808bba293131f235af1b201b6fd3d9de1",
+  "training_code_changed": false,
+  "method_specification_changed": false
+}

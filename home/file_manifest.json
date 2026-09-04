@@ -16,14 +16,14 @@
       "sha256": "87c1d65a3413535f9097a7bd7662b3e6e2937d0702b7cdc1793e0032622f8019"
     },
     {
-      "bytes": 4090,
+      "bytes": 5565,
       "path": "CHANGELOG.md",
-      "sha256": "183d8f9cb646e4d5e1d1921be8bab3205d2cd061ae8f41ac946290f960854801"
+      "sha256": "f4f6cb713c44b5dab5b5500fe42dbece43e67f9beff130e3381655214ed9f9bb"
     },
     {
-      "bytes": 2689,
+      "bytes": 4164,
       "path": "HANDOFF.md",
-      "sha256": "33089237e5a5a3aec5d94a59a45d030facd9fc311283f3eec8191e8188bd0de3"
+      "sha256": "7cb2c44e5ba7c2f691b7d641200100f9cbe3a03fe4a36d6d57edd52df1d98208"
     },
     {
       "bytes": 10862,
@@ -36,9 +36,9 @@
       "sha256": "5df91d926ddafbf557cd6401bda13fbed410bdc59a6d45fb70dd796c4849361b"
     },
     {
-      "bytes": 7849,
+      "bytes": 9324,
       "path": "PIPELINE_LEDGER.md",
-      "sha256": "627ae35ef3c1fd05c0710dc6c1cabcd47f8c8d819e3c9363f3f118c863d158c2"
+      "sha256": "43485013df81ac91cfe053b4b2c513def59907dd06c15d9610a9d8e20d9361ef"
     },
     {
       "bytes": 794,
@@ -84,6 +84,16 @@
       "bytes": 4961,
       "path": "docs/unified_release_evidence.json",
       "sha256": "52491086de02294cb215e3fd0cc5305c2a314ed4516a40f0e5895a08a54ec734"
+    },
+    {
+      "bytes": 2735,
+      "path": "docs/unimodal_evaluation_fix_evidence.json",
+      "sha256": "5aefabaeba34d895f78d42e058db6247f270f7b6c675347cf6732d8801406dbb"
+    },
+    {
+      "bytes": 3282,
+      "path": "docs/unimodal_fix_method_review.md",
+      "sha256": "5ad257aa9b658a8869265af2a06749e6725b3a9365ee1ef2697848301b2584d8"
     },
     {
       "bytes": 3498,
@@ -421,9 +431,9 @@
       "sha256": "636b4c4307b0dfb449f05363f8e625a9b4d9db5840e3ccbe9e49eb28c8788308"
     },
     {
-      "bytes": 35321,
+      "bytes": 35364,
       "path": "tool/look_core/look.py",
-      "sha256": "ff264b41d805cfe5f569ab4a42d2954d08003003bea12d81aa4b5031856ae37e"
+      "sha256": "bf3dfeafa14b13aa827f54d6b61c416e8141fbfb6470319a1583d77e0f47dfad"
     },
     {
       "bytes": 12806,
@@ -516,6 +526,11 @@
       "sha256": "cecb9db84a127a28aa4acd10cd59e26a20b64aba73c9aa1746eb719654b5be6c"
     },
     {
+      "bytes": 5021,
+      "path": "tool/operations/cleanup_failed_unimodal_evaluation.py",
+      "sha256": "9da0cb064f90a9cd33441f84307917dff12f9381703ee02db9eaa71351a16fd4"
+    },
+    {
       "bytes": 2455,
       "path": "tool/operations/diagnose_ddp_prepare.py",
       "sha256": "77b94ab77816167f0ec1a768d9d0e4f92dcd9e143f49439b7befd9915f2e7430"
@@ -549,6 +564,11 @@
       "bytes": 3550,
       "path": "tool/operations/verify_unified_release.py",
       "sha256": "b38d46cdb98973ecb63a4d94f7346bff35688443a2d5c39775f276d35927a8b5"
+    },
+    {
+      "bytes": 3813,
+      "path": "tool/operations/verify_unimodal_evaluation.py",
+      "sha256": "78ee583c5c6323dfc2c161b5750055dabffbbf0cd824c2236ebc6d49e231a16b"
     },
     {
       "bytes": 3042,
@@ -629,6 +649,11 @@
       "bytes": 4469,
       "path": "tool/tests/test_data.py",
       "sha256": "b9b3b1602ac5a839e6afdbe8d3d1269d9b66fcb51e897624656b6780500199df"
+    },
+    {
+      "bytes": 1690,
+      "path": "tool/tests/test_evaluation_topologies.py",
+      "sha256": "b0965206ab0c703d493eed6d3b797f94763962a1f334e993099295517e0469d3"
     },
     {
       "bytes": 2192,
@@ -726,7 +751,7 @@
       "sha256": "da57a8264ec36ac7d4b8372d88304bf965743d4aba78875da53e2fd12fe0f184"
     }
   ],
-  "generated_at_utc": "2026-09-04T16:46:55.339396+00:00",
+  "generated_at_utc": "2026-09-04T17:15:55.032816+00:00",
   "release_id": "2026_09_04_19_18_07",
   "schema_version": 2
 }

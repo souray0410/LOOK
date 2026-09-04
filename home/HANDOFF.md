@@ -39,3 +39,27 @@ claiming layer3 is the Macro-F1-best fusion position. Earlier fixed-layer3 LOOK 
 remain exploratory evidence, not invalid solely because architecture selection changed.
 Do not delete them or describe all prior results as erroneous. Per-level weight streaming
 is deferred. Every new technical failure blocks progress; negative efficacy does not.
+
+
+## 2026-09-04: unimodal post-training evaluation repair
+
+The shared LOOK input reset assumed both OCT and CFP input nodes existed. This
+crashed after the first OCT-only training run completed, before validation_result
+was written. Reset now writes only input nodes present in the graph. Training,
+checkpoint selection, graph topology, residual fitting and statistical definitions
+are unchanged. The existing verified checkpoint must be reused, not retrained.
+
+Regression coverage now executes evaluate_missing for all seven fusion positions
+and both unimodal controls, checks exact original-forward logits and a partial tail
+batch, and checks that an unused modality cannot affect a unimodal model. A real
+296-participant validation pass through ExperimentRunner also matches the saved
+Macro-F1 exactly. Verification and scoped failure cleanup commands are in
+tool/operations/verify_unimodal_evaluation.py and cleanup_failed_unimodal_evaluation.py.
+The latter requires --execute, permits only the known failed attempt, preserves
+training artifacts and writes a small audit before deletion.
+
+The source-code fingerprint creates a new study ID inside the SAME release and
+unchanged specification. The failed attempt is archived as a maintenance audit;
+its incomplete evaluation/sweep/state directories are removed. The original
+release tag remains immutable; the repair receives a distinct patch tag. Read the
+latest live summary rather than relying on the initial study ID.
