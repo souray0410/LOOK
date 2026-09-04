@@ -114,8 +114,8 @@ def _primary_look_profile() -> dict[str, Any]:
         "missing_ratios": [0.2, 0.4, 0.6, 0.8, 1.0],
         "correction_nodes": ["all_available"],
         "downsample_factors": [4, 8, 16],
-        "latent_dims": [16, 32, 64, 128, 256],
-        "max_pca_rank": 256,
+        "latent_dims": [8, 16, 32, 64, 96, 128, 192, 256, 384, 512],
+        "max_pca_rank": 512,
         "primary_metric": "macro_auroc_ovr",
     }
 

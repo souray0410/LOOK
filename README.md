@@ -28,6 +28,10 @@ one configuration, three seeds, zero/mean/cGAN filling and train-fit/validation-
 PCA-Ridge correction. Original failed automatic gates remain recorded. Both test
 cohorts remain sealed. See `home/README.md` for launch, resume and monitoring commands.
 
+Shared complete-feature PCA banks are prepared before correction fitting and reused
+across missing scenarios and fillings. Dmax (default 512) is independent of the
+dimension search. Two quick diagnostic cases precede the nine full comparisons.
+
 Path precedence is explicit CLI argument, `LOOK_*` environment variable, then the
 author defaults in `project.json`. Other authorized users can reproduce the workflow
 by overriding their project, data, source-image, phenotype, and cache paths.

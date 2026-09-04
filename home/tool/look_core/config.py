@@ -69,8 +69,8 @@ class ExperimentConfig:
     missing_patterns: List[str] = field(default_factory=lambda: ["oct_missing", "cfp_missing"])
     correction_nodes: List[str] = field(default_factory=lambda: ["all_available"])
     downsample_factors: List[int] = field(default_factory=lambda: [4, 8, 16])
-    latent_dims: List[int] = field(default_factory=lambda: [16, 32, 64, 128, 256])
-    max_pca_rank: int = 256
+    latent_dims: List[int] = field(default_factory=lambda: [8, 16, 32, 64, 96, 128, 192, 256, 384, 512])
+    max_pca_rank: int = 512
     primary_metric: str = "macro_auroc_ovr"
     baseline_auroc_target: float = 0.80
     baseline_macro_f1_target: float = 0.70

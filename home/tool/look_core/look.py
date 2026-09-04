@@ -17,6 +17,34 @@ from tqdm.auto import tqdm
 
 from .filling import MissingModalityFiller, NormalizedMeanFiller
 from .reproducibility import write_json_atomic
+from .state import PipelineState, file_sha256, quarantine, stable_hash
+
+
+@dataclass
+class FullFeaturePCA:
+    node_name: str
+    factor: int
+    feature_shape: Tuple[int, ...]
+    downsample_shape: Tuple[int, ...]
+    mean: torch.Tensor
+    std: torch.Tensor
+    pca_mean: torch.Tensor
+    components: torch.Tensor
+    explained_variance_ratio: torch.Tensor
+    sample_count: int
+    fit_seconds: float
+    peak_rss_bytes: int
+    source_id: str
+
+    def save(self, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix('.partial')
+        torch.save(asdict(self), temporary)
+        temporary.replace(path)
+
+    @classmethod
+    def load(cls, path: Path) -> 'FullFeaturePCA':
+        return cls(**torch.load(path, map_location='cpu', weights_only=False))
 
 
 @dataclass
@@ -40,6 +68,7 @@ class LOOKArtifact:
     pca_explained_variance: float = 0.0
     pca_fit_seconds: float = 0.0
     pca_peak_rss_bytes: int = 0
+    pca_source_id: str = ''
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -184,6 +213,18 @@ def forward_with_look(
 
 
 @torch.no_grad()
+def iter_complete_features(graph, loader, node_name, factor, device):
+    """Only original complete inputs: no filler, correction or missing forward."""
+    graph.eval()
+    for batch in loader:
+        feature = forward_with_look(
+            graph, batch['oct'].to(device), batch['cfp'].to(device), stop_node=node_name
+        ).detach()
+        flat, shape = downsample_flatten(feature, factor)
+        yield flat.cpu(), tuple(feature.shape[1:]), shape
+
+
+@torch.no_grad()
 def iter_feature_pairs(
     graph,
     loader,
@@ -211,7 +252,7 @@ def iter_feature_pairs(
 
 
 def _fit_incremental_pca(
-    pair_factory,
+    feature_factory,
     mean: torch.Tensor,
     std: torch.Tensor,
     max_rank: int,
@@ -221,7 +262,7 @@ def _fit_incremental_pca(
     model = IncrementalPCA(n_components=max_rank, batch_size=fit_batch_size)
     buffer: List[np.ndarray] = []
     buffered = 0
-    for full, _, _, _ in pair_factory():
+    for full, _, _ in feature_factory():
         values = ((full - mean) / std).numpy().astype(np.float32, copy=False)
         buffer.append(values)
         buffered += len(values)
@@ -241,6 +282,107 @@ def _fit_incremental_pca(
 def _process_peak_rss_bytes() -> int:
     peak = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
     return peak if sys.platform == "darwin" else peak * 1024
+
+
+def fit_complete_pca(graph, loader, node_name, factor, max_rank, device, source_id):
+    def features():
+        return iter_complete_features(graph, loader, node_name, factor, device)
+
+    moments = StreamingMoments()
+    feature_shape = down_shape = None
+    for full, feature_shape, down_shape in tqdm(features(), desc=f'PCA stats {node_name} x{factor}'):
+        moments.update(full)
+    mean, std = moments.finalize()
+    rank = min(max_rank, moments.count - 1, mean.numel())
+    started = time.perf_counter()
+    pca = _fit_incremental_pca(features, mean, std, rank)
+    if pca.n_samples_seen_ != moments.count:
+        raise RuntimeError('PCA must consume every complete training feature')
+    return FullFeaturePCA(
+        node_name=node_name, factor=factor, feature_shape=feature_shape,
+        downsample_shape=down_shape, mean=mean, std=std,
+        pca_mean=torch.from_numpy(pca.mean_).float(),
+        components=torch.from_numpy(pca.components_).float(),
+        explained_variance_ratio=torch.from_numpy(pca.explained_variance_ratio_).float(),
+        sample_count=moments.count, fit_seconds=time.perf_counter() - started,
+        peak_rss_bytes=_process_peak_rss_bytes(), source_id=source_id,
+    )
+
+
+def prepare_complete_pca_bank(
+    graph, loader, correction_nodes, factors, max_rank, device,
+    pca_root: Path, identity: Mapping[str, object], quarantine_root: Path,
+    *, load_only: bool = False,
+) -> Dict[Tuple[str, int], FullFeaturePCA]:
+    """Build/verify a complete-training-only bank shared by all missing scenarios."""
+    if getattr(loader.dataset, 'split', 'train') != 'train' or getattr(loader.dataset, 'augment', False):
+        raise ValueError('Shared PCA requires the unaugmented training split')
+    if getattr(loader, 'drop_last', False):
+        raise ValueError('Shared PCA cannot drop training samples')
+    identity = dict(identity, max_rank=max_rank, pca_code_sha256=file_sha256(Path(__file__)))
+    bank_id = stable_hash(identity)[:16]
+    output = Path(pca_root) / bank_id
+    graph.eval()
+    first = next(iter(loader))
+    with torch.no_grad():
+        forward_with_look(graph, first['oct'].to(device), first['cfp'].to(device))
+    entries = []
+    for node in correction_nodes:
+        shape = graph.get_node_by_name(node).feature_message.current_state.shape
+        node_factors = [1] if len(shape) == 2 else list(dict.fromkeys(factors))
+        entries.extend((node, int(factor)) for factor in node_factors)
+    state_config = dict(identity, requested_entries=entries)
+    bank = {}
+    output.mkdir(parents=True, exist_ok=True)
+    with PipelineState(output / 'state', 'prepare', state_config, []) as state:
+        for index, (node, factor) in enumerate(entries):
+            path = output / f'{node}_x{factor}.pt'
+            metadata_path = path.with_suffix('.json')
+            source_id = f'{bank_id}/{node}_x{factor}'
+            progress = dict(status='running', bank_id=bank_id, node=node, factor=factor,
+                            completed_entries=index, total_entries=len(entries))
+            write_json_atomic(progress, output / 'progress.json')
+            basis = None
+            if path.exists() or metadata_path.exists():
+                try:
+                    metadata = json.loads(metadata_path.read_text())
+                    if metadata['source_id'] != source_id or metadata['sha256'] != file_sha256(path):
+                        raise ValueError('PCA source identity or hash mismatch')
+                    basis = FullFeaturePCA.load(path)
+                    if basis.source_id != source_id or basis.node_name != node or basis.factor != factor:
+                        raise ValueError('PCA metadata mismatch')
+                    if not all(torch.isfinite(t).all() for t in
+                               (basis.mean, basis.std, basis.pca_mean, basis.components, basis.explained_variance_ratio)):
+                        raise ValueError('Non-finite shared PCA')
+                except (OSError, ValueError, KeyError, RuntimeError, EOFError, TypeError):
+                    if load_only:
+                        raise RuntimeError(f'Frozen PCA entry is invalid: {path}')
+                    for invalid in (path, metadata_path):
+                        if invalid.exists():
+                            quarantine(invalid, quarantine_root, 'invalid shared PCA entry')
+                    basis = None
+            if basis is None:
+                if load_only:
+                    raise FileNotFoundError(path)
+                print(f'FIT shared PCA {source_id} (complete train only)', flush=True)
+                basis = fit_complete_pca(graph, loader, node, factor, max_rank, device, source_id)
+                basis.save(path)
+                write_json_atomic(dict(source_id=source_id, sha256=file_sha256(path),
+                    bytes=path.stat().st_size, samples=basis.sample_count), metadata_path)
+            else:
+                print(f'REUSE shared PCA {source_id}', flush=True)
+            bank[(node, factor)] = basis
+            state.checkpoint(completed_entries=index + 1, last_source_id=source_id)
+        manifest = dict(bank_id=bank_id, identity=identity, entries=[
+            dict(node=node, factor=factor, source_id=bank[(node, factor)].source_id,
+                 path=str(output / f'{node}_x{factor}.pt'),
+                 sha256=file_sha256(output / f'{node}_x{factor}.pt'))
+            for node, factor in entries])
+        write_json_atomic(manifest, output / 'bank_manifest.json')
+        write_json_atomic(dict(status='complete', bank_id=bank_id,
+            completed_entries=len(entries), total_entries=len(entries)), output / 'progress.json')
+        state.complete([output / 'bank_manifest.json', *(output / f'{node}_x{factor}.pt' for node, factor in entries)])
+    return bank
 
 
 def _gcv_lambda(cxx: torch.Tensor, cxy: torch.Tensor, tss: float, n: int, dimension: int) -> float:
@@ -271,6 +413,7 @@ def fit_look_node(
     latent_dims: Sequence[int],
     max_rank: int,
     device: torch.device,
+    pca: FullFeaturePCA,
     upstream_artifacts: Sequence[LOOKArtifact] = (),
     filler: MissingModalityFiller | None = None,
 ) -> Dict[int, LOOKArtifact]:
@@ -279,19 +422,12 @@ def fit_look_node(
             graph, loader, node_name, missing_pattern, factor, device, upstream_artifacts, filler
         )
 
-    moments = StreamingMoments()
-    feature_shape = down_shape = None
-    for full, _, feature_shape, down_shape in tqdm(pairs(), desc=f"Stats {node_name} x{factor}"):
-        moments.update(full)
-    mean, std = moments.finalize()
-    feature_dimension = mean.numel()
-    rank = min(max_rank, moments.count, feature_dimension)
-    pca_started = time.perf_counter()
-    pca = _fit_incremental_pca(pairs, mean, std, rank)
-    pca_fit_seconds = time.perf_counter() - pca_started
-    pca_peak_rss_bytes = _process_peak_rss_bytes()
-    components = torch.from_numpy(pca.components_).float()
-    pca_mean = torch.from_numpy(pca.mean_).float()
+    if pca.node_name != node_name or pca.factor != factor:
+        raise ValueError('LOOK node must use its matching shared complete PCA')
+    mean, std, components, pca_mean = pca.mean, pca.std, pca.components, pca.pca_mean
+    feature_shape, down_shape = pca.feature_shape, pca.downsample_shape
+    rank = min(max_rank, len(components))
+    components = components[:rank]
     statistics = LatentSufficientStatistics(rank)
     for full, missing, _, _ in tqdm(pairs(), desc=f"Latent {node_name} x{factor}"):
         full_z = (((full - mean) / std) - pca_mean) @ components.T
@@ -326,10 +462,11 @@ def fit_look_node(
             train_r2=1.0 - residual_sum_squares / tss if tss > 0 else 0.0,
             train_mse=float(mse),
             pca_explained_variance=float(
-                np.asarray(pca.explained_variance_ratio_)[:dimension].sum()
+                pca.explained_variance_ratio[:dimension].sum()
             ),
-            pca_fit_seconds=float(pca_fit_seconds),
-            pca_peak_rss_bytes=pca_peak_rss_bytes,
+            pca_fit_seconds=pca.fit_seconds,
+            pca_peak_rss_bytes=pca.peak_rss_bytes,
+            pca_source_id=pca.source_id,
         )
     return artifacts
 
@@ -382,6 +519,7 @@ def _fit_factor_bank(
     max_rank: int,
     device: torch.device,
     output_dir: Path,
+    pca_bank: Mapping[Tuple[str, int], FullFeaturePCA],
     filler: MissingModalityFiller | None = None,
     primary_metric: str = "macro_f1",
     resume: bool = True,
@@ -420,6 +558,7 @@ def _fit_factor_bank(
             latent_dims=latent_dims,
             max_rank=max_rank,
             device=device,
+            pca=pca_bank[(node_name, node_factor)],
             upstream_artifacts=selected,
             filler=filler,
         )
@@ -509,6 +648,7 @@ def greedy_fit_look(
     max_rank: int,
     device: torch.device,
     output_dir: Path,
+    pca_bank: Mapping[Tuple[str, int], FullFeaturePCA],
     filler: MissingModalityFiller | None = None,
     primary_metric: str = "macro_f1",
     resume: bool = True,
@@ -536,6 +676,7 @@ def greedy_fit_look(
             max_rank,
             device,
             factor_dir,
+            pca_bank=pca_bank,
             filler=filler,
             primary_metric=primary_metric,
             resume=resume,

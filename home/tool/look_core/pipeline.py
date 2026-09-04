@@ -21,7 +21,7 @@ from .evaluate import evaluate_missing
 from .filling import NormalizedMeanFiller, PairedCGANFiller, RawZeroFiller
 from .gan import load_generator, make_gan_loaders, train_paired_cgan_direction
 from .graph import build_resnet50_mhd_graph, graph_summary
-from .look import greedy_fit_look, load_selected_bank, validate_global_factor_bank
+from .look import greedy_fit_look, load_selected_bank, prepare_complete_pca_bank, validate_global_factor_bank
 from .matrix_analysis import analyze_look_bank
 from .metrics import (
     classification_metrics,
@@ -226,31 +226,10 @@ class ExperimentRunner:
         write_json_atomic(structure, self.experiment_dir / "graph_summary.json")
         checkpoint_path = self._train_or_resume()
 
-        checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
-        graph = build_resnet50_mhd_graph(
-            self.selection.fusion_position,
-            self.config.num_classes,
-            self.config.micro_batch_size,
-            self.config.image_size,
-            self.device,
-            pretrained=False,
-            classifier_dropout=self.config.classifier_dropout,
-            label_smoothing=self.config.label_smoothing,
-        )
-        if checkpoint["architecture_id"] != self.selection.architecture_id:
-            raise RuntimeError("Checkpoint architecture does not match the selected experiment")
-        if checkpoint.get("backbone_training") != "complete_modalities_only":
-            raise RuntimeError("The classifier checkpoint was not trained on complete modalities only")
-        if checkpoint.get("training_strategy") != "end_to_end_finetuning":
-            raise RuntimeError("The classifier checkpoint is not from the single-stage protocol")
-        if checkpoint.get("training_stage") != "complete_modalities":
-            raise RuntimeError("The selected checkpoint is not the complete-modality baseline")
-        if checkpoint.get("labels_sha256") != self.data_hash:
-            raise RuntimeError("The classifier checkpoint was trained from a different label table")
-        graph.load_state_dict(checkpoint["graph_state_dict"])
-        graph.eval()
-        for parameter in graph.parameters():
-            parameter.requires_grad_(False)
+        graph, checkpoint = self._load_frozen_graph(checkpoint_path)
+        pca_bank = None
+        if self.options.fit_look and not self.options.look_load_only:
+            pca_bank = self._prepare_shared_pca(graph, loaders['look_train'], checkpoint_path)
 
         filler = None
         filling_summary = {
@@ -264,7 +243,7 @@ class ExperimentRunner:
         look_summary = {"enabled": False, "banks": {}}
         if self.options.fit_look:
             look_banks, look_summary = self._fit_or_load_look(
-                graph, loaders["look_train"], loaders["validation"], filler
+                graph, loaders["look_train"], loaders["validation"], filler, pca_bank
             )
         if self.options.phase == "validation":
             validation_results = self._evaluate_split(
@@ -588,7 +567,53 @@ class ExperimentRunner:
         ).hexdigest()[:12]
         return f"paired_cgan__seed{self.selection.seed}__{fingerprint}"
 
-    def _fit_or_load_look(self, graph, train_loader, validation_loader, filler):
+    def _load_frozen_graph(self, checkpoint_path):
+        checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+        graph = build_resnet50_mhd_graph(
+            self.selection.fusion_position, self.config.num_classes,
+            self.config.micro_batch_size, self.config.image_size, self.device,
+            pretrained=False, classifier_dropout=self.config.classifier_dropout,
+            label_smoothing=self.config.label_smoothing,
+        )
+        if checkpoint['architecture_id'] != self.selection.architecture_id:
+            raise RuntimeError('Checkpoint architecture does not match the selected experiment')
+        if (checkpoint.get('backbone_training') != 'complete_modalities_only'
+                or checkpoint.get('training_strategy') != 'end_to_end_finetuning'
+                or checkpoint.get('training_stage') != 'complete_modalities'
+                or checkpoint.get('labels_sha256') != self.data_hash):
+            raise RuntimeError('Checkpoint is not the matching complete-modality baseline')
+        graph.load_state_dict(checkpoint['graph_state_dict'])
+        graph.eval()
+        for parameter in graph.parameters():
+            parameter.requires_grad_(False)
+        return graph, checkpoint
+
+    def _prepare_shared_pca(self, graph, train_loader, checkpoint_path):
+        nodes = graph.correction_nodes if self.config.correction_nodes == ['all_available'] else self.config.correction_nodes
+        identity = dict(backbone_id=self._backbone_id(), checkpoint_sha256=sha256(checkpoint_path),
+            labels_sha256=self.data_hash, feature_implementation_sha256=self.backbone_implementation_hash,
+            image_size=self.config.image_size, feature_batch_size=self.config.micro_batch_size,
+            split='train', augment=False, order='reference_table', smoke_limit=self.options.smoke_limit)
+        return prepare_complete_pca_bank(graph, train_loader, nodes,
+            self.config.downsample_factors, self.config.max_pca_rank, self.device,
+            Path(self.config.output_root) / 'pca', identity,
+            Path(self.config.cache_root) / 'quarantine')
+
+    def prepare_shared_pca(self):
+        """Explicit stage for all full-feature PCs before any missing-modality fits."""
+        seed_everything(self.selection.seed)
+        checkpoint_path = self._train_or_resume()
+        graph, _ = self._load_frozen_graph(checkpoint_path)
+        dataset = UKBBilateralVisitDataset(labels_csv=self.config.labels_csv,
+            data_root=self.config.image_root, split='train', augment=False,
+            image_size=self.config.image_size, limit=self.options.smoke_limit,
+            preprocess_cache_root=self.config.preprocess_cache_root)
+        loader = make_loader(dataset, self.config.micro_batch_size, self.config.num_workers,
+            train=False, seed=self.selection.seed, sampling_strategy=self.config.sampling_strategy)
+        bank = self._prepare_shared_pca(graph, loader, checkpoint_path)
+        return [basis.source_id for basis in bank.values()]
+
+    def _fit_or_load_look(self, graph, train_loader, validation_loader, filler, pca_bank):
         banks, summary = {}, {"enabled": True, "banks": {}}
         correction_nodes = (
             graph.correction_nodes
@@ -624,6 +649,7 @@ class ExperimentRunner:
                     self.config.max_pca_rank,
                     self.device,
                     output_dir,
+                    pca_bank=pca_bank,
                     filler=filler,
                     primary_metric=self.config.primary_metric,
                     resume=self.options.resume,
@@ -664,6 +690,7 @@ class ExperimentRunner:
                         "node": artifact.node_name,
                         "factor": artifact.factor,
                         "latent_dim": artifact.latent_dim,
+                        "pca_source_id": artifact.pca_source_id,
                         "ridge_lambda": artifact.ridge_lambda,
                         "train_r2": artifact.train_r2,
                     }

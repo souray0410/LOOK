@@ -74,6 +74,12 @@ the corresponding snapshot.
 - Corrected PCA short-tail sample omission and the Ridge GCV residual/df calculation;
   no change to backbone training, MHD V4, dataset or existing checkpoints. Added
   numerical regression tests. No alpha, DCT or low-rank preprocessing is introduced.
+- Later on 2026-09-04: replaced repeated per-missing-pattern PCA fitting with an
+  explicit complete-training-feature PCA stage shared across missing directions,
+  fillings and candidate dimensions. Dmax is independent (default 512); support
+  both listed candidates and min/max/step search. Two quick seed-3407 diagnostic
+  cases precede nine full cases. Step 35 records scoped deletion of the superseded
+  partial LOOK run; original backbone checkpoints and all baseline results remain.
 
 `2026_09_03_19_35_04` is active. The reviewed fixed-backbone LOOK development study is
 the next stage. Failed thresholds remain recorded; they are not journal acceptance

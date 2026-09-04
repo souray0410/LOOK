@@ -50,10 +50,15 @@
         |-- 31_summarize_task_scout.py
         |-- 32_select_formal_task.py
         |-- 33_run_overnight_validation.py
-        `-- 34_run_reviewed_look_study.py
+        |-- 34_run_reviewed_look_study.py
+        `-- 35_clean_superseded_look.py
 ```
 
 Author runtime:
+
+Shared learned preprocessing is stored under `runs/pca/<bank_id>/` with per-node
+PCA files, hashes and manifests. `runs/reviewed_look/<study_id>/` records the progressive
+study. `runs/maintenance/` contains only scoped cleanup audit reports, not old artifacts.
 
 ```text
 /data/mengh/LOOK/2026_09_03_19_35_04/

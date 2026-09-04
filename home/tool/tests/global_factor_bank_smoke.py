@@ -10,7 +10,7 @@ import torch
 
 from look_core.data import UKBBilateralVisitDataset, make_loader
 from look_core.graph import build_resnet50_mhd_graph
-from look_core.look import greedy_fit_look, validate_global_factor_bank
+from look_core.look import greedy_fit_look, prepare_complete_pca_bank, validate_global_factor_bank
 from look_core.paths import ProjectPaths
 
 
@@ -38,6 +38,8 @@ def main() -> None:
         "layer3", batch_size=2, pretrained=False, device=device
     )
     nodes = ["fusion_layer3", "fusion_feature"]
+    pca_bank = prepare_complete_pca_bank(graph, train_loader, nodes, [4, 8, 16], 2,
+        device, args.output / 'shared_pca', {'fixture': True}, args.output / 'quarantine')
     artifacts, _ = greedy_fit_look(
         graph,
         train_loader,
@@ -49,6 +51,7 @@ def main() -> None:
         2,
         device,
         args.output,
+        pca_bank=pca_bank,
         resume=False,
     )
     selection = json.loads(

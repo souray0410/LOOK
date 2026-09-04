@@ -21,8 +21,11 @@ def main():
     if summaries:
         summary = json.loads(summaries[-1].read_text())
         print(f'summary={summaries[-1]}')
-        for key in ('status', 'stage', 'updated_at_utc', 'active_plan_id', 'error', 'test_access'):
+        for key in ('status', 'stage', 'next_stage', 'active_seed', 'updated_at_utc', 'active_plan_id', 'error', 'test_access'):
             print(f'{key}={summary.get(key)}')
+        pca_progress = sorted((runs / 'pca').glob('*/progress.json'), key=lambda p: p.stat().st_mtime)
+        for path in pca_progress[-3:]:
+            print('shared_pca=' + json.dumps(json.loads(path.read_text())))
         plans = {s['plan_id'] for s in summary['completed_stages'].values()}
         if summary.get('active_plan_id'):
             plans.add(summary['active_plan_id'])

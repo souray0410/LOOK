@@ -161,6 +161,8 @@ def analyze_correction_matrix(
         ),
         "latent_dim": artifact.latent_dim,
         "pca_explained_variance": artifact.pca_explained_variance,
+        "pca_source_id": artifact.pca_source_id,
+        "pca_cost_accounting": "shared source cost; count once per pca_source_id",
         "pca_fit_seconds": artifact.pca_fit_seconds,
         "pca_peak_rss_bytes": artifact.pca_peak_rss_bytes,
         "ridge_lambda": artifact.ridge_lambda,

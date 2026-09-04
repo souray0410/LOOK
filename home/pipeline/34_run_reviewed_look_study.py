@@ -3,13 +3,29 @@
 from __future__ import annotations
 
 import argparse
+import copy
 from dataclasses import asdict, replace
 import json
 import os
 from pathlib import Path
 
 
-def study_stages(candidate, factors, latent_dims):
+def latent_candidates(explicit, start, stop, step, max_rank):
+    if explicit is not None and any(v is not None for v in (start, stop, step)):
+        raise ValueError('Choose either a latent list or a range, not both')
+    if any(v is not None for v in (start, stop, step)):
+        if any(v is None for v in (start, stop, step)) or step < 1 or start < 1 or stop < start:
+            raise ValueError('A range requires positive min, max and step')
+        values = list(range(start, stop + 1, step))
+    else:
+        values = explicit if explicit is not None else [8, 16, 32, 64, 96, 128, 192, 256, 384, 512]
+    values = sorted(set(values))
+    if max_rank < 1 or not values or values[0] < 1 or values[-1] > max_rank:
+        raise ValueError('Latent candidates must be positive and not exceed PCA Dmax')
+    return values
+
+
+def study_stages(candidate, factors, latent_dims, pca_max_rank=512, quick_dims=None):
     from look_core.study_grid import StudyGrid
     common = dict(
         fusion_positions=[candidate['winner']['fusion_position']],
@@ -20,11 +36,17 @@ def study_stages(candidate, factors, latent_dims):
             missing_patterns=['oct_missing', 'cfp_missing'],
             missing_ratios=[0.2, 0.4, 0.6, 0.8, 1.0],
             correction_nodes=['all_available'], downsample_factors=factors,
-            latent_dims=latent_dims, max_pca_rank=max(latent_dims),
+            latent_dims=latent_dims, max_pca_rank=pca_max_rank,
             primary_metric='macro_auroc_ovr',
         )],
     )
+    quick = copy.deepcopy(common)
+    quick_profile = quick['look_profiles'][0]
+    quick_profile.update(name='quick_diagnostic', downsample_factors=[max(factors)],
+        latent_dims=quick_dims or sorted(set(min(d, pca_max_rank) for d in [16, 64, 256])),
+        evaluate_random_missing=False)
     return [
+        ('quick_zero_mean', StudyGrid(**quick, seeds=[3407], filling_strategies=['raw_zero', 'normalized_mean'])),
         ('first_seed_zero_mean', StudyGrid(**common, seeds=[3407], filling_strategies=['raw_zero', 'normalized_mean'])),
         ('remaining_seeds_zero_mean', StudyGrid(**common, seeds=[3408, 3409], filling_strategies=['raw_zero', 'normalized_mean'])),
         ('independent_cgan_all_seeds', StudyGrid(**common, seeds=[3407, 3408, 3409], filling_strategies=['paired_cgan'])),
@@ -40,13 +62,25 @@ def main():
     parser.add_argument('--reviewer-note', required=True)
     parser.add_argument('--gpus', default='0,1')
     parser.add_argument('--factors', nargs='+', type=int, default=[4, 8, 16])
-    parser.add_argument('--latent-dims', nargs='+', type=int, default=[8, 16, 32, 64, 128, 256])
+    parser.add_argument('--pca-max-rank', type=int, default=512)
+    parser.add_argument('--latent-dims', nargs='+', type=int)
+    parser.add_argument('--latent-min', type=int)
+    parser.add_argument('--latent-max', type=int)
+    parser.add_argument('--latent-step', type=int)
+    parser.add_argument('--quick-latent-dims', nargs='+', type=int)
     parser.add_argument('--execute', action='store_true')
     args = parser.parse_args()
     if not args.reviewer_note.strip():
         parser.error('A genuine review decision is required')
-    if not args.factors or min(args.factors) < 1 or min(args.latent_dims) < 1:
-        parser.error('Factors and latent dimensions must be positive')
+    if not args.factors or min(args.factors) < 1:
+        parser.error('Factors must be positive')
+    try:
+        dims = latent_candidates(args.latent_dims, args.latent_min, args.latent_max,
+                                 args.latent_step, args.pca_max_rank)
+        quick_dims = (latent_candidates(args.quick_latent_dims, None, None, None, args.pca_max_rank)
+                      if args.quick_latent_dims else None)
+    except ValueError as error:
+        parser.error(str(error))
     paths = resolve_runtime_arguments(args)
     from look_core.distributed import parse_gpu_devices
     devices = parse_gpu_devices(args.gpus)
@@ -66,7 +100,7 @@ def main():
     errors = validate_file_manifest(candidate['artifacts'])
     if errors:
         raise RuntimeError(f'Baseline evidence failed verification: {errors[:5]}')
-    stages = study_stages(candidate, args.factors, args.latent_dims)
+    stages = study_stages(candidate, args.factors, dims, args.pca_max_rank, quick_dims)
     identity = dict(candidate_sha256=file_sha256(args.candidate),
         labels_sha256=file_sha256(paths.labels_csv),
         implementation_sha256=implementation_sha256(paths.project_root),
@@ -113,6 +147,19 @@ def main():
         atomic_write_json(approval, output / 'reviewed_baseline.json')
         try:
             for name, grid in stages:
+                report('prepare_shared_complete_pca', status='running', next_stage=name)
+                prepared = set()
+                for case in expand_study_grid(grid, paths, gpu_devices=devices):
+                    runner = ExperimentRunner(case.config, case.selection,
+                        replace(case.options, train_if_missing=False), torch.device('cuda:0'))
+                    if runner._backbone_id() in prepared:
+                        continue
+                    report('prepare_shared_complete_pca', active_seed=case.selection.seed)
+                    sources = runner.prepare_shared_pca()
+                    prepared.add(runner._backbone_id())
+                    summary.setdefault('shared_pca_sources', {})[str(case.selection.seed)] = sources
+                    report('prepare_shared_complete_pca')
+                    torch.cuda.empty_cache()
                 report(name, status='running', active_grid=asdict(grid))
                 # This writes a resumable plan even if interrupted before the first result.
                 plan = run_study_grid(grid, paths, torch.device('cuda:0'), execute=False,
@@ -132,7 +179,7 @@ def main():
                             result_file=item['result_file']))
                 atomic_write_json(comparisons, output / 'look_comparisons.json')
                 report(name + '_complete')
-            report('complete', status='complete', reason='All 9 filling/seed cases completed; test remains sealed')
+            report('complete', status='complete', reason='2 quick diagnostics and 9 full filling/seed cases completed; test remains sealed')
             state.complete([output / 'summary.json', output / 'reviewed_baseline.json'])
         except BaseException as error:
             report('failed', status='failed', error=repr(error))

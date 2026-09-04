@@ -32,18 +32,55 @@ No labels, splits, backbone parameters or existing checkpoints are changed.
 Step 34 runs one fusion configuration, not three winning fusions. It reuses its three
 existing seed checkpoints, verified by exact training IDs and hashes before execution:
 
-1. Seed 3407: raw-zero and normalized-mean filling, each before/after LOOK.
-2. Seeds 3408/3409: the same two filling strategies and LOOK search protocol.
-3. All three seeds: independently trained paired cGAN filling, before/after LOOK.
+1. Quick diagnostics: seed 3407, raw-zero and normalized-mean, factor 16,
+   dimensions `[16,64,256]`, both completely missing directions; no random-ratio sweep.
+2. Seed 3407: raw-zero and normalized-mean with the expanded factor/dimension search.
+3. Seeds 3408/3409: the same expanded two-filling search protocol.
+4. All three seeds: independently trained paired cGAN filling and expanded LOOK search.
 
-There are nine outer cases. Each tests missing CFP and missing OCT, with missing ratios
-20/40/60/80/100 percent. Inside each case, fit three complete artifact banks with shared
-spatial factors `[4,8,16]`. At each node, select among latent dimensions
-`[8,16,32,64,128,256]` on validation, using the existing sequential node-wise search.
+There are two quick cases followed by nine full cases. A completed case is available
+immediately, without waiting for the whole queue. Quick diagnostics use the entire
+training and validation splits, not a small sample. A negative diagnostic does not
+silently cancel the remaining predeclared comparisons or trigger unlimited tuning.
+Full cases test missing CFP and missing OCT, with missing ratios 20/40/60/80/100 percent.
+At each node, validation selects among `[8,16,32,64,96,128,192,256,384,512]`, using the
+existing sequential node-wise search; complete artifact banks share factors `[4,8,16]`.
 This is not exhaustive search over every combination of node dimensions. The final
 global factor is selected by full-bank validation AUROC, with larger factor breaking
 exact ties. Vector nodes use identity compression. Dimension and factor lists can be
-overridden explicitly; changing them starts new identified experiments, not overwrites.
+overridden explicitly; changing them starts new identified correction experiments,
+not overwrites. Search is bounded and progressive, not a promise of performance gains.
+
+### Shared Complete-Feature PCA
+
+Before a stage's missing-modality fits, build or load all required full-feature PCA
+entries for that frozen checkpoint. They live in `runs/pca/<bank_id>/<node>_x<factor>.pt`,
+with per-entry hash metadata, `bank_manifest.json`, progress and recovery state. The
+PCA pass has no missing pattern, filler or upstream correction. All missing scenarios,
+zero/mean/GAN strategies and latent-dimension candidates reuse these exact bases.
+Correction artifacts include `pca_source_id` and a portable slice of that shared basis;
+those slices are not independently fitted PCs. Count PCA resource cost once per source.
+
+`Dmax` is an independent capacity, default **512**, not inferred from the search list.
+Actual rank is bounded by `min(Dmax, N_train_features - 1, feature_dimension)`.
+Each candidate `d` takes the first `d` PCs from the same fitted basis. A new candidate
+list or missing scenario reuses existing PCs. New checkpoints, training references,
+PCA implementation, image settings or Dmax create separate banks. Vector nodes always
+use factor 1; new requested spatial factors add entries without refitting valid entries.
+Three backbone seeds have different weights, so they correctly have separate PCA banks.
+
+The first quick stage only needs the factor-16 entries for seed 3407; build those first,
+then run its diagnostic cases. Later stages supplement factors 4 and 8 and other seeds
+before their corresponding corrections. Do not delay the first result to precompute
+every seed. Higher Dmax costs more SVD time and memory; it is not free or inherently better.
+
+Examples to append to the Step 34 launch command (choose list OR range):
+
+```bash
+--pca-max-rank 512 --latent-dims 8 16 32 64 96 128 192 256 384 512
+--pca-max-rank 512 --latent-min 32 --latent-max 512 --latent-step 32
+--quick-latent-dims 16 64 256
+```
 
 All fitting data come from train. PCA now retains every training sample, including
 the short final batch. Ridge GCV uses the exact residual SSE and an unpenalized
@@ -57,7 +94,7 @@ PCA/GCV is expected, not evidence of a stalled DDP worker.
 Validation is reused for development, including dimension/factor selection per seed;
 seed repeats quantify initialization sensitivity, not independent test replication.
 Report all cases, including negative LOOK effects. Test remains sealed until a separate
-final configuration review. There is no metric-based stop between these nine cases;
+final configuration review. There is no metric-based stop between these cases;
 technical failures stop visibly and the same command resumes validated artifacts.
 
 ```bash
@@ -74,6 +111,20 @@ matrix analyses are in `runs/experiments/<id>/`. Partial banks record candidate 
 scores and completed nodes; the monitor displays these before a full case finishes.
 Same-command reruns validate/reuse checkpoints and completed results, then resume
 unfinished banks. Original source media are never modified.
+
+For the one-time upgrade from the superseded per-pattern PCA implementation, stop the
+old tmux job first, then run Step 35 with the old reviewed summary and explicit log:
+
+```bash
+python pipeline/35_clean_superseded_look.py --summary <old-reviewed-summary.json> --log <old-reviewed-log>
+python pipeline/35_clean_superseded_look.py --summary <old-reviewed-summary.json> --log <old-reviewed-log> --execute
+```
+
+The first command is a dry-run allowlist. The second removes only that manifest's
+LOOK experiments, sweeps, state and log, retaining a small cleanup ledger under
+`runs/maintenance/`. It never deletes backbones, baseline evidence, source images,
+preprocessing cache or GAN checkpoints. Step 35 is maintenance, not a fresh-data
+prerequisite; afterward rerun Step 34 with the same reviewed baseline.
 
 ## Historical Bounded Follow-Up (Step 33)
 

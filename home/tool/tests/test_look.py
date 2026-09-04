@@ -191,6 +191,7 @@ def test_global_factor_selection_writes_one_selected_bank(monkeypatch, tmp_path)
         1,
         torch.device("cpu"),
         tmp_path,
+        pca_bank={},
     )
     selection = json.loads((tmp_path / "factor_selection.json").read_text())
     assert calls == [4, 8, 16]
