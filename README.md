@@ -1,19 +1,15 @@
-# LOOK 2026_09_04_10_49_20
+# LOOK 2026_09_04_19_18_07
 
-Current Macro-F1 research release. Read [the handoff](home/HANDOFF.md) first.
-`main` contains the current workflow; [archive/superseded-auroc-2026-09-03](https://github.com/souray0410/LOOK/tree/archive/superseded-auroc-2026-09-03)
-preserves the superseded AUROC protocol for historical tracing only.
+Current unified Macro-F1 research release. Read [the handoff](home/HANDOFF.md) first.
+Seven fusion positions and two unimodal controls are trained at three seeds; choose
+three fusion positions by mean validation Macro-F1 and run all three filling strategies
+with joint sequential LOOK. Keep all factor/scenario results and negative findings.
 
-Complete-input layer3 backbones are trained at three seeds, selecting best
-weights by full validation Macro-F1. Joint sequential optional LOOK selects its
-sites and dimensions by the same endpoint. Every spatial factor and missing
-scenario is reported. Test cohorts remain sealed. Controlled data are not included.
+Deploy home/ to /home/mengh/LOOK/2026_09_04_19_18_07; outputs belong in
+/data/mengh/LOOK/2026_09_04_19_18_07. data/ is an empty runtime skeleton. Controlled
+images, identities, checkpoints and runtime results are never committed to this repo.
 
-Deploy `home/` to `/home/mengh/LOOK/2026_09_04_10_49_20`; runtime outputs belong in
-`/data/mengh/LOOK/2026_09_04_10_49_20`. `data/` is an empty runtime skeleton.
-Existing data, cohort definitions, environment and preprocessing are shared via
-explicit paths in `home/project.json`; no image copy is needed.
-
-See [method and commands](home/JOINT_LOOK_PROTOCOL.md),
-[fixed specification](home/configs/macro_f1_study.json),
-[project standard](GENERAL_PROJECT_STANDARD.md) and [historical timeline](PROJECT_TIMELINE.md).
+See [fixed specification](home/configs/unified_study.json), [protocol](home/JOINT_LOOK_PROTOCOL.md),
+[project standard](GENERAL_PROJECT_STANDARD.md) and [timeline](PROJECT_TIMELINE.md).
+The paused previous release is preserved by snapshot/2026_09_04_10_49_20 and
+2026_09_04_10_49_20. Older AUROC source remains in archive/superseded-auroc-2026-09-03.

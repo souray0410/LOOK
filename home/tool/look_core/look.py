@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .state import durable_replace
+
 import json
 import resource
 import sys
@@ -45,7 +47,7 @@ class FullFeaturePCA:
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_suffix('.partial')
         torch.save(asdict(self), temporary)
-        temporary.replace(path)
+        durable_replace(temporary, path)
 
     @classmethod
     def load(cls, path: Path) -> 'FullFeaturePCA':
@@ -83,7 +85,7 @@ class LOOKArtifact:
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_suffix(path.suffix + ".partial")
         torch.save(asdict(self), temporary)
-        temporary.replace(path)
+        durable_replace(temporary, path)
 
     @classmethod
     def load(cls, path: Path) -> "LOOKArtifact":

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .state import durable_replace
+
 import hashlib
 import json
 from contextlib import nullcontext
@@ -307,7 +309,7 @@ def train_paired_cgan_direction(
                 },
                 temporary,
             )
-            temporary.replace(output_dir / "best_generator.pt")
+            durable_replace(temporary, output_dir / "best_generator.pt")
         else:
             stale += 1
         temporary = output_dir / "last_training.pt.tmp"
@@ -324,7 +326,7 @@ def train_paired_cgan_direction(
             },
             temporary,
         )
-        temporary.replace(last_path)
+        durable_replace(temporary, last_path)
         if stale >= config.gan_patience:
             break
     write_json_atomic(
@@ -466,7 +468,7 @@ def train_paired_cgan_direction_ddp(
                     "world_size": context.world_size,
                     "initial_state_sha256": generator_state_sha256,
                 }, temporary)
-                temporary.replace(output_dir / "best_generator.pt")
+                durable_replace(temporary, output_dir / "best_generator.pt")
         else:
             stale += 1
         if context.is_main:
@@ -482,7 +484,7 @@ def train_paired_cgan_direction_ddp(
                 "generator_initial_state_sha256": generator_state_sha256,
                 "discriminator_initial_state_sha256": discriminator_state_sha256,
             }, temporary)
-            temporary.replace(last_path)
+            durable_replace(temporary, last_path)
             monitor.append({"event": "gan_epoch", **record})
         mhd_barrier(context)
         if stale >= config.gan_patience:

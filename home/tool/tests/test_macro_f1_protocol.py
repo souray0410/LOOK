@@ -8,7 +8,7 @@ import torch
 from look_core.train import selection_criterion
 from look_core.metrics import validation_macro_f1,validation_binary_auroc
 from look_core.pipeline import ExperimentRunner,PipelineOptions
-from look_core.macro_f1_study import study_stages,verify_f1_checkpoint
+from look_core.unified_study import backbone_stages,correction_stages,verify_f1_checkpoint
 from look_core.study_grid import expand_study_grid,_ranking_key
 from test_configuration import _paths,_config
 
@@ -30,29 +30,29 @@ def test_metric_changes_checkpoint_identity(tmp_path):
 
 
 def test_entire_new_study_uses_macro_f1_and_same_backbones(tmp_path):
-    spec=json.loads((Path(__file__).resolve().parents[2]/'configs/macro_f1_study.json').read_text())
-    baselines,looks=study_stages(spec);paths=_paths(tmp_path)
+    spec=json.loads((Path(__file__).resolve().parents[2]/'configs/unified_study.json').read_text())
+    baselines=backbone_stages(spec);looks=correction_stages(spec,['input','layer3','feature']);paths=_paths(tmp_path)
     ids={}
     for _,grid in baselines:
         case=expand_study_grid(grid,paths,gpu_devices=(0,1))[0]
         runner=ExperimentRunner(case.config,case.selection,case.options,torch.device('cpu'))
-        ids[case.selection.seed]=runner._backbone_id()
+        ids[(case.selection.fusion_position,case.selection.seed)]=runner._backbone_id()
         assert case.config.primary_metric=='macro_f1' and not case.options.fit_look
     count=0
     for _,grid in looks:
         for case in expand_study_grid(grid,paths,gpu_devices=(0,1)):
             count+=1
             runner=ExperimentRunner(case.config,case.selection,case.options,torch.device('cpu'))
-            assert runner._backbone_id()==ids[case.selection.seed]
+            assert runner._backbone_id()==ids[(case.selection.fusion_position,case.selection.seed)]
             assert case.config.primary_metric=='macro_f1' and case.config.evaluate_all_factors
             assert case.options.phase=='validation'
-    assert count==11 and len(ids)==3
+    assert count==33 and len(ids)==27
 
 
 def test_factor_evaluation_covers_all_random_ratios(monkeypatch,tmp_path):
     import look_core.pipeline as p
     runner=ExperimentRunner.__new__(ExperimentRunner)
-    runner.config=SimpleNamespace(missing_patterns=['oct_missing','cfp_missing'],missing_ratios=[.2,.4,.6,.8,1.],evaluate_all_factors=True)
+    runner.config=SimpleNamespace(missingness_seed=3407,missing_patterns=['oct_missing','cfp_missing'],missing_ratios=[.2,.4,.6,.8,1.],evaluate_all_factors=True)
     runner.options=SimpleNamespace(evaluate_random_missing=True,evaluate_missing_baselines=True)
     runner.selection=SimpleNamespace(seed=3407);runner.device='cpu'
     runner.factor_look_banks={f:{'oct_missing':[],'cfp_missing':[]} for f in (4,8,16)}
@@ -69,7 +69,7 @@ def test_checkpoint_verifier_checks_macro_f1_best_epoch(tmp_path):
     checkpoint=tmp_path/'best.pt';checkpoint.write_bytes(b'test')
     history=[dict(epoch=1,criteria_value=.5,validation={'macro_f1':.5}),dict(epoch=2,criteria_value=.7,validation={'macro_f1':.7}),dict(epoch=3,criteria_value=.6,validation={'macro_f1':.6})]
     (tmp_path/'history.json').write_text(json.dumps(history))
-    complete=dict(criteria='validation_macro_f1',primary_metric='macro_f1',best_epoch=2,best_score=.7)
+    complete=dict(validation_precision='fp32',criteria='validation_macro_f1',primary_metric='macro_f1',best_epoch=2,best_score=.7)
     path=tmp_path/'training_complete.json';path.write_text(json.dumps(complete))
     runner=SimpleNamespace(_train_or_resume=lambda:checkpoint,_backbone_id=lambda:'new')
     assert verify_f1_checkpoint(runner)['best_epoch']==2

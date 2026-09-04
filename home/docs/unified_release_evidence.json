@@ -1,0 +1,119 @@
+{
+  "completed_at_utc": "2026-09-04T16:45:31.305712+00:00",
+  "gates": {
+    "ddp_criteria": {
+      "log": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/unified_acceptance/4f6c474784c9/ddp_criteria.log",
+      "log_sha256": "2f498bb999d46d2f326cb65850792d60bb4f87fc0fc1cfe272bfbefff68e5893",
+      "returncode": 0
+    },
+    "joint": {
+      "log": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/unified_acceptance/4f6c474784c9/joint.log",
+      "log_sha256": "34c56fbd52f6fcace29865643ce4b20112af8c40330b647e36044c67da70c7dd",
+      "returncode": 0
+    },
+    "pipeline": {
+      "log": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/unified_acceptance/4f6c474784c9/pipeline.log",
+      "log_sha256": "d5e7c034a43ea8fed167ec5945d32860f69174b9779936f4623a2b2fdf6eca93",
+      "returncode": 0
+    },
+    "pipeline_resume": {
+      "log": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/unified_acceptance/4f6c474784c9/pipeline_resume.log",
+      "log_sha256": "6a336d3cf7251eb5562d7e4d9758b99bc5728d258cccca3817cf28a13dc57113",
+      "returncode": 0
+    },
+    "plan_first": {
+      "log": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/unified_acceptance/4f6c474784c9/plan_first.log",
+      "log_sha256": "0523eca082bf3ae1d45d6fa16c09308920dd717bd608763c47d25feb362b3ac4",
+      "returncode": 0
+    },
+    "plan_second": {
+      "log": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/unified_acceptance/4f6c474784c9/plan_second.log",
+      "log_sha256": "0523eca082bf3ae1d45d6fa16c09308920dd717bd608763c47d25feb362b3ac4",
+      "returncode": 0
+    },
+    "qualification": {
+      "log": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/unified_acceptance/4f6c474784c9/qualification.log",
+      "log_sha256": "6f5e3ad2756a12e6df80dc5070de34b564bd4ab5d37cf62a0ae07887eb869305",
+      "returncode": 0
+    },
+    "topology": {
+      "log": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/unified_acceptance/4f6c474784c9/topology.log",
+      "log_sha256": "e68682aa2a865adc2ad1e1a5ca07c56ae87a98e052432d5885746aa5d98682e2",
+      "returncode": 0
+    },
+    "training": {
+      "log": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/unified_acceptance/4f6c474784c9/training.log",
+      "log_sha256": "5e7a17b4df9fa07d496b40fce20f2c12895ca19e6761e179320f7986bf3abc97",
+      "returncode": 0
+    },
+    "unit": {
+      "log": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/maintenance/unified_acceptance/4f6c474784c9/unit.log",
+      "log_sha256": "138caac81d8477c595c0d3a2f969531ce9e61674e87c693d77573452df16c1bb",
+      "returncode": 0
+    }
+  },
+  "implementation_sha256": "4f6c474784c960f0971ab4e9a8784c9cec32c9455b326d3b6b0a6c6bdfadb860",
+  "planned_study": {
+    "backbone_stages": [
+      "backbone_oct_only_3407",
+      "backbone_oct_only_3408",
+      "backbone_oct_only_3409",
+      "backbone_cfp_only_3407",
+      "backbone_cfp_only_3408",
+      "backbone_cfp_only_3409",
+      "backbone_input_3407",
+      "backbone_input_3408",
+      "backbone_input_3409",
+      "backbone_stem_3407",
+      "backbone_stem_3408",
+      "backbone_stem_3409",
+      "backbone_layer1_3407",
+      "backbone_layer1_3408",
+      "backbone_layer1_3409",
+      "backbone_layer2_3407",
+      "backbone_layer2_3408",
+      "backbone_layer2_3409",
+      "backbone_layer3_3407",
+      "backbone_layer3_3408",
+      "backbone_layer3_3409",
+      "backbone_layer4_3407",
+      "backbone_layer4_3408",
+      "backbone_layer4_3409",
+      "backbone_feature_3407",
+      "backbone_feature_3408",
+      "backbone_feature_3409"
+    ],
+    "backbones": {},
+    "completed_stages": {},
+    "expected_ablation_cases": 6,
+    "expected_backbones": 27,
+    "expected_main_look_cases": 27,
+    "gpus": [
+      0,
+      1
+    ],
+    "implementation_sha256": "4f6c474784c960f0971ab4e9a8784c9cec32c9455b326d3b6b0a6c6bdfadb860",
+    "labels_sha256": "eae604091a1094ed70ff4edbcf6e59d00b57b5be124fb4ac5f76ece1beac0d8d",
+    "output": "/data/mengh/LOOK/2026_09_04_19_18_07/runs/unified_study/042ba0e49137",
+    "primary_metric": "macro_f1",
+    "protocol": "unified_fusion_joint_look_macro_f1_v2",
+    "selection_rule": "mean_macro_f1, then lower sample SD, then declared position order",
+    "spec_sha256": "b3ef311fe2e5e9a96a3a3be760fd205559014366529b87bdf8114ce958d428a9",
+    "status": "planned",
+    "test_access": false
+  },
+  "resume_artifacts_unchanged": 275,
+  "started_at_utc": "2026-09-04T16:43:46.043823+00:00",
+  "status": "passed",
+  "test_access": false,
+  "unit_tests_passed": 135,
+  "previous_release": {
+    "release": "2026_09_04_10_49_20",
+    "source_commit": "004f33601ba7a703bd90e0298e77603011ff8bad",
+    "status": "paused_by_user",
+    "deleted_results": false,
+    "stop_audit": "/data/mengh/LOOK/2026_09_04_10_49_20/runs/maintenance/unified_protocol_pause_20260904T161807Z.json",
+    "stop_audit_sha256": "cc0b2579a264b4f2747e7917859158cc3f4e9a435604057e3ef25baf045be348"
+  },
+  "formal_results_included": false
+}

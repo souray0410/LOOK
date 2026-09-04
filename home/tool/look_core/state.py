@@ -42,7 +42,7 @@ def atomic_write_json(payload: Any, path: Path) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         temporary.chmod(0o644)
-        temporary.replace(path)
+        durable_replace(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 
@@ -57,7 +57,7 @@ def atomic_write_text(text: str, path: Path) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         temporary.chmod(0o644)
-        temporary.replace(path)
+        durable_replace(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 
@@ -170,3 +170,15 @@ class PipelineState(AbstractContextManager["PipelineState"]):
             atomic_write_json(self.payload, self.state_path)
         self._release()
         return False
+
+
+def durable_replace(temporary: Path, destination: Path) -> None:
+    """Commit a fully written file and its directory entry before reporting completion."""
+    with temporary.open("rb") as handle:
+        os.fsync(handle.fileno())
+    temporary.replace(destination)
+    descriptor = os.open(destination.parent, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)

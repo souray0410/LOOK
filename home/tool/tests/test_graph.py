@@ -126,7 +126,7 @@ def test_validation_macro_f1_is_an_exact_task_criterion():
     expected = classification_metrics(
         labels.numpy(), torch.softmax(logits, dim=1).numpy()
     )["macro_f1"]
-    assert validation_macro_f1(graph).item() == pytest.approx(expected)
+    assert validation_macro_f1(graph) == pytest.approx(expected)
 
 
 def test_validation_binary_auroc_matches_sklearn():

@@ -16,7 +16,7 @@ from look_core.pipeline import ExperimentRunner
 from look_core.reproducibility import sha256, seed_everything, implementation_sha256, backbone_implementation_sha256
 from look_core.state import atomic_write_json, stable_hash
 from look_core.study_grid import expand_study_grid
-from look_core.macro_f1_study import study_stages
+from look_core.unified_study import backbone_stages
 from look_core.config import ExperimentConfig
 
 
@@ -26,8 +26,8 @@ def main():
     args=parser.parse_args()
     paths=resolve_runtime_arguments(args)
     project=Path(__file__).resolve().parents[2]
-    spec=json.loads((project/'configs/macro_f1_study.json').read_text())
-    case=expand_study_grid(study_stages(spec)[0][0][1],paths,gpu_devices=(0,1),smoke_limit=8)[0]
+    spec=json.loads((project/'configs/unified_study.json').read_text())
+    case=expand_study_grid(dict(backbone_stages(spec))["backbone_layer3_3407"],paths,gpu_devices=(0,1),smoke_limit=8)[0]
     proof=json.loads((paths.runs_root/'maintenance/macro_f1_training_verification.json').read_text())
     checkpoint=Path(proof['checkpoint']['path'])
     payload=torch.load(checkpoint,map_location='cpu',weights_only=False)

@@ -9,7 +9,6 @@ from look_core.data import (
     UKBBilateralVisitDataset,
     apply_missingness,
     make_loader,
-    participant_missing_pattern,
     reference_training_class_counts,
 )
 
@@ -63,13 +62,6 @@ def test_preprocess_cache_is_lossless_atomic_and_self_repairing(tmp_path):
     assert torch.equal(repaired["cfp"], uncached["cfp"])
     assert torch.equal(repaired["oct"], uncached["oct"])
     assert np.load(cache_files[0], allow_pickle=False).shape == (2, 16, 16, 3)
-
-
-def test_missing_pattern_is_participant_stable():
-    first = participant_missing_pattern("1000015", 0.6, 3407)
-    second = participant_missing_pattern("1000015", 0.6, 3407)
-    assert first == second
-    assert first in {"complete", "oct_missing", "cfp_missing"}
 
 
 def test_normalized_mean_filling_is_zero_after_normalization():

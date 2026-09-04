@@ -71,6 +71,7 @@ class ExperimentConfig:
     downsample_factors: List[int] = field(default_factory=lambda: [4, 8, 16])
     latent_dims: List[int] = field(default_factory=lambda: [8, 16, 32, 64, 96, 128, 192, 256, 384, 512])
     max_pca_rank: int = 512
+    missingness_seed: int = 3407
     primary_metric: str = "macro_f1"
     evaluate_all_factors: bool = False
     baseline_auroc_target: float = 0.80

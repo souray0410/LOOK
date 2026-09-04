@@ -18,7 +18,7 @@ from sklearn.metrics import (
 
 
 @torch.no_grad()
-def validation_macro_f1(graph) -> torch.Tensor:
+def validation_macro_f1(graph) -> float:
     """LOOK model-selection criterion computed from complete validation Nodes."""
     logits = graph.get_node_by_name("fusion_logits").feature_message.current_state
     labels = graph.get_node_by_name("label_gt").feature_message.current_state.long()
@@ -27,9 +27,9 @@ def validation_macro_f1(graph) -> torch.Tensor:
     for class_id in range(logits.shape[1]):
         predicted = prediction == class_id
         expected = labels == class_id
-        true_positive = torch.logical_and(predicted, expected).sum().float()
-        false_positive = torch.logical_and(predicted, ~expected).sum().float()
-        false_negative = torch.logical_and(~predicted, expected).sum().float()
+        true_positive = torch.logical_and(predicted, expected).sum().double()
+        false_positive = torch.logical_and(predicted, ~expected).sum().double()
+        false_negative = torch.logical_and(~predicted, expected).sum().double()
         denominator = 2 * true_positive + false_positive + false_negative
         values.append(
             torch.where(
@@ -38,7 +38,8 @@ def validation_macro_f1(graph) -> torch.Tensor:
                 torch.zeros_like(denominator),
             )
         )
-    return torch.stack(values).mean()
+    # Return a Python float: MHD intentionally casts tensor criteria to float32.
+    return torch.stack(values).mean().item()
 
 
 @torch.no_grad()

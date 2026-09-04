@@ -8,7 +8,7 @@ from look_core.cli import add_runtime_arguments,resolve_runtime_arguments
 from look_core.config import ExperimentConfig
 from look_core.study_grid import expand_study_grid
 from look_core.pipeline import ExperimentRunner
-from look_core.macro_f1_study import study_stages,verify_f1_checkpoint
+from look_core.unified_study import backbone_stages,verify_f1_checkpoint
 from look_core.reproducibility import implementation_sha256
 from look_core.state import atomic_write_json
 
@@ -16,8 +16,8 @@ from look_core.state import atomic_write_json
 def main():
     p=argparse.ArgumentParser(description=__doc__);add_runtime_arguments(p);args=p.parse_args()
     paths=resolve_runtime_arguments(args)
-    spec=json.loads((paths.project_root/'configs/macro_f1_study.json').read_text())
-    grid=study_stages(spec)[0][0][1]
+    spec=json.loads((paths.project_root/'configs/unified_study.json').read_text())
+    grid=dict(backbone_stages(spec))["backbone_layer3_3407"]
     case=expand_study_grid(grid,paths,gpu_devices=(0,1),smoke_limit=8)[0]
     config=ExperimentConfig.from_dict(case.config.as_dict())
     config.epochs=2;config.patience=2;config.micro_batch_size=2;config.effective_batch_size=4;config.num_workers=0;config.warmup_epochs=0

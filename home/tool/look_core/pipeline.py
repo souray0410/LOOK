@@ -318,6 +318,7 @@ class ExperimentRunner:
             "look": look_summary,
             "validation": {name: item["metrics"] for name, item in validation_results.items()},
             "validation_diagnostics": validation_diagnostics,
+            "missingness": {name: item["missingness"] for name, item in {**validation_results, **test_results}.items() if "missingness" in item},
             "test": {name: item["metrics"] for name, item in test_results.items()},
             "statistics": statistics,
             "prediction_directory": str(self.prediction_dir),
@@ -754,7 +755,7 @@ class ExperimentRunner:
                         loader,
                         self.device,
                         random_ratio=ratio,
-                        random_seed=self.selection.seed,
+                        random_seed=self.config.missingness_seed,
                         filler=filler,
                     )
                     results[f"look_after_fill_random_{ratio:.1f}"] = evaluate_missing(
@@ -762,7 +763,7 @@ class ExperimentRunner:
                         loader,
                         self.device,
                         random_ratio=ratio,
-                        random_seed=self.selection.seed,
+                        random_seed=self.config.missingness_seed,
                         artifact_banks=look_banks,
                         filler=filler,
                     )
@@ -774,7 +775,7 @@ class ExperimentRunner:
                 if self.options.evaluate_random_missing:
                     for ratio in self.config.missing_ratios:
                         results[f"look_x{factor}_after_fill_random_{ratio:.1f}"] = evaluate_missing(
-                            graph, loader, self.device, random_ratio=ratio, random_seed=self.selection.seed,
+                            graph, loader, self.device, random_ratio=ratio, random_seed=self.config.missingness_seed,
                             artifact_banks=banks, filler=filler)
         for name, result in results.items():
             self._save_prediction(result, split, name)
@@ -783,18 +784,10 @@ class ExperimentRunner:
     def _save_prediction(self, result, split: str, name: str) -> None:
         self.prediction_dir.mkdir(parents=True, exist_ok=True)
         destination = self.prediction_dir / f"{split}__{name}.npz"
-        temporary = destination.with_suffix(".npz.partial")
-        with temporary.open("wb") as handle:
-            np.savez_compressed(
-                handle,
-                labels=result["labels"],
-                probabilities=result["probabilities"],
-                logits=result["logits"],
-                scores=result["scores"],
-                participant_ids=result["participant_ids"],
-                patterns=result.get("patterns", np.asarray(["complete"] * len(result["labels"]))),
-            )
-        temporary.replace(destination)
+        from .evaluate import save_prediction_bundle
+        bundle = dict(result)
+        bundle.setdefault("patterns", np.asarray(["complete"] * len(result["labels"])))
+        save_prediction_bundle(bundle, destination)
 
     def _statistics(self, test_results):
         comparisons = []

@@ -7,7 +7,8 @@ import numpy as np
 import torch
 from tqdm.auto import tqdm
 
-from .data import participant_missing_pattern
+from .missingness import missingness_plan
+from .state import atomic_write_json, durable_replace
 from .filling import MissingModalityFiller, NormalizedMeanFiller
 from .look import LOOKArtifact, forward_with_look
 from .stable_metrics import logit_metrics, probabilities_from_logits
@@ -15,8 +16,9 @@ from .stable_metrics import logit_metrics, probabilities_from_logits
 
 def save_prediction_bundle(result: Dict[str, object], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + ".partial.npz")
     np.savez_compressed(
-        path,
+        temporary,
         labels=result["labels"],
         probabilities=result["probabilities"],
         logits=result["logits"],
@@ -24,6 +26,10 @@ def save_prediction_bundle(result: Dict[str, object], path: Path) -> None:
         participant_ids=result["participant_ids"],
         patterns=result["patterns"],
     )
+
+    durable_replace(temporary, path)
+    if "missingness" in result:
+        atomic_write_json(result["missingness"], path.with_suffix(".missingness.json"))
 
 
 @torch.no_grad()
@@ -43,6 +49,9 @@ def evaluate_missing(
     artifact_banks = artifact_banks or {}
     filler = filler or NormalizedMeanFiller()
     all_labels, all_logits, all_participants, all_patterns = [], [], [], []
+    plan, missingness = ({}, None) if random_ratio is None else missingness_plan(
+        loader.dataset.participant_ids, random_ratio, random_seed
+    )
     for batch in tqdm(loader, desc="Missing-modality evaluation", leave=False):
         oct_tensor = batch["oct"].to(device, non_blocking=True)
         cfp_tensor = batch["cfp"].to(device, non_blocking=True)
@@ -50,7 +59,7 @@ def evaluate_missing(
         patterns = (
             [fixed_pattern] * len(participants)
             if fixed_pattern is not None
-            else [participant_missing_pattern(pid, random_ratio, random_seed) for pid in participants]
+            else [plan[str(pid)] for pid in participants]
         )
         batch_logits = torch.empty(
             (len(participants), int(graph.num_classes)), device=device
@@ -83,4 +92,5 @@ def evaluate_missing(
         "participant_ids": np.asarray(all_participants),
         "patterns": np.asarray(all_patterns),
         "metrics": logit_metrics(labels, logits),
+        **({"missingness": missingness} if missingness is not None else {}),
     }

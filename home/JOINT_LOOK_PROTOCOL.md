@@ -1,31 +1,52 @@
-# LOOK joint sequential optional correction (Step 37, Macro-F1)
+# LOOK unified protocol — Step 38
 
-Current release: `2026_09_04_10_49_20`. The retired AUROC protocol is preserved
-on Git branch `archive/superseded-auroc-2026-09-03` at `383c3c8`. It is not a
-valid source of checkpoints or results for this release. Main tracks this protocol.
+Release `2026_09_04_19_18_07`. This specification supersedes fixed-layer3 Step 37.
+The previous release was paused by user instruction; its files and negative results
+remain historical exploratory evidence, not inputs to this new study.
 
-## Fixed architecture, new checkpoints and inputs
+## Complete-input backbone and fusion comparison
 
-Train complete-input layer3 ResNet50 at seeds 3407, 3408 and 3409 from ImageNet
-initial weights. The versioned `configs/macro_f1_study.json` fixes the previous
-architecture and optimizer hyperparameters; do not reopen architecture search.
-Cross-entropy remains the gradient loss. Full participant-level validation
-Macro-F1 determines best checkpoint and early stopping, with argmax predictions
-and no threshold tuning. Ties preserve the first best epoch. Metric name, source
-identity and labels hash are included in checkpoint metadata and backbone ID.
-LOOK must reuse these exact new completed checkpoints; mismatch raises an error.
+Keep ResNet50, ImageNet initialization and normalization, the selected record-derived
+UKB glaucoma task, participant splits, preprocessing, MHD V4 core and optimizer profile
+fixed. Train all seven fusion positions (input, stem, layer1, layer2, layer3, layer4,
+feature) at seeds 3407, 3408, 3409. Also train OCT-only and CFP-only at the same seeds.
+These are 27 fresh complete-input backbones. Do not reuse earlier checkpoints.
 
-ImageNet input normalization and the participant splits are unchanged. Missing
-`normalized_mean` inputs are zero after normalization; `raw_zero` represents a
-raw black image (`-mu/std` after normalization). Observed inputs use the same
-normalization in every arm. Independent paired cGAN is a separate filling arm,
-trained only on internal training pairs if no compatible generator exists.
-No missing-input backbone fine-tuning, residual-strength alpha or test access.
+Cross-entropy is the gradient loss. Best epoch and early stopping use full participant
+validation Macro-F1 from logits argmax; no threshold tuning. Training may use AMP,
+but validation and frozen inference use FP32. Macro-F1 counts/ratios use float64 and
+return a Python float to preserve precision through the existing trainer interface.
+Checkpoint/frozen-validation Macro-F1 disagreement blocks fusion ranking for diagnosis.
+
+Rank the seven fusion positions by mean validation Macro-F1 across all three seeds,
+then lower sample SD, then declared position order. Select exactly the first three.
+No winner is chosen by its best seed, AUROC, missing-input performance or test result.
+Save all 21 fusion rows, six reference rows, seven aggregate rows and selection rule.
+This is a prespecified validation-selection protocol; selected architectures and
+LOOK performance still require independent sealed-test confirmation later.
+
+LOOK must strictly reuse each selected position/seed checkpoint with matching identity
+and hash. A mismatch fails instead of automatically retraining. ImageNet normalization
+is unchanged: normalized_mean inserts zero AFTER normalization; raw_zero is a raw
+black image and becomes -mu/std. Neither is a dataset-mean normalization change.
+Observed modalities undergo exactly the same normalization in every filling arm.
+
+Independent paired cGAN trains only on an internal split of complete training pairs
+(internal validation fraction 0.1; generator selection by reconstruction L1). It does
+not use outer validation/test labels or images for generator selection. Its generation
+is independent of fusion position, so one generator pair per seed is shared by the
+three selected backbones. The GAN is newly trained in this release. Classifier and
+LOOK select by Macro-F1; the independent generator keeps its task-agnostic criterion.
+No missing-input backbone fine-tuning or residual-strength parameter is introduced.
+Both test cohorts remain sealed throughout this queue.
 
 ## Ordered joint sites and feature model
 
-`joint_input -> joint_stem -> joint_layer1 -> joint_layer2 -> joint_layer3 ->
-fusion_layer3 -> fusion_layer4 -> fusion_feature -> fusion_participant_feature`.
+For selected fusion position f, visit joint_input through joint_f in original order,
+then fusion_f through fusion_feature and fusion_participant_feature. For example,
+layer3 uses `joint_input -> joint_stem -> joint_layer1 -> joint_layer2 -> joint_layer3
+-> fusion_layer3 -> fusion_layer4 -> fusion_feature -> fusion_participant_feature`.
+Input and feature fusion use the corresponding dynamically generated schedule.
 
 Before fusion, concatenate OCT then CFP on channels for the same participant and
 eye. For input, `[B,2,3,H,W]` becomes `[2B,3,H,W]` in participant-major, eye-minor
@@ -84,66 +105,68 @@ Completed bank summaries and factor selection expose all decisions and matrices.
 Validation bootstrap is exploratory and conditional on validation selection,
 not a held-out confirmatory interval. Both test cohorts remain sealed.
 
-## Queue and operations
+## Shared random missingness
 
-Nine main cases: mean seed 3407 first, mean 3408/3409, black all three seeds, then
-independent cGAN all three seeds. Two additional mean-3407 ablations enable only
-joint input, or only the four fusion/post-fusion sites. Each case covers both
-complete missing directions and random ratios 0.2, 0.4, 0.6, 0.8, 1.0.
+`nested_exact_count_fixed_direction_v1`, mask seed 3407, independent of model seed.
+On the evaluation cohort's unique participant IDs, hash-rank IDs without labels.
+At ratio r, mask the first floor(r*N+0.5) participants. Alternate missing directions
+in this fixed order with a seeded offset, so every prefix is balanced within one.
+A participant's direction never changes as r grows. The entire modality in both eyes
+is missing; the other modality remains. At r=1 all participants lose ONE modality,
+not both. At N=296 the five missing counts are 59, 118, 178, 237, 296. Realized fractions
+and per-direction counts are saved; nominal percentages are rounded to participants.
 
-Before these LOOK cases, Step 37 completes all three new backbones. All three
-spatial factors (4, 8, 16) are independently evaluated for both complete-missing
-directions and every random ratio. Each case saves complete performance, filling
-performance, and filling-plus-LOOK performance; factor selection does not hide
-factor-specific results. F1, AUROC/AUPRC, sensitivity/specificity, confusion matrix
-and calibration are reported. Selection on Macro-F1 does not guarantee that the
-other metrics improve, or that gains generalize to independent test participants.
+Every fusion position, backbone seed, filling strategy and LOOK factor shares these
+same masks. Prediction bundles include IDs and patterns; a sidecar records protocol,
+seed, nominal/actual ratio, counts, participant-set hash and assignment hash. No labels
+enter assignment. Fixed complete OCT missing and CFP missing are separate scenarios.
+Matrices are fitted on the training cohort with each corresponding modality masked;
+random evaluation reuses these matrices and never refits from evaluation labels.
 
-Start/resume on ws with the same source, specification and GPU configuration:
+## Queue, recovery and evidence
+
+After 27 backbone runs and fusion selection, run mean for all three selected positions
+and three seeds, then black for the same nine cases, then independent cGAN for the same
+nine cases: 27 main cases. Add mean seed 3407 input-only and fusion-only ablations for
+each selected position: six ablation cases. Fusion-only sites are derived from each
+architecture, not hardcoded to layer3. Every case reports complete, filling and
+filling+LOOK for factors 4/8/16, both full-missing directions and all five random ratios.
+The ten candidate dimensions are 8,16,32,64,96,128,192,256,384,512, capped by available
+rank; Dmax remains independent at 512. No factor curve is assumed monotonic.
+
+Start or resume with unchanged committed source/specification and GPU set:
 
 ```bash
-bash /home/mengh/LOOK/2026_09_04_10_49_20/tool/operations/start_macro_f1.sh --gpus 0,1 --execute
-python3 /home/mengh/LOOK/2026_09_04_10_49_20/tool/operations/check_macro_f1.py
+bash /home/mengh/LOOK/2026_09_04_19_18_07/tool/operations/start_unified_study.sh --gpus 0,1 --execute
+python3 /home/mengh/LOOK/2026_09_04_19_18_07/tool/operations/check_unified_study.py
 ```
 
-The launcher exports the new source path and refuses to duplicate a live
-`look-macro-f1` session. Training resumes from `last/`; LOOK resumes completed
-ordered decisions. Summaries: `runs/macro_f1_study/<id>/summary.json`; history:
-`runs/backbones/<id>/history.json`; results and per-factor decisions:
-`runs/experiments/<id>/validation_result.json` and `look/`.
+Session: `look-unified-20260904-191807`. Summary: `runs/unified_study/<id>/summary.json`.
+Backbone evidence and fusion selection are beside that summary. Runtime histories,
+predictions, PCA, matrices, ordered decisions and search traces retain their existing
+subdirectories. The launcher refuses a duplicate live session. Resume revalidates
+completed checkpoint/results and resumes incomplete training/ordered LOOK decisions.
+JSON and prediction writes use atomic replacement with file/directory fsync. Portable
+best weights are synced before completion metadata. This does not make a multi-file
+training checkpoint immune to power loss; corrupt/inconsistent state must be diagnosed.
 
-## Retirement and technical verification
+Old release `2026_09_04_10_49_20` is paused, with no result deletion. Stop audit:
+`/data/mengh/LOOK/2026_09_04_10_49_20/runs/maintenance/unified_protocol_pause_20260904T161807Z.json`.
+Historical source is retained in its snapshot branch/tag and in the old deployed tree.
+Only the new main release is an active workflow. Step 37 entry/config is archived under
+`pipeline/history/2026_09_04_10_49_20` and is not an executable current entrypoint.
 
-`retire_auroc_release.py` scopes cleanup to explicitly listed model/output/state
-subtrees of runtime `2026_09_03_19_35_04`. It preserves shared data, environment,
-independent generators, task-selection provenance and small maintenance audits.
-It refuses symlinks, live writers, test outputs and non-target releases. The
-minimal audit is `runs/maintenance/retired_auroc_release.json` in the new release;
-it records code/config identities and deleted paths/sizes, not large result copies.
+## Technical gates and implementation limits
 
-`verify_macro_f1_training.py` checks real two-GPU, two-epoch checkpoint selection
-on eight train/validation participants per split. `verify_macro_f1_joint.py` uses
-that technical checkpoint on nine training and twelve validation participants,
-all nine sites, both missing directions and all factors, Dmax 4 and dimensions
-1/2. These are technical checks, not scientific evidence. They verify all-off
-logit equality, restored selected banks, nondecreasing validation Macro-F1 and
-unchanged checkpoint hashes. Tests additionally cover endpoint disagreement,
-upstream inheritance, residual decoding, GCV, complete PCA sharing, interruption
-recovery, all-factor reporting and cleanup boundaries.
+`tool/operations/verify_unified_release.py --project-root <source>` runs the bounded gates.
+Run unit tests, nine graph-topology smoke checks, intentional tiny overfit, two-GPU FP32-checkpoint smoke,
+joint-site/PCA/restore smoke, three-filling end-to-end smoke and resume checks before
+formal training. Save source hashes and technical verification under runs/maintenance.
+Disappointing metrics are reportable findings, not reasons to restart or change criteria.
+No validation bootstrap accounts for the full architecture/dimension-selection process;
+reported validation intervals remain exploratory and conditional on selection.
 
-## Implementation advantage and limits
-
-Frozen backbones and local sufficient-statistic fitting permit stage-wise
-execution and caching without backpropagation. This is an implementation
-advantage, not a claim that CPU offloading is a new algorithm. Current Step 37
-keeps the model resident: streaming per-level weight loading/unloading is NOT
-implemented or benchmarked. The active layer3 graph has about 130.3 MiB of FP32
-parameters, so activations/PCA/workspace/cache must also be measured before
-claiming large GPU-memory savings. Any later backend must demonstrate logit and
-decision equivalence and report peak allocated/reserved memory, runtime and cache
-volume. Describe this method as frozen-backbone/backpropagation-free correction;
-PCA, Ridge fitting and validation selection still have data and compute costs.
-
-Historical reference: `references/260810_source.txt`, exact hash in its manifest.
-The reference's alpha sweep, missing-input training, old GCV and omitted input
-correction during downstream collection are deliberately not carried forward.
+Frozen-backbone and sufficient-statistic fitting support a future stage-wise execution
+backend. Per-level weight streaming remains deferred and has not been implemented or
+benchmarked. Do not claim measured memory savings or call this computation-free.
+Reference source and hash: references/260810_source.txt and 260810_manifest.json.

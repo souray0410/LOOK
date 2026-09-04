@@ -118,3 +118,20 @@ cleanup preserves negative aggregates and all baseline/data/generator evidence.
 See home/JOINT_LOOK_PROTOCOL.md and home/docs/joint_migration_evidence.json for
 implementation, acceptance, deployment and live-state snapshot. Per-level weight
 offloading was discussed as a possible implementation advantage, not implemented.
+
+
+## Step 38 — 2026_09_04_19_18_07 unified protocol replacement
+
+User requested pause of Step 37 and fresh consistent comparisons. Old processes were
+stopped and old results preserved. Train all seven fusion positions and two unimodal
+controls at seeds 3407/3408/3409. Checkpoint/architecture/LOOK endpoint is Macro-F1;
+validation uses FP32, training AMP. Select top three fusion positions by three-seed mean,
+then lower SD and declared order. Run 27 main LOOK cases plus six ablations. Independent
+GAN still uses training-internal reconstruction validation. Random masks now use shared
+hash ordering, exact rounded participant counts, nested sets and fixed missing direction.
+All factors and metrics are reported; both test cohorts remain sealed. Step 37 and the
+old method descriptions are historical and do not govern this release.
+
+Current specification: configs/unified_study.json; current entrypoint: pipeline/38_run_unified_study.py.
+Technical evidence belongs under the new runtime runs/maintenance; runtime status requires
+live verification. No earlier checkpoint, generator, PCA or experimental result is reused.

@@ -374,15 +374,6 @@ def make_loader(
     )
 
 
-def participant_missing_pattern(participant_id: str, ratio: float, seed: int) -> str:
-    """Stable participant-level assignment: complete, OCT missing, or CFP missing."""
-    token = f"{seed}:{participant_id}".encode("utf-8")
-    value = int.from_bytes(hashlib.sha256(token).digest()[:8], "big") / 2**64
-    if value >= ratio:
-        return "complete"
-    return "oct_missing" if value < ratio / 2 else "cfp_missing"
-
-
 def apply_missingness(
     oct_tensor: torch.Tensor,
     cfp_tensor: torch.Tensor,

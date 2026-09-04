@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
   "project_name": "LOOK",
-  "release_id": "2026_09_04_10_49_20",
+  "release_id": "2026_09_04_19_18_07",
   "selected_task_profile": "glaucoma_all_evidence",
   "task_selection_manifest": "dataset/cohorts/task_selection/selected_task_manifest.json",
   "deployment_defaults": {
-    "project_root": "/home/mengh/LOOK/2026_09_04_10_49_20",
-    "data_root": "/data/mengh/LOOK/2026_09_04_10_49_20",
+    "project_root": "/home/mengh/LOOK/2026_09_04_19_18_07",
+    "data_root": "/data/mengh/LOOK/2026_09_04_19_18_07",
     "dataset_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset",
     "image_root": "/data/mengh/LOOK/2026_09_03_08_30_00/dataset",
     "cohort_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/ukb_record_glaucoma_binary_bilateral",
@@ -14,7 +14,7 @@
     "natural_labels_csv": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/task_scout/glaucoma_all_evidence/natural/reference_labels.csv",
     "preprocess_cache_root": "/data/mengh/LOOK/2026_09_03_08_30_00/cache/preprocessed_pairs",
     "venv_path": "/home/mengh/LOOK/2026_08_30_11_20_47/tool/environment/.venv",
-    "ssh_host": "ws",
+    "ssh_host": "ws02",
     "ukb_source_uuid": "7E0E-D004",
     "ukb_source_mount": "/mnt/ukbiobank",
     "ukb_source_root": "/mnt/ukbiobank/UKB",
@@ -48,6 +48,10 @@
     "backbone_checkpoint": "macro_f1",
     "look_selection": "macro_f1",
     "test_access": false,
-    "entrypoint": "pipeline/37_run_macro_f1_study.py"
+    "entrypoint": "pipeline/38_run_unified_study.py",
+    "fusion_selection": "mean_validation_macro_f1_over_three_seeds",
+    "top_k": 3,
+    "validation_precision": "fp32",
+    "missingness_protocol": "nested_exact_count_fixed_direction_v1"
   }
 }

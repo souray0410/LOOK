@@ -119,7 +119,5 @@ def environment_manifest(
 
 
 def write_json_atomic(payload: Dict[str, Any], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    temporary.replace(path)
+    from .state import atomic_write_json
+    atomic_write_json(payload, path)

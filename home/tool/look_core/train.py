@@ -161,7 +161,7 @@ def train_complete_model_ddp(
         if hasattr(train_loader.dataset, "set_epoch"):
             train_loader.dataset.set_epoch(epoch)
         train_metrics = trainer.train_epoch(train_loader, epoch)
-        eval_metrics = trainer.eval_epoch(validation_loader, epoch)
+        eval_metrics = evaluate_fp32(trainer, validation_loader, epoch)
         complete_logits = trainer.last_eval_tensors["fusion_logits"]
         complete_labels = trainer.last_eval_tensors["label_gt"]
         if len(complete_labels) != len(validation_loader.dataset):
@@ -210,6 +210,7 @@ def train_complete_model_ddp(
             "criteria": trainer.criteria_name,
             "criteria_mode": trainer.criteria_mode,
             "criteria_scope": "full_validation_distributed",
+            "validation_precision": "fp32",
             "score": best_score,
             "graph_state_dict": graph.state_dict(),
             "config": config.as_dict(),
@@ -224,7 +225,8 @@ def train_complete_model_ddp(
             "world_size": context.world_size,
             "classification_loss": classification_loss_metadata(graph),
         }, temporary)
-        temporary.replace(run_dir / "best.pt")
+        from .state import durable_replace
+        durable_replace(temporary, run_dir / "best.pt")
         write_json_atomic({
             "status": "complete",
             "primary_metric": config.primary_metric,
@@ -234,6 +236,7 @@ def train_complete_model_ddp(
             "criteria": trainer.criteria_name,
             "criteria_mode": trainer.criteria_mode,
             "criteria_scope": "full_validation_distributed",
+            "validation_precision": "fp32",
             "canonical_checkpoint": str(run_dir / "best"),
             "portable_checkpoint": str(run_dir / "best.pt"),
             "checkpoint_sha256": sha256(run_dir / "best.pt"),
@@ -251,3 +254,13 @@ def train_complete_model_ddp(
         monitor.finalize()
     mhd_barrier(context)
     return graph
+
+
+def evaluate_fp32(trainer, loader, epoch):
+    """Use the frozen inference precision for checkpoint selection; retain AMP training."""
+    previous = trainer.precision
+    trainer.precision = "fp32"
+    try:
+        return trainer.eval_epoch(loader, epoch)
+    finally:
+        trainer.precision = previous

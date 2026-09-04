@@ -1,18 +1,12 @@
-# LOOK current workflow
+# LOOK 2026_09_04_19_18_07
 
-Read [HANDOFF.md](HANDOFF.md), then [JOINT_LOOK_PROTOCOL.md](JOINT_LOOK_PROTOCOL.md).
-Current specification: `configs/macro_f1_study.json`. Current entrypoint: Step 37.
-The notebook exposes the same configuration and detached launcher.
+Read [HANDOFF.md](HANDOFF.md), [the fixed study specification](configs/unified_study.json)
+and [method and operations](JOINT_LOOK_PROTOCOL.md). Step 38 compares seven fusion
+positions and two unimodal controls at three seeds, selecting checkpoints and the top
+three fusion positions by validation Macro-F1. It then evaluates joint sequential LOOK
+with mean, black-image and independent cGAN filling on each selected position/seed.
 
-On ws:
-```bash
-bash /home/mengh/LOOK/2026_09_04_10_49_20/tool/operations/start_macro_f1.sh --gpus 0,1 --execute
-python3 /home/mengh/LOOK/2026_09_04_10_49_20/tool/operations/check_macro_f1.py
-```
-
-The first command also resumes interrupted work and refuses a duplicate live
-session. Keep source/specification/GPU list unchanged to resume the same identity.
-Backbone checkpoint selection and LOOK decisions both use validation Macro-F1;
-training loss stays cross-entropy. All factors, both missing directions and random
-ratios are evaluated. Both test cohorts remain sealed. Historical AUROC execution
-scripts are on `archive/superseded-auroc-2026-09-03`, not active main entrypoints.
+Main is current source. Previous fixed-layer3 results are retained as exploratory history;
+their queue is paused. Data, splits, preprocessing, ImageNet normalization and MHD V4
+are shared unchanged. All models/generators/PCA/results in this release are newly fitted.
+Tests stay sealed. Stage-wise weight streaming is not implemented.
