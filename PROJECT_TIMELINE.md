@@ -64,9 +64,20 @@ the corresponding snapshot.
   when baseline gates fail, uniform stage comparison if improved, and an optional
   single-seed zero/mean LOOK validation pilot if unchanged gates pass. No test access.
 
-`2026_09_03_19_35_04` is active. Task selection is complete and formal baseline
-qualification is running. LOOK starts only after explicit review and baseline freeze;
-balanced and natural sealed tests remain unavailable until then.
+- 2026-09-04: Step 33 completed all six regularization profiles, two unimodal controls,
+  seven fusions and Top-3 three-seed repeats. New feature AUROC/F1 was 0.7760/0.7047;
+  original layer3 was 0.7835/0.6938. Neither passed all internal automatic gates.
+- The researcher explicitly approved proceeding to LOOK with original layer3 under
+  the existing AUROC selection rule, without additional backbone search. Step 34
+  schedules zero/mean plus LOOK first, three-seed replication, then independent cGAN
+  plus LOOK. One fusion configuration, nine outer cases, validation-only.
+- Corrected PCA short-tail sample omission and the Ridge GCV residual/df calculation;
+  no change to backbone training, MHD V4, dataset or existing checkpoints. Added
+  numerical regression tests. No alpha, DCT or low-rank preprocessing is introduced.
+
+`2026_09_03_19_35_04` is active. The reviewed fixed-backbone LOOK development study is
+the next stage. Failed thresholds remain recorded; they are not journal acceptance
+criteria. Balanced and natural tests remain sealed pending final configuration review.
 
 ## Git Snapshot Map
 

@@ -49,7 +49,8 @@
         |-- 30_run_task_scout.py
         |-- 31_summarize_task_scout.py
         |-- 32_select_formal_task.py
-        `-- 33_run_overnight_validation.py
+        |-- 33_run_overnight_validation.py
+        `-- 34_run_reviewed_look_study.py
 ```
 
 Author runtime:

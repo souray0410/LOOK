@@ -217,6 +217,7 @@ def _fit_incremental_pca(
     max_rank: int,
     fit_batch_size: int = 512,
 ) -> IncrementalPCA:
+    fit_batch_size = max(fit_batch_size, max_rank)
     model = IncrementalPCA(n_components=max_rank, batch_size=fit_batch_size)
     buffer: List[np.ndarray] = []
     buffered = 0
@@ -224,16 +225,16 @@ def _fit_incremental_pca(
         values = ((full - mean) / std).numpy().astype(np.float32, copy=False)
         buffer.append(values)
         buffered += len(values)
-        if buffered >= fit_batch_size:
+        # Keep a rank-sized tail so the final partial_fit uses every sample.
+        if buffered >= fit_batch_size + max_rank:
             joined = np.concatenate(buffer, axis=0)
-            usable = (len(joined) // fit_batch_size) * fit_batch_size
+            usable = ((len(joined) - max_rank) // fit_batch_size) * fit_batch_size
             model.partial_fit(joined[:usable])
             buffer = [joined[usable:]] if usable < len(joined) else []
             buffered = len(joined) - usable
     if buffer:
         remainder = np.concatenate(buffer, axis=0)
-        if len(remainder) >= max_rank:
-            model.partial_fit(remainder)
+        model.partial_fit(remainder)
     return model
 
 
@@ -252,8 +253,9 @@ def _gcv_lambda(cxx: torch.Tensor, cxy: torch.Tensor, tss: float, n: int, dimens
     def objective(log_lambda: float) -> float:
         ridge = float(np.exp(log_lambda))
         shrinkage = eigenvalues / (eigenvalues + ridge)
-        residual = max(0.0, tss - float((shrinkage.square() * projected_norm).sum()))
-        scale = 1.0 - float(shrinkage.sum()) / n
+        # ||Y-XW||^2 = TSS - sum((2*s-s^2)*||u^T Y||^2).
+        residual = max(0.0, tss - float(((2 * shrinkage - shrinkage.square()) * projected_norm).sum()))
+        scale = 1.0 - (1.0 + float(shrinkage.sum())) / n
         return residual / max(1, n * dimension) / max(scale * scale, 1e-15)
 
     result = minimize_scalar(objective, bounds=(-13.8, 4.6), method="bounded")

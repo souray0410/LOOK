@@ -19,7 +19,63 @@ opening any test split. `glaucoma_all_evidence` ranked first among eligible prof
 full conventional baseline search. These scout values are not paper-level baseline or
 test results.
 
-## Unattended Validation Follow-Up
+## Current Reviewed LOOK Study (Step 34)
+
+On 2026-09-04 the researcher approved proceeding with LOOK rather than continuing
+backbone tuning. Select the original `layer3` configuration by the original primary
+criterion, three-seed mean validation AUROC: 0.7835 (Macro-F1 0.6938). The regularized
+feature candidate had AUROC 0.7760 (F1 0.7047), so it is not substituted based on F1.
+The original automatic thresholds were not met. This is an explicit reviewed development
+decision, not a passed gate, a clinical qualification, or an approval to access test.
+No labels, splits, backbone parameters or existing checkpoints are changed.
+
+Step 34 runs one fusion configuration, not three winning fusions. It reuses its three
+existing seed checkpoints, verified by exact training IDs and hashes before execution:
+
+1. Seed 3407: raw-zero and normalized-mean filling, each before/after LOOK.
+2. Seeds 3408/3409: the same two filling strategies and LOOK search protocol.
+3. All three seeds: independently trained paired cGAN filling, before/after LOOK.
+
+There are nine outer cases. Each tests missing CFP and missing OCT, with missing ratios
+20/40/60/80/100 percent. Inside each case, fit three complete artifact banks with shared
+spatial factors `[4,8,16]`. At each node, select among latent dimensions
+`[8,16,32,64,128,256]` on validation, using the existing sequential node-wise search.
+This is not exhaustive search over every combination of node dimensions. The final
+global factor is selected by full-bank validation AUROC, with larger factor breaking
+exact ties. Vector nodes use identity compression. Dimension and factor lists can be
+overridden explicitly; changing them starts new identified experiments, not overwrites.
+
+All fitting data come from train. PCA now retains every training sample, including
+the short final batch. Ridge GCV uses the exact residual SSE and an unpenalized
+intercept in its effective degrees of freedom. No residual-strength alpha is used:
+`z_corrected = z_missing + (z_missing W + b)`. Backbone training code and MHD V4 are
+unchanged. GAN training is independent and uses an internal training-set holdout;
+there is no missing-input backbone fine-tuning. Frozen backbone/LOOK inference is on
+one GPU; GAN training uses the requested DDP devices. Low GPU utilization during CPU
+PCA/GCV is expected, not evidence of a stalled DDP worker.
+
+Validation is reused for development, including dimension/factor selection per seed;
+seed repeats quantify initialization sensitivity, not independent test replication.
+Report all cases, including negative LOOK effects. Test remains sealed until a separate
+final configuration review. There is no metric-based stop between these nine cases;
+technical failures stop visibly and the same command resumes validated artifacts.
+
+```bash
+bash tool/operations/start_reviewed_look.sh \
+  --candidate /data/mengh/LOOK/2026_09_03_19_35_04/runs/baseline_selection/candidates/baseline_candidate__025a0ceb64d2.json \
+  --reviewer-note 'Souray approved 2026-09-04: proceed with original AUROC-ranked layer3, all three seeds; retain failed automatic gates; validation only, no test.' \
+  --gpus 0,1 --execute
+python3 tool/operations/check_reviewed_look.py
+```
+
+Add `--follow` to follow the detached log. Summary and reviewed baseline evidence are in
+`runs/reviewed_look/<fingerprint>/`. Per-case predictions, paired bootstrap, metrics and
+matrix analyses are in `runs/experiments/<id>/`. Partial banks record candidate validation
+scores and completed nodes; the monitor displays these before a full case finishes.
+Same-command reruns validate/reuse checkpoints and completed results, then resume
+unfinished banks. Original source media are never modified.
+
+## Historical Bounded Follow-Up (Step 33)
 
 Step 33 waits for the specified baseline session to finish successfully, then reads the
 candidate from the exact confirmation plan. It never stops a running predecessor.

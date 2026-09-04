@@ -77,14 +77,14 @@
     }
   ],
   "data_tree": "data",
-  "deployment_data_root": "/private/tmp/look-overnight-work/data",
+  "deployment_data_root": "/data/mengh/LOOK/2026_09_03_19_35_04",
   "home_tree": "home",
   "project": "LOOK",
   "release_documents": [
     {
-      "bytes": 1812,
+      "bytes": 2097,
       "path": "README.md",
-      "sha256": "a83210ef82849b904e095094061255dcb0b79281025a76245bcd85010990bbb4"
+      "sha256": "e0ee1e6ddbc1ff9884fdf795bb62771417f658b08167cfb3e8cf4db87944b892"
     },
     {
       "bytes": 7842,
@@ -92,15 +92,15 @@
       "sha256": "c441fdee21d90106271eb976f07e768f60f64a76b9721179213968a75b6093eb"
     },
     {
-      "bytes": 4142,
+      "bytes": 5000,
       "path": "PROJECT_TIMELINE.md",
-      "sha256": "0e1f3c5975dda0b20256c782e672700c8fafbab7e37140bba1aa1310afa29520"
+      "sha256": "bd5941f230b3e4b189160783325ec2155727f32c2d6a7aa280c1b13a4129acc8"
     }
   ],
   "release_id": "2026_09_03_19_35_04",
   "schema_version": 2,
   "source_manifest": {
     "path": "home/file_manifest.json",
-    "sha256": "bd62a41caa3cd914001b9b32766f58b4f4819a5869de3ee280a7ab0bdf69e381"
+    "sha256": "f20dc13c0a420f41c71ef949fc44e3c3502fdd844fdc482221dc51f1ac445f1f"
   }
 }

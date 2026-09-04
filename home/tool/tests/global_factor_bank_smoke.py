@@ -46,7 +46,6 @@ def main() -> None:
         nodes,
         [4, 8, 16],
         [2],
-        [0.0],
         2,
         device,
         args.output,

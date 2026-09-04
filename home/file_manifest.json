@@ -21,19 +21,19 @@
       "sha256": "5df91d926ddafbf557cd6401bda13fbed410bdc59a6d45fb70dd796c4849361b"
     },
     {
-      "bytes": 5090,
+      "bytes": 5376,
       "path": "PIPELINE_LEDGER.md",
-      "sha256": "2ee830f70aa19fefb2d7be6ebf5e33d8c24d0edcda1434bfc536cb8673ac41e9"
+      "sha256": "c0b9f0a877e754edba25e2bdded62b3814eea4f781d0252b92442bbdc9996ab0"
     },
     {
-      "bytes": 11295,
+      "bytes": 15009,
       "path": "README.md",
-      "sha256": "a1f575297cfaba6c39a629955a2d09ef35f004ffc05fc6619d627601a376484a"
+      "sha256": "9b1f2a12ed4e48c6a3ce180f1d2fe35bd61d1c7adb74d7f9074a9aba62cb0ab2"
     },
     {
-      "bytes": 2445,
+      "bytes": 2487,
       "path": "STRUCTURE.md",
-      "sha256": "9401a64f1a78704c5a40a76fb6e6d1becd56ec851aba76df1d95ddda6c0fffb2"
+      "sha256": "9fee4427abb76bcb1ea49a0389f72906250146849598f1d4e9f26299cd8f0ded"
     },
     {
       "bytes": 3498,
@@ -119,6 +119,11 @@
       "bytes": 12208,
       "path": "pipeline/33_run_overnight_validation.py",
       "sha256": "65ad346341796d1b8abccbe7bf7e51d906cada783ee827a0f715ca67cce98a83"
+    },
+    {
+      "bytes": 8066,
+      "path": "pipeline/34_run_reviewed_look_study.py",
+      "sha256": "7ae0a9b5fdc6d6b48509531b0db0e46f39774c9855b35af133923e62f65f976b"
     },
     {
       "bytes": 6674,
@@ -326,9 +331,9 @@
       "sha256": "dd1b81207f8864d691ace0590a18f205d9392c9e354af82c28ece52d76546b76"
     },
     {
-      "bytes": 22716,
+      "bytes": 22908,
       "path": "tool/look_core/look.py",
-      "sha256": "a7fb0183d29f54b5e08c96b20ef48f4a741cf6f64834fdf643e255bd477b7a81"
+      "sha256": "538ed98d9d13d3574ac6f93e591b7bfa0e32bd3570e0b8c1a4b660f6480092ea"
     },
     {
       "bytes": 12674,
@@ -416,6 +421,11 @@
       "sha256": "8ccba67e08d808650522f250fab646eae09361c985dd8f5bee48d776d4618c78"
     },
     {
+      "bytes": 3754,
+      "path": "tool/operations/check_reviewed_look.py",
+      "sha256": "436a67994638cdb4f7045e2eabbb2b0cb6bfc22cd0963acee49016af07ee0e9b"
+    },
+    {
       "bytes": 2455,
       "path": "tool/operations/diagnose_ddp_prepare.py",
       "sha256": "77b94ab77816167f0ec1a768d9d0e4f92dcd9e143f49439b7befd9915f2e7430"
@@ -429,6 +439,11 @@
       "bytes": 1345,
       "path": "tool/operations/start_overnight_validation.sh",
       "sha256": "2ec413798ac95497ae0fed6061f4c9a59be66055440329460483cf01b3d1199b"
+    },
+    {
+      "bytes": 1343,
+      "path": "tool/operations/start_reviewed_look.sh",
+      "sha256": "a5d6d431f142dd731946c9c44dd11670a24754afd44d8629bfef8ffa2f61e22f"
     },
     {
       "bytes": 3042,
@@ -486,9 +501,9 @@
       "sha256": "bd6e30408773ce9d6205ada700f16ad67da58d473926ddea752513c045db45ce"
     },
     {
-      "bytes": 2386,
+      "bytes": 2371,
       "path": "tool/tests/global_factor_bank_smoke.py",
-      "sha256": "2424cece8429eecc550d61d15ab8cf78015369c06bb96777f7b89ac80baabffc"
+      "sha256": "4ae4c7a5a5130fdc886e4715a32da69c370c4c0cc5a36689c27dfd226748fd93"
     },
     {
       "bytes": 6494,
@@ -553,7 +568,7 @@
     {
       "bytes": 5873,
       "path": "tool/tests/test_project_governance.py",
-      "sha256": "483cbaa176a8a39dd9e82c3d1a6a6b4cd07c7690eae506e0b9cb2a21f55efea8"
+      "sha256": "453a4f8b19db906606e1b2f4b967c532e419cabeaaddb9ff87e0c7b5c7e9ae29"
     },
     {
       "bytes": 2253,
@@ -564,6 +579,11 @@
       "bytes": 1407,
       "path": "tool/tests/test_quality_audit.py",
       "sha256": "0977de02227a7ef44bd12a03b4909e30175b6e486366a66fefd4a4aecb9292c9"
+    },
+    {
+      "bytes": 2732,
+      "path": "tool/tests/test_reviewed_look.py",
+      "sha256": "f3678650fea7519af7d56ca353deca02d6539afa7b21f5166557ed67311f102d"
     },
     {
       "bytes": 2140,
@@ -581,7 +601,7 @@
       "sha256": "da57a8264ec36ac7d4b8372d88304bf965743d4aba78875da53e2fd12fe0f184"
     }
   ],
-  "generated_at_utc": "2026-09-03T21:12:21.559120+00:00",
+  "generated_at_utc": "2026-09-04T04:50:20.449817+00:00",
   "release_id": "2026_09_03_19_35_04",
   "schema_version": 2
 }

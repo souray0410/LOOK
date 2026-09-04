@@ -22,8 +22,11 @@ references the existing immutable image export and preprocessing cache through e
 paths in `home/project.json`; no 346 GB image copy or symlink is created.
 
 The validation-only task scout selected `glaucoma_all_evidence` (925 cases and 925
-matched controls) for formal baseline qualification. Selection does not freeze a
-baseline, approve LOOK, or open either sealed test cohort.
+matched controls). On 2026-09-04, after baseline comparison, the researcher approved
+the original AUROC-ranked layer3 backbone for the Step 34 LOOK development study:
+one configuration, three seeds, zero/mean/cGAN filling and train-fit/validation-selected
+PCA-Ridge correction. Original failed automatic gates remain recorded. Both test
+cohorts remain sealed. See `home/README.md` for launch, resume and monitoring commands.
 
 Path precedence is explicit CLI argument, `LOOK_*` environment variable, then the
 author defaults in `project.json`. Other authorized users can reproduce the workflow
