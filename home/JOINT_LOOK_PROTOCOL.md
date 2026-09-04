@@ -1,23 +1,26 @@
-# LOOK joint sequential optional correction (Step 36)
+# LOOK joint sequential optional correction (Step 37, Macro-F1)
 
-This is the approved scientific protocol replacing study `e6d740a884be`.
-The contribution under investigation is LOOK. Negative results remain evidence;
-validation acceptance does not guarantee test, F1 or calibration improvement.
+Current release: `2026_09_04_10_49_20`. The retired AUROC protocol is preserved
+on Git branch `archive/superseded-auroc-2026-09-03` at `383c3c8`. It is not a
+valid source of checkpoints or results for this release. Main tracks this protocol.
 
-## Fixed backbone and inputs
+## Fixed architecture, new checkpoints and inputs
 
-Reuse the three reviewed layer3 backbones from candidate
-`baseline_candidate__025a0ceb64d2.json` (seeds 3407, 3408, 3409). Step 36 verifies
-candidate artifacts, exact scientific backbone IDs and checkpoint hashes, and
-raises on mismatch; it never retrains or quarantines a protected backbone. The strict backbone reuse
-flag is separate from generator training: missing independent cGANs may train on
-the internal training split during validation development, never during test.
-The seven training-identity source files and MHD core are unchanged.
+Train complete-input layer3 ResNet50 at seeds 3407, 3408 and 3409 from ImageNet
+initial weights. The versioned `configs/macro_f1_study.json` fixes the previous
+architecture and optimizer hyperparameters; do not reopen architecture search.
+Cross-entropy remains the gradient loss. Full participant-level validation
+Macro-F1 determines best checkpoint and early stopping, with argmax predictions
+and no threshold tuning. Ties preserve the first best epoch. Metric name, source
+identity and labels hash are included in checkpoint metadata and backbone ID.
+LOOK must reuse these exact new completed checkpoints; mismatch raises an error.
+
 ImageNet input normalization and the participant splits are unchanged. Missing
 `normalized_mean` inputs are zero after normalization; `raw_zero` represents a
-raw black image, i.e. `-mu/std` after normalization. Neither changes how observed
-images are normalized. Independent paired cGAN is a separate filling arm.
-No missing-input fine-tuning, residual-strength alpha, threshold tuning, or test access.
+raw black image (`-mu/std` after normalization). Observed inputs use the same
+normalization in every arm. Independent paired cGAN is a separate filling arm,
+trained only on internal training pairs if no compatible generator exists.
+No missing-input backbone fine-tuning, residual-strength alpha or test access.
 
 ## Ordered joint sites and feature model
 
@@ -60,9 +63,9 @@ latent residuals from sufficient statistics, including an intercept. GCV uses
 ## Acceptance, scoring and recovery
 
 Each position evaluates the current bank with that position OFF. The best
-candidate is enabled only for strictly higher validation AUROC; a tie or decline
+candidate is enabled only for strictly higher validation Macro-F1; a tie or decline
 leaves it off. Candidate ties choose the smaller dimension. Entire factor banks
-are compared by AUROC, then fewer enabled sites, then larger factor. All-off is
+are compared by Macro-F1, then fewer enabled sites, then larger factor. All-off is
 valid and exactly reproduces filling-baseline logits.
 
 Every AUROC/AUPRC in the new LOOK evaluation and bootstrap uses the original
@@ -88,43 +91,51 @@ independent cGAN all three seeds. Two additional mean-3407 ablations enable only
 joint input, or only the four fusion/post-fusion sites. Each case covers both
 complete missing directions and random ratios 0.2, 0.4, 0.6, 0.8, 1.0.
 
-On ws, start or resume the exact same command after verifying no live session:
+Before these LOOK cases, Step 37 completes all three new backbones. All three
+spatial factors (4, 8, 16) are independently evaluated for both complete-missing
+directions and every random ratio. Each case saves complete performance, filling
+performance, and filling-plus-LOOK performance; factor selection does not hide
+factor-specific results. F1, AUROC/AUPRC, sensitivity/specificity, confusion matrix
+and calibration are reported. Selection on Macro-F1 does not guarantee that the
+other metrics improve, or that gains generalize to independent test participants.
+
+Start/resume on ws with the same source, specification and GPU configuration:
 
 ```bash
-bash /home/mengh/LOOK/2026_09_03_19_35_04/tool/operations/start_joint_look.sh \
-  --candidate /data/mengh/LOOK/2026_09_03_19_35_04/runs/baseline_selection/candidates/baseline_candidate__025a0ceb64d2.json \
-  --reviewer-note 'Souray approved joint sequential optional LOOK migration; preserve exact layer3 checkpoints; test sealed' \
-  --gpus 0,1 --execute
-python3 /home/mengh/LOOK/2026_09_03_19_35_04/tool/operations/check_joint_look.py
+bash /home/mengh/LOOK/2026_09_04_10_49_20/tool/operations/start_macro_f1.sh --gpus 0,1 --execute
+python3 /home/mengh/LOOK/2026_09_04_10_49_20/tool/operations/check_macro_f1.py
 ```
 
-Keep the reviewer note, GPU configuration, dimensions and source version fixed
-when resuming; they determine study identity. A live session is not restarted.
-Step 36 writes `runs/joint_look/<id>/summary.json`, plans under `runs/sweeps/`,
-per-case predictions and decisions under `runs/experiments/<id>/look/`.
+The launcher exports the new source path and refuses to duplicate a live
+`look-macro-f1` session. Training resumes from `last/`; LOOK resumes completed
+ordered decisions. Summaries: `runs/macro_f1_study/<id>/summary.json`; history:
+`runs/backbones/<id>/history.json`; results and per-factor decisions:
+`runs/experiments/<id>/validation_result.json` and `look/`.
 
-## Retirement and validation evidence
+## Retirement and technical verification
 
-`tool/operations/clean_joint_predecessor.py` is separate from Step 35. It scopes
-removal to stopped study e6d740a884be, refuses external references, symlinks,
-live writers, non-LOOK/test plans and protected paths, and saves old code/config
-identities and aggregate results before deletion. Full runtime audit:
-`runs/maintenance/joint_protocol_cleanup_e6d740a884be.json`.
-Backbones, baseline evidence, dataset/cache, environment, generators, prior
-maintenance audits and Git source history are retained. No large result backup.
+`retire_auroc_release.py` scopes cleanup to explicitly listed model/output/state
+subtrees of runtime `2026_09_03_19_35_04`. It preserves shared data, environment,
+independent generators, task-selection provenance and small maintenance audits.
+It refuses symlinks, live writers, test outputs and non-target releases. The
+minimal audit is `runs/maintenance/retired_auroc_release.json` in the new release;
+it records code/config identities and deleted paths/sizes, not large result copies.
 
-The bounded real-checkpoint verifier is `tool/operations/verify_joint_protocol.py`.
-It uses nine training participants and twelve validation participants, all nine
-sites, both missing directions, Dmax 4 and dimensions 1/2 solely for technical
-acceptance. It asserts exact all-off logits, nondecreasing development selection,
-restorable banks and unchanged checkpoint hashes. Its scores are not scientific
-results. See `docs/joint_migration_evidence.json` for final deployment evidence.
+`verify_macro_f1_training.py` checks real two-GPU, two-epoch checkpoint selection
+on eight train/validation participants per split. `verify_macro_f1_joint.py` uses
+that technical checkpoint on nine training and twelve validation participants,
+all nine sites, both missing directions and all factors, Dmax 4 and dimensions
+1/2. These are technical checks, not scientific evidence. They verify all-off
+logit equality, restored selected banks, nondecreasing validation Macro-F1 and
+unchanged checkpoint hashes. Tests additionally cover endpoint disagreement,
+upstream inheritance, residual decoding, GCV, complete PCA sharing, interruption
+recovery, all-factor reporting and cleanup boundaries.
 
 ## Implementation advantage and limits
 
 Frozen backbones and local sufficient-statistic fitting permit stage-wise
 execution and caching without backpropagation. This is an implementation
-advantage, not a claim that CPU offloading is a new algorithm. Current Step 36
+advantage, not a claim that CPU offloading is a new algorithm. Current Step 37
 keeps the model resident: streaming per-level weight loading/unloading is NOT
 implemented or benchmarked. The active layer3 graph has about 130.3 MiB of FP32
 parameters, so activations/PCA/workspace/cache must also be measured before

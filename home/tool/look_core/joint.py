@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import torch
 
-PROTOCOL = 'joint_sequential_optional_v1'
+PROTOCOL = 'joint_sequential_optional_v2_macrof1'
 
 
 def correction_sites(graph):

@@ -116,7 +116,7 @@ def _primary_look_profile() -> dict[str, Any]:
         "downsample_factors": [4, 8, 16],
         "latent_dims": [8, 16, 32, 64, 96, 128, 192, 256, 384, 512],
         "max_pca_rank": 512,
-        "primary_metric": "macro_auroc_ovr",
+        "primary_metric": "macro_f1",
     }
 
 
@@ -345,8 +345,8 @@ def expand_study_grid(
 
 def _ranking_key(row: dict[str, Any]) -> tuple[float, float, float, float]:
     return (
-        -float(row.get("macro_auroc_ovr", -1.0)),
         -float(row.get("macro_f1", -1.0)),
+        -float(row.get("macro_auroc_ovr", -1.0)),
         -float(row.get("balanced_accuracy", -1.0)),
         float(row.get("ece_15", float("inf"))),
     )
@@ -404,8 +404,8 @@ def _search_diagnostics(rows: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "completed_configurations": len(rows),
         "ranking_rule": [
-            "macro_auroc_ovr_desc",
             "macro_f1_desc",
+            "macro_auroc_ovr_desc",
             "balanced_accuracy_desc",
             "ece_15_asc",
         ],
@@ -564,7 +564,7 @@ def _aggregate_confirmation(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             item[f"std_{metric}"] = statistics.pstdev(values)
         result.append(item)
     result.sort(key=lambda row: (
-        -row["mean_macro_auroc_ovr"], -row["mean_macro_f1"],
+        -row["mean_macro_f1"], -row["mean_macro_auroc_ovr"],
         -row["mean_balanced_accuracy"], row["mean_ece_15"], row["std_macro_auroc_ovr"],
     ))
     for rank, row in enumerate(result, start=1):
@@ -642,7 +642,7 @@ def run_baseline_selection(
         "unimodal_reference_plan_id": reference["plan_id"],
         "classifier_profile": selected_profile,
         "ranking_rule": [
-            "mean_macro_auroc_ovr_desc", "mean_macro_f1_desc",
+            "mean_macro_f1_desc", "mean_macro_auroc_ovr_desc",
             "mean_balanced_accuracy_desc", "mean_ece_15_asc", "std_macro_auroc_ovr_asc",
         ],
         "quality_gate": {

@@ -48,7 +48,7 @@ def validation_binary_auroc(graph) -> torch.Tensor:
     labels = graph.get_node_by_name("label_gt").feature_message.current_state.long()
     if logits.ndim != 2 or logits.shape[1] != 2:
         raise ValueError("validation_binary_auroc requires two-class logits")
-    scores = torch.softmax(logits.float(), dim=1)[:, 1]
+    scores = logits[:, 1].double() - logits[:, 0].double()
     positive = scores[labels == 1]
     negative = scores[labels == 0]
     if not positive.numel() or not negative.numel():

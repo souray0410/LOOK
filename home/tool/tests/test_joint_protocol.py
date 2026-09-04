@@ -181,22 +181,6 @@ def test_factor_ties_prefer_fewer_sites_then_larger_factor(monkeypatch,tmp_path)
     assert look.load_selected_bank(tmp_path)==[]
 
 
-def test_step36_case_order_and_ablation_contract():
-    import runpy
-    from look_core.study_grid import calibration_classifier_profiles
-    api=runpy.run_path(str(Path(__file__).resolve().parents[2]/'pipeline/36_run_joint_look_study.py'))
-    candidate={'winner':{'fusion_position':'layer3'},'classifier_profile':calibration_classifier_profiles()[4]}
-    stages=api['study_stages'](candidate,[4,8,16],[8,16,32],512)
-    assert sum(len(g.seeds)*len(g.filling_strategies) for _,g in stages)==11
-    assert stages[0][1].seeds==[3407] and stages[0][1].filling_strategies==['normalized_mean']
-    assert stages[-2][1].look_profiles[0]['correction_nodes']==['joint_input']
-    assert len(stages[-1][1].look_profiles[0]['correction_nodes'])==4
-    for _,g in stages:
-        g.validate()
-        assert g.look_profiles[0]['max_pca_rank']==512
-        assert g.look_profiles[0]['downsample_factors']==[4,8,16]
-
-
 def test_strict_checkpoint_failure_preserves_original(tmp_path):
     from look_core.pipeline import ExperimentRunner
     runner=ExperimentRunner.__new__(ExperimentRunner)

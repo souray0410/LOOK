@@ -1,0 +1,145 @@
+{
+  "release": "2026_09_04_10_49_20",
+  "status": "verified_before_formal_launch",
+  "test_access": false,
+  "archived_source": {
+    "branch": "archive/superseded-auroc-2026-09-03",
+    "commit": "383c3c8cf2d5a1eb9f7c8fd658a38bac6e09fa3a"
+  },
+  "tests": {
+    "result": "130 passed, 263 warnings",
+    "seconds": 21.73,
+    "log": "/tmp/look-macrof1-alltests.log"
+  },
+  "training_verification": {
+    "checkpoint": {
+      "backbone_id": "resnet50_oct_cfp_fusion_layer3__complete_modalities__seed3407__e531d96305b8",
+      "best_epoch": 1,
+      "criteria": "validation_macro_f1",
+      "macro_f1": 0.3333333432674408,
+      "path": "/data/mengh/LOOK/2026_09_04_10_49_20/runs/maintenance/macro_f1_training_smoke/backbones/resnet50_oct_cfp_fusion_layer3__complete_modalities__seed3407__e531d96305b8/best.pt",
+      "sha256": "818497b38e14492929a890fcd4e9c81df80fb58fb2761e845f99942ec49ea6ba"
+    },
+    "epochs": 2,
+    "history": [
+      {
+        "criterion": 0.3333333432674408,
+        "epoch": 1,
+        "macro_f1": 0.3333333333333333
+      },
+      {
+        "criterion": 0.3333333432674408,
+        "epoch": 2,
+        "macro_f1": 0.3333333333333333
+      }
+    ],
+    "implementation_sha256": "3bec3b1b67f1405b4efdcf786d0b4b1832e63b6c5bdf5f8bc8dd619f68ee81f6",
+    "participants_per_split": 8,
+    "status": "passed",
+    "test_access": false,
+    "world_size": 2
+  },
+  "joint_verification": {
+    "status": "passed",
+    "implementation_sha256": "3bec3b1b67f1405b4efdcf786d0b4b1832e63b6c5bdf5f8bc8dd619f68ee81f6",
+    "checkpoint_sha256": "818497b38e14492929a890fcd4e9c81df80fb58fb2761e845f99942ec49ea6ba",
+    "checkpoint_sha256_after": "818497b38e14492929a890fcd4e9c81df80fb58fb2761e845f99942ec49ea6ba",
+    "backbone_implementation_sha256": "457b81533d430c415c4ac673c26446536623766a30c96ef5246f02b340e82252",
+    "all_off_logits_exact": true,
+    "sites": [
+      "joint_input",
+      "joint_stem",
+      "joint_layer1",
+      "joint_layer2",
+      "joint_layer3",
+      "fusion_layer3",
+      "fusion_layer4",
+      "fusion_feature",
+      "fusion_participant_feature"
+    ],
+    "test_access": false
+  },
+  "joint_verification_file": "/data/mengh/LOOK/2026_09_04_10_49_20/runs/maintenance/macro_f1_joint_smoke/343e3b8aca30/verification.json",
+  "cleanup": {
+    "status": "complete",
+    "old_release": "2026_09_03_19_35_04",
+    "new_release": "2026_09_04_10_49_20",
+    "total_bytes": 797344261352,
+    "all_targets_absent": true,
+    "completed_at_utc": "2026-09-04T08:08:19.603633+00:00",
+    "paths": [
+      {
+        "bytes": 781051465395,
+        "files": 941,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/backbones"
+      },
+      {
+        "bytes": 296990,
+        "files": 2,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/baseline_selection"
+      },
+      {
+        "bytes": 13142602670,
+        "files": 1584,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/experiments"
+      },
+      {
+        "bytes": 58778,
+        "files": 3,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/joint_look"
+      },
+      {
+        "bytes": 10206572,
+        "files": 6,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/logs"
+      },
+      {
+        "bytes": 136617,
+        "files": 4,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/overnight"
+      },
+      {
+        "bytes": 718929111,
+        "files": 63,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/pca"
+      },
+      {
+        "bytes": 0,
+        "files": 0,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/reviewed_look"
+      },
+      {
+        "bytes": 2392457448,
+        "files": 469,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/smoke"
+      },
+      {
+        "bytes": 331413,
+        "files": 45,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/sweeps"
+      },
+      {
+        "bytes": 27147,
+        "files": 1,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/experiment_registry.json"
+      },
+      {
+        "bytes": 147926,
+        "files": 54,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/cache/partial"
+      },
+      {
+        "bytes": 91933,
+        "files": 60,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/cache/pipeline_state"
+      },
+      {
+        "bytes": 27509352,
+        "files": 492,
+        "path": "/data/mengh/LOOK/2026_09_03_19_35_04/runs/maintenance/joint_smoke"
+      }
+    ]
+  },
+  "protected_dataset_files": 37,
+  "scientific_results": "None yet. All small-subset verification metrics are technical checks only."
+}

@@ -26,13 +26,37 @@ from .graph import (
     optimizer_parameter_groups,
     reset_and_forward,
 )
-from .metrics import classification_metrics, validation_binary_auroc
+from .metrics import validation_binary_auroc, validation_macro_f1
+from .stable_metrics import logit_metrics
 from .monitoring import TrainingMonitor
 from .reproducibility import (
     backbone_implementation_sha256,
     sha256,
     write_json_atomic,
 )
+
+
+def selection_criterion(primary_metric):
+    criteria = {"macro_f1": validation_macro_f1, "macro_auroc_ovr": validation_binary_auroc}
+    if primary_metric not in criteria:
+        raise ValueError(f"Unsupported checkpoint criterion: {primary_metric}")
+    return criteria[primary_metric]
+
+
+def load_best_model_weights(trainer):
+    """Restore only model tensors for export; optimizer slots can differ by epoch.
+
+    In particular an AMP-skipped first update may leave Adam state empty in the
+    best checkpoint, while later epochs allocate it. Export does not resume
+    optimization and must not request those later optimizer slots.
+    """
+    from torch.distributed import checkpoint as dcp
+    from torch.distributed.checkpoint.state_dict import get_model_state_dict, set_model_state_dict
+
+    state = {"model": get_model_state_dict(trainer.model)}
+    dcp.load(state, checkpoint_id=str(Path(trainer.save_dir) / "best"),
+             no_dist=not trainer.context.distributed)
+    set_model_state_dict(trainer.model, state["model"])
 
 
 def _schedule(epoch: int, epochs: int, warmup_epochs: int) -> float:
@@ -102,7 +126,7 @@ def train_complete_model_ddp(
         graph_monitor,
         forward_levels=graph.forward_levels,
         backward_levels=backward_levels,
-        criteria=validation_binary_auroc,
+        criteria=selection_criterion(config.primary_metric),
         criteria_mode="max",
         save_dir=str(run_dir),
         lr_scheduler=scheduler,
@@ -119,7 +143,7 @@ def train_complete_model_ddp(
     )
     completion_path = run_dir / "training_complete.json"
     if completion_path.is_file():
-        trainer.load_checkpoint(load_best=True)
+        load_best_model_weights(trainer)
         return graph
 
     start_epoch = 0
@@ -145,9 +169,8 @@ def train_complete_model_ddp(
                 f"Distributed validation returned {len(complete_labels)} rows; "
                 f"expected {len(validation_loader.dataset)}"
             )
-        probabilities = torch.softmax(complete_logits.float(), dim=1).numpy()
         labels = complete_labels.long().numpy()
-        metrics = classification_metrics(labels, probabilities)
+        metrics = logit_metrics(labels, complete_logits.numpy())
         metrics["cross_entropy"] = float(eval_metrics[trainer.loss_node_name])
         graph_score = float(eval_metrics[trainer.criteria_name])
         score = float(metrics[config.primary_metric])
@@ -177,7 +200,7 @@ def train_complete_model_ddp(
     epochs_completed = len(history)
     best_epoch = int(trainer.history["best_epoch"])
     best_score = float(trainer.history["best_eval_value"])
-    trainer.load_checkpoint(load_best=True)
+    load_best_model_weights(trainer)
     if context.is_main:
         temporary = run_dir / "best.pt.tmp"
         torch.save({
@@ -204,6 +227,7 @@ def train_complete_model_ddp(
         temporary.replace(run_dir / "best.pt")
         write_json_atomic({
             "status": "complete",
+            "primary_metric": config.primary_metric,
             "epochs_completed": epochs_completed,
             "best_epoch": best_epoch,
             "best_score": best_score,

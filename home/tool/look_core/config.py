@@ -71,7 +71,8 @@ class ExperimentConfig:
     downsample_factors: List[int] = field(default_factory=lambda: [4, 8, 16])
     latent_dims: List[int] = field(default_factory=lambda: [8, 16, 32, 64, 96, 128, 192, 256, 384, 512])
     max_pca_rank: int = 512
-    primary_metric: str = "macro_auroc_ovr"
+    primary_metric: str = "macro_f1"
+    evaluate_all_factors: bool = False
     baseline_auroc_target: float = 0.80
     baseline_macro_f1_target: float = 0.70
     baseline_min_sensitivity: float = 0.65
@@ -138,6 +139,8 @@ class ExperimentConfig:
             raise ValueError("Binary class_names must be [normal, positive phenotype]")
         if self.sample_unit != "participant_earliest_complete_bilateral_visit":
             raise ValueError("The primary analysis unit must be one bilateral participant visit")
+        if self.primary_metric not in {"macro_f1", "macro_auroc_ovr"}:
+            raise ValueError("Unsupported primary selection metric")
         if self.backbone_name != "resnet50":
             raise ValueError("LOOK currently supports backbone_name='resnet50'")
         if self.image_size != 224:

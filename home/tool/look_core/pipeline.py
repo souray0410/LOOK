@@ -39,7 +39,7 @@ from .reproducibility import (
     write_json_atomic,
 )
 from .state import PipelineState, quarantine
-from .train import predict
+from .train import predict, selection_criterion
 
 
 @dataclass(frozen=True)
@@ -368,6 +368,7 @@ class ExperimentRunner:
     def _backbone_id(self) -> str:
         identity = {
             "architecture_id": self.selection.architecture_id,
+            "primary_metric": self.config.primary_metric,
             "seed": self.selection.seed,
             "num_classes": self.config.num_classes,
             "image_size": self.config.image_size,
@@ -420,6 +421,8 @@ class ExperimentRunner:
                     and summary.get("checkpoint_sha256") == sha256(checkpoint_path)
                     and summary.get("training_strategy") == "end_to_end_finetuning"
                     and summary.get("training_stage") == "complete_modalities"
+                    and summary.get("primary_metric") == self.config.primary_metric
+                    and summary.get("criteria") == selection_criterion(self.config.primary_metric).__name__
                 )
             except (OSError, ValueError, json.JSONDecodeError):
                 valid = False
@@ -596,6 +599,9 @@ class ExperimentRunner:
                 or checkpoint.get('training_stage') != 'complete_modalities'
                 or checkpoint.get('labels_sha256') != self.data_hash):
             raise RuntimeError('Checkpoint is not the matching complete-modality baseline')
+        if (checkpoint.get('primary_metric') != self.config.primary_metric
+                or checkpoint.get('criteria') != selection_criterion(self.config.primary_metric).__name__):
+            raise RuntimeError('Checkpoint selection metric does not match this protocol')
         graph.load_state_dict(checkpoint['graph_state_dict'])
         graph.eval()
         for parameter in graph.parameters():
@@ -629,6 +635,7 @@ class ExperimentRunner:
 
     def _fit_or_load_look(self, graph, train_loader, validation_loader, filler, pca_bank):
         banks, summary = {}, {"enabled": True, "banks": {}}
+        self.factor_look_banks = {}
         correction_nodes = resolve_sites(graph, self.config.correction_nodes)
         for pattern in self.config.missing_patterns:
             output_dir = self.experiment_dir / "look" / pattern
@@ -691,6 +698,11 @@ class ExperimentRunner:
                     completion,
                 )
             banks[pattern] = artifacts
+            if self.config.evaluate_all_factors:
+                for factor in self.config.downsample_factors:
+                    factor_bank = load_selected_bank(output_dir / "factors" / f"x{factor}")
+                    validate_global_factor_bank(factor_bank, correction_nodes, factor)
+                    self.factor_look_banks.setdefault(factor, {})[pattern] = factor_bank
             summary["banks"][pattern] = {
                 "selected": [
                     {
@@ -754,6 +766,16 @@ class ExperimentRunner:
                         artifact_banks=look_banks,
                         filler=filler,
                     )
+        if look_banks and self.config.evaluate_all_factors:
+            for factor, banks in self.factor_look_banks.items():
+                for pattern in self.config.missing_patterns:
+                    results[f"look_x{factor}_after_fill_{pattern}"] = evaluate_missing(
+                        graph, loader, self.device, fixed_pattern=pattern, artifact_banks=banks, filler=filler)
+                if self.options.evaluate_random_missing:
+                    for ratio in self.config.missing_ratios:
+                        results[f"look_x{factor}_after_fill_random_{ratio:.1f}"] = evaluate_missing(
+                            graph, loader, self.device, random_ratio=ratio, random_seed=self.selection.seed,
+                            artifact_banks=banks, filler=filler)
         for name, result in results.items():
             self._save_prediction(result, split, name)
         return results

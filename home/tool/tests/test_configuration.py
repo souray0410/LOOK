@@ -260,6 +260,5 @@ def test_notebook_has_one_documented_configuration_cell():
             assert index and notebook["cells"][index - 1]["cell_type"] == "markdown"
     assert notebook["metadata"]["kernelspec"]["display_name"] == "LOOK"
     source = "".join(next(cell for cell in notebook["cells"] if cell.get("id") == "configuration")["source"])
-    assert 'PROJECT_ROOT = Path("/home/mengh/LOOK/2026_09_03_19_35_04")' in source
-    assert 'EXECUTION_MODE = "baseline_selection"' in source
-    assert 'TASK_SCOUT_EPOCHS = 12' in source
+    assert 'PROJECT_ROOT = Path("/home/mengh/LOOK/2026_09_04_10_49_20")' in source
+    assert 'EXECUTION_MODE = "macro_f1_study"' in source

@@ -1,3 +1,15 @@
+## 2026-09-04 — Step 37: Macro-F1 restart (current)
+
+Release `2026_09_04_10_49_20` supersedes previous model/output protocols. Backbone
+best epoch and early stopping now use full-validation Macro-F1; LOOK uses the
+same primary endpoint. Fixed layer3 and three seeds are retrained from ImageNet,
+without architecture search. New checkpoint identities and PCA banks prevent old
+AUROC artifacts from being reused. All factors and random missing ratios are
+reported independently. Test cohorts remain sealed. Steps 33–36 and their
+launchers are archived on `archive/superseded-auroc-2026-09-03` at `383c3c8`.
+The following older entries are historical and do not define current acceptance
+or launch rules. See `JOINT_LOOK_PROTOCOL.md` in the home tree for current rules.
+
 # Pipeline Ledger
 
 | Step | Purpose | Durable output | Recovery and integrity |

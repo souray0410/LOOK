@@ -10,19 +10,27 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--project-root', type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument('--runs-root', type=Path)
-    parser.add_argument('--session', default='look-joint')
+    parser.add_argument('--session', default='look-macro-f1')
     parser.add_argument('--follow', action='store_true')
     args = parser.parse_args()
     cfg = json.loads((args.project_root / 'project.json').read_text())
     runs = args.runs_root or Path(cfg['deployment_defaults']['data_root']) / cfg['directories']['runs']
     active = subprocess.run(['tmux', 'has-session', '-t', args.session], capture_output=True).returncode == 0
     print(f'session={args.session} running={active}')
-    summaries = sorted((runs / 'joint_look').glob('*/summary.json'), key=lambda p: p.stat().st_mtime)
+    summaries = sorted((runs / 'macro_f1_study').glob('*/summary.json'), key=lambda p: p.stat().st_mtime)
     if summaries:
         summary = json.loads(summaries[-1].read_text())
         print(f'summary={summaries[-1]}')
-        for key in ('status', 'stage', 'next_stage', 'active_seed', 'updated_at_utc', 'active_plan_id', 'error', 'test_access'):
+        for key in ('status', 'stage', 'next_stage', 'active_seed', 'updated_at_utc', 'active_plan_id', 'active_backbone_id', 'error', 'test_access'):
             print(f'{key}={summary.get(key)}')
+        bid = summary.get('active_backbone_id')
+        if bid:
+            history = runs / 'backbones' / bid / 'history.json'
+            if history.exists():
+                rows = json.loads(history.read_text())
+                if rows:
+                    best = max(rows, key=lambda row: row['criteria_value'])
+                    print('backbone_epoch=' + str(rows[-1]['epoch']) + ' criterion=' + rows[-1]['criteria'] + ' best_f1=' + str(best['criteria_value']) + ' best_epoch=' + str(best['epoch']))
         pca_progress = sorted((runs / 'pca').glob('*/progress.json'), key=lambda p: p.stat().st_mtime)
         for path in pca_progress[-3:]:
             print('shared_pca=' + json.dumps(json.loads(path.read_text())))
@@ -52,7 +60,7 @@ def main():
                         record = bank / 'bank_complete.json'
                         if record.exists():
                             d = json.loads(record.read_text())
-                            print(f"  {bank.relative_to(root)} nodes={n} AUROC={d['primary_score']:.4f}")
+                            print(f"  {bank.relative_to(root)} nodes={n} Macro-F1={d['primary_score']:.4f}")
                         else:
                             history = bank / 'search_history.json'
                             rows = json.loads(history.read_text()) if history.exists() else []

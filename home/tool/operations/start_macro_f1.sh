@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export OMP_NUM_THREADS="${OMP_NUM_THREADS:-4}"
+export MKL_NUM_THREADS="${MKL_NUM_THREADS:-4}"
+export OPENBLAS_NUM_THREADS="${OPENBLAS_NUM_THREADS:-4}"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SESSION=look-overnight
+SESSION=look-macro-f1
 PYTHON=""
 ARGS=()
 while [[ $# -gt 0 ]]; do
@@ -18,10 +21,11 @@ fi
 if [[ -z "$PYTHON" ]]; then
   PYTHON="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["deployment_defaults"]["venv_path"]+"/bin/python")' "$PROJECT_ROOT/project.json")"
 fi
+export PYTHONPATH="$PROJECT_ROOT/tool${PYTHONPATH:+:$PYTHONPATH}"
 RUNS_ROOT="$("$PYTHON" -c 'import argparse;from look_core.cli import add_runtime_arguments,resolve_runtime_arguments;p=argparse.ArgumentParser();add_runtime_arguments(p);a,_=p.parse_known_args();print(resolve_runtime_arguments(a).runs_root)' --project-root "$PROJECT_ROOT" "${ARGS[@]}")"
 mkdir -p "$RUNS_ROOT/logs"
 LOG="$RUNS_ROOT/logs/${SESSION}_$(date -u +%Y%m%dT%H%M%SZ).log"
-COMMAND=("$PYTHON" -u "$PROJECT_ROOT/pipeline/33_run_overnight_validation.py" --project-root "$PROJECT_ROOT" "${ARGS[@]}")
+COMMAND=(env "PYTHONPATH=$PYTHONPATH" "OMP_NUM_THREADS=$OMP_NUM_THREADS" "MKL_NUM_THREADS=$MKL_NUM_THREADS" "OPENBLAS_NUM_THREADS=$OPENBLAS_NUM_THREADS" "$PYTHON" -u "$PROJECT_ROOT/pipeline/37_run_macro_f1_study.py" --project-root "$PROJECT_ROOT" "${ARGS[@]}")
 printf -v CMD '%q ' "${COMMAND[@]}"
 printf -v LOG_QUOTED '%q' "$LOG"
 tmux new-session -d -s "$SESSION" "exec $CMD > $LOG_QUOTED 2>&1"

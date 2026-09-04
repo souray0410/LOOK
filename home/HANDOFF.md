@@ -1,58 +1,43 @@
-# LOOK handoff — joint sequential correction
+# LOOK handoff — Macro-F1 restart
 
-Updated 2026-09-04 after Souray's approved Step 36 migration. Runtime statements
-are snapshots: refresh with the checker before acting. Respond in Chinese and
-begin every reply with “好的，Souray。”; remain objective about negative metrics.
+Current release `2026_09_04_10_49_20`. Respond in Chinese beginning “好的，Souray。”
+Local shell commands use `/tmp`; temporary clones only. GitHub `main` is the latest
+valid workflow. Archive branch `archive/superseded-auroc-2026-09-03` preserves
+commit `383c3c8` and the retired AUROC protocol, for historical tracing only.
 
-## Read in this order
-
-1. `project.json`: canonical runtime roots, task and environment.
-2. `JOINT_LOOK_PROTOCOL.md`: current method, queue, exact start/resume commands.
+Read in order:
+1. `project.json` and `configs/macro_f1_study.json`.
+2. `JOINT_LOOK_PROTOCOL.md` (method, selection, queue and recovery commands).
 3. `PIPELINE_LEDGER.md`, `CHANGELOG.md`, parent `PROJECT_TIMELINE.md`.
-4. `docs/joint_migration_evidence.json`: deployment acceptance and cleanup snapshot.
-5. On ws, current `runs/joint_look/*/summary.json`, factor/decision records and
-   `runs/maintenance/joint_protocol_cleanup_e6d740a884be.json`.
-6. `docs/history/HANDOFF_3d0047c.md` for historical baseline/scouting evidence;
-   its Step 34 method and running-state claims are superseded.
-7. `references/260810_manifest.json` and source export for method provenance.
+4. New runtime `runs/maintenance/`: training/joint verification and retirement audit.
+5. Refresh `tool/operations/check_macro_f1.py`; read current study summary and logs.
+6. `references/260810_manifest.json` and verbatim reference source when needed.
 
-Run `python3 tool/operations/check_joint_look.py` on ws after reading. Old
-`check_reviewed_look.py` inspects the retired protocol, not the current queue.
+Source: `/home/mengh/LOOK/2026_09_04_10_49_20` on `ssh ws`.
+Runtime: `/data/mengh/LOOK/2026_09_04_10_49_20`.
+Environment: `/home/mengh/LOOK/2026_08_30_11_20_47/tool/environment/.venv`.
+Existing selected cohort metadata remains in the previous release dataset root;
+images and preprocessing remain shared with `2026_09_03_08_30_00`. These are
+intentional immutable data dependencies, not old model/result reuse.
 
-## Fixed context
+Souray explicitly replaced the earlier fixed-checkpoint instruction: retrain all
+three complete-input backbones with validation Macro-F1 best-epoch selection,
+then new full-train PCA and joint sequential optional LOOK, also selected by
+Macro-F1. Preserve layer3, ImageNet normalization, hyperparameters and data splits.
+No new architecture search. CE remains the training loss; no threshold tuning.
+Do not reuse or rename AUROC-best weights. Both test cohorts remain sealed.
 
-Private canonical source: https://github.com/souray0410/LOOK (`main`). The release
-contains `home/` source and `data/` skeleton. Deployed source is NOT a git checkout.
+Step 37 is the only current formal experiment entrypoint. Old Steps 33–36 and
+launchers were removed from main; recover them only from the archived branch.
+The current notebook calls Step 37. Earlier ledger entries are historical records.
+The queue trains seeds 3407/3408/3409, then mean 3407, remaining mean cases,
+three black-image cases, three independent cGAN cases and two mean-3407 ablations.
+Report every factor and missing ratio, not just the selected factor. Technical
+errors block progress; disappointing metrics do not justify protocol changes.
 
-- SSH `ws`; source `/home/mengh/LOOK/2026_09_03_19_35_04`.
-- Runtime `/data/mengh/LOOK/2026_09_03_19_35_04`.
-- Python `/home/mengh/LOOK/2026_08_30_11_20_47/tool/environment/.venv/bin/python`.
-- Images and preprocessing are shared with release `2026_09_03_08_30_00`.
-- Parent project standard and timeline remain authoritative maintenance records.
-- Local terminal workdir `/tmp`; only temporary local checkout, no permanent
-  source or downloaded participant data. Verify GitHub/deployment before removal.
+Per-level subgraph/weight streaming is deferred and is not implemented. Do not
+claim measured memory savings or a new offloading algorithm.
 
-Task `glaucoma_all_evidence`: participant-level binary record-derived phenotype,
-925 cases and 925 matched controls; train 1264, validation 296, test 290. Each
-participant has bilateral CFP and central 2D OCT; OCT grayscale is repeated RGB.
-Natural-distribution test is secondary and sealed together with primary test.
-
-Reuse exact layer3 seeds 3407/3408/3409 from baseline candidate
-`025a0ceb64d2`; no further backbone search, no missing-input fine-tuning and no
-alpha. Complete-input checkpoint selection evidence and failed historical gates
-are preserved. The original baseline gate does not block this approved study.
-
-Main filling is zero AFTER ImageNet normalization (`normalized_mean`). Black
-raw images are `raw_zero` and are different inputs. Preserve independent cGAN.
-Full complete-training PCA is shared across filling and missing directions;
-Dmax 512 is independent of dimensions. Nine ordered joint/fusion sites can each
-be disabled; all-off is a valid baseline. All ranking uses logit differences.
-
-Study e6d740a884be was stopped for protocol replacement; its exclusive incompatible
-outputs are retired using the new scoped cleanup, with negative aggregate results
-kept. Never interpret old saturated softmax AUROC=0.5 as proof of absent logit
-ranking information. Do not resurrect Step 34 or apply Step 35's old PCA-only reason.
-
-Current implementation advantage: frozen local fits support staged execution.
-Per-level weight offloading remains a proposed optimization, not implemented
-capability or measured savings. No claim of computation-free or learning-free LOOK.
+All runtime status statements need live verification. Start/resume:
+`bash tool/operations/start_macro_f1.sh --gpus 0,1 --execute`.
+Check: `python3 tool/operations/check_macro_f1.py`.

@@ -1,53 +1,19 @@
-# LOOK 2026_09_03_19_35_04
+# LOOK 2026_09_04_10_49_20
 
-New assistant/session: start with [home/HANDOFF.md](home/HANDOFF.md), then refresh
-the remote monitor. It records current decisions, runtime paths, historical pointers,
-and known negative results without requiring the previous conversation.
+Current Macro-F1 research release. Read [the handoff](home/HANDOFF.md) first.
+`main` contains the current workflow; [archive/superseded-auroc-2026-09-03](https://github.com/souray0410/LOOK/tree/archive/superseded-auroc-2026-09-03)
+preserves the superseded AUROC protocol for historical tracing only.
 
-Portable two-tree release for the selected UK Biobank bilateral CFP/OCT
-all-evidence glaucoma benchmark and LOOK missing-modality study.
-Controlled UK Biobank data are not distributed.
+Complete-input layer3 backbones are trained at three seeds, selecting best
+weights by full validation Macro-F1. Joint sequential optional LOOK selects its
+sites and dimensions by the same endpoint. Every spatial factor and missing
+scenario is reported. Test cohorts remain sealed. Controlled data are not included.
 
-```text
-2026_09_03_19_35_04/
-|-- home/  source, configuration, reusable packages, and numbered pipeline
-`-- data/  empty runtime skeleton for a new deployment
-```
+Deploy `home/` to `/home/mengh/LOOK/2026_09_04_10_49_20`; runtime outputs belong in
+`/data/mengh/LOOK/2026_09_04_10_49_20`. `data/` is an empty runtime skeleton.
+Existing data, cohort definitions, environment and preprocessing are shared via
+explicit paths in `home/project.json`; no image copy is needed.
 
-Author deployment:
-
-```text
-home/ -> /home/mengh/LOOK/2026_09_03_19_35_04
-data/ -> /data/mengh/LOOK/2026_09_03_19_35_04
-```
-
-The new runtime stores cohort manifests, state, checkpoints, and analyses only. It
-references the existing immutable image export and preprocessing cache through explicit
-paths in `home/project.json`; no 346 GB image copy or symlink is created.
-
-The validation-only task scout selected `glaucoma_all_evidence` (925 cases and 925
-matched controls). On 2026-09-04, after baseline comparison, the researcher approved
-the original AUROC-ranked layer3 backbone for the Step 34 LOOK development study:
-one configuration, three seeds, zero/mean/cGAN filling and train-fit/validation-selected
-PCA-Ridge correction. Original failed automatic gates remain recorded. Both test
-cohorts remain sealed. See `home/README.md` for launch, resume and monitoring commands.
-
-Shared complete-feature PCA banks are prepared before correction fitting and reused
-across missing scenarios and fillings. Dmax (default 512) is independent of the
-dimension search. Two quick diagnostic cases precede the nine full comparisons.
-
-Path precedence is explicit CLI argument, `LOOK_*` environment variable, then the
-author defaults in `project.json`. Other authorized users can reproduce the workflow
-by overriding their project, data, source-image, phenotype, and cache paths.
-
-See [home/README.md](home/README.md) for commands and
-[GENERAL_PROJECT_STANDARD.md](GENERAL_PROJECT_STANDARD.md) for the reusable engineering
-standard. [PROJECT_TIMELINE.md](PROJECT_TIMELINE.md) records the purpose and outcome of
-every timestamped snapshot.
-
-## Version Control
-
-The private GitHub repository is the canonical source of truth. `main` contains the
-current release; each historical source tree is preserved as both
-`snapshot/<YYYY_MM_DD_HH_MM_SS>` and a matching timestamp tag. Compute servers are
-deployments of committed GitHub source. Local clones are optional and disposable.
+See [method and commands](home/JOINT_LOOK_PROTOCOL.md),
+[fixed specification](home/configs/macro_f1_study.json),
+[project standard](GENERAL_PROJECT_STANDARD.md) and [historical timeline](PROJECT_TIMELINE.md).
