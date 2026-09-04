@@ -8,9 +8,13 @@ remain historical exploratory evidence, not inputs to this new study.
 
 Keep ResNet50, ImageNet initialization and normalization, the selected record-derived
 UKB glaucoma task, participant splits, preprocessing, MHD V4 core and optimizer profile
-fixed. Train all seven fusion positions (input, stem, layer1, layer2, layer3, layer4,
-feature) at seeds 3407, 3408, 3409. Also train OCT-only and CFP-only at the same seeds.
-These are 27 fresh complete-input backbones. Do not reuse earlier checkpoints.
+fixed. Screen all seven fusion positions (input, stem, layer1, layer2, layer3, layer4,
+feature) once at the prespecified seed 3407. Rank these seven screening runs by
+validation Macro-F1, breaking exact ties by the declared position order, and select
+the first three. Only the selected positions receive seeds 3408 and 3409, giving nine
+formal fusion backbones. OCT-only and CFP-only are auxiliary three-seed controls and
+do not enter fusion selection. In total the queue fits 19 unique complete-input
+backbones: seven screening, six selected-position replications and six references.
 
 Cross-entropy is the gradient loss. Best epoch and early stopping use full participant
 validation Macro-F1 from logits argmax; no threshold tuning. Training may use AMP,
@@ -18,10 +22,10 @@ but validation and frozen inference use FP32. Macro-F1 counts/ratios use float64
 return a Python float to preserve precision through the existing trainer interface.
 Checkpoint/frozen-validation Macro-F1 disagreement blocks fusion ranking for diagnosis.
 
-Rank the seven fusion positions by mean validation Macro-F1 across all three seeds,
-then lower sample SD, then declared position order. Select exactly the first three.
-No winner is chosen by its best seed, AUROC, missing-input performance or test result.
-Save all 21 fusion rows, six reference rows, seven aggregate rows and selection rule.
+No 3408/3409 result may influence the screening decision, and an unselected position
+must not be replicated. Save the seven screening rows, ordered selection, nine formal
+selected-position rows and six reference rows. AUROC, missing-input performance and
+test results never select the fusion position.
 This is a prespecified validation-selection protocol; selected architectures and
 LOOK performance still require independent sealed-test confirmation later.
 
@@ -125,11 +129,13 @@ random evaluation reuses these matrices and never refits from evaluation labels.
 
 ## Queue, recovery and evidence
 
-After 27 backbone runs and fusion selection, run mean for all three selected positions
-and three seeds, then black for the same nine cases, then independent cGAN for the same
-nine cases: 27 main cases. Add mean seed 3407 input-only and fusion-only ablations for
-each selected position: six ablation cases. Fusion-only sites are derived from each
-architecture, not hardcoded to layer3. Every case reports complete, filling and
+Run seven seed-3407 screening backbones, select three positions, and add the six missing
+selected-position replications. Then run mean for all three selected positions and
+three seeds, black for the same nine cases, and independent cGAN for the same nine
+cases: 27 main cases. Add mean seed 3407 input-only and fusion-only ablations for each
+selected position: six ablation cases. Run the six auxiliary single-modality references
+after the core LOOK queue. The complete queue has 52 stages. Fusion-only sites are
+derived from each architecture, not hardcoded to layer3. Every case reports complete, filling and
 filling+LOOK for factors 4/8/16, both full-missing directions and all five random ratios.
 The ten candidate dimensions are 8,16,32,64,96,128,192,256,384,512, capped by available
 rank; Dmax remains independent at 512. No factor curve is assumed monotonic.

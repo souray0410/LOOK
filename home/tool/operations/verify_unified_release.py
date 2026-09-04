@@ -46,7 +46,9 @@ def main():
     run('ddp_criteria',['-m','torch.distributed.run','--standalone','--nproc-per-node','2',project/'tool/tests/ddp_criteria_smoke.py','--output',output/'ddp_criteria'])
     command=[project/'pipeline/38_run_unified_study.py',*common,'--gpus','0,1']
     first=json.loads(run('plan_first',command).read_text());second=json.loads(run('plan_second',command).read_text())
-    if first!=second or first['expected_backbones']!=27 or first['expected_main_look_cases']!=27:
+    if (first!=second or first['expected_screening_backbones']!=7 or
+            first['expected_formal_fusion_backbones']!=9 or first['expected_backbones']!=19 or
+            first['expected_main_look_cases']!=27 or first['expected_total_stages']!=52):
         raise RuntimeError('Study planning is not deterministic')
     report['planned_study']=first
     report.update(status='passed',completed_at_utc=utc_now())

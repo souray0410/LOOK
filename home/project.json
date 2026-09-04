@@ -49,7 +49,7 @@
     "look_selection": "macro_f1",
     "test_access": false,
     "entrypoint": "pipeline/38_run_unified_study.py",
-    "fusion_selection": "mean_validation_macro_f1_over_three_seeds",
+    "fusion_selection": "validation_macro_f1_seed3407_screen_then_selected_three_seed_replication",
     "top_k": 3,
     "validation_precision": "fp32",
     "missingness_protocol": "nested_exact_count_fixed_direction_v1"

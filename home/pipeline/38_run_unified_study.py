@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare fusion positions with Macro-F1 and run three selected joint LOOK branches."""
+"""Screen fusion positions once with Macro-F1, replicate the selected three, then run LOOK."""
 import argparse
 import json
 import os

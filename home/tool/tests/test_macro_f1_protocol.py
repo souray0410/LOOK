@@ -8,7 +8,7 @@ import torch
 from look_core.train import selection_criterion
 from look_core.metrics import validation_macro_f1,validation_binary_auroc
 from look_core.pipeline import ExperimentRunner,PipelineOptions
-from look_core.unified_study import backbone_stages,correction_stages,verify_f1_checkpoint
+from look_core.unified_study import screening_stages,selected_replication_stages,reference_stages,correction_stages,verify_f1_checkpoint
 from look_core.study_grid import expand_study_grid,_ranking_key
 from test_configuration import _paths,_config
 
@@ -31,7 +31,9 @@ def test_metric_changes_checkpoint_identity(tmp_path):
 
 def test_entire_new_study_uses_macro_f1_and_same_backbones(tmp_path):
     spec=json.loads((Path(__file__).resolve().parents[2]/'configs/unified_study.json').read_text())
-    baselines=backbone_stages(spec);looks=correction_stages(spec,['input','layer3','feature']);paths=_paths(tmp_path)
+    selected=['input','layer3','feature']
+    baselines=[*screening_stages(spec),*selected_replication_stages(spec,selected),*reference_stages(spec)]
+    looks=correction_stages(spec,selected);paths=_paths(tmp_path)
     ids={}
     for _,grid in baselines:
         case=expand_study_grid(grid,paths,gpu_devices=(0,1))[0]
@@ -46,7 +48,7 @@ def test_entire_new_study_uses_macro_f1_and_same_backbones(tmp_path):
             assert runner._backbone_id()==ids[(case.selection.fusion_position,case.selection.seed)]
             assert case.config.primary_metric=='macro_f1' and case.config.evaluate_all_factors
             assert case.options.phase=='validation'
-    assert count==33 and len(ids)==27
+    assert count==33 and len(ids)==19
 
 
 def test_factor_evaluation_covers_all_random_ratios(monkeypatch,tmp_path):

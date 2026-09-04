@@ -1,5 +1,5 @@
 {
-  "protocol": "unified_fusion_joint_look_macro_f1_v2",
+  "protocol": "screen_then_replicate_joint_look_macro_f1_v3",
   "seeds": [
     3407,
     3408,
@@ -45,7 +45,7 @@
     "weight_decay": 0.0001,
     "missingness_seed": 3407
   },
-  "configuration_provenance": "Fresh complete-modality training for all seven fusion positions and two unimodal controls; same three seeds and fixed training hyperparameters. Top three fusion positions selected by mean validation Macro-F1, ties by lower sample SD then declared position order. No previous checkpoint or result is reused.",
+  "configuration_provenance": "Screen all seven fusion positions once with seed 3407 using validation Macro-F1, select the top three with declared position order as the tie breaker, and only then add seeds 3408 and 3409 for the selected positions. Run LOOK only on the selected three-seed backbones. OCT-only and CFP-only are auxiliary controls and do not enter fusion selection. No result from the superseded three-seed-all-positions study is an input.",
   "test_access": false,
   "release_id": "2026_09_04_19_18_07",
   "fusion_positions": [
@@ -58,6 +58,7 @@
     "feature"
   ],
   "top_k": 3,
+  "screening_seed": 3407,
   "reference_positions": [
     "oct_only",
     "cfp_only"

@@ -23,7 +23,7 @@ def main():
         print(f'summary={summaries[-1]}')
         for key in ('status', 'stage', 'next_stage', 'active_seed', 'active_fusion', 'selected_fusions', 'updated_at_utc', 'active_plan_id', 'active_backbone_id', 'error', 'test_access'):
             print(f'{key}={summary.get(key)}')
-        print('completed_stages=' + str(len(summary['completed_stages'])) + '/60')
+        print('completed_stages=' + str(len(summary['completed_stages'])) + '/' + str(summary.get('expected_total_stages', '?')))
         bid = summary.get('active_backbone_id')
         if bid:
             history = runs / 'backbones' / bid / 'history.json'

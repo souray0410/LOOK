@@ -3,7 +3,7 @@ from pathlib import Path
 from types import SimpleNamespace
 import pytest
 from look_core.missingness import missingness_plan
-from look_core.unified_study import rank_fusions, correction_stages
+from look_core.unified_study import rank_fusions, correction_stages, screening_stages, selected_replication_stages, reference_stages
 from look_core.train import evaluate_fp32
 
 
@@ -27,22 +27,33 @@ def test_missingness_nested_fixed_direction_exact_counts_and_order_independence(
 
 
 def evidence():
+    seed=spec()['screening_seed']
     return [dict(fusion_position=fusion,seed=seed,macro_f1=.5,backbone_id=f'{fusion}:{seed}')
-            for fusion in spec()['fusion_positions'] for seed in spec()['seeds']]
+            for fusion in spec()['fusion_positions']]
 
 
-def test_fusion_ranking_uses_all_seeds_and_declared_ties():
+def test_fusion_ranking_uses_only_screening_seed_and_declared_ties():
     rows=evidence()
-    # A high best seed must not win against a better three-seed mean.
     for row in rows:
-        if row['fusion_position']=='input':row['macro_f1']=1. if row['seed']==3407 else .25
+        if row['fusion_position']=='input':row['macro_f1']=.7
         if row['fusion_position']=='layer3':row['macro_f1']=.6
     ranking=rank_fusions(rows,spec())
-    assert ranking[0]['fusion_position']=='layer3'
-    assert ranking[1]['fusion_position']=='stem' # same mean, lower SD than input
-    assert ranking[-1]['fusion_position']=='input'
+    assert ranking[0]['fusion_position']=='input'
+    assert ranking[1]['fusion_position']=='layer3'
+    assert ranking[2]['fusion_position']=='stem'
     with pytest.raises(RuntimeError):rank_fusions(rows[:-1],spec())
     with pytest.raises(RuntimeError):rank_fusions(rows+[rows[0]],spec())
+    wrong=[dict(rows[0],seed=3408),*rows[1:]]
+    with pytest.raises(RuntimeError):rank_fusions(wrong,spec())
+
+
+def test_backbone_schedule_screens_then_replicates_selected_only():
+    cfg=spec();selected=['input','layer3','feature']
+    screens=screening_stages(cfg);replications=selected_replication_stages(cfg,selected);refs=reference_stages(cfg)
+    assert len(screens)==7 and all(grid.seeds==[3407] for _,grid in screens)
+    assert len(replications)==6 and {grid.fusion_positions[0] for _,grid in replications}==set(selected)
+    assert all(grid.seeds[0] in {3408,3409} for _,grid in replications)
+    assert len(refs)==6 and {grid.fusion_positions[0] for _,grid in refs}=={'oct_only','cfp_only'}
 
 
 def test_fusion_only_sites_follow_selected_architecture():

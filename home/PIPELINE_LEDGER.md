@@ -92,10 +92,10 @@ the decision but does not qualify the baseline or authorize LOOK.
 ## Step 38 — 2026_09_04_19_18_07 unified protocol replacement
 
 User requested pause of Step 37 and fresh consistent comparisons. Old processes were
-stopped and old results preserved. Train all seven fusion positions and two unimodal
-controls at seeds 3407/3408/3409. Checkpoint/architecture/LOOK endpoint is Macro-F1;
-validation uses FP32, training AMP. Select top three fusion positions by three-seed mean,
-then lower SD and declared order. Run 27 main LOOK cases plus six ablations. Independent
+stopped and old results preserved. Screen all seven fusion positions at seed 3407,
+select the top three by validation Macro-F1, then add seeds 3408/3409 only for those
+positions. OCT-only and CFP-only remain auxiliary three-seed controls outside fusion
+selection. Validation uses FP32 and training uses AMP. Run 27 main LOOK cases plus six ablations. Independent
 GAN still uses training-internal reconstruction validation. Random masks now use shared
 hash ordering, exact rounded participant counts, nested sets and fixed missing direction.
 All factors and metrics are reported; both test cohorts remain sealed. Step 37 and the
@@ -112,7 +112,8 @@ The shared LOOK input reset assumed both OCT and CFP input nodes existed. This
 crashed after the first OCT-only training run completed, before validation_result
 was written. Reset now writes only input nodes present in the graph. Training,
 checkpoint selection, graph topology, residual fitting and statistical definitions
-are unchanged. The existing verified checkpoint must be reused, not retrained.
+were unchanged in that repair. Its checkpoint belonged to the subsequently superseded
+all-position three-seed attempt and is no longer a valid input to the current study.
 
 Regression coverage now executes evaluate_missing for all seven fusion positions
 and both unimodal controls, checks exact original-forward logits and a partial tail
