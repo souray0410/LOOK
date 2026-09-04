@@ -16,6 +16,11 @@
       "sha256": "8f3969ab585f9e0ee5a8dd82c4d9f35856bd1ce85adb53ec1af7f54d5367f4c3"
     },
     {
+      "bytes": 15687,
+      "path": "HANDOFF.md",
+      "sha256": "f78f0a4d664cb96ae7b1a96f566c5087c1243bfef6fc3e5fd61510db1adb2e9a"
+    },
+    {
       "bytes": 33,
       "path": "LOOK.code-workspace",
       "sha256": "5df91d926ddafbf557cd6401bda13fbed410bdc59a6d45fb70dd796c4849361b"
@@ -26,9 +31,9 @@
       "sha256": "cc20f2f505ecc066f7cf53b3216200b7d77035aa38b309e596173c35f84648c1"
     },
     {
-      "bytes": 18172,
+      "bytes": 18337,
       "path": "README.md",
-      "sha256": "a7e66aa9fb2b9433cba61baeadd30fac15dde13107260c87714b3eaec3e00e33"
+      "sha256": "71468f5e7a2ed5dfd1fd97752ec147ab90f58476c1303bce19129c24ed055110"
     },
     {
       "bytes": 2789,
@@ -461,6 +466,11 @@
       "sha256": "5c676fd4add1412b53b723c8040317127da6359ce512b11e396dcc1a564c1b02"
     },
     {
+      "bytes": 1779,
+      "path": "tool/research/HANDOFF_SNAPSHOT_20260904.json",
+      "sha256": "ea9a136745aa842583577e3208bc5a66318ddb7ca37f48a3ce3ec336214b7525"
+    },
+    {
       "bytes": 29360,
       "path": "tool/research/LOOK.tex",
       "sha256": "26118017245d665ff9253a3900d342cd10b8f79f23f23f723885a814f8299103"
@@ -616,7 +626,7 @@
       "sha256": "da57a8264ec36ac7d4b8372d88304bf965743d4aba78875da53e2fd12fe0f184"
     }
   ],
-  "generated_at_utc": "2026-09-04T05:18:35.897099+00:00",
+  "generated_at_utc": "2026-09-04T05:32:27.511670+00:00",
   "release_id": "2026_09_03_19_35_04",
   "schema_version": 2
 }

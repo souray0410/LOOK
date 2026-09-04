@@ -1,5 +1,9 @@
 # LOOK 2026_09_03_19_35_04
 
+New assistant/session: start with [home/HANDOFF.md](home/HANDOFF.md), then refresh
+the remote monitor. It records current decisions, runtime paths, historical pointers,
+and known negative results without requiring the previous conversation.
+
 Portable two-tree release for the selected UK Biobank bilateral CFP/OCT
 all-evidence glaucoma benchmark and LOOK missing-modality study.
 Controlled UK Biobank data are not distributed.

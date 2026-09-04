@@ -1,5 +1,8 @@
 # LOOK UK Biobank All-Evidence Glaucoma Benchmark
 
+For a new session, read [HANDOFF.md](HANDOFF.md) first. Runtime status in that document
+is a dated snapshot; refresh the monitor before reporting current progress.
+
 ## Scientific Contract
 
 The selected task is participant-level binary classification of `Normal` and `Glaucoma`.

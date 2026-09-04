@@ -97,9 +97,9 @@
   "project": "LOOK",
   "release_documents": [
     {
-      "bytes": 2342,
+      "bytes": 2584,
       "path": "README.md",
-      "sha256": "05e776f82e977845b079ce02bdf73edac1a047b9229dde3658136af378870b02"
+      "sha256": "31a9bfe396676580e1cac9f6174619c4b6c3039381c44731cdc085eb9389d4c8"
     },
     {
       "bytes": 7842,
@@ -116,6 +116,6 @@
   "schema_version": 2,
   "source_manifest": {
     "path": "home/file_manifest.json",
-    "sha256": "a5eab44471fc04a3b60dcafc052d9494f26b29652001cabba087f84564ca0b62"
+    "sha256": "03dffb823cd0a2bf98f128a6f013856133bc0cf5729060bd33bdb4428c9c7e9e"
   }
 }

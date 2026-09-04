@@ -1,0 +1,27 @@
+{
+  "checked_at_utc": "2026-09-04T05:27:23.480970+00:00",
+  "snapshot_only": true,
+  "contains_patient_level_data": false,
+  "study_id": "e6d740a884be",
+  "quick_plan_id": "bc70f6d5d8dc",
+  "status_at_check": "running",
+  "stage_at_check": "prepare_shared_complete_pca",
+  "quick_stage_complete": true,
+  "test_access": false,
+  "seed": 3407,
+  "quick_factor": 16,
+  "quick_latent_dims": [16, 64, 256],
+  "pca_dmax": 512,
+  "complete_baseline": {"auroc": 0.772781227173119, "macro_f1": 0.7124407108977655},
+  "comparisons": [
+    {"filling": "raw_zero", "missing": "oct_missing", "fill_auroc": 0.731259130752374, "look_auroc": 0.7448867786705625, "fill_f1": 0.58451536643026, "look_f1": 0.6619152046783625},
+    {"filling": "raw_zero", "missing": "cfp_missing", "fill_auroc": 0.6307523739956172, "look_auroc": 0.6570489408327247, "fill_f1": 0.5517378351539226, "look_f1": 0.6327205882352941},
+    {"filling": "normalized_mean", "missing": "oct_missing", "fill_auroc": 0.7022233382030679, "look_auroc": 0.5, "fill_f1": 0.3333333333333333, "look_f1": 0.3333333333333333},
+    {"filling": "normalized_mean", "missing": "cfp_missing", "fill_auroc": 0.593681519357195, "look_auroc": 0.6358655953250547, "fill_f1": 0.5807748538011696, "look_f1": 0.6027301405219386}
+  ],
+  "quick_experiment_ids": [
+    "resnet50_oct_cfp_fusion_layer3__raw_zero__seed3407__clf-lr-3e-04-3e-03__dropout-0.0__gan-not_applicable__look-quick_diagnostic__1042bc06deb7",
+    "resnet50_oct_cfp_fusion_layer3__normalized_mean__seed3407__clf-lr-3e-04-3e-03__dropout-0.0__gan-not_applicable__look-quick_diagnostic__1ab4db7fcf26"
+  ],
+  "next_analysis_priority": "Inspect normalized-mean OCT-missing collapse using expanded results and per-node diagnostics; cause is not established. Preserve negative results."
+}
