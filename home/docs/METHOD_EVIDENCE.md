@@ -1,10 +1,10 @@
 # Bounded method evidence and advisor report
 
 This supplement runs only after all 52 original stages and all 243 suffix cases
-(including 30 reused cases) complete. It adds 9 cases: three methods, three seeds,
+(including 30 reused cases) complete. It adds 15 cases: five methods, three seeds,
 fixed layer3 fusion and normalized-mean filling. Each case fits two directions;
 the five nested random ratios reuse the frozen directional configurations.
-Combined development count is 52 + 213 + 9 = 274. Test remains sealed.
+Combined development count is 52 + 213 + 15 = 280. Test remains sealed.
 
 ## Hypotheses and comparisons fixed before results
 
@@ -22,6 +22,25 @@ Combined development count is 52 + 213 + 9 = 274. Test remains sealed.
 The terminal-only comparison reuses the ninth suffix. The original and
 validation-selected-start configurations are retained. No new architecture,
 residual-strength or additional dimension/factor search is introduced.
+
+4. Original LOOK vs bias-only: set W=0, fit the train mean paired latent
+   residual b, and retain the same PCA, sequential conditioning and validation
+   search. This tests whether sample-dependent mapping is needed beyond recentering.
+5. Original LOOK vs logit-affine: fit s_new = a*s+c, a>=1e-8, on unaugmented
+   train logits/labels by binary cross-entropy plus 0.5e-6*((a-1)^2+c^2).
+   L-BFGS-B max 2000 iterations, fixed tolerances, no optimizer search. Validation
+   chooses fitted versus identity by strict Macro-F1; ties stay OFF. Frozen
+   positive affine transforms preserve directional AUROC/AUPRC, but mixed-direction
+   rankings can change at random ratios. Backbone, head and features stay unchanged.
+
+The two new controls (6 cases, 12 direction fits) are exploratory additions
+specified after seeing development results, before any test access. They are
+not retrospectively described as prespecified before all validation observations.
+The v2 order is logit-affine, bias-only, SSF, independent-fit, missing-only,
+each with seeds 3407/3408/3409. Original nine control definitions are preserved.
+The previous v1 waiting study has no completed cases; retain its summary and
+record the superseding v2 identity in a deployment audit. Running parent and suffix
+source releases are unchanged. No partial v1 artifacts are adopted.
 
 ## SSF adaptation
 
@@ -75,3 +94,24 @@ The report generator updates after each new completed case and after the final
 reference analyses; comparison_freeze.json records the completed scope.
 
 Report runtime dependency: reportlab==4.4.3; plotting uses existing matplotlib.
+
+## Advisor deadline and report refresh
+
+The user requested a report for the morning of 2026-09-06 (Asia/Riyadh).
+The full 280-stage program cannot be promised complete overnight: the parent
+still had 18 stages remaining when this supplement was authorized, followed by
+213 new suffix cases. Deliver a timestamped, verified development snapshot even
+when the queue remains incomplete; never relax the protocol to meet the deadline.
+
+`pipeline/41_refresh_advisor_report.py --method-summary PATH --output NEW_DIRECTORY`
+runs read-only analyses independently of GPU queues, verifies every included
+prediction against all six metrics, and writes an English presentation PDF,
+Chinese speaker notes, paired effects, seed summaries and provenance. Use a
+new timestamped directory each refresh. Render and inspect every PDF page before
+copying it to the user. No email to the advisor is authorized.
+
+The report includes F1-versus-AUROC changes, NLL ratios, unfavorable outcomes,
+and only complete three-seed aggregates. Main changes may be described as
+validation improvements; mechanism hypotheses remain pending until their
+controls finish. Actual ON-node amplification still requires direct diagnostic
+evidence; large unused candidate weights are not an explanation.

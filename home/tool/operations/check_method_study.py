@@ -8,7 +8,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('summary',type=Path);a=p.parse_args()
     s=json.loads(a.summary.read_text())
     print(json.dumps({k:s.get(k) for k in ('status','updated_at_utc','active_case','error','test_access')},indent=2))
-    print(f"completed={len(s['completed_cases'])}/9")
+    print(f"completed={len(s['completed_cases'])}/{s['expected_new_cases']}")
     for key in ('parent_summary','suffix_summary'):
         v=json.loads(Path(s[key]).read_text());print(key,v['status'],len(v.get('completed_stages',v.get('completed_cases',{}))))
 

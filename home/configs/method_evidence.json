@@ -1,17 +1,40 @@
 {
-  "protocol": "frozen_look_method_evidence_v1",
+  "protocol": "frozen_look_method_evidence_v2",
   "fusion_position": "layer3",
   "fusion_choice_reason": "First position under the existing seed-3407 complete-model screening rule; fixed before control results",
   "filling": "normalized_mean",
-  "seeds": [3407, 3408, 3409],
-  "methods": ["ssf", "independent_fit", "missing_only"],
-  "patterns": ["oct_missing", "cfp_missing"],
-  "expected_new_cases": 9,
-  "expected_direction_fits": 18,
+  "seeds": [
+    3407,
+    3408,
+    3409
+  ],
+  "methods": [
+    "logit_affine",
+    "bias_only",
+    "ssf",
+    "independent_fit",
+    "missing_only"
+  ],
+  "patterns": [
+    "oct_missing",
+    "cfp_missing"
+  ],
+  "expected_new_cases": 15,
+  "expected_direction_fits": 30,
   "missingness_seed": 3407,
-  "random_ratios": [0.2, 0.4, 0.6, 0.8, 1.0],
+  "random_ratios": [
+    0.2,
+    0.4,
+    0.6,
+    0.8,
+    1.0
+  ],
   "ssf": {
-    "learning_rates": [0.00001, 0.00006, 0.0003],
+    "learning_rates": [
+      1e-05,
+      6e-05,
+      0.0003
+    ],
     "optimizer": "AdamW",
     "weight_decay": 0.01,
     "epochs": 100,
@@ -28,10 +51,30 @@
     "missing_input": "same_normalized_mean_filling_as_LOOK; missing_branch_weights_frozen_and_unadapted",
     "reference": "https://arxiv.org/abs/2310.03986"
   },
-  "primary_comparisons": ["original_LOOK_vs_SSF", "original_LOOK_vs_independent_fit", "original_LOOK_vs_missing_only"],
+  "primary_comparisons": [
+    "original_LOOK_vs_SSF",
+    "original_LOOK_vs_independent_fit",
+    "original_LOOK_vs_missing_only",
+    "original_LOOK_vs_bias_only",
+    "original_LOOK_vs_logit_affine"
+  ],
   "primary_metric": "macro_f1",
-  "secondary_metrics": ["macro_auroc_ovr", "macro_auprc_ovr", "ece_15", "multiclass_brier", "negative_log_likelihood"],
+  "secondary_metrics": [
+    "macro_auroc_ovr",
+    "macro_auprc_ovr",
+    "ece_15",
+    "multiclass_brier",
+    "negative_log_likelihood"
+  ],
   "selection_scope": "development_validation_only; no per-ratio selection",
   "external_validation": "not_in_this_queue; requires an independent compatible cohort",
-  "test_access": false
+  "test_access": false,
+  "logit_affine": {
+    "identity_l2": 1e-06,
+    "minimum_slope": 1e-08,
+    "max_iterations": 2000,
+    "supervision": "train_labels_binary_cross_entropy",
+    "selection": "validation_macro_f1_fitted_vs_identity_only; strict improvement; ties OFF",
+    "random_ratios": "reuse_frozen_directions_no_refit"
+  }
 }

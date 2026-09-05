@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "release_id": "2026_09_05_19_20_22",
-  "generated_at_utc": "2026-09-05T16:21:12.760693+00:00",
+  "release_id": "2026_09_05_21_45_23",
+  "generated_at_utc": "2026-09-05T18:46:24.889245+00:00",
   "files": [
     {
       "path": ".gitattributes",
@@ -65,8 +65,8 @@
     },
     {
       "path": "configs/method_evidence.json",
-      "bytes": 1722,
-      "sha256": "9d0f72de70e9c1c06afe7faf38b2231eedec6fd6bdf0d4c48f0f6aef7812aa8a"
+      "bytes": 2272,
+      "sha256": "7ecc4e0694bb01d8122711570b1eba15f797e2f8279fa323e058aa5c8066e238"
     },
     {
       "path": "configs/unified_study.json",
@@ -75,8 +75,8 @@
     },
     {
       "path": "docs/METHOD_EVIDENCE.md",
-      "bytes": 4525,
-      "sha256": "e0dbd1812bd83f8134e64242b5518da284162483f11797d604e86e23de47677c"
+      "bytes": 7128,
+      "sha256": "3d0da99d29290e677bd013eb2296d8d68542894e2a5abbd8d9a7bbae35f2cf72"
     },
     {
       "path": "docs/history/2026_09_04_10_49_20_HANDOFF.md",
@@ -219,6 +219,11 @@
       "sha256": "3af744e17da2fb16da3d154861102b9137d96288d7ee9b64cda44ee5c31713c6"
     },
     {
+      "path": "pipeline/41_refresh_advisor_report.py",
+      "bytes": 1356,
+      "sha256": "b59cc59ae5166bd7266a55ef3021c691ac6ff783a366448b64c3ddab3dcfd93e"
+    },
+    {
       "path": "pipeline/4_verify_source_mounts.sh",
       "bytes": 3593,
       "sha256": "7d4bdeca0503e1365d435071b7f4830b7b3452751cbda5c3756e1dfeaa14306e"
@@ -330,8 +335,8 @@
     },
     {
       "path": "project.json",
-      "bytes": 3079,
-      "sha256": "9598d991ddaf1f61e19f7da291a6280c71d4c72bfe620b33975eb29bd9536ef2"
+      "bytes": 3080,
+      "sha256": "ea43a2925cd90ae66f27665ca9e61c749285e5941f8e47c5754b711e16792fc4"
     },
     {
       "path": "pyproject.toml",
@@ -382,6 +387,11 @@
       "path": "tool/look_core/__init__.py",
       "bytes": 162,
       "sha256": "4723ac4190cfa010f744e97fa1a099d5fec7bbc871f7a5c6e8d21259fc15888a"
+    },
+    {
+      "path": "tool/look_core/advisor_findings.py",
+      "bytes": 11077,
+      "sha256": "e002c81f36f9fa7a62f7336fee2edb61bf3010aaebad2c09d32734959fe30ef8"
     },
     {
       "path": "tool/look_core/artifacts.py",
@@ -480,13 +490,18 @@
     },
     {
       "path": "tool/look_core/method_kernels.py",
-      "bytes": 12923,
-      "sha256": "10de66d2d1231a250b8be37c17dffc51c00eabe152f346f986e85e2369da464f"
+      "bytes": 13036,
+      "sha256": "985fa396d082d05aef97ce5e030542d39311d518960acce541a1d637577f32f2"
+    },
+    {
+      "path": "tool/look_core/method_logit.py",
+      "bytes": 9394,
+      "sha256": "cd3fb967a5a87d46ac9ee67756b844790a6913bdc92e8c91431e8640bd1cef9c"
     },
     {
       "path": "tool/look_core/method_report.py",
-      "bytes": 19837,
-      "sha256": "6cfca541e3cacad203502e97350cbbfd375f69ba76ddf86e1eb2afc82c21def7"
+      "bytes": 21295,
+      "sha256": "8ce369374edc4d74ae18570467f29f1780a957ea7417d4030fc95e81b3e5ed52"
     },
     {
       "path": "tool/look_core/method_ssf.py",
@@ -495,8 +510,8 @@
     },
     {
       "path": "tool/look_core/method_study.py",
-      "bytes": 17354,
-      "sha256": "bf3277f21dab00bbb529a4d6f2aef27c634104c6de59851666e1beb2a2185603"
+      "bytes": 17711,
+      "sha256": "58f717c4a1b798e4ad554230632ac4e7f64a1cf7cccd84d55723737c93aa6694"
     },
     {
       "path": "tool/look_core/metrics.py",
@@ -590,8 +605,8 @@
     },
     {
       "path": "tool/operations/check_method_study.py",
-      "bytes": 698,
-      "sha256": "3522a72fcc86f484d9fdfa009aeefb0452279fe4c91c5022d348f1252c4ecd8d"
+      "bytes": 722,
+      "sha256": "197f17c3c849a3bd28fa508b825812060b804fee9f143b7546e1daa20a7e2ba4"
     },
     {
       "path": "tool/operations/check_start_study.py",
@@ -657,6 +672,11 @@
       "path": "tool/operations/verify_method_evidence.py",
       "bytes": 4224,
       "sha256": "ea49f2cdecb2d287776a413d5c408e78c3eab8d293886a5349520fefb663a8d3"
+    },
+    {
+      "path": "tool/operations/verify_simple_controls.py",
+      "bytes": 5825,
+      "sha256": "8ab9b5860d3949bfda051dd4030921b2d2d90aae2272e864b56f7cb2fb37763c"
     },
     {
       "path": "tool/operations/verify_start_study.py",
@@ -800,8 +820,8 @@
     },
     {
       "path": "tool/tests/test_method_evidence.py",
-      "bytes": 9794,
-      "sha256": "618c217aa359b7f33f811536c132b8dc0b0c450ef5e7591e365df69edd5cab73"
+      "bytes": 9795,
+      "sha256": "bd5e6eb77e262a1ad0d4b1539ac7187e4af82f6282f805c1c7571695c2bb251f"
     },
     {
       "path": "tool/tests/test_mhd_trainer_criteria.py",
@@ -825,8 +845,8 @@
     },
     {
       "path": "tool/tests/test_project_governance.py",
-      "bytes": 6248,
-      "sha256": "0131a7c7270eb1dec0adfd9da558fb52ffd1b521b8474c1cadc1cd98288e89fd"
+      "bytes": 6252,
+      "sha256": "de5d928bc865e90e2364a618511345c239b3cf5e5f95363053f59c3b1680ebd2"
     },
     {
       "path": "tool/tests/test_pruning.py",
@@ -857,6 +877,11 @@
       "path": "tool/tests/test_shared_pca.py",
       "bytes": 4586,
       "sha256": "a78701c79c967181046f7efe9c9ed4fd1ba1e3bbb9fe8388edb9dc65728f5ae1"
+    },
+    {
+      "path": "tool/tests/test_simple_controls.py",
+      "bytes": 4820,
+      "sha256": "21f10fdbb2c698e7f5347b705aa9d55c1b8e5c7a9dc9e5ed7c019726c83d89c0"
     },
     {
       "path": "tool/tests/test_start_study.py",
