@@ -223,6 +223,13 @@ class ExperimentRunner:
             label_smoothing=self.config.label_smoothing,
         )
         structure = graph_summary(summary_graph)
+        # Observation sites include joint pre-fusion states; graph nodes alone do not.
+        structure['graph_correction_nodes'] = list(structure['correction_nodes'])
+        structure['candidate_correction_sites'] = correction_sites(summary_graph)
+        structure['eligible_correction_sites'] = (
+            resolve_sites(summary_graph, self.config.correction_nodes) if self.options.fit_look else []
+        )
+        structure['correction_site_semantics'] = 'Eligible sites are optional, not forced ON; see LOOK decisions.'
         del summary_graph
         write_json_atomic(structure, self.experiment_dir / "graph_summary.json")
         checkpoint_path = self._train_or_resume()

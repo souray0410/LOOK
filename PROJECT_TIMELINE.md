@@ -1,3 +1,7 @@
+# 2026_09_05_09_12_55 — Correction-start supplement
+
+Add pipeline 39: 243 suffix configurations, 30 strict source references and 213 fresh fits, queued after the original 52 stages. Validation chooses starts independently per missing direction; test remains sealed. Numerical LOOK, PCA, backbone and generator code are unchanged. New topology/decision provenance and consistent scientific reports distinguish eligible starts from enabled sites.
+
 ## 2026-09-04 — Step 37: Macro-F1 restart (current)
 
 Release `2026_09_04_10_49_20` supersedes previous model/output protocols. Backbone

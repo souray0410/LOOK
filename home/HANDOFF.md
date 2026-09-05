@@ -1,3 +1,7 @@
+# Correction-start supplement: 2026_09_05_09_12_55
+
+The latest release adds the suffix-start study after the unchanged parent 52-stage queue. See [START_STUDY.md](START_STUDY.md). Parent paths and status snapshots below are historical; use the read-only monitors for current status.
+
 # LOOK handoff — unified fusion and LOOK study
 
 Current release `2026_09_04_19_18_07`. Respond in Chinese beginning “好的，Souray。”

@@ -1,3 +1,7 @@
+# Correction-start supplement: 2026_09_05_09_12_55
+
+The latest release adds the suffix-start study after the unchanged parent 52-stage queue. See [START_STUDY.md](home/START_STUDY.md). Parent paths and status snapshots below are historical; use the read-only monitors for current status.
+
 # LOOK 2026_09_04_19_18_07
 
 Current unified Macro-F1 research release. Read [the handoff](home/HANDOFF.md) first.

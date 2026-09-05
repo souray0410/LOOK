@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
   "project_name": "LOOK",
-  "release_id": "2026_09_04_19_18_07",
+  "release_id": "2026_09_05_09_12_55",
   "selected_task_profile": "glaucoma_all_evidence",
   "task_selection_manifest": "dataset/cohorts/task_selection/selected_task_manifest.json",
   "deployment_defaults": {
-    "project_root": "/home/mengh/LOOK/2026_09_04_19_18_07",
-    "data_root": "/data/mengh/LOOK/2026_09_04_19_18_07",
+    "project_root": "/home/mengh/LOOK/2026_09_05_09_12_55",
+    "data_root": "/data/mengh/LOOK/2026_09_05_09_12_55",
     "dataset_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset",
     "image_root": "/data/mengh/LOOK/2026_09_03_08_30_00/dataset",
     "cohort_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/ukb_record_glaucoma_binary_bilateral",
@@ -53,5 +53,17 @@
     "top_k": 3,
     "validation_precision": "fp32",
     "missingness_protocol": "nested_exact_count_fixed_direction_v1"
+  },
+  "supplemental_study": {
+    "protocol": "suffix_start_validation_selection_v1",
+    "entrypoint": "pipeline/39_run_start_study.py",
+    "parent_release": "2026_09_04_19_18_07",
+    "parent_study": "63561eb169f2",
+    "parent_stages": 52,
+    "suffix_cases": 243,
+    "reused_cases": 30,
+    "new_cases": 213,
+    "combined_development_stages": 265,
+    "test_access": false
   }
 }
