@@ -27,7 +27,7 @@ def graph():
 def test_exact_bounded_scope_and_fail_closed():
     spec=json.loads((Path(__file__).resolve().parents[2]/'configs/method_evidence.json').read_text())
     cases=make_method_cases(spec)
-    assert len(cases)==len({c['case_id'] for c in cases})==9
+    assert len(cases)==len({c['case_id'] for c in cases})==15
     assert make_method_cases(spec)==cases
     for key,value in [('fusion_position','feature'),('seeds',[3407]),('test_access',True)]:
         with pytest.raises(ValueError):make_method_cases(dict(spec,**{key:value}))

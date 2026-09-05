@@ -153,3 +153,7 @@ Release 2026_09_05_18_49_49 adds the fixed 9-case comparison and advisor-report 
 ## 2026-09-05: correct parent/GAN memory overlap
 
 Operational release 2026_09_05_19_14_09 parks the unused frozen classifier graph on CPU while GAN workers run; restores it without changing scientific configuration. GPU round-trip equivalence and launcher tests precede recovery.
+
+## 2026-09-05: bounded simple controls and morning advisor snapshot
+
+Release 2026_09_05_21_45_23 adds six cases (bias-only and positive affine output control, three seeds each) to the nine method-evidence cases, for 280 combined stages. Parent and suffix remain unchanged and sealed-test discipline is preserved. Advisor snapshots now include data-derived conclusions, unfavorable probability outcomes and Chinese speaker notes; refresh is independent of unfinished GPU queues.

@@ -1,4 +1,4 @@
-"""Nine bounded method-evidence cases, queued AFTER the full suffix supplement."""
+"""Bounded method-evidence cases, queued AFTER the full suffix supplement."""
 from __future__ import annotations
 import gc
 import json
@@ -20,9 +20,11 @@ from .method_analysis import representation_evidence, measure_inference
 
 
 def make_method_cases(spec):
-    if (spec['protocol'] != 'frozen_look_method_evidence_v1' or spec['fusion_position'] != 'layer3'
+    scopes={'frozen_look_method_evidence_v1':['ssf','independent_fit','missing_only'],
+            'frozen_look_method_evidence_v2':['logit_affine','bias_only','ssf','independent_fit','missing_only']}
+    if (spec['protocol'] not in scopes or spec['fusion_position'] != 'layer3'
         or spec['filling'] != 'normalized_mean' or spec['seeds'] != [3407,3408,3409]
-        or spec['methods'] != ['ssf','independent_fit','missing_only']
+        or spec['methods'] != scopes[spec['protocol']]
         or spec['patterns'] != PATTERNS or spec['test_access'] is not False):
         raise ValueError('Unexpected method-evidence scope')
     return [dict(case_id=f'{method}_layer3_normalized_mean_{seed}',method=method,seed=seed,
@@ -44,6 +46,9 @@ def make_resource_case(seed):
 
 
 def run_method_case(source, case, spec, output, device, devices):
+    if case['method']=='logit_affine':
+        from .method_logit import run_logit_case
+        return run_logit_case(source,case,spec,output,device,devices)
     output=Path(output);output.mkdir(parents=True,exist_ok=True)
     identity=dict(case=case,spec=spec,source_sha256=stable_hash(source),
                   implementation_sha256=implementation_sha256(Path(__file__).resolve().parents[2]))
@@ -178,7 +183,7 @@ def run_method_study(paths,parent_path,parent_source,suffix_path,devices,*,execu
     if any(output.resolve().is_relative_to(p.parents[2]) for p in (parent_path,suffix_path)):
         raise ValueError('Method output must be in its own release run root')
     summary=dict(identity=identity,spec=spec,cases=cases,output=str(output),status='planned',completed_cases={},
-        reference_analyses={},expected_new_cases=9,expected_direction_fits=18,combined_development_stages=274,
+        reference_analyses={},expected_new_cases=len(cases),expected_direction_fits=2*len(cases),combined_development_stages=265+len(cases),
         test_access=False,parent_summary=str(parent_path),suffix_summary=str(suffix_path))
     if not execute:return summary
     output.mkdir(parents=True,exist_ok=True)
@@ -190,7 +195,7 @@ def run_method_study(paths,parent_path,parent_source,suffix_path,devices,*,execu
         def report(status,**fields):
             summary.update(dict(status=status,updated_at_utc=utc_now(),error=None) | fields)
             atomic_write_json(summary,path)
-            print(f'{utc_now()} method_status={status} completed={len(summary["completed_cases"])}/9 {fields}',flush=True)
+            print(f'{utc_now()} method_status={status} completed={len(summary["completed_cases"])}/{len(cases)} {fields}',flush=True)
         try:
             report('waiting_predecessors')
             if render:

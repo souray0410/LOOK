@@ -22,3 +22,7 @@ See [fixed specification](home/configs/unified_study.json), [protocol](home/JOIN
 [project standard](GENERAL_PROJECT_STANDARD.md) and [timeline](PROJECT_TIMELINE.md).
 The paused previous release is preserved by snapshot/2026_09_04_10_49_20 and
 2026_09_04_10_49_20. Older AUROC source remains in archive/superseded-auroc-2026-09-03.
+
+### Simple-control supplement and advisor snapshots
+
+Current method-evidence protocol v2 adds bias-only and train-fitted positive logit-affine controls (15 total method cases, 280 combined stages). See `home/docs/METHOD_EVIDENCE.md`. `home/pipeline/41_refresh_advisor_report.py` creates timestamped validation-only reports without waiting for the entire queue.

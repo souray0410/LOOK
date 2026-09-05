@@ -119,7 +119,7 @@ def write_method_report(summary,destination,*,pdf=True):
     atomic_write_json(manifest,destination/'report_manifest.json')
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':10,'axes.spines.top':False,'axes.spines.right':False,'axes.grid':True,'grid.alpha':.18})
     figures=[]
-    colors={'filling':'#999FA8','original_LOOK':'#237C8B','ssf':'#C38A39','independent_fit':'#9C6388','missing_only':'#677BB4','selected_start_LOOK':'#477842','terminal_only':'#B57964'}
+    colors={'filling':'#999FA8','original_LOOK':'#237C8B','ssf':'#C38A39','independent_fit':'#9C6388','missing_only':'#677BB4','selected_start_LOOK':'#477842','terminal_only':'#B57964','bias_only':'#A06C32','logit_affine':'#7068A0'}
     names={'normalized_mean':'Normalized mean','raw_zero':'Raw zero','paired_cgan':'Paired cGAN'}
     for filling in ('normalized_mean','raw_zero','paired_cgan'):
         fig,axes=plt.subplots(1,2,figsize=(12,4.6),layout='constrained')
@@ -155,7 +155,7 @@ def write_method_report(summary,destination,*,pdf=True):
     for ext in ('png','svg'):fig.savefig(destination/f'random_missingness.{ext}',dpi=160)
     plt.close(fig);figures.append(('Random missingness: frozen direction configs',destination/'random_missingness.png'))
     fig,axes=plt.subplots(1,2,figsize=(12,4.8),layout='constrained')
-    methods=['original_LOOK','selected_start_LOOK','terminal_only','ssf','independent_fit','missing_only']
+    methods=['original_LOOK','selected_start_LOOK','terminal_only','ssf','independent_fit','missing_only','bias_only','logit_affine']
     for ax,pattern in zip(axes,('oct_missing','cfp_missing')):
         for i,method in enumerate(methods):
             rr=[r for r in rows if (r['fusion'],r['filling'],r['method'],r['scenario'],r['metric'])==('layer3','normalized_mean',method,pattern,'macro_f1')]
@@ -168,15 +168,15 @@ def write_method_report(summary,destination,*,pdf=True):
     for ext in ('png','svg'):fig.savefig(destination/f'method_comparison.{ext}',dpi=160)
     plt.close(fig);figures.append(('Method evidence: available vs pending',destination/'method_comparison.png'))
     sections=[('Study status and evidence boundary',[
-        f"Snapshot UTC: {manifest['generated_at_utc']}. Parent: {manifest['parent_completed']}/52; suffix: {manifest['suffix_completed']}/243 (includes 30 reuse slots); new controls: {manifest['methods_completed']}/9.",
+        f"Snapshot UTC: {manifest['generated_at_utc']}. Parent: {manifest['parent_completed']}/52; suffix: {manifest['suffix_completed']}/243 (includes 30 reuse slots); new controls: {manifest['methods_completed']}/{summary.get('expected_new_cases',9)}.",
         'All shown values are development validation results. Fusion, dimensions, factors, nodes and starts use this validation set for selection. They are not independent test evidence.',
-        'Train fits PCA and paired Ridge W/b. SSF alone uses train labels for adapter fitting. Frozen original backbone and classifier are shared by all comparisons.',
+        'Train fits PCA and paired Ridge W/b. SSF and the output-only control use train labels for fitting. Frozen original backbone and classifier are shared by all comparisons.',
         'Primary and natural test cohorts remain sealed. Check participant overlap before treating the two test reports as independent replications.']),
       ('Questions and fixed experimental scope',[
         'SSF: compare feature reconstruction with supervised scale-and-shift adaptation of the retained encoder and fusion operations; frozen head and backbone.',
         'Independent fit: fit each correction without upstream corrections; evaluate the resulting sequence with accepted upstream corrections. This tests conditional fitting.',
         'Missing-only writeback: joint regression sees both branches, but only the missing branch is replaced before fusion. This tests the value of correcting the retained branch.',
-        'Nine new cases = 3 methods x 3 seeds, each with 2 missing directions and 5 fixed random-missingness ratios. Run after the existing parent and suffix queues. Terminal-only is reused.']),
+        f"{summary.get('expected_new_cases',9)} method cases, each with 2 missing directions and 5 frozen random ratios. Run after the parent and suffix queues. Terminal-only is reused."]),
       ('Selection, controls and reporting rules',[
         'At every allowed site: evaluate OFF, search dimensions 8,16,32,64,96,128,192,256,384,512, and enable only a strict validation Macro-F1 improvement. Ties stay OFF.',
         'Spatial reduction rho = 1/4, 1/8, 1/16; vector features use identity reduction. Dmax = 512 is independent of the search grid.',
@@ -197,6 +197,18 @@ def write_method_report(summary,destination,*,pdf=True):
         'Report Macro-F1 with AUROC, AUPRC, calibration and all unfavorable differences. Do not expand hypotheses after seeing favorable test subsets.',
         'Before any independent evaluation, freeze both method configuration lists, primary contrasts, uncertainty procedure and report scope. This queue does not authorize opening test data.',
         'Deliverables include all_metrics.csv, paired_method_differences.csv, three_seed_summary.csv, representation_diagnostics.json, costs.json, report_manifest.json and the existing suffix decision/gain reports.'])]
+    from .advisor_findings import finding_sections, write_speaker_notes, tradeoff_figure, workflow_figure
+    figures.insert(0,('Method and data roles',workflow_figure(destination)))
+    findings=finding_sections(rows,agg)
+    sections[1:1]=findings
+    sections.append(('Two simple explanations tested',[
+        'Bias-only: fix W = 0 and fit b = mean(train full latent - train missing latent). Keep the shared PCA, sites, dimensions, factors and strict validation acceptance. Downstream fitting inherits accepted upstream corrections.',
+        'Output-only: fit positive a and offset c to train binary cross-entropy, s_new = a*s + c. Fixed identity-centered L2 = 1e-6; a >= 1e-8. Validation chooses fitted versus identity only; ties stay OFF.',
+        'Positive slope preserves AUROC and AUPRC within a fixed missing direction. Mixing differently transformed directions at random ratios can change ranking. No intermediate features change.',
+        'These six added cases were specified after examining development results. They are exploratory mechanism controls; test remains sealed. Existing SSF and mechanism settings are unchanged.']))
+    tradeoff=tradeoff_figure(rows,destination)
+    if tradeoff:figures.append(('Classification gains and probability tradeoffs',tradeoff))
+    write_speaker_notes(rows,agg,manifest,destination)
     if audit:
         counts=audit['split_counts']
         sections[0][1].insert(1,f"Primary cohort: train {counts['train']}, validation {counts['validation']}, sealed test {counts['test']} participants. Recorded participant split leakage: {audit['participant_split_leakage']}. Counts are from the existing audit; no test inference was run.")

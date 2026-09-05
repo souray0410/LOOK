@@ -19,7 +19,7 @@ from .missingness import missingness_plan
 from .stable_metrics import logit_metrics, probabilities_from_logits
 from .state import atomic_write_json, file_sha256, stable_hash
 
-POLICIES = ('joint', 'independent_fit', 'missing_only')
+POLICIES = ('joint', 'independent_fit', 'missing_only', 'bias_only')
 
 
 def forward_control(graph, oct_tensor, cfp_tensor, artifacts=(), *, policy='joint',
@@ -115,8 +115,9 @@ def fit_candidates(graph, loader, node, pattern, factor, dims, max_rank, device,
     result = {}
     for d in sorted(set(min(x, rank) for x in dims if x > 0)):
         cxx, cxy, tss, mx, my, n = stats.centered(d)
-        ridge = _gcv_lambda(cxx, cxy, tss, n, d)
-        w = torch.linalg.solve(cxx + ridge * torch.eye(d, dtype=cxx.dtype), cxy)
+        ridge = 0. if policy == 'bias_only' else _gcv_lambda(cxx, cxy, tss, n, d)
+        w = (torch.zeros_like(cxy) if policy == 'bias_only' else
+             torch.linalg.solve(cxx + ridge * torch.eye(d, dtype=cxx.dtype), cxy))
         b = my-mx@w
         rss = max(0., tss - 2*float(torch.trace(w.T@cxy)) + float(torch.trace(w.T@cxx@w)))
         result[d] = LOOKArtifact(node_name=node, missing_pattern=pattern, filling_strategy=filler.name,
