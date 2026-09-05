@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "release_id": "2026_09_05_19_14_09",
-  "generated_at_utc": "2026-09-05T16:15:17.686953+00:00",
+  "release_id": "2026_09_05_19_20_22",
+  "generated_at_utc": "2026-09-05T16:21:12.760693+00:00",
   "files": [
     {
       "path": ".gitattributes",
@@ -25,8 +25,8 @@
     },
     {
       "path": "HANDOFF.md",
-      "bytes": 6346,
-      "sha256": "fc45555f4e3d6d304ab0b651f3e27253a9278f114770ea920099eb95a3d9f230"
+      "bytes": 6618,
+      "sha256": "a97c0c41015631e6ff5ebba48c3a2a216ee5413e28096962454fb8d709f0a818"
     },
     {
       "path": "JOINT_LOOK_PROTOCOL.md",
@@ -331,7 +331,7 @@
     {
       "path": "project.json",
       "bytes": 3079,
-      "sha256": "f73cc44b46c43a02b771cd90092dcda43b255ff48f8eb5a4d34eb466ddc68a60"
+      "sha256": "9598d991ddaf1f61e19f7da291a6280c71d4c72bfe620b33975eb29bd9536ef2"
     },
     {
       "path": "pyproject.toml",
@@ -625,8 +625,8 @@
     },
     {
       "path": "tool/operations/run_unified_with_idle_graph_parking.py",
-      "bytes": 3590,
-      "sha256": "eb33d52eb1d9b1293bc452294f4aa6698261c784bb5283fd893011f9a5204075"
+      "bytes": 3760,
+      "sha256": "5e0cd7b4694715ada73d0b77c5f729e25103322a2f3a853cb2ef453ed9d325a9"
     },
     {
       "path": "tool/operations/start_method_evidence.sh",

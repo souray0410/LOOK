@@ -64,7 +64,9 @@ def main():
     p=argparse.ArgumentParser(add_help=False)
     p.add_argument('--project-root',type=Path,required=True);p.add_argument('--runtime-audit-root',type=Path,required=True)
     a,remaining=p.parse_known_args()
-    sys.path.insert(0,str(a.project_root/'tool'))
+    import look_core.pipeline as pipeline
+    if Path(pipeline.__file__).resolve().parents[2]!=a.project_root.resolve():
+        raise RuntimeError('Launcher PYTHONPATH does not identify the requested immutable source')
     install(a.runtime_audit_root)
     entry=a.project_root/'pipeline/38_run_unified_study.py'
     sys.argv=[str(entry),'--project-root',str(a.project_root),*remaining]
