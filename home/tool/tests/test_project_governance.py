@@ -56,7 +56,7 @@ def test_pipeline_numbering_preserves_shared_steps_and_new_iteration_range() -> 
         match = re.fullmatch(r"(\d+)_[A-Za-z0-9_]+\.(?:py|sh|ipynb)", path.name)
         assert match, f"Unnumbered or invalid pipeline entry: {path.name}"
         numbered.append(int(match.group(1)))
-    assert sorted(numbered) == [*range(1, 12), *range(21, 33), 38, 39]
+    assert sorted(numbered) == [*range(1, 12), *range(21, 33), 38, 39, 40]
     assert len(numbered) == len(set(numbered))
     history = PROJECT_ROOT / "pipeline/history/2026_09_03_08_30_00"
     assert sorted(int(path.name.split("_", 1)[0]) for path in history.glob("[0-9]*_*")) == list(range(12, 21))

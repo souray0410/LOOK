@@ -1,3 +1,7 @@
+# Current method-evidence supplement
+
+Release 2026_09_05_18_49_49. Adds SSF, independent-fit and missing-only controls: 9 cases after original 52 stages and suffix 243 cases. Original numerical kernels unchanged; test sealed. Protocol and comparator deviations: docs/METHOD_EVIDENCE.md. Advisor report is generated from completed, traceable validation results.
+
 # Runtime handoff — 2026-09-05
 
 Latest observed parent state: failed at 27/52, raw_zero/feature/3409, at 06:27:56 UTC. DataLoader ancillary-descriptor transfer failed; the shell soft file limit is 1024. The supplement correctly exited without fitting any new case. Do not claim either queue is running. Parent recovery requires user authorization; source and accepted results remain intact. The new suffix launcher sets a 65536 open-file limit in its tmux child. See START_STUDY.md and refresh remote status before reporting.

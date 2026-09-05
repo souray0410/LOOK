@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
   "project_name": "LOOK",
-  "release_id": "2026_09_05_16_44_54",
+  "release_id": "2026_09_05_18_49_49",
   "selected_task_profile": "glaucoma_all_evidence",
   "task_selection_manifest": "dataset/cohorts/task_selection/selected_task_manifest.json",
   "deployment_defaults": {
-    "project_root": "/home/mengh/LOOK/2026_09_05_16_44_54",
-    "data_root": "/data/mengh/LOOK/2026_09_05_16_44_54",
+    "project_root": "/home/mengh/LOOK/2026_09_05_18_49_49",
+    "data_root": "/data/mengh/LOOK/2026_09_05_18_49_49",
     "dataset_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset",
     "image_root": "/data/mengh/LOOK/2026_09_03_08_30_00/dataset",
     "cohort_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/ukb_record_glaucoma_binary_bilateral",
@@ -65,5 +65,14 @@
     "new_cases": 213,
     "combined_development_stages": 265,
     "test_access": false
+  },
+  "method_evidence_study": {
+    "protocol": "frozen_look_method_evidence_v1",
+    "entrypoint": "pipeline/40_run_method_evidence.py",
+    "new_cases": 9,
+    "direction_fits": 18,
+    "combined_development_stages": 274,
+    "test_access": false,
+    "execution": "single_process_cuda0_after_both_predecessors_complete"
   }
 }

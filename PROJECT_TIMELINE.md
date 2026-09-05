@@ -143,3 +143,8 @@ old method descriptions are historical and do not govern this release.
 Current specification: configs/unified_study.json; current entrypoint: pipeline/38_run_unified_study.py.
 Technical evidence belongs under the new runtime runs/maintenance; runtime status requires
 live verification. No earlier checkpoint, generator, PCA or experimental result is reused.
+
+
+## 2026-09-05: method evidence supplement
+
+Release 2026_09_05_18_49_49 adds the fixed 9-case comparison and advisor-report generator. Scientific regression and balanced real-data CPU acceptance precede deployment. Original and suffix releases are not modified.

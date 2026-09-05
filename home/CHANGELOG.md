@@ -1,3 +1,7 @@
+# 2026-09-05: bounded method evidence
+
+Release 2026_09_05_18_49_49. Adds SSF, independent-fit and missing-only controls: 9 cases after original 52 stages and suffix 243 cases. Original numerical kernels unchanged; test sealed. Protocol and comparator deviations: docs/METHOD_EVIDENCE.md. Advisor report is generated from completed, traceable validation results.
+
 # 2026_09_05_09_12_55 — Correction-start supplement
 
 Add pipeline 39: 243 suffix configurations, 30 strict source references and 213 fresh fits, queued after the original 52 stages. Validation chooses starts independently per missing direction; test remains sealed. Numerical LOOK, PCA, backbone and generator code are unchanged. New topology/decision provenance and consistent scientific reports distinguish eligible starts from enabled sites.

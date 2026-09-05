@@ -42,7 +42,7 @@ stamp.touch()
             return json.loads(next((root/'logs').glob('*.log')).read_text())
 
     def test_defaults_override_stale_tmux_environment(self):
-        for launcher in ('start_unified_study.sh','start_suffix_study.sh'):
+        for launcher in ('start_unified_study.sh','start_suffix_study.sh','start_method_evidence.sh'):
             with self.subTest(launcher=launcher):
                 result = self.launch(launcher)
                 self.assertEqual(result['nofile'],65536)
@@ -50,7 +50,7 @@ stamp.touch()
                     self.assertEqual(result['env'][key],value)
 
     def test_explicit_deployment_override_is_preserved(self):
-        for launcher in ('start_unified_study.sh','start_suffix_study.sh'):
+        for launcher in ('start_unified_study.sh','start_suffix_study.sh','start_method_evidence.sh'):
             with self.subTest(launcher=launcher):
                 result=self.launch(launcher,{'NCCL_CUMEM_ENABLE':'1','NCCL_CUMEM_HOST_ENABLE':'1','LOOK_NOFILE_LIMIT':'32768'})
                 self.assertEqual(result['nofile'],32768)
