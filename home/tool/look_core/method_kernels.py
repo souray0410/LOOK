@@ -19,7 +19,7 @@ from .missingness import missingness_plan
 from .stable_metrics import logit_metrics, probabilities_from_logits
 from .state import atomic_write_json, file_sha256, stable_hash
 
-POLICIES = ('joint', 'independent_fit', 'missing_only', 'bias_only')
+POLICIES = ('joint', 'independent_fit', 'missing_only', 'bias_only', 'self_input_missing_only')
 
 
 def forward_control(graph, oct_tensor, cfp_tensor, artifacts=(), *, policy='joint',
@@ -45,13 +45,19 @@ def forward_control(graph, oct_tensor, cfp_tensor, artifacts=(), *, policy='join
             if a.member_shapes and tuple(map(tuple, a.member_shapes)) != member_shapes(graph, a.node_name):
                 raise ValueError('Correction member shape mismatch')
             before = read_site(graph, a.node_name)
-            after = apply_artifact(before, a)
-            if policy == 'missing_only' and a.node_name.startswith('joint_'):
+            if policy == 'self_input_missing_only':
+                from .self_input import apply_self_input
+                if a.missing_pattern != pattern:
+                    raise ValueError('Self-input artifact direction mismatch')
+                after = apply_self_input(before, a)
+            else:
+                after = apply_artifact(before, a)
+            if policy in ('missing_only', 'self_input_missing_only') and a.node_name.startswith('joint_'):
                 if pattern == 'complete':
                     raise ValueError('Missing-only correction requires a missing direction')
                 first = graph.get_node_by_name(members(a.node_name)[0]).feature_message.current_state
                 channels = first.shape[2] if a.node_name == 'joint_input' else first.shape[1]
-                # Joint regression still observes BOTH branches. Only writeback changes.
+                # Both policies write only the missing branch. self_input also masks the predictor input.
                 after = (torch.cat((after[:, :channels], before[:, channels:]), 1)
                          if pattern == 'oct_missing' else
                          torch.cat((before[:, :channels], after[:, channels:]), 1))
@@ -109,6 +115,10 @@ def fit_candidates(graph, loader, node, pattern, factor, dims, max_rank, device,
         missing_flat, shape2 = downsample_flatten(missing, factor)
         if shape != shape2 or shape != tuple(pca.downsample_shape):
             raise ValueError('PCA/pair geometry mismatch')
+        if policy == 'self_input_missing_only' and node.startswith('joint_'):
+            from .self_input import neutralize_retained
+            full_flat = neutralize_retained(full_flat, pca, pattern)
+            missing_flat = neutralize_retained(missing_flat, pca, pattern)
         full_z = (((full_flat.cpu()-pca.mean)/pca.std)-pca.pca_mean) @ components.T
         missing_z = (((missing_flat.cpu()-pca.mean)/pca.std)-pca.pca_mean) @ components.T
         stats.update(missing_z, full_z)

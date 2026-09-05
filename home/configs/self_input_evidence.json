@@ -1,0 +1,38 @@
+{
+  "protocol": "self_input_missing_only_shared_pca_v1",
+  "fusion_position": "layer3",
+  "filling": "normalized_mean",
+  "seeds": [
+    3407,
+    3408,
+    3409
+  ],
+  "methods": [
+    "self_input_missing_only"
+  ],
+  "patterns": [
+    "oct_missing",
+    "cfp_missing"
+  ],
+  "expected_new_cases": 3,
+  "expected_direction_fits": 6,
+  "missingness_seed": 3407,
+  "random_ratios": [
+    0.2,
+    0.4,
+    0.6,
+    0.8,
+    1.0
+  ],
+  "primary_metric": "macro_f1",
+  "test_access": false,
+  "primary_comparison": "self_input_missing_only_minus_missing_only",
+  "secondary_comparison": "self_input_missing_only_minus_original_LOOK",
+  "intervention": "Pre-fusion predictor inputs: clamp retained coordinates to complete-train PCA mean BEFORE projection; write only missing branch. Fused nodes unchanged.",
+  "pca": "Reuse identical complete-train joint PCA and dimensions; no branch-specific PCA refit",
+  "start": "Fixed original input start; no extra start search",
+  "selection": "Same strict validation Macro-F1 ON/OFF, dimensions and factors as missing_only; each policy refits downstream on its own accepted upstream",
+  "scope": "Exploratory source-information ablation after development discussion; does not establish heterogeneous-network compatibility",
+  "expected_predecessor_cases": 15,
+  "combined_development_stages": 283
+}

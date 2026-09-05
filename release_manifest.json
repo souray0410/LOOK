@@ -92,7 +92,7 @@
     }
   ],
   "data_tree": "data",
-  "deployment_data_root": "/data/mengh/LOOK/2026_09_05_21_45_23",
+  "deployment_data_root": "/data/mengh/LOOK/2026_09_05_23_25_06",
   "home_tree": "home",
   "project": "LOOK",
   "release_documents": [
@@ -108,14 +108,14 @@
     },
     {
       "path": "PROJECT_TIMELINE.md",
-      "bytes": 9814,
-      "sha256": "ca20c7d3319e5850418df726a064365791f08c9bd01077f8f7a38b987d00c0cd"
+      "bytes": 10161,
+      "sha256": "33b19e360d5b680b52a3ce9334eba5b32fa18e4cc3fbab862a3dc21404628607"
     }
   ],
-  "release_id": "2026_09_05_21_45_23",
+  "release_id": "2026_09_05_23_25_06",
   "schema_version": 2,
   "source_manifest": {
     "path": "home/file_manifest.json",
-    "sha256": "906e2c43d905fd5f06f1c3c7a8e4d474b368baa92432163b2af487922d2c2162"
+    "sha256": "8981923295602d5d15dbde524697c4ef4306984122ed68e17068d44fc921fa61"
   }
 }

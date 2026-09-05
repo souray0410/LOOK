@@ -89,6 +89,43 @@ def paired_comparisons(rows):
     return out
 
 
+def self_input_comparisons(rows):
+    index={(r['fusion'],r['filling'],r['seed'],r['scenario'],r['metric']):r
+        for r in rows if r['method']=='missing_only'}
+    result=[]
+    for r in rows:
+        if r['method']!='self_input_missing_only':continue
+        key=tuple(r[k] for k in ('fusion','filling','seed','scenario','metric'))
+        if key in index:
+            b=index[key]
+            result.append(dict(r,reference_method='missing_only',reference_value=b['value'],
+                delta=r['value']-b['value'],reference_source=b['source_path'],reference_sha256=b['source_sha256']))
+    return result
+
+
+def include_self_input(summary, path, method_path):
+    extra=read_json(Path(path))
+    if extra.get('test_access') is not False or Path(extra['predecessor_summary']).resolve()!=Path(method_path).resolve():
+        raise ValueError('Wrong or unsealed self-input supplement')
+    from .state import stable_hash
+    from .self_input_study import make_cases
+    make_cases(extra['spec'])
+    if extra['identity']['predecessor_identity']!=stable_hash(summary['identity']):
+        raise ValueError('Self-input predecessor identity mismatch')
+    merged=dict(summary,completed_cases=dict(summary['completed_cases']))
+    for key,rec in extra['completed_cases'].items():
+        if key in merged['completed_cases']:raise ValueError('Duplicate supplemental case')
+        verify_file(rec);result=read_json(Path(rec['path']))
+        if result['case'] not in extra['cases'] or result['identity']['spec']!=extra['spec']:
+            raise ValueError('Self-input result scope mismatch')
+        merged['completed_cases'][key]=rec
+    merged.update(expected_new_cases=18,self_input_summary=file_record(Path(path)),
+        self_input_status=extra['status'],self_input_completed=len(extra['completed_cases']),
+        original_method_status=summary['status'],_self_input_snapshot=extra)
+    if summary['status']=='complete' and extra['status']!='complete':merged['status']='self_input_'+extra['status']
+    return merged
+
+
 def write_method_report(summary,destination,*,pdf=True):
     import matplotlib
     matplotlib.use('Agg')
@@ -98,6 +135,7 @@ def write_method_report(summary,destination,*,pdf=True):
     rows,sources,parent,suffix=collect(summary);agg=aggregate(rows);comparisons=paired_comparisons(rows)
     write_csv(rows,destination/'all_metrics.csv');write_csv(agg,destination/'three_seed_summary.csv')
     write_csv(comparisons,destination/'paired_method_differences.csv')
+    write_csv(self_input_comparisons(rows),destination/'paired_self_input_differences.csv')
     diagnostics=[];costs=[]
     records=list(summary.get('reference_analyses',{}).values())
     for rec in summary.get('completed_cases',{}).values():
@@ -119,7 +157,7 @@ def write_method_report(summary,destination,*,pdf=True):
     atomic_write_json(manifest,destination/'report_manifest.json')
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':10,'axes.spines.top':False,'axes.spines.right':False,'axes.grid':True,'grid.alpha':.18})
     figures=[]
-    colors={'filling':'#999FA8','original_LOOK':'#237C8B','ssf':'#C38A39','independent_fit':'#9C6388','missing_only':'#677BB4','selected_start_LOOK':'#477842','terminal_only':'#B57964','bias_only':'#A06C32','logit_affine':'#7068A0'}
+    colors={'filling':'#999FA8','original_LOOK':'#237C8B','ssf':'#C38A39','independent_fit':'#9C6388','missing_only':'#677BB4','selected_start_LOOK':'#477842','terminal_only':'#B57964','bias_only':'#A06C32','logit_affine':'#7068A0','self_input_missing_only':'#415F45'}
     names={'normalized_mean':'Normalized mean','raw_zero':'Raw zero','paired_cgan':'Paired cGAN'}
     for filling in ('normalized_mean','raw_zero','paired_cgan'):
         fig,axes=plt.subplots(1,2,figsize=(12,4.6),layout='constrained')
@@ -156,6 +194,7 @@ def write_method_report(summary,destination,*,pdf=True):
     plt.close(fig);figures.append(('Random missingness: frozen direction configs',destination/'random_missingness.png'))
     fig,axes=plt.subplots(1,2,figsize=(12,4.8),layout='constrained')
     methods=['original_LOOK','selected_start_LOOK','terminal_only','ssf','independent_fit','missing_only','bias_only','logit_affine']
+    if summary.get('self_input_summary'):methods.append('self_input_missing_only')
     for ax,pattern in zip(axes,('oct_missing','cfp_missing')):
         for i,method in enumerate(methods):
             rr=[r for r in rows if (r['fusion'],r['filling'],r['method'],r['scenario'],r['metric'])==('layer3','normalized_mean',method,pattern,'macro_f1')]
@@ -163,7 +202,7 @@ def write_method_report(summary,destination,*,pdf=True):
             a=[r for r in agg if (r['fusion'],r['filling'],r['method'],r['scenario'],r['metric'])==('layer3','normalized_mean',method,pattern,'macro_f1')]
             if a:ax.errorbar(i,a[0]['mean'],yerr=a[0]['sd'],fmt='ks',capsize=4,ms=4)
             if not rr:ax.text(i,.06,'Pending',rotation=90,ha='center',color='#777777',fontsize=9)
-        ax.set(xticks=range(len(methods)),xticklabels=[m.replace('_','\n') for m in methods],ylim=(0,1),ylabel='Validation Macro-F1',title=pattern.replace('_',' ').upper())
+        ax.set(xticks=range(len(methods)),xticklabels=['self\ninput' if m=='self_input_missing_only' else m.replace('_','\n') for m in methods],ylim=(0,1),ylabel='Validation Macro-F1',title=pattern.replace('_',' ').upper())
     fig.suptitle('Bounded method comparison | layer3 + normalized_mean | 3 seeds',fontsize=13)
     for ext in ('png','svg'):fig.savefig(destination/f'method_comparison.{ext}',dpi=160)
     plt.close(fig);figures.append(('Method evidence: available vs pending',destination/'method_comparison.png'))
@@ -208,7 +247,21 @@ def write_method_report(summary,destination,*,pdf=True):
         'These six added cases were specified after examining development results. They are exploratory mechanism controls; test remains sealed. Existing SSF and mechanism settings are unchanged.']))
     tradeoff=tradeoff_figure(rows,destination)
     if tradeoff:figures.append(('Classification gains and probability tradeoffs',tradeoff))
+    if summary.get('self_input_summary'):
+        manifest.update(self_input_status=summary['self_input_status'],self_input_completed=summary['self_input_completed'],self_input_summary=summary['self_input_summary'],combined_development_stages=283)
+        atomic_write_json(manifest,destination/'report_manifest.json')
+        sections.append(('One additional information-source control',[
+            'Fixed layer3 fusion, normalized-mean filling, seeds 3407/3408/3409. Three new cases only, after the original 15 method cases; total 283 computation stages. No additional node groups, start search or hyperparameters.',
+            'Compare self_input_missing_only against missing_only: both write only the missing branch before fusion. The new control clamps retained-branch coordinates to their complete-train PCA mean BEFORE projection. The same joint PCA and search grid are reused.',
+            'The regression receives no sample-specific retained-branch information at pre-fusion sites. Fused sites remain unchanged and contain both branches. This is a shared-PCA information-source ablation, not a branch-specific PCA method or proof of heterogeneous-backbone portability.',
+        ]))
+        sections.append(('Self-input comparison and scope',[
+            'Each policy refits its downstream corrections using its own accepted upstream state. Primary paired difference is self-input minus joint-input/missing-only; positive Macro-F1 favors self-input. Negative results remain visible; three-seed aggregation requires all three.',
+            f"Self-input status: {summary['self_input_status']}; {summary['self_input_completed']}/3 completed. Paired values are in paired_self_input_differences.csv. All values remain development validation results."]))
     write_speaker_notes(rows,agg,manifest,destination)
+    if summary.get('self_input_summary'):
+        note_path=destination/'导师汇报讲稿.md'
+        atomic_write_text(note_path.read_text()+'\n\n## 固定的一种自身输入对照\n\n仅增加 layer3、normalized mean、三个种子的 self_input_missing_only，共3个case，接在原15个机制实验之后，总阶段数283。沿用原level、起点和搜索规则，不枚举组合。与missing_only配对：两者都只写缺失分支，新增方案在PCA前把保留分支置为完整训练均值，因此融合前回归器不读取当前参与者的保留分支信息。共享联合PCA不变，融合后流程不变；这不是异构网络或独立分支PCA验证。结果未完成时不填零；负差值如实保留。\n',note_path)
     if audit:
         counts=audit['split_counts']
         sections[0][1].insert(1,f"Primary cohort: train {counts['train']}, validation {counts['validation']}, sealed test {counts['test']} participants. Recorded participant split leakage: {audit['participant_split_leakage']}. Counts are from the existing audit; no test inference was run.")
