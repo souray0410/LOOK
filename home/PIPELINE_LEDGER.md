@@ -141,3 +141,8 @@ unchanged specification. The failed attempt is archived as a maintenance audit;
 its incomplete evaluation/sweep/state directories are removed. The original
 release tag remains immutable; the repair receives a distinct patch tag. Read the
 latest live summary rather than relying on the initial study ID.
+
+
+## Step 42: self-input supplement
+
+Release 2026_09_05_23_25_06: append exactly 3 self_input_missing_only cases after the unchanged 15-case method queue. Total 283 stages. Same levels and shared PCA, train-mean clamp before PCA, missing-only writeback, no new start search. See docs/SELF_INPUT_EVIDENCE.md. Test remains sealed.

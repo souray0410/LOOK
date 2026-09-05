@@ -15,3 +15,8 @@ Main is current source. Previous fixed-layer3 results are retained as explorator
 their queue is paused. Data, splits, preprocessing, ImageNet normalization and MHD V4
 are shared unchanged. Superseded all-position three-seed results are not inputs.
 Tests stay sealed. Stage-wise weight streaming is not implemented.
+
+
+## Self-input supplement
+
+Release 2026_09_05_23_25_06: append exactly 3 self_input_missing_only cases after the unchanged 15-case method queue. Total 283 stages. Same levels and shared PCA, train-mean clamp before PCA, missing-only writeback, no new start search. See docs/SELF_INPUT_EVIDENCE.md. Test remains sealed.

@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 from look_core.start_study import read_json,file_record
-from look_core.method_report import write_method_report
+from look_core.method_report import write_method_report,include_self_input
 from look_core.state import atomic_write_json
 
 
@@ -12,10 +12,15 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--method-summary',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--self-input-summary',type=Path)
     a=p.parse_args()
     if a.output.exists():raise ValueError('Use a fresh snapshot directory; historical reports are immutable')
     summary=read_json(a.method_summary)
     if summary.get('test_access') is not False:raise ValueError('Only sealed development reporting is allowed')
+    if a.self_input_summary:
+        summary=include_self_input(summary,a.self_input_summary,a.method_summary)
+        atomic_write_json(summary.pop('_self_input_snapshot'),a.output/'self_input_summary_snapshot.json')
+        summary['self_input_summary']=file_record(a.output/'self_input_summary_snapshot.json')
     manifest=write_method_report(summary,a.output)
     atomic_write_json(summary,a.output/'method_summary_snapshot.json')
     manifest['method_summary_snapshot']=file_record(a.output/'method_summary_snapshot.json')

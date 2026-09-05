@@ -157,3 +157,8 @@ Operational release 2026_09_05_19_14_09 parks the unused frozen classifier graph
 ## 2026-09-05: bounded simple controls and morning advisor snapshot
 
 Release 2026_09_05_21_45_23 adds six cases (bias-only and positive affine output control, three seeds each) to the nine method-evidence cases, for 280 combined stages. Parent and suffix remain unchanged and sealed-test discipline is preserved. Advisor snapshots now include data-derived conclusions, unfavorable probability outcomes and Chinese speaker notes; refresh is independent of unfinished GPU queues.
+
+
+## 2026-09-05: one bounded self-input contrast
+
+Release 2026_09_05_23_25_06: append exactly 3 self_input_missing_only cases after the unchanged 15-case method queue. Total 283 stages. Same levels and shared PCA, train-mean clamp before PCA, missing-only writeback, no new start search. See home/docs/SELF_INPUT_EVIDENCE.md. Test remains sealed.
