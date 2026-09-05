@@ -25,10 +25,12 @@ export PYTHONPATH="$PROJECT_ROOT/tool${PYTHONPATH:+:$PYTHONPATH}"
 RUNS_ROOT="$("$PYTHON" -c 'import argparse;from look_core.cli import add_runtime_arguments,resolve_runtime_arguments;p=argparse.ArgumentParser();add_runtime_arguments(p);a,_=p.parse_known_args();print(resolve_runtime_arguments(a).runs_root)' --project-root "$PROJECT_ROOT" "${ARGS[@]}")"
 mkdir -p "$RUNS_ROOT/logs"
 LOG="$RUNS_ROOT/logs/${SESSION}_$(date -u +%Y%m%dT%H%M%SZ).log"
-COMMAND=(env "PYTHONPATH=$PYTHONPATH" "OMP_NUM_THREADS=$OMP_NUM_THREADS" "MKL_NUM_THREADS=$MKL_NUM_THREADS" "OPENBLAS_NUM_THREADS=$OPENBLAS_NUM_THREADS" "$PYTHON" -u "$PROJECT_ROOT/pipeline/39_run_start_study.py" --project-root "$PROJECT_ROOT" "${ARGS[@]}" --execute --wait-parent)
+NOFILE_LIMIT="${LOOK_NOFILE_LIMIT:-65536}"
+# Set the limit inside the tmux child, even if the server predates this launch.
+COMMAND=(bash -c 'ulimit -Sn "$1" || exit; shift; exec "$@"' _ "$NOFILE_LIMIT" env "PYTHONPATH=$PYTHONPATH" "OMP_NUM_THREADS=$OMP_NUM_THREADS" "MKL_NUM_THREADS=$MKL_NUM_THREADS" "OPENBLAS_NUM_THREADS=$OPENBLAS_NUM_THREADS" "$PYTHON" -u "$PROJECT_ROOT/pipeline/39_run_start_study.py" --project-root "$PROJECT_ROOT" "${ARGS[@]}" --execute --wait-parent)
 printf -v CMD '%q ' "${COMMAND[@]}"
 printf -v LOG_QUOTED '%q' "$LOG"
 tmux new-session -d -s "$SESSION" "exec $CMD > $LOG_QUOTED 2>&1"
 sleep 1
 tmux has-session -t "$SESSION"
-echo "session=$SESSION log=$LOG"
+echo "session=$SESSION log=$LOG nofile_limit=$NOFILE_LIMIT"

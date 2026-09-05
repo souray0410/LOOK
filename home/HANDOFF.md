@@ -1,3 +1,7 @@
+# Runtime handoff — 2026-09-05
+
+Latest observed parent state: failed at 27/52, raw_zero/feature/3409, at 06:27:56 UTC. DataLoader ancillary-descriptor transfer failed; the shell soft file limit is 1024. The supplement correctly exited without fitting any new case. Do not claim either queue is running. Parent recovery requires user authorization; source and accepted results remain intact. The new suffix launcher sets a 65536 open-file limit in its tmux child. See START_STUDY.md and refresh remote status before reporting.
+
 # Correction-start supplement: 2026_09_05_09_12_55
 
 The latest release adds the suffix-start study after the unchanged parent 52-stage queue. See [START_STUDY.md](START_STUDY.md). Parent paths and status snapshots below are historical; use the read-only monitors for current status.

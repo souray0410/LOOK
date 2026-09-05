@@ -39,3 +39,7 @@ The three figure families cover start effects, ON/OFF topology decisions, and se
 ## Acceptance
 
 Run the full unit suite and `tool/operations/verify_start_study.py` with explicit source, parent and separate maintenance output paths. The latter uses the real frozen feature/3407 backbone and its existing training PCA with six train and six validation participants, two late starts, both directions and all fillings; its cGAN generator is explicitly an untrained deterministic conversion fixture. It checks all-OFF equality, suffix fits, resumed decisions, upstream input propagation and unchanged parent resources. Its numbers are technical acceptance only, never formal performance results. Existing unchanged training/DDP qualification remains attributable to the parent release.
+
+## Runtime resource guard
+
+The suffix launcher sets the child process open-file soft limit to 65536 (`LOOK_NOFILE_LIMIT` override), including when a tmux server already exists. This changes no scientific configuration. A failed parent is never restarted automatically. On 2026-09-05 at 06:27:56 UTC the parent stopped at 27/52 with DataLoader `received 0 items of ancdata` followed by `Pin memory thread exited unexpectedly`; the observed shell soft limit was 1024. Descriptor exhaustion is a supported working diagnosis, not a proven postmortem count. Recovery requires explicit authorization under the user's no-automatic-restart instruction.
