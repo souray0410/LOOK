@@ -1,3 +1,7 @@
+# 2026_09_05_16_44_54 — ws02 runtime recovery
+
+Pin NCCL transport and file limits inside tmux children. Preserve both immutable study sources and all scientific configuration. Formal-sized isolated generator checks passed in both directions; 158 regression tests passed. See home/RUNTIME_RECOVERY_20260905.md for evidence and limits.
+
 # 2026_09_05_09_12_55 — Correction-start supplement
 
 Add pipeline 39: 243 suffix configurations, 30 strict source references and 213 fresh fits, queued after the original 52 stages. Validation chooses starts independently per missing direction; test remains sealed. Numerical LOOK, PCA, backbone and generator code are unchanged. New topology/decision provenance and consistent scientific reports distinguish eligible starts from enabled sites.

@@ -35,6 +35,8 @@ has not been reproduced deterministically.
   older tmux server with stale transport settings and a 1024-file limit; they
   also check explicit overrides.
 
+- Full regression suite: 158 passed.
+
 ## Deployment and provenance
 
 The new operations release is `/home/mengh/LOOK/2026_09_05_16_44_54`.
