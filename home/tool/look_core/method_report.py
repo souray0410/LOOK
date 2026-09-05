@@ -130,7 +130,7 @@ def write_method_report(summary,destination,*,pdf=True):
                     for r in subset:ax.scatter(fi+(mi-.5)*.22+(r['seed']-3408)*.035,r['value'],s=20,color=colors[method],alpha=.6)
                     a=[r for r in agg if (r['filling'],r['fusion'],r['scenario'],r['metric'],r['method'])==(filling,fusion,pattern,'macro_f1',method)]
                     if a:ax.errorbar(fi+(mi-.5)*.22,a[0]['mean'],yerr=a[0]['sd'],color=colors[method],fmt='s',capsize=5,label=method if fi==0 else None)
-            ax.set(xticks=range(3),xticklabels=['layer3','feature','layer2'],ylim=(0,1),ylabel='Validation Macro-F1',title=pattern.replace('_',' ').upper())
+            ax.set(xticks=range(3),xticklabels=['layer3','feature','layer2'],xlim=(-.4,2.4),ylim=(0,1),ylabel='Validation Macro-F1',title=pattern.replace('_',' ').upper())
             ax.legend(handles=[Line2D([],[],marker='o',ls='',color=colors[m],label=label) for m,label in [('filling','Filling baseline'),('original_LOOK','Original LOOK')]],fontsize=9)
             for fi,fusion in enumerate(('layer3','feature','layer2')):
                 if not any(r['fusion']==fusion and r['filling']==filling for r in rows):ax.text(fi,.08,'Pending',ha='center',color='#777777',fontsize=9)
@@ -168,7 +168,7 @@ def write_method_report(summary,destination,*,pdf=True):
     for ext in ('png','svg'):fig.savefig(destination/f'method_comparison.{ext}',dpi=160)
     plt.close(fig);figures.append(('Method evidence: available vs pending',destination/'method_comparison.png'))
     sections=[('Study status and evidence boundary',[
-        f"Snapshot UTC: {manifest['generated_at_utc']}. Parent: {manifest['parent_completed']}/52; suffix: {manifest['suffix_completed']}/243 (30 reused); new controls: {manifest['methods_completed']}/9.",
+        f"Snapshot UTC: {manifest['generated_at_utc']}. Parent: {manifest['parent_completed']}/52; suffix: {manifest['suffix_completed']}/243 (includes 30 reuse slots); new controls: {manifest['methods_completed']}/9.",
         'All shown values are development validation results. Fusion, dimensions, factors, nodes and starts use this validation set for selection. They are not independent test evidence.',
         'Train fits PCA and paired Ridge W/b. SSF alone uses train labels for adapter fitting. Frozen original backbone and classifier are shared by all comparisons.',
         'Primary and natural test cohorts remain sealed. Check participant overlap before treating the two test reports as independent replications.']),
