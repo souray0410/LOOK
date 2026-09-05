@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
   "project_name": "LOOK",
-  "release_id": "2026_09_05_18_49_49",
+  "release_id": "2026_09_05_19_14_09",
   "selected_task_profile": "glaucoma_all_evidence",
   "task_selection_manifest": "dataset/cohorts/task_selection/selected_task_manifest.json",
   "deployment_defaults": {
-    "project_root": "/home/mengh/LOOK/2026_09_05_18_49_49",
-    "data_root": "/data/mengh/LOOK/2026_09_05_18_49_49",
+    "project_root": "/home/mengh/LOOK/2026_09_05_19_14_09",
+    "data_root": "/data/mengh/LOOK/2026_09_05_19_14_09",
     "dataset_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset",
     "image_root": "/data/mengh/LOOK/2026_09_03_08_30_00/dataset",
     "cohort_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/ukb_record_glaucoma_binary_bilateral",

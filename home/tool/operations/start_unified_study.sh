@@ -4,6 +4,7 @@ export OMP_NUM_THREADS="${OMP_NUM_THREADS:-4}"
 export MKL_NUM_THREADS="${MKL_NUM_THREADS:-4}"
 export OPENBLAS_NUM_THREADS="${OPENBLAS_NUM_THREADS:-4}"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+OPERATIONS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SESSION=look-unified-20260904-191807
 PYTHON=""
 ARGS=()
@@ -29,7 +30,7 @@ NOFILE_LIMIT="${LOOK_NOFILE_LIMIT:-65536}"
 # Apply the limit inside the tmux child, including an existing server.
 # Pin transport inside the tmux child rather than inheriting stale server settings.
 # Keep watchdog monitoring and its production timeout unchanged.
-COMMAND=(bash -c 'ulimit -Sn "$1" || exit; shift; exec "$@"' _ "$NOFILE_LIMIT" env "PYTHONPATH=$PYTHONPATH" "NCCL_P2P_DISABLE=${NCCL_P2P_DISABLE:-1}" "NCCL_SHM_DISABLE=${NCCL_SHM_DISABLE:-0}" "NCCL_CUMEM_ENABLE=${NCCL_CUMEM_ENABLE:-0}" "NCCL_CUMEM_HOST_ENABLE=${NCCL_CUMEM_HOST_ENABLE:-0}" "TORCH_FR_BUFFER_SIZE=${TORCH_FR_BUFFER_SIZE:-2000}" "TORCH_NCCL_DUMP_ON_TIMEOUT=${TORCH_NCCL_DUMP_ON_TIMEOUT:-1}" "OMP_NUM_THREADS=$OMP_NUM_THREADS" "MKL_NUM_THREADS=$MKL_NUM_THREADS" "OPENBLAS_NUM_THREADS=$OPENBLAS_NUM_THREADS" "$PYTHON" -u "$PROJECT_ROOT/pipeline/38_run_unified_study.py" --project-root "$PROJECT_ROOT" "${ARGS[@]}")
+COMMAND=(bash -c 'ulimit -Sn "$1" || exit; shift; exec "$@"' _ "$NOFILE_LIMIT" env "PYTHONPATH=$PYTHONPATH" "NCCL_P2P_DISABLE=${NCCL_P2P_DISABLE:-1}" "NCCL_SHM_DISABLE=${NCCL_SHM_DISABLE:-0}" "NCCL_CUMEM_ENABLE=${NCCL_CUMEM_ENABLE:-0}" "NCCL_CUMEM_HOST_ENABLE=${NCCL_CUMEM_HOST_ENABLE:-0}" "TORCH_FR_BUFFER_SIZE=${TORCH_FR_BUFFER_SIZE:-2000}" "TORCH_NCCL_DUMP_ON_TIMEOUT=${TORCH_NCCL_DUMP_ON_TIMEOUT:-1}" "OMP_NUM_THREADS=$OMP_NUM_THREADS" "MKL_NUM_THREADS=$MKL_NUM_THREADS" "OPENBLAS_NUM_THREADS=$OPENBLAS_NUM_THREADS" "$PYTHON" -u "$OPERATIONS_ROOT/run_unified_with_idle_graph_parking.py" --runtime-audit-root "$RUNS_ROOT/maintenance/idle_graph_parking" --project-root "$PROJECT_ROOT" "${ARGS[@]}")
 printf -v CMD '%q ' "${COMMAND[@]}"
 printf -v LOG_QUOTED '%q' "$LOG"
 tmux new-session -d -s "$SESSION" "exec $CMD > $LOG_QUOTED 2>&1"

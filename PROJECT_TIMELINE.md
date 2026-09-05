@@ -148,3 +148,8 @@ live verification. No earlier checkpoint, generator, PCA or experimental result 
 ## 2026-09-05: method evidence supplement
 
 Release 2026_09_05_18_49_49 adds the fixed 9-case comparison and advisor-report generator. Scientific regression and balanced real-data CPU acceptance precede deployment. Original and suffix releases are not modified.
+
+
+## 2026-09-05: correct parent/GAN memory overlap
+
+Operational release 2026_09_05_19_14_09 parks the unused frozen classifier graph on CPU while GAN workers run; restores it without changing scientific configuration. GPU round-trip equivalence and launcher tests precede recovery.

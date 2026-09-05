@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "release_id": "2026_09_05_18_49_49",
-  "generated_at_utc": "2026-09-05T15:59:55.926338+00:00",
+  "release_id": "2026_09_05_19_14_09",
+  "generated_at_utc": "2026-09-05T16:15:17.686953+00:00",
   "files": [
     {
       "path": ".gitattributes",
@@ -20,13 +20,13 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 6994,
-      "sha256": "7ecb8fa11ae9d97d6591929e6cbf49e7fbee59e9d6278a9c19048a50dd1b31d4"
+      "bytes": 7675,
+      "sha256": "48bbc9eb5152ae1805e0ff4a8e3c2ef2d5f2750820581a2c47e913520f536ab4"
     },
     {
       "path": "HANDOFF.md",
-      "bytes": 5665,
-      "sha256": "a9a438acf18790e326df5cba5a3bfb336b0853b4e20b6f713bb3878f35a10e44"
+      "bytes": 6346,
+      "sha256": "fc45555f4e3d6d304ab0b651f3e27253a9278f114770ea920099eb95a3d9f230"
     },
     {
       "path": "JOINT_LOOK_PROTOCOL.md",
@@ -40,8 +40,8 @@
     },
     {
       "path": "PIPELINE_LEDGER.md",
-      "bytes": 10230,
-      "sha256": "fb571e082208339928c950ef54e9218e315fff1fc45f8dbed865e516f3e52b64"
+      "bytes": 10911,
+      "sha256": "89d2e27eb5d2cd00fadfc2dd6b882a93208621201981ef33f84fa216fb0bdf77"
     },
     {
       "path": "README.md",
@@ -331,7 +331,7 @@
     {
       "path": "project.json",
       "bytes": 3079,
-      "sha256": "670a6de677b1edb756330ca1021c31b51ed8ce98b677f7762f7cfaceb06d8be6"
+      "sha256": "f73cc44b46c43a02b771cd90092dcda43b255ff48f8eb5a4d34eb466ddc68a60"
     },
     {
       "path": "pyproject.toml",
@@ -624,6 +624,11 @@
       "sha256": "fb3355e5d2491790838d2602ecbd12ec1f812dc87737a0f6b5679f95594b9087"
     },
     {
+      "path": "tool/operations/run_unified_with_idle_graph_parking.py",
+      "bytes": 3590,
+      "sha256": "eb33d52eb1d9b1293bc452294f4aa6698261c784bb5283fd893011f9a5204075"
+    },
+    {
       "path": "tool/operations/start_method_evidence.sh",
       "bytes": 2403,
       "sha256": "5f9e7ff4e5488fb514573238a714584f79b802c27bc61663a95d1c1e14f82f36"
@@ -635,8 +640,8 @@
     },
     {
       "path": "tool/operations/start_unified_study.sh",
-      "bytes": 2370,
-      "sha256": "17f5a9202fe5224bd8222e289667f70261b3523dc0da7ab59b0139979aece84c"
+      "bytes": 2508,
+      "sha256": "cadb37ef822019da0f53fd39d944ab520a89f7ef2373f02305ef67bcee261a4c"
     },
     {
       "path": "tool/operations/verify_macro_f1_joint.py",
@@ -767,6 +772,11 @@
       "path": "tool/tests/test_graph.py",
       "bytes": 7818,
       "sha256": "5f03c93acfa793bc0d1d502b71a3d659b32085b2a98fcd84527d4a4be4beb8cf"
+    },
+    {
+      "path": "tool/tests/test_idle_graph_parking.py",
+      "bytes": 2207,
+      "sha256": "d2394443dd167bf097cc05b4a21f148a5bac7b80d51b7f74d18e6eb7369ac2a0"
     },
     {
       "path": "tool/tests/test_joint_protocol.py",
