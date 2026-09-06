@@ -45,11 +45,12 @@ def run_self_input_study(paths, predecessor_path, devices, *, execute=False, wai
         predecessor_path=str(predecessor_path),predecessor_identity=stable_hash(parent['identity']),
         implementation_sha256=implementation_sha256(paths.project_root),devices=list(devices))
     output=paths.runs_root/'self_input_study'/stable_hash(identity)[:12]
-    if output.resolve().is_relative_to(predecessor_path.parents[2]):
+    protected = predecessor_path.parent if parent.get('start_scope')=='representative' else predecessor_path.parents[2]
+    if output.resolve().is_relative_to(protected):
         raise ValueError('Self-input outputs require a separate release run root')
     summary=dict(identity=identity,spec=spec,cases=cases,status='planned',output=str(output),
         predecessor_summary=str(predecessor_path),completed_cases={},expected_new_cases=3,
-        expected_direction_fits=6,combined_development_stages=283,test_access=False)
+        expected_direction_fits=6,combined_development_stages=None if parent.get('combined_development_stages') is None else parent['combined_development_stages']+3,test_access=False)
     if not execute:return summary
     output.mkdir(parents=True,exist_ok=True);path=output/'summary.json'
     with PipelineState(output/'state','self_input',identity,[spec_path]) as state:

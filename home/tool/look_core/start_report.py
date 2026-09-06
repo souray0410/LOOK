@@ -86,7 +86,7 @@ def write_report(summary, destination):
         for scenario, values in r['validation'].items():
             metrics.append(dict(case_id=r['case_id'],scenario=scenario,metrics=values,result=r['result']))
     atomic_write_json(metrics,destination/'all_validation_metrics.json')
-    atomic_write_json(dict(completed_cases=len(summary['completed_cases']),expected_cases=243,
+    atomic_write_json(dict(completed_cases=len(summary['completed_cases']),expected_cases=summary.get('expected_cases',243),
         three_seed_groups=len(aggregates),test_access=False,selected_contexts=summary.get('selected_contexts',{})), destination/'report_manifest.json')
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':9,'axes.spines.top':False,'axes.spines.right':False,
         'axes.titleweight':'semibold','savefig.facecolor':'white','axes.grid':True,'grid.alpha':.16})
@@ -98,7 +98,7 @@ def write_report(summary, destination):
     fusions = list(dict.fromkeys(r['fusion'] for r in rows))
     for filling in fillings:
         fig, axes = plt.subplots(len(fusions),4,figsize=(19,3.7*len(fusions)),squeeze=False,layout='constrained')
-        fig.suptitle(f'LOOK correction start | {filling}\nValidation-selected configurations • {len(summary['completed_cases'])}/243 cases available • test sealed',fontsize=16)
+        fig.suptitle(f'LOOK correction start | {filling}\nValidation-selected configurations • {len(summary['completed_cases'])}/{summary.get('expected_cases',243)} cases available • test sealed',fontsize=16)
         for i,fusion in enumerate(fusions):
             for j,pattern in enumerate(PATTERNS):
                 subset=[r for r in rows if (r['filling'],r['fusion'],r['pattern'])==(filling,fusion,pattern)]
@@ -134,7 +134,7 @@ def write_report(summary, destination):
                     ax.scatter(r['start_ordinal']-1,y,s=75,facecolors='none',edgecolors='black',linewidths=.8)
                     if bank['first_enabled']: ax.scatter(sites.index(bank['first_enabled']),y,marker='*',s=60,color='#F7C66A',edgecolors='#333333',linewidths=.3)
                 ax.set(xticks=range(9),xticklabels=sites,yticks=range(len(selected)),
-                    yticklabels=[f"{r['seed']} / start {r['start_ordinal']} / ρ=1/{r['banks'][pattern]['selected_factor']}" for r in selected],title=pattern)
+                    yticklabels=[f"{r['seed']} / start {r['start_ordinal']} / ρ = 1/{r['banks'][pattern]['selected_factor']}" for r in selected],title=pattern)
                 ax.tick_params(axis='x',labelrotation=55,labelsize=8)
             fig.legend(handles=[Patch(color=c,label=l) for c,l in zip(cmap.colors,['Excluded before start','Eligible, OFF','Enabled, ON'])],loc='outside lower center',ncol=3)
             save(fig,f'{filling}__{fusion}__decisions')

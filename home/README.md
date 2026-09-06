@@ -1,3 +1,28 @@
+
+## 2026-09-06 bounded continuation (current)
+
+Release 2026_09_06_15_48_18 contracts are documented in docs/ADVISOR_QUESTIONS.md.
+The original 52-stage study is unchanged. The full 243-start queue is deferred
+after a controlled cutover: retain every complete result, verify the 27
+layer3/normalized_mean/three-seed starts, finish at most the cutover active case,
+and then run the existing 15 method cases followed by three self-input cases.
+Do not restart the historical full suffix or old waiting controllers.
+
+Step 43 is the serial budget supervisor (GPU0/1 allowed, 14 GiB per GPU aggregate,
+12 GiB torch allocator plus context margin). Step 44 produces a CPU-only cohort
+provenance and validation sensitivity audit. Scientific configs remain pinned.
+
+The legacy cuDNN TF32 setting causes measurable batch-dependent logits. Keep
+original feature/evaluation batches; only graph allocation and SSF training
+microbatches may shrink. Real-data acceptance reproduces both original full
+validation missing-direction baseline logits exactly. Do not claim arbitrary
+batch-size bitwise equivalence or silently change historical precision.
+
+MHD_MODEL_ADAPTER_DESIGN.md is a future interface design, not an implemented
+model migration. Additional architectures/data can change empirical conclusions.
+
+Runtime pointer: /data/mengh/LOOK/maintenance/bounded_queue_current.json.
+
 # Correction-start supplement: 2026_09_05_09_12_55
 
 The latest release adds the suffix-start study after the unchanged parent 52-stage queue. See [START_STUDY.md](START_STUDY.md). Parent paths and status snapshots below are historical; use the read-only monitors for current status.
