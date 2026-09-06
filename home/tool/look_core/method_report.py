@@ -27,6 +27,9 @@ def aggregate(rows):
 
 def collect(summary):
     parent=read_json(Path(summary['parent_summary']));suffix=read_json(Path(summary['suffix_summary']))
+    if summary.get('start_scope')=='representative':
+        from .start_evidence import load_evidence
+        suffix=load_evidence(Path(summary['suffix_summary']),deep=False)
     rows=[];sources=[]
     def add(path,fusion,filling,seed,method,translate=False):
         rec=file_record(Path(path));result=read_json(Path(path));verify_file(rec)
@@ -154,6 +157,7 @@ def write_method_report(summary,destination,*,pdf=True):
         test_access=False,data_audit=audit,source_records=sources,summary_snapshots=[file_record(destination/'parent_summary_snapshot.json'),file_record(destination/'suffix_summary_snapshot.json')],
         verified_prediction_bundles=len({r['prediction_path'] for r in rows}),metric_reproduction_tolerance=1e-12,
         interpretation='Development validation; no independent test claim. SD across seeds is not a confidence interval.')
+    manifest.update(start_scope=summary.get('start_scope','full'), suffix_expected=suffix.get('expected_cases',243), historical_suffix_completed=suffix.get('historical_completed'))
     atomic_write_json(manifest,destination/'report_manifest.json')
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':10,'axes.spines.top':False,'axes.spines.right':False,'axes.grid':True,'grid.alpha':.18})
     figures=[]
@@ -207,7 +211,7 @@ def write_method_report(summary,destination,*,pdf=True):
     for ext in ('png','svg'):fig.savefig(destination/f'method_comparison.{ext}',dpi=160)
     plt.close(fig);figures.append(('Method evidence: available vs pending',destination/'method_comparison.png'))
     sections=[('Study status and evidence boundary',[
-        f"Snapshot UTC: {manifest['generated_at_utc']}. Parent: {manifest['parent_completed']}/52; suffix: {manifest['suffix_completed']}/243 (includes 30 reuse slots); new controls: {manifest['methods_completed']}/{summary.get('expected_new_cases',9)}.",
+        f"Snapshot UTC: {manifest['generated_at_utc']}. Parent: {manifest['parent_completed']}/52; suffix: {manifest['suffix_completed']}/{suffix.get('expected_cases',243)} ({'representative evidence; other starts deferred' if summary.get('start_scope')=='representative' else 'includes 30 reuse slots'}); new controls: {manifest['methods_completed']}/{summary.get('expected_new_cases',9)}.",
         'All shown values are development validation results. Fusion, dimensions, factors, nodes and starts use this validation set for selection. They are not independent test evidence.',
         'Train fits PCA and paired Ridge W/b. SSF and the output-only control use train labels for fitting. Frozen original backbone and classifier are shared by all comparisons.',
         'Primary and natural test cohorts remain sealed. Check participant overlap before treating the two test reports as independent replications.']),
@@ -248,10 +252,10 @@ def write_method_report(summary,destination,*,pdf=True):
     tradeoff=tradeoff_figure(rows,destination)
     if tradeoff:figures.append(('Classification gains and probability tradeoffs',tradeoff))
     if summary.get('self_input_summary'):
-        manifest.update(self_input_status=summary['self_input_status'],self_input_completed=summary['self_input_completed'],self_input_summary=summary['self_input_summary'],combined_development_stages=283)
+        manifest.update(self_input_status=summary['self_input_status'],self_input_completed=summary['self_input_completed'],self_input_summary=summary['self_input_summary'],combined_development_stages=summary.get('combined_development_stages'))
         atomic_write_json(manifest,destination/'report_manifest.json')
         sections.append(('One additional information-source control',[
-            'Fixed layer3 fusion, normalized-mean filling, seeds 3407/3408/3409. Three new cases only, after the original 15 method cases; total 283 computation stages. No additional node groups, start search or hyperparameters.',
+            'Fixed layer3 fusion, normalized-mean filling, seeds 3407/3408/3409. Three new cases only, after the original 15 method cases; progress is counted separately for parent, representative evidence, and controls. No additional node groups, start search or hyperparameters.',
             'Compare self_input_missing_only against missing_only: both write only the missing branch before fusion. The new control clamps retained-branch coordinates to their complete-train PCA mean BEFORE projection. The same joint PCA and search grid are reused.',
             'The regression receives no sample-specific retained-branch information at pre-fusion sites. Fused sites remain unchanged and contain both branches. This is a shared-PCA information-source ablation, not a branch-specific PCA method or proof of heterogeneous-backbone portability.',
         ]))
@@ -261,7 +265,7 @@ def write_method_report(summary,destination,*,pdf=True):
     write_speaker_notes(rows,agg,manifest,destination)
     if summary.get('self_input_summary'):
         note_path=destination/'导师汇报讲稿.md'
-        atomic_write_text(note_path.read_text()+'\n\n## 固定的一种自身输入对照\n\n仅增加 layer3、normalized mean、三个种子的 self_input_missing_only，共3个case，接在原15个机制实验之后，总阶段数283。沿用原level、起点和搜索规则，不枚举组合。与missing_only配对：两者都只写缺失分支，新增方案在PCA前把保留分支置为完整训练均值，因此融合前回归器不读取当前参与者的保留分支信息。共享联合PCA不变，融合后流程不变；这不是异构网络或独立分支PCA验证。结果未完成时不填零；负差值如实保留。\n',note_path)
+        atomic_write_text(note_path.read_text()+'\n\n## 固定的一种自身输入对照\n\n仅增加 layer3、normalized mean、三个种子的 self_input_missing_only，共3个case，接在原15个机制实验之后；主实验、起点证据和新增对照分别计数。沿用原level、起点和搜索规则，不枚举组合。与missing_only配对：两者都只写缺失分支，新增方案在PCA前把保留分支置为完整训练均值，因此融合前回归器不读取当前参与者的保留分支信息。共享联合PCA不变，融合后流程不变；这不是异构网络或独立分支PCA验证。结果未完成时不填零；负差值如实保留。\n',note_path)
     if audit:
         counts=audit['split_counts']
         sections[0][1].insert(1,f"Primary cohort: train {counts['train']}, validation {counts['validation']}, sealed test {counts['test']} participants. Recorded participant split leakage: {audit['participant_split_leakage']}. Counts are from the existing audit; no test inference was run.")

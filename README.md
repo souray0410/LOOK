@@ -1,3 +1,10 @@
+# Current release: 2026_09_06_15_48_18
+
+Bounded LOOK continuation: representative start evidence, existing 15+3 controls,
+14 GiB/device resource supervision, cohort provenance/sensitivity audit, and
+future MHD model-adapter design. See home/docs/ADVISOR_QUESTIONS.md and
+home/docs/MHD_MODEL_ADAPTER_DESIGN.md. Historical runs are preserved.
+
 # Runtime recovery: 2026_09_05_16_44_54
 
 See [runtime recovery and validation](home/RUNTIME_RECOVERY_20260905.md). This operations-only update resumes the existing parent and supplement through explicit --project-root paths; it does not start a new scientific study. The isolated tests passed, but the intermittent NCCL hang was not deterministically reproduced.

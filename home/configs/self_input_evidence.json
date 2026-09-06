@@ -34,5 +34,5 @@
   "selection": "Same strict validation Macro-F1 ON/OFF, dimensions and factors as missing_only; each policy refits downstream on its own accepted upstream",
   "scope": "Exploratory source-information ablation after development discussion; does not establish heterogeneous-network compatibility",
   "expected_predecessor_cases": 15,
-  "combined_development_stages": 283
+  "combined_development_stages": null
 }

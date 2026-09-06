@@ -162,3 +162,14 @@ Release 2026_09_05_21_45_23 adds six cases (bias-only and positive affine output
 ## 2026-09-05: one bounded self-input contrast
 
 Release 2026_09_05_23_25_06: append exactly 3 self_input_missing_only cases after the unchanged 15-case method queue. Total 283 stages. Same levels and shared PCA, train-mean clamp before PCA, missing-only writeback, no new start search. See home/docs/SELF_INPUT_EVIDENCE.md. Test remains sealed.
+
+## 2026-09-06 — Representative start evidence and resource budget
+
+After inspecting partial development results, the user approved deferring the
+remaining full suffix grid. Preserve 52 parent stages, 27 representative
+layer3/normalized_mean/three-seed starts and all extra completed results. At most
+one active case is drained, followed by the existing 15+3 controls. No new
+SSF+LOOK, datasets, or backbone search. Added 43 (supervision) and 44 (audit).
+Legacy TF32 settings require preserving evaluation batches; real-data checks
+reproduce original full-validation baseline logits exactly. A model adapter
+interface is documented for future migration, not applied to current kernels.

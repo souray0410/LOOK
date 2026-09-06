@@ -172,19 +172,27 @@ def analyze_reference(source, label, bank_roots, output, device, devices):
     return record
 
 
-def run_method_study(paths,parent_path,parent_source,suffix_path,devices,*,execute=False,wait=False,render=True):
-    parent_path,parent_source,suffix_path=map(lambda p:Path(p).resolve(),(parent_path,parent_source,suffix_path))
+def run_method_study(paths,parent_path,parent_source,suffix_path,devices,*,execute=False,wait=False,render=True,start_evidence_manifest=None):
+    from .start_evidence import load_evidence
+    if (suffix_path is None) == (start_evidence_manifest is None):
+        raise ValueError('Choose exactly one suffix summary or representative evidence manifest')
+    representative = start_evidence_manifest is not None
+    parent_path,parent_source=map(lambda p:Path(p).resolve(),(parent_path,parent_source))
+    suffix_path=Path(start_evidence_manifest if representative else suffix_path).resolve()
     spec_path=paths.project_root/'configs/method_evidence.json';spec=read_json(spec_path)
-    cases=make_method_cases(spec);parent=read_json(parent_path);suffix=read_json(suffix_path)
+    cases=make_method_cases(spec);parent=read_json(parent_path);suffix=load_evidence(suffix_path) if representative else read_json(suffix_path)
     identity=dict(protocol=spec['protocol'],spec_sha256=file_sha256(spec_path),parent_path=str(parent_path),
         parent_implementation=parent['implementation_sha256'],suffix_path=str(suffix_path),
         suffix_identity=stable_hash(suffix['identity']),implementation_sha256=implementation_sha256(paths.project_root),devices=list(devices))
+    if representative:identity['start_scope']='representative'
     output=paths.runs_root/'method_study'/stable_hash(identity)[:12]
-    if any(output.resolve().is_relative_to(p.parents[2]) for p in (parent_path,suffix_path)):
+    if any(output.resolve().is_relative_to(p.parents[2]) for p in ((parent_path,) if representative else (parent_path,suffix_path))):
         raise ValueError('Method output must be in its own release run root')
     summary=dict(identity=identity,spec=spec,cases=cases,output=str(output),status='planned',completed_cases={},
         reference_analyses={},expected_new_cases=len(cases),expected_direction_fits=2*len(cases),combined_development_stages=265+len(cases),
         test_access=False,parent_summary=str(parent_path),suffix_summary=str(suffix_path))
+    if representative:
+        summary.update(start_evidence_manifest=str(suffix_path),start_scope='representative',combined_development_stages=None)
     if not execute:return summary
     output.mkdir(parents=True,exist_ok=True)
     path=output/'summary.json'
@@ -201,13 +209,17 @@ def run_method_study(paths,parent_path,parent_source,suffix_path,devices,*,execu
             if render:
                 from .method_report import write_method_report
                 write_method_report(summary,output/'report')
-            while parent['status']!='complete' or suffix['status']!='complete':
+            while parent['status']!='complete' or (not representative and suffix['status']!='complete'):
                 if parent['status'] in ('failed','cancelled') or suffix['status'] in ('failed','cancelled'):
                     raise RuntimeError('A predecessor failed; method queue will not start or restart it')
                 if not wait:raise RuntimeError('Predecessors incomplete; --wait-predecessors is required')
                 time.sleep(30);parent=read_json(parent_path);suffix=read_json(suffix_path)
             parent_spec=parent_source/'configs/unified_study.json'
-            verify_predecessors(parent,suffix,read_json(parent_spec),parent_spec)
+            if representative:
+                verify_parent(parent,read_json(parent_spec),parent_spec)
+                suffix=load_evidence(suffix_path)
+            else:
+                verify_predecessors(parent,suffix,read_json(parent_spec),parent_spec)
             if stable_hash(suffix['identity'])!=identity['suffix_identity']:raise RuntimeError('Suffix identity changed')
             if parent['implementation_sha256']!=identity['parent_implementation']:raise RuntimeError('Parent identity changed')
             inventory_path=output/'source_inventory.json'

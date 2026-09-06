@@ -122,7 +122,9 @@ def train_ssf(graph, train, validation, device, pattern, spec, output, source_ha
                     graph.eval(); adapter.enabled = True
                     optimizer.zero_grad(set_to_none=True)
                     started = time.perf_counter(); total_loss, total_n = 0., 0
-                    accumulation = spec['effective_batch_size']//spec['micro_batch_size']
+                    accumulation = spec['effective_batch_size']//train.batch_size
+                    if spec['effective_batch_size'] % train.batch_size:
+                        raise ValueError('Execution microbatch must divide effective batch')
                     for step, batch in enumerate(train):
                         first = (step//accumulation)*accumulation
                         end = min(first+accumulation, len(train))
@@ -145,7 +147,7 @@ def train_ssf(graph, train, validation, device, pattern, spec, output, source_ha
                     if score > best:
                         best, stale = score, 0;save_torch(adapter.state_dict(),best_path)
                     else: stale += 1
-                    history.append(dict(epoch=epoch+1, train_loss=total_loss/total_n, macro_f1=score,
+                    history.append(dict(epoch=epoch+1, execution_micro_batch_size=train.batch_size, train_loss=total_loss/total_n, macro_f1=score,
                         best_macro_f1=best, training_seconds=train_seconds,
                         validation_seconds=time.perf_counter()-started))
                     save_torch(dict(identity=identity, epoch=epoch+1, stale=stale,best=best,history=history,
