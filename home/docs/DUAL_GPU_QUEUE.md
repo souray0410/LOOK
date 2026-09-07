@@ -1,3 +1,12 @@
+# Scope amendment on 2026-09-07
+
+The user has now explicitly resumed all 182 deferred start cases. Pipeline 47 builds
+a frozen plan from audited original cases; it never reruns the verified 61. Each
+selected-context job depends on all its own unfinished starts, freezes the two
+validation-selected directions, and evaluates the fixed random masks without searching
+again by missingness ratio. Existing four complete selected contexts are reused.
+The old empty plan remains a record of the earlier idle state, not the current scope.
+
 # Independent single-GPU LOOK queue
 
 Effective 2026-09-07: the user replaced the earlier one-case-at-a-time execution

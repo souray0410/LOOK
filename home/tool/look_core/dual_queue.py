@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import signal
+import shutil
 import subprocess
 import sys
 import time
@@ -53,7 +54,7 @@ def validate_plan(plan):
         name = job['id']
         if not re.fullmatch(r'[a-zA-Z0-9_-]+', name) or name in seen:
             raise ValueError('Duplicate or unsafe case id')
-        if job['kind'] not in ('method', 'suffix', 'acceptance'):
+        if job['kind'] not in ('method', 'suffix', 'selected', 'acceptance'):
             raise ValueError('Unsupported case kind')
         if job['kind'] == 'acceptance' and not plan.get('acceptance_only', False):
             raise ValueError('Acceptance jobs cannot be scientific results')
@@ -228,8 +229,11 @@ def supervise(project_root, plan_path, output, lock_path, *, snapshot=gpu_snapsh
                     else:
                         raise RuntimeError(f"Case {job['id']} stopped: {'memory budget/OOM' if oom else 'worker failure'} (exit={code})")
                 pending = ready_jobs(jobs, completed, {r['job']['id'] for r in active.values()})
+                disk_ready = shutil.disk_usage(output).free >= plan.get('min_free_disk_gib', 0) * 1024**3
+                if pending and not active and not disk_ready:
+                    raise RuntimeError('Insufficient disk headroom; complete artifacts retained')
                 for gpu in (0, 1):
-                    if gpu in active or not pending: continue
+                    if gpu in active or not pending or not disk_ready: continue
                     value = stats[gpu]
                     if value['look_mib'] or value['free_mib'] < BUDGET_MIB: continue
                     job = pending.pop(0); micro = (8, 4, 2, 1)[attempts[job['id']]]
@@ -297,6 +301,23 @@ def worker(project_root, plan_path, output, job_id):
                 raise ValueError('Method source fusion/filling mismatch')
             run_method_case(source, case, spec, out/'result', torch.device('cuda:0'), (0,))
             result_path = out/'result'/'validation_result.json'
+        elif job['kind'] == 'selected':
+            from .start_study import audit_case, evaluate_selected
+            rows = []
+            for item in job['records']:
+                if 'job_id' in item:
+                    predecessor = next(j for j in jobs if j['id'] == item['job_id'])
+                    receipt = validate_receipt(output/'cases'/item['job_id']/'queue_complete.json', identity, predecessor)
+                    rp = verify(receipt['result'])
+                else:
+                    rp = verify(item['result'])
+                rows.append(audit_case(item['case'], rp))
+            rows.sort(key=lambda r:r['start_ordinal'])
+            if ([r['start_ordinal'] for r in rows] != list(range(1,10))
+                    or any(r['context'] != job['context'] for r in rows)):
+                raise ValueError('Selected context requires exactly its nine ordered starts')
+            chosen = evaluate_selected(job['context'], rows, source, out/'result', torch.device('cuda:0'), (0,))
+            result_path = Path(chosen['path'])
         else:
             from .start_study import sites_for_fusion
             case = job['case']; sites = sites_for_fusion(source['selection']['fusion_position'])
@@ -325,6 +346,7 @@ def worker(project_root, plan_path, output, job_id):
             verify({k: rec[k] for k in ('path', 'bytes', 'sha256')})
             artifacts.append({k: rec[k] for k in ('path', 'bytes', 'sha256')})
         value = dict(identity=identity, job_sha256=digest(job), status='complete', test_access=False,
+                     result=record(result_path),
                      physical_gpu=int(physical), physical_uuid=os.environ['LOOK_ASSIGNED_GPU_UUID'],
                      visible_devices=1, seed=job['seed'],
                      started_at_unix=begun, ended_at_unix=time.time(), artifacts=artifacts,
