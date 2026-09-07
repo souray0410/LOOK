@@ -116,6 +116,6 @@
   "schema_version": 2,
   "source_manifest": {
     "path": "home/file_manifest.json",
-    "sha256": "11ec69fc4c0f2b5b4c4f54ae2854996e36ff77adb71ca03582eae51a97b7f7de"
+    "sha256": "6bb7ca3dac9906bb8e9a3a777e3df2e210dad5fd2ca9378b5f4e68fca03f713c"
   }
 }

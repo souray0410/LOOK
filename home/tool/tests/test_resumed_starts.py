@@ -27,3 +27,34 @@ def test_selection_waits_for_its_unfinished_starts():
     validate_plan(dict(protocol='independent_single_gpu_cases_v1',test_access=False,jobs=jobs))
     assert [j['id'] for j in ready_jobs(jobs,{},set())]==['start8']
     assert [j['id'] for j in ready_jobs(jobs,{'start8':{}},set())]==['select']
+
+
+def test_selected_worker_never_writes_its_input_result(tmp_path, monkeypatch):
+    from look_core.dual_queue import atomic,read,record,digest,worker
+    import look_core.dual_queue as queue
+    import look_core.bounded_runtime as runtime
+    import look_core.start_study as starts
+    import torch
+    root=tmp_path/'source';root.mkdir();out=tmp_path/'output';out.mkdir()
+    original=tmp_path/'historical_result.json';atomic({'status':'complete','original':True},original)
+    before=record(original)
+    source={k:before for k in ('result','manifest','checkpoint','pca_manifest','labels','natural_labels')}
+    source.update(selection={'seed':3407},pcas=[],generators={})
+    source_path=tmp_path/'source.json';atomic(source,source_path)
+    rows=[dict(case={'context':'ctx','start_ordinal':i},result=before) for i in range(1,10)]
+    job=dict(id='select',kind='selected',seed=3407,context='ctx',source=record(source_path),records=rows,after=[])
+    plan=dict(protocol='independent_single_gpu_cases_v1',test_access=False,jobs=[job]);pp=tmp_path/'plan.json';atomic(plan,pp)
+    atomic(dict(plan_sha256=digest(plan),source_manifest_sha256='code'),out/'queue_identity.json')
+    monkeypatch.setattr(queue,'check_source',lambda _: 'code')
+    monkeypatch.setattr(torch.cuda,'device_count',lambda:1)
+    monkeypatch.setattr(runtime,'install_runtime',lambda:None)
+    monkeypatch.setattr(starts,'verify_source',lambda _:None)
+    monkeypatch.setattr(starts,'audit_case',lambda c,p:c)
+    def evaluate(context,rows,source,destination,device,devices):
+        p=destination/'selected_starts'/context/'validation_result.json'
+        atomic(dict(status='complete',phase='validation',test_access=False),p);return record(p)
+    monkeypatch.setattr(starts,'evaluate_selected',evaluate)
+    for key,value in dict(LOOK_PHYSICAL_GPU='0',LOOK_ASSIGNED_GPU_UUID='GPU-test',CUDA_VISIBLE_DEVICES='GPU-test',LOOK_EXECUTION_MICROBATCH='8').items():monkeypatch.setenv(key,value)
+    worker(root,pp,out,'select')
+    assert record(original)==before
+    assert read(out/'cases/select/queue_complete.json')['result']['path'] != str(original)

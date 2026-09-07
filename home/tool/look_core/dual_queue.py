@@ -270,8 +270,8 @@ def worker(project_root, plan_path, output, job_id):
     out = output/'cases'/job_id; out.mkdir(parents=True, exist_ok=True)
     with (out/'worker.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        rp = out/'queue_complete.json'
-        if rp.exists(): return validate_receipt(rp, identity, job)
+        receipt_path = out/'queue_complete.json'
+        if receipt_path.exists(): return validate_receipt(receipt_path, identity, job)
         physical = os.environ['LOOK_PHYSICAL_GPU']
         if physical not in ('0', '1') or os.environ.get('CUDA_VISIBLE_DEVICES') != os.environ.get('LOOK_ASSIGNED_GPU_UUID'):
             raise ValueError('Worker must expose exactly its assigned physical GPU')
@@ -308,10 +308,10 @@ def worker(project_root, plan_path, output, job_id):
                 if 'job_id' in item:
                     predecessor = next(j for j in jobs if j['id'] == item['job_id'])
                     receipt = validate_receipt(output/'cases'/item['job_id']/'queue_complete.json', identity, predecessor)
-                    rp = verify(receipt['result'])
+                    input_result_path = verify(receipt['result'])
                 else:
-                    rp = verify(item['result'])
-                rows.append(audit_case(item['case'], rp))
+                    input_result_path = verify(item['result'])
+                rows.append(audit_case(item['case'], input_result_path))
             rows.sort(key=lambda r:r['start_ordinal'])
             if ([r['start_ordinal'] for r in rows] != list(range(1,10))
                     or any(r['context'] != job['context'] for r in rows)):
@@ -351,5 +351,5 @@ def worker(project_root, plan_path, output, job_id):
                      visible_devices=1, seed=job['seed'],
                      started_at_unix=begun, ended_at_unix=time.time(), artifacts=artifacts,
                      execution_microbatch=int(os.environ['LOOK_EXECUTION_MICROBATCH']))
-        atomic(value, rp)
+        atomic(value, out/'queue_complete.json')
         return value
