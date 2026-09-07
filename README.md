@@ -1,3 +1,16 @@
+# 2026_09_07_11_18_41: explicitly resumed full start analysis
+
+The user authorized completing the previously deferred remainder on 2026-09-07.
+Pipeline 47 verifies and freezes 61 existing results, then queues exactly 182 new
+start cases through the two independent GPU workers in pipeline 46. The four already
+selected contexts are reused after verification; the remaining 23 selected-context
+evaluations follow their nine starts. Those evaluations are not extra start fits.
+Full scope: three frozen fusion positions × three fillings × three seeds × nine starts.
+No backbone/PCA/generator retraining, new hyperparameters or test access.
+Historical studies and failed/interrupted records are retained unchanged. The prior
+empty pending plan describes the earlier idle state; this explicitly authorized
+continuation uses configs/resume_full_starts.json and its generated frozen plan.
+
 # Current release: 2026_09_07_11_03_06
 
 Independent case parallelism: GPU 0 and GPU 1 each run one case, at most 14 GiB LOOK memory per card. No pending scientific jobs are added by this release. See home/docs/DUAL_GPU_QUEUE.md.

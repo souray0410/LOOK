@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "release_id": "2026_09_07_11_03_06",
-  "generated_at_utc": "2026-09-07T08:08:54.788531+00:00",
+  "release_id": "2026_09_07_11_18_41",
+  "generated_at_utc": "2026-09-07T08:31:00.728980+00:00",
   "files": [
     {
       "path": ".gitattributes",
@@ -25,8 +25,8 @@
     },
     {
       "path": "HANDOFF.md",
-      "bytes": 9195,
-      "sha256": "162c57a9a7498c957bbd694e4a7e83175cbc207c85f48bee2f69643871bf1c0b"
+      "bytes": 10081,
+      "sha256": "0130be29897018eba7fc84612b06df92495cdf3dbab65bebe9efef5a2ae92048"
     },
     {
       "path": "JOINT_LOOK_PROTOCOL.md",
@@ -40,13 +40,13 @@
     },
     {
       "path": "PIPELINE_LEDGER.md",
-      "bytes": 13501,
-      "sha256": "c84088fe40f365782de76a73a5dd8e402db35af8f4a33367ba2fb9c591a4e6a6"
+      "bytes": 14387,
+      "sha256": "aeec00d5eb1a34bedb7c80360019ca1bd03d11516f63b005f0da13f05fc6ff78"
     },
     {
       "path": "README.md",
-      "bytes": 3691,
-      "sha256": "93e38e20ec595066c8083882167e12e6e0b02af1f690b37da7e0c2bf4a3c65ea"
+      "bytes": 4577,
+      "sha256": "3ed143933b04276e31d8068b9f993d40d40d6510d189af77f15332a1659da625"
     },
     {
       "path": "RUNTIME_RECOVERY_20260905.md",
@@ -74,6 +74,11 @@
       "sha256": "7ecc4e0694bb01d8122711570b1eba15f797e2f8279fa323e058aa5c8066e238"
     },
     {
+      "path": "configs/resume_full_starts.json",
+      "bytes": 469,
+      "sha256": "a0dda134647b39f01ad6021053ef6709c79f16e65bcfde53abd14bde894423d4"
+    },
+    {
       "path": "configs/self_input_evidence.json",
       "bytes": 1338,
       "sha256": "e68179c114c53fbb386a806c7cb9f1546d4da79f62bba530d90851aba505ad3c"
@@ -95,8 +100,8 @@
     },
     {
       "path": "docs/DUAL_GPU_QUEUE.md",
-      "bytes": 4480,
-      "sha256": "c2f53f7f5761e74a4ed3e706e453ac0300e2f6192e262f2f8a534f75ee51bcef"
+      "bytes": 5013,
+      "sha256": "c88674152f7c7dc576e41f14a604d29a2b386465c30ac460ab82759816a0e2dc"
     },
     {
       "path": "docs/METHOD_EVIDENCE.md",
@@ -289,6 +294,11 @@
       "sha256": "f575dffeb113bcb8f0ccb3361bb5ca0f20515ba78405c78d75eff0e05cb99382"
     },
     {
+      "path": "pipeline/47_resume_full_starts.py",
+      "bytes": 600,
+      "sha256": "d9e39da2a0b5fab2e651449dedbc8085ebd540c5ab8d4aef70242e8943447acc"
+    },
+    {
       "path": "pipeline/4_verify_source_mounts.sh",
       "bytes": 3593,
       "sha256": "7d4bdeca0503e1365d435071b7f4830b7b3452751cbda5c3756e1dfeaa14306e"
@@ -400,8 +410,8 @@
     },
     {
       "path": "project.json",
-      "bytes": 4281,
-      "sha256": "3379aeba57b67428e91b73ea0b4cdb19433b45fe94759324f1da66b37dc1aa71"
+      "bytes": 4516,
+      "sha256": "9c0b06660f4377daa959911cec0b9c4178b15332b14aba2a04b8898b3123dfd7"
     },
     {
       "path": "pyproject.toml",
@@ -515,8 +525,8 @@
     },
     {
       "path": "tool/look_core/dual_queue.py",
-      "bytes": 17756,
-      "sha256": "3e6e99ec2186a53d18a2d22cde1b70ad7b709603725f68935ef0abf606a4f714"
+      "bytes": 19262,
+      "sha256": "f3f7bdad89be484de78154ffd8680d186170f53d0c0511e854e3b856089fe9d3"
     },
     {
       "path": "tool/look_core/dual_queue_acceptance.py",
@@ -642,6 +652,11 @@
       "path": "tool/look_core/reproducibility.py",
       "bytes": 4525,
       "sha256": "093c9eff267a88a3095fb101fc9408fbd35093896550025bf475d368b93fab6e"
+    },
+    {
+      "path": "tool/look_core/resumed_starts.py",
+      "bytes": 8307,
+      "sha256": "5e538f0dbeb0f6c5d6d0562bdf7e202f7a97e7f94e96825a87fc95dfdbc967c7"
     },
     {
       "path": "tool/look_core/self_input.py",
@@ -975,8 +990,8 @@
     },
     {
       "path": "tool/tests/test_project_governance.py",
-      "bytes": 6549,
-      "sha256": "b038beec0fd48185c1363bbcee6c360e97e06096f513f2f94556ed6996613773"
+      "bytes": 6553,
+      "sha256": "5fc064a4fab0ba3a5f7fc9f174cf0be21bc1a8a0543643e4bd35ba5e65300a48"
     },
     {
       "path": "tool/tests/test_pruning.py",
@@ -987,6 +1002,11 @@
       "path": "tool/tests/test_quality_audit.py",
       "bytes": 1407,
       "sha256": "0977de02227a7ef44bd12a03b4909e30175b6e486366a66fefd4a4aecb9292c9"
+    },
+    {
+      "path": "tool/tests/test_resumed_starts.py",
+      "bytes": 3336,
+      "sha256": "547a7622af5927a5f9e22a2d10ac6fceab3b19cb76693f7aed8f5a1147932580"
     },
     {
       "path": "tool/tests/test_retire_release.py",
