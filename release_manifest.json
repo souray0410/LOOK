@@ -92,14 +92,14 @@
     }
   ],
   "data_tree": "data",
-  "deployment_data_root": "/data/mengh/LOOK/2026_09_06_15_48_18",
+  "deployment_data_root": "/data/mengh/LOOK/2026_09_07_11_03_06",
   "home_tree": "home",
   "project": "LOOK",
   "release_documents": [
     {
       "path": "README.md",
-      "bytes": 2398,
-      "sha256": "84d6538829c155097c13515446b503e86f565b93af6b3cea93ad8fe1585dbe0d"
+      "bytes": 2628,
+      "sha256": "17b521ef51435978acaadfa2fae7dc43001c4feb2f9224eedd5015eef6908419"
     },
     {
       "path": "GENERAL_PROJECT_STANDARD.md",
@@ -108,14 +108,14 @@
     },
     {
       "path": "PROJECT_TIMELINE.md",
-      "bytes": 10849,
-      "sha256": "3729ed0a0ad110a1fab67dc3a7fc423551e81cd8a6010289e54956fd3a9e9479"
+      "bytes": 11036,
+      "sha256": "a945e7b86e866dd1fa74a99cfe593b8f81d790a55dfc23de8cc655327dad25fa"
     }
   ],
-  "release_id": "2026_09_06_15_48_18",
+  "release_id": "2026_09_07_11_03_06",
   "schema_version": 2,
   "source_manifest": {
     "path": "home/file_manifest.json",
-    "sha256": "6e82b2773b01ee19a9d25dadb08f0f29e768a6111ee22b3089fab03890b48f08"
+    "sha256": "bd562ad35eab7d1773753730c215f83bc294d46189350b8d93a8baf85c6712b0"
   }
 }

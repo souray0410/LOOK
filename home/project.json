@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
   "project_name": "LOOK",
-  "release_id": "2026_09_07_10_44_19",
+  "release_id": "2026_09_07_11_03_06",
   "selected_task_profile": "glaucoma_all_evidence",
   "task_selection_manifest": "dataset/cohorts/task_selection/selected_task_manifest.json",
   "deployment_defaults": {
-    "project_root": "/home/mengh/LOOK/2026_09_07_10_44_19",
-    "data_root": "/data/mengh/LOOK/2026_09_07_10_44_19",
+    "project_root": "/home/mengh/LOOK/2026_09_07_11_03_06",
+    "data_root": "/data/mengh/LOOK/2026_09_07_11_03_06",
     "dataset_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset",
     "image_root": "/data/mengh/LOOK/2026_09_03_08_30_00/dataset",
     "cohort_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/ukb_record_glaucoma_binary_bilateral",
@@ -42,7 +42,12 @@
       1
     ],
     "maximum_visible_gpus": 2,
-    "execution": "sequential_ddp"
+    "execution": "independent_single_gpu_cases",
+    "maximum_concurrent_cases": 2,
+    "look_memory_budget_gib_per_device": 14,
+    "entrypoint": "pipeline/46_run_dual_gpu_queue.py",
+    "pending_plan": "configs/dual_gpu_pending.json",
+    "historical_backbone_execution": "sequential_ddp"
   },
   "selection_protocol": {
     "backbone_checkpoint": "macro_f1",
@@ -68,21 +73,25 @@
   },
   "method_evidence_study": {
     "protocol": "frozen_look_method_evidence_v2",
-    "entrypoint": "pipeline/40_run_method_evidence.py",
+    "entrypoint": "pipeline/46_run_dual_gpu_queue.py",
     "new_cases": 15,
     "direction_fits": 30,
     "combined_development_stages": 280,
     "test_access": false,
-    "execution": "single_process_cuda0_after_both_predecessors_complete"
+    "execution": "independent_cases_with_explicit_dependency_barriers",
+    "historical_entrypoint": "pipeline/40_run_method_evidence.py",
+    "status": "previous_authorized_cases_complete"
   },
   "self_input_study": {
     "protocol": "self_input_missing_only_shared_pca_v1",
-    "entrypoint": "pipeline/42_run_self_input_evidence.py",
+    "entrypoint": "pipeline/46_run_dual_gpu_queue.py",
     "new_cases": 3,
     "direction_fits": 6,
     "combined_development_stages": 283,
     "test_access": false,
-    "execution": "single_process_cuda0_after_original_15_method_cases"
+    "execution": "independent_cases_with_explicit_dependency_barriers",
+    "historical_entrypoint": "pipeline/42_run_self_input_evidence.py",
+    "status": "previous_authorized_cases_complete"
   },
   "compact_prefix_supplement": {
     "entrypoint": "pipeline/45_run_compact_prefix.py",

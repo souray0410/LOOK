@@ -1,3 +1,7 @@
+# 2026_09_07_11_03_06
+
+Replaced future LOOK serial case scheduling with explicit two-card independent-case queue. Historical experiments and artifacts retained; no renewed suffix sweep.
+
 # 2026_09_05_16_44_54 — ws02 runtime recovery
 
 Pin NCCL transport and file limits inside tmux children. Preserve both immutable study sources and all scientific configuration. Formal-sized isolated generator checks passed in both directions; 158 regression tests passed. See home/RUNTIME_RECOVERY_20260905.md for evidence and limits.
