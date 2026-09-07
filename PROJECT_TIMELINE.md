@@ -197,3 +197,8 @@ Decouple device selection/controller identity from frozen worker/case identity.
 Allow arbitrary selected GPUs, graceful drain, urgent release and resume. Partition
 LOOK, other-project and unknown NVML memory; do not classify a shared environment as
 LOOK. Preserve all frozen start results and the existing plan; no new research scope.
+
+
+## 2026_09_07_16_28_16: authorized test follow-on
+
+The user requested automatic test evaluation after the current validation experiments and standardized the name to test. Add a separate dependent queue without changing the running validation source. The old natural-distribution test was withdrawn before evaluation; only the existing 290-person test is in scope.

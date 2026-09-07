@@ -197,3 +197,8 @@ latest live summary rather than relying on the initial study ID.
 ## Step 42: self-input supplement
 
 Release 2026_09_05_23_25_06: append exactly 3 self_input_missing_only cases after the unchanged 15-case method queue. Total 283 stages. Same levels and shared PCA, train-mean clamp before PCA, missing-only writeback, no new start search. See docs/SELF_INPUT_EVIDENCE.md. Test remains sealed.
+
+
+## Step 49: test follow-on (2026_09_07_16_28_16)
+
+Wait for all current validation dependencies, freeze 87 configurations, pass validation replay and process-memory gates, then evaluate the 290-person test without refitting. Preserve all comparisons, negative results and paired participant uncertainty. See docs/TEST_QUEUE.md.

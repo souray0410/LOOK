@@ -1,3 +1,7 @@
+# 2026_09_07_16_28_16
+
+Add gated, inference-only test evaluation after the current validation queue; preserve the original numerical kernels and source identities. Natural test is excluded.
+
 # Idle graph parking during GAN workers
 
 Operational release 2026_09_05_19_14_09. The unified launcher executes the original scientific entrypoint through an audited adapter. During paired-cGAN preparation only, the idle frozen graph is moved to CPU and restored after workers finish. Model weights, node states, RNG and logits passed GPU round-trip equivalence checks. Original batch size, optimizer, seeds, PCA and data roles are unchanged. This prevents the parent graph from competing with GAN workers for about 13 GiB of GPU memory; it is not an edge-deployment method claim. Use this release operations/start_unified_study.sh with the original --project-root and --execute.
