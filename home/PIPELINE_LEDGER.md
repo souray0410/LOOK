@@ -1,3 +1,7 @@
+# Compact-start and frozen-prefix supplement (2026_09_07_10_44_19)
+
+Pipeline 45 audits nine existing starts (1/4/7) with fusion fixed at layer3, then replays only the original accepted 3407/OCT-missing path. No refitting or test access. Prior 52 and 15+3 stages are complete; 182 historical starts stay deferred. See docs/COMPACT_START_PREFIX_PROTOCOL.md.
+
 
 ## 2026-09-06 bounded continuation (current)
 

@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
   "project_name": "LOOK",
-  "release_id": "2026_09_06_15_48_18",
+  "release_id": "2026_09_07_10_44_19",
   "selected_task_profile": "glaucoma_all_evidence",
   "task_selection_manifest": "dataset/cohorts/task_selection/selected_task_manifest.json",
   "deployment_defaults": {
-    "project_root": "/home/mengh/LOOK/2026_09_06_15_48_18",
-    "data_root": "/data/mengh/LOOK/2026_09_06_15_48_18",
+    "project_root": "/home/mengh/LOOK/2026_09_07_10_44_19",
+    "data_root": "/data/mengh/LOOK/2026_09_07_10_44_19",
     "dataset_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset",
     "image_root": "/data/mengh/LOOK/2026_09_03_08_30_00/dataset",
     "cohort_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/ukb_record_glaucoma_binary_bilateral",
@@ -83,5 +83,21 @@
     "combined_development_stages": 283,
     "test_access": false,
     "execution": "single_process_cuda0_after_original_15_method_cases"
+  },
+  "compact_prefix_supplement": {
+    "entrypoint": "pipeline/45_run_compact_prefix.py",
+    "parent_release": "2026_09_06_15_48_18",
+    "fusion": "layer3",
+    "filling": "normalized_mean",
+    "starts": [
+      1,
+      4,
+      7
+    ],
+    "reused_cases": 9,
+    "new_fits": 0,
+    "diagnostic_seed": 3407,
+    "diagnostic_pattern": "oct_missing",
+    "test_access": false
   }
 }
