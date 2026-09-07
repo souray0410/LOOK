@@ -1,4 +1,13 @@
-# Current release: 2026_09_07_15_04_51 — flexible device execution
+# Current release: 2026_09_07_16_28_16 — test after validation
+
+Step 49 is an inference-only test follow-on. It waits for the unchanged validation
+queue, freezes 87 comparison configurations, verifies all validation replays, and
+then evaluates the existing 290-participant test. Natural test is withdrawn.
+It inherits the current arbitrary-GPU policy and 14 GiB LOOK-only per-card limit.
+No test is opened while validation is running. Results include all seeds, negative
+findings, paired intervals and calibration metrics. See [test queue](home/docs/TEST_QUEUE.md).
+
+# Historical release: 2026_09_07_15_04_51 — flexible device execution
 
 Pipeline 48 supports arbitrary explicitly selected single/multiple GPUs and live
 drain/interrupt/add transitions. The existing study continues against its immutable

@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
   "project_name": "LOOK",
-  "release_id": "2026_09_07_15_04_51",
+  "release_id": "2026_09_07_16_28_16",
   "selected_task_profile": "glaucoma_all_evidence",
   "task_selection_manifest": "dataset/cohorts/task_selection/selected_task_manifest.json",
   "deployment_defaults": {
-    "project_root": "/home/mengh/LOOK/2026_09_07_15_04_51",
-    "data_root": "/data/mengh/LOOK/2026_09_07_15_04_51",
+    "project_root": "/home/mengh/LOOK/2026_09_07_16_28_16",
+    "data_root": "/data/mengh/LOOK/2026_09_07_16_28_16",
     "dataset_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset",
     "image_root": "/data/mengh/LOOK/2026_09_03_08_30_00/dataset",
     "cohort_root": "/data/mengh/LOOK/2026_09_03_19_35_04/dataset/cohorts/ukb_record_glaucoma_binary_bilateral",
@@ -20,7 +20,7 @@
     "ukb_source_root": "/mnt/ukbiobank/UKB",
     "ukb_label_uuid": "69B9-6FD2",
     "ukb_label_mount": "/mnt/liverpool_ukbiobank",
-    "ukb_label_root": "/mnt/liverpool_ukbiobank/ukbb/UKB\u5229\u7269\u6d66\u6587\u4ef6\u5939/csv",
+    "ukb_label_root": "/mnt/liverpool_ukbiobank/ukbb/UKB利物浦文件夹/csv",
     "torch_index_url": "https://download.pytorch.org/whl/cu128",
     "torch_version": "2.8.0",
     "torchvision_version": "0.23.0"
@@ -116,5 +116,14 @@
     "new_cases": 182,
     "total_cases": 243,
     "test_access": false
+  },
+  "test_evaluation": {
+    "entrypoint": "pipeline/49_run_test_queue.py",
+    "scope": "test",
+    "natural_test": "withdrawn",
+    "requires": "complete_validation_then_frozen_roster_then_validation_replay",
+    "configurations": 87,
+    "inference_only": true,
+    "device_policy": "reuse_current_external_control"
   }
 }

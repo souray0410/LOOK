@@ -1,3 +1,12 @@
+# Current release: 2026_09_07_16_28_16 — test after validation
+
+Step 49 is an inference-only test follow-on. It waits for the unchanged validation
+queue, freezes 87 comparison configurations, verifies all validation replays, and
+then evaluates the existing 290-participant test. Natural test is withdrawn.
+It inherits the current arbitrary-GPU policy and 14 GiB LOOK-only per-card limit.
+No test is opened while validation is running. Results include all seeds, negative
+findings, paired intervals and calibration metrics. See [test queue](docs/TEST_QUEUE.md).
+
 # 2026_09_07_11_18_41: explicitly resumed full start analysis
 
 The user authorized completing the previously deferred remainder on 2026-09-07.
