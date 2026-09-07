@@ -1,3 +1,11 @@
+## 2026_09_07_19_27_25
+
+- Add Step 50: bounded train/validation stability, calibration and cost diagnostics.
+- Freeze 12 source models / 30 prediction analyses and three supplemental GPU seed jobs.
+- Keep original validation/test kernels, configuration selection and queues unchanged.
+- Share arbitrary live GPU policy, project lock and per-card 14 GiB process budget.
+- Separate CPU completion, tiny acceptance, full replay and historical cost evidence.
+
 # 2026_09_07_16_28_16
 
 Add gated, inference-only test evaluation after the current validation queue; preserve the original numerical kernels and source identities. Natural test is excluded.
