@@ -1,3 +1,7 @@
+# Current release: 2026_09_07_11_03_06
+
+Independent case parallelism: GPU 0 and GPU 1 each run one case, at most 14 GiB LOOK memory per card. No pending scientific jobs are added by this release. See home/docs/DUAL_GPU_QUEUE.md.
+
 # Current release: 2026_09_06_15_48_18
 
 Bounded LOOK continuation: representative start evidence, existing 15+3 controls,

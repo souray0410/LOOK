@@ -1,3 +1,12 @@
+# 2026_09_07_11_03_06: independent case scheduling
+
+The current default for future LOOK cases is pipeline/46_run_dual_gpu_queue.py:
+one independent seed/case per physical GPU 0/1, up to two cases, 14 GiB LOOK memory
+per card. The user replaced the previous single-case restriction. Case dependencies,
+scientific parameters and sealed-test boundaries remain fixed. The compact supplement
+is complete; configs/dual_gpu_pending.json is empty and deferred searches stay deferred.
+See [dual-GPU execution contract](docs/DUAL_GPU_QUEUE.md).
+
 # Compact-start and frozen-prefix supplement (2026_09_07_10_44_19)
 
 Pipeline 45 audits nine existing starts (1/4/7) with fusion fixed at layer3, then replays only the original accepted 3407/OCT-missing path. No refitting or test access. Prior 52 and 15+3 stages are complete; 182 historical starts stay deferred. See docs/COMPACT_START_PREFIX_PROTOCOL.md.

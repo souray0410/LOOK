@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "release_id": "2026_09_07_10_44_19",
-  "generated_at_utc": "2026-09-07T07:45:50.965069+00:00",
+  "release_id": "2026_09_07_11_03_06",
+  "generated_at_utc": "2026-09-07T08:08:54.788531+00:00",
   "files": [
     {
       "path": ".gitattributes",
@@ -25,8 +25,8 @@
     },
     {
       "path": "HANDOFF.md",
-      "bytes": 8659,
-      "sha256": "40bc9da7da2d60c27c168f7df4bfe296aa09bcea8e4628dd9c4067df8cb3c0a9"
+      "bytes": 9195,
+      "sha256": "162c57a9a7498c957bbd694e4a7e83175cbc207c85f48bee2f69643871bf1c0b"
     },
     {
       "path": "JOINT_LOOK_PROTOCOL.md",
@@ -40,13 +40,13 @@
     },
     {
       "path": "PIPELINE_LEDGER.md",
-      "bytes": 12965,
-      "sha256": "0362e478113c39064ddeabc561f9081d024cde2b65d2eaf0a65383f27490c4ba"
+      "bytes": 13501,
+      "sha256": "c84088fe40f365782de76a73a5dd8e402db35af8f4a33367ba2fb9c591a4e6a6"
     },
     {
       "path": "README.md",
-      "bytes": 3155,
-      "sha256": "041dc414852ee38a072325e38368dd275e6a93f3be601c72c9121b86eb4e711f"
+      "bytes": 3691,
+      "sha256": "93e38e20ec595066c8083882167e12e6e0b02af1f690b37da7e0c2bf4a3c65ea"
     },
     {
       "path": "RUNTIME_RECOVERY_20260905.md",
@@ -62,6 +62,11 @@
       "path": "STRUCTURE.md",
       "bytes": 2789,
       "sha256": "152853719e18cc7f20625648228804372385abe8801cd9a90181d7d3b488face"
+    },
+    {
+      "path": "configs/dual_gpu_pending.json",
+      "bytes": 198,
+      "sha256": "7c8c2d51fa78327a6f6d87da3e159897b68246e61275c6a9487e5c9cca3a5f8c"
     },
     {
       "path": "configs/method_evidence.json",
@@ -87,6 +92,11 @@
       "path": "docs/COMPACT_START_PREFIX_PROTOCOL.md",
       "bytes": 1779,
       "sha256": "4f32c49d05ccd58a3d81ad4641de9a2b231a139d0ba1d8f8e628e5ed8a768df4"
+    },
+    {
+      "path": "docs/DUAL_GPU_QUEUE.md",
+      "bytes": 4480,
+      "sha256": "c2f53f7f5761e74a4ed3e706e453ac0300e2f6192e262f2f8a534f75ee51bcef"
     },
     {
       "path": "docs/METHOD_EVIDENCE.md",
@@ -274,6 +284,11 @@
       "sha256": "b0b2851e249bc1d8934ddb3a8262ea1112f98508ec3796b6249435a283acb853"
     },
     {
+      "path": "pipeline/46_run_dual_gpu_queue.py",
+      "bytes": 813,
+      "sha256": "f575dffeb113bcb8f0ccb3361bb5ca0f20515ba78405c78d75eff0e05cb99382"
+    },
+    {
       "path": "pipeline/4_verify_source_mounts.sh",
       "bytes": 3593,
       "sha256": "7d4bdeca0503e1365d435071b7f4830b7b3452751cbda5c3756e1dfeaa14306e"
@@ -385,8 +400,8 @@
     },
     {
       "path": "project.json",
-      "bytes": 3790,
-      "sha256": "9c0423a5d69d5b8cece35687fa9bdafc7e9ca14dede6e61112b101f58e62f945"
+      "bytes": 4281,
+      "sha256": "3379aeba57b67428e91b73ea0b4cdb19433b45fe94759324f1da66b37dc1aa71"
     },
     {
       "path": "pyproject.toml",
@@ -497,6 +512,16 @@
       "path": "tool/look_core/distributed_worker.py",
       "bytes": 4344,
       "sha256": "31b3dc2a5949f98911b8e52cf5009d2be96546b51f5581c26d5fff10cb40cc71"
+    },
+    {
+      "path": "tool/look_core/dual_queue.py",
+      "bytes": 17756,
+      "sha256": "3e6e99ec2186a53d18a2d22cde1b70ad7b709603725f68935ef0abf606a4f714"
+    },
+    {
+      "path": "tool/look_core/dual_queue_acceptance.py",
+      "bytes": 2496,
+      "sha256": "dcbcdb3b2d1eb7af9773f1c53f6ca2d7cdf2a37a447e205f2021084e9a14a5ee"
     },
     {
       "path": "tool/look_core/evaluate.py",
@@ -874,6 +899,11 @@
       "sha256": "b9b3b1602ac5a839e6afdbe8d3d1269d9b66fcb51e897624656b6780500199df"
     },
     {
+      "path": "tool/tests/test_dual_queue.py",
+      "bytes": 7876,
+      "sha256": "3aa6481a88527e668f7f7ca9b5139fa2b8ca9ef3017aa851906307d5045f0ff5"
+    },
+    {
       "path": "tool/tests/test_evaluation_topologies.py",
       "bytes": 1690,
       "sha256": "b0965206ab0c703d493eed6d3b797f94763962a1f334e993099295517e0469d3"
@@ -945,8 +975,8 @@
     },
     {
       "path": "tool/tests/test_project_governance.py",
-      "bytes": 6268,
-      "sha256": "30161a296b5c7627f5e6165006818c1c1a7f2ec27bff63a1f37dbb007edfc65c"
+      "bytes": 6549,
+      "sha256": "b038beec0fd48185c1363bbcee6c360e97e06096f513f2f94556ed6996613773"
     },
     {
       "path": "tool/tests/test_pruning.py",

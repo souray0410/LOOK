@@ -45,7 +45,12 @@ def test_required_project_contract_is_declared() -> None:
     assert config["compute"] == {
         "default_gpu_devices": [0, 1],
         "maximum_visible_gpus": 2,
-        "execution": "sequential_ddp",
+        "execution": "independent_single_gpu_cases",
+        "maximum_concurrent_cases": 2,
+        "look_memory_budget_gib_per_device": 14,
+        "entrypoint": "pipeline/46_run_dual_gpu_queue.py",
+        "pending_plan": "configs/dual_gpu_pending.json",
+        "historical_backbone_execution": "sequential_ddp",
     }
 
 
@@ -56,7 +61,7 @@ def test_pipeline_numbering_preserves_shared_steps_and_new_iteration_range() -> 
         match = re.fullmatch(r"(\d+)_[A-Za-z0-9_]+\.(?:py|sh|ipynb)", path.name)
         assert match, f"Unnumbered or invalid pipeline entry: {path.name}"
         numbered.append(int(match.group(1)))
-    assert sorted(numbered) == [*range(1, 12), *range(21, 33), 38, 39, 40, 41, 42, 43, 44, 45]
+    assert sorted(numbered) == [*range(1, 12), *range(21, 33), 38, 39, 40, 41, 42, 43, 44, 45, 46]
     assert len(numbered) == len(set(numbered))
     history = PROJECT_ROOT / "pipeline/history/2026_09_03_08_30_00"
     assert sorted(int(path.name.split("_", 1)[0]) for path in history.glob("[0-9]*_*")) == list(range(12, 21))
