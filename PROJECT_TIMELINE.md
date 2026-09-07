@@ -202,3 +202,11 @@ LOOK. Preserve all frozen start results and the existing plan; no new research s
 ## 2026_09_07_16_28_16: authorized test follow-on
 
 The user requested automatic test evaluation after the current validation experiments and standardized the name to test. Add a separate dependent queue without changing the running validation source. The old natural-distribution test was withdrawn before evaluation; only the existing 290-person test is in scope.
+
+## 2026_09_07_19_27_25 — targeted diagnostics before broader expansion
+
+After discussing observed validation confidence amplification and simpler controls,
+the user authorized stability traces, calibration diagnostics and cost assessment.
+This is explicitly a development-result-informed supplement. No test feedback was
+used to select its scope; it does not amend the frozen evaluation method roster.
+CPU work is immediate; three resource-bounded GPU seed jobs follow existing test.

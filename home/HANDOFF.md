@@ -1,4 +1,22 @@
-# Current release: 2026_09_07_16_28_16 — test after validation
+# Current release: 2026_09_07_19_27_25 — bounded diagnostic supplement
+
+Step 50 adds validation temperature diagnostics and three fixed-seed GPU jobs for
+train/validation accepted-prefix stability and matched inference costs. It reuses
+frozen layer3/normalized_mean original LOOK, self-input LOOK, SSF and logit affine.
+No new backbone, W/b, PCA, start selection, or test configuration is introduced.
+
+CPU analysis runs immediately. GPU acceptance/replay follows completion of the
+existing validation and test queues, sharing their live arbitrary-device policy
+and 14 GiB LOOK-per-card memory budget. Existing source releases stay immutable.
+See [diagnostic protocol](docs/SUPPLEMENT_DIAGNOSTICS.md).
+
+Status pointer: /data/mengh/LOOK/maintenance/supplement_diagnostics_current.json
+Runtime: /data/mengh/LOOK/2026_09_07_19_27_25/runs/supplement_diagnostics
+Test predecessor remains release 2026_09_07_16_28_16; do not restart or replace it.
+GPU phases remain pending until existing work releases the project lock. CPU smoke
+is not GPU acceptance, and calibration cross-fit does not remove model-selection bias.
+
+# Historical release: 2026_09_07_16_28_16 — test after validation
 
 Step 49 is an inference-only test follow-on. It waits for the unchanged validation
 queue, freezes 87 comparison configurations, verifies all validation replays, and

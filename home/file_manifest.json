@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "release_id": "2026_09_07_16_28_16",
-  "generated_at_utc": "2026-09-07T13:32:21.495971+00:00",
+  "release_id": "2026_09_07_19_27_25",
+  "generated_at_utc": "2026-09-07T16:44:13.995539+00:00",
   "files": [
     {
       "path": ".gitattributes",
@@ -20,13 +20,13 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 7866,
-      "sha256": "9d2d9ff623dd63abb86448536f886c03f577bb9e64854b88826da5f01459d0f2"
+      "bytes": 8322,
+      "sha256": "46f4d9908032760e0176e1524f96c26d5c445bdb20a82fb7f744857aa8bf0192"
     },
     {
       "path": "HANDOFF.md",
-      "bytes": 10645,
-      "sha256": "a2c83eec5b2a2e903e8ab830ef238b2366326e72f78d14cd546cd15b478210c5"
+      "bytes": 11762,
+      "sha256": "a76563d7c440a7c0d63c320c65ce0add1d3a68f6ef6c55dc175d1acdd4745869"
     },
     {
       "path": "JOINT_LOOK_PROTOCOL.md",
@@ -122,6 +122,11 @@
       "path": "docs/SELF_INPUT_EVIDENCE.md",
       "bytes": 3787,
       "sha256": "7c02eae62a3ca5783f9daa28de2add43e35f11d2497e904d0c68e2df366d651b"
+    },
+    {
+      "path": "docs/SUPPLEMENT_DIAGNOSTICS.md",
+      "bytes": 4390,
+      "sha256": "5b4074ff45e024cc6ef27fd797832656e8e236cdeb2e6e80789dd5dee94f7ac7"
     },
     {
       "path": "docs/TEST_QUEUE.md",
@@ -324,6 +329,11 @@
       "sha256": "7d4bdeca0503e1365d435071b7f4830b7b3452751cbda5c3756e1dfeaa14306e"
     },
     {
+      "path": "pipeline/50_run_supplement_diagnostics.py",
+      "bytes": 1794,
+      "sha256": "46d48eb89e3c504c388b3d4c1943a58ec6f0f65b7f7d75757914eb754e21d13f"
+    },
+    {
       "path": "pipeline/5_export_ukb_ophthalmology.py",
       "bytes": 13041,
       "sha256": "018cba08dfedf6ea5e4c939448f18d574cbba88f9cad4c3f3ad7069a37db7e71"
@@ -430,8 +440,8 @@
     },
     {
       "path": "project.json",
-      "bytes": 4867,
-      "sha256": "c5f040730d1f5ee12761d5167895a071d7384c26f1adf203b85b594fe4f554e3"
+      "bytes": 5161,
+      "sha256": "666ed2f070a3fe4f0a574cbf872e25244ce379b3602b381943480af1f9e508c4"
     },
     {
       "path": "pyproject.toml",
@@ -719,6 +729,16 @@
       "sha256": "eb6326b7b078954fd9fbcf070267ccaa8268e716b708859444d9364e6b924423"
     },
     {
+      "path": "tool/look_core/supplement_diagnostics.py",
+      "bytes": 17917,
+      "sha256": "e0e75c48e4106f6dc57be8df139ba4910cef10237614f9fa72eb8b08c2c6a429"
+    },
+    {
+      "path": "tool/look_core/supplement_runtime.py",
+      "bytes": 13586,
+      "sha256": "22a5ebc37743fd2bb3df1947bb1c1ef252ab3c23ae0f192261e7337890c1c9bc"
+    },
+    {
       "path": "tool/look_core/task_scout.py",
       "bytes": 23976,
       "sha256": "d2c2e8cdfea06c73d3c66a0849bee81c98d914d63dc7fe2cc87e4c4c7bced549"
@@ -827,6 +847,11 @@
       "path": "tool/operations/start_unified_study.sh",
       "bytes": 2508,
       "sha256": "cadb37ef822019da0f53fd39d944ab520a89f7ef2373f02305ef67bcee261a4c"
+    },
+    {
+      "path": "tool/operations/supplement_queue.py",
+      "bytes": 7541,
+      "sha256": "d7b22223724052c39aabe6b719b814fec4022d7d2cd8162c151d885247bdd6dd"
     },
     {
       "path": "tool/operations/test_queue.py",
@@ -1045,8 +1070,8 @@
     },
     {
       "path": "tool/tests/test_project_governance.py",
-      "bytes": 6537,
-      "sha256": "79a551f20059957d2dfaf71a320441455145282e62ef8c9695e73078ff53c331"
+      "bytes": 6541,
+      "sha256": "da5343cf712199fe329f358305dc01972d121e7d87d5bfb0aa4b5ca82764948c"
     },
     {
       "path": "tool/tests/test_pruning.py",
@@ -1097,6 +1122,11 @@
       "path": "tool/tests/test_start_study.py",
       "bytes": 8289,
       "sha256": "091557c1de1d19be13ffa3a31820b8f249df2ee0321623f0427f7f649c1658bf"
+    },
+    {
+      "path": "tool/tests/test_supplement_diagnostics.py",
+      "bytes": 4836,
+      "sha256": "8b6fc0134f3710a2a5e65a50d30a5b992c364ff140ec7686ba3c5d32a590f8df"
     },
     {
       "path": "tool/tests/test_task_selection.py",
