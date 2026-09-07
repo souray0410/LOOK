@@ -190,3 +190,10 @@ SSF+LOOK, datasets, or backbone search. Added 43 (supervision) and 44 (audit).
 Legacy TF32 settings require preserving evaluation batches; real-data checks
 reproduce original full-validation baseline logits exactly. A model adapter
 interface is documented for future migration, not applied to current kernels.
+
+## 2026_09_07_15_04_51 — flexible device execution
+
+Decouple device selection/controller identity from frozen worker/case identity.
+Allow arbitrary selected GPUs, graceful drain, urgent release and resume. Partition
+LOOK, other-project and unknown NVML memory; do not classify a shared environment as
+LOOK. Preserve all frozen start results and the existing plan; no new research scope.

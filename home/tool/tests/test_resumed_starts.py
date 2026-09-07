@@ -29,7 +29,8 @@ def test_selection_waits_for_its_unfinished_starts():
     assert [j['id'] for j in ready_jobs(jobs,{'start8':{}},set())]==['select']
 
 
-def test_selected_worker_never_writes_its_input_result(tmp_path, monkeypatch):
+@pytest.mark.parametrize('flexible',[False,True])
+def test_selected_worker_never_writes_its_input_result(tmp_path, monkeypatch, flexible):
     from look_core.dual_queue import atomic,read,record,digest,worker
     import look_core.dual_queue as queue
     import look_core.bounded_runtime as runtime
@@ -45,6 +46,14 @@ def test_selected_worker_never_writes_its_input_result(tmp_path, monkeypatch):
     job=dict(id='select',kind='selected',seed=3407,context='ctx',source=record(source_path),records=rows,after=[])
     plan=dict(protocol='independent_single_gpu_cases_v1',test_access=False,jobs=[job]);pp=tmp_path/'plan.json';atomic(plan,pp)
     atomic(dict(plan_sha256=digest(plan),source_manifest_sha256='code'),out/'queue_identity.json')
+    if flexible:
+        import importlib.util
+        from pathlib import Path
+        path=Path(__file__).resolve().parents[1]/'operations/flexible_worker.py'
+        spec=importlib.util.spec_from_file_location('tested_flexible_worker',path)
+        queue=importlib.util.module_from_spec(spec);spec.loader.exec_module(queue)
+        worker=queue.worker
+        monkeypatch.setattr(runtime,'install_allocator_limits',runtime.install_allocator_limits)
     monkeypatch.setattr(queue,'check_source',lambda _: 'code')
     monkeypatch.setattr(torch.cuda,'device_count',lambda:1)
     monkeypatch.setattr(runtime,'install_runtime',lambda:None)
@@ -54,7 +63,7 @@ def test_selected_worker_never_writes_its_input_result(tmp_path, monkeypatch):
         p=destination/'selected_starts'/context/'validation_result.json'
         atomic(dict(status='complete',phase='validation',test_access=False),p);return record(p)
     monkeypatch.setattr(starts,'evaluate_selected',evaluate)
-    for key,value in dict(LOOK_PHYSICAL_GPU='0',LOOK_ASSIGNED_GPU_UUID='GPU-test',CUDA_VISIBLE_DEVICES='GPU-test',LOOK_EXECUTION_MICROBATCH='8').items():monkeypatch.setenv(key,value)
+    for key,value in dict(LOOK_PHYSICAL_GPU='3' if flexible else '0',LOOK_ASSIGNED_GPU_UUID='GPU-test',CUDA_VISIBLE_DEVICES='GPU-test',LOOK_EXECUTION_MICROBATCH='8').items():monkeypatch.setenv(key,value)
     worker(root,pp,out,'select')
     assert record(original)==before
     assert read(out/'cases/select/queue_complete.json')['result']['path'] != str(original)
