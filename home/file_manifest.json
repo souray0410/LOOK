@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "release_id": "2026_09_07_11_18_41",
-  "generated_at_utc": "2026-09-07T08:31:00.728980+00:00",
+  "release_id": "2026_09_07_15_04_51",
+  "generated_at_utc": "2026-09-07T12:10:57.788252+00:00",
   "files": [
     {
       "path": ".gitattributes",
@@ -102,6 +102,11 @@
       "path": "docs/DUAL_GPU_QUEUE.md",
       "bytes": 5013,
       "sha256": "c88674152f7c7dc576e41f14a604d29a2b386465c30ac460ab82759816a0e2dc"
+    },
+    {
+      "path": "docs/FLEXIBLE_GPU_EXECUTION.md",
+      "bytes": 4590,
+      "sha256": "67889afc3a55a40dc3aa352a5e3a7d89ce1a9d77f816cefeae97187db6aaeeef"
     },
     {
       "path": "docs/METHOD_EVIDENCE.md",
@@ -299,6 +304,11 @@
       "sha256": "d9e39da2a0b5fab2e651449dedbc8085ebd540c5ab8d4aef70242e8943447acc"
     },
     {
+      "path": "pipeline/48_run_flexible_gpu_queue.py",
+      "bytes": 2210,
+      "sha256": "c0f78fe057b9fe810152bcf8337733cd33e1288500c6649c048f813d6217e2c5"
+    },
+    {
       "path": "pipeline/4_verify_source_mounts.sh",
       "bytes": 3593,
       "sha256": "7d4bdeca0503e1365d435071b7f4830b7b3452751cbda5c3756e1dfeaa14306e"
@@ -410,8 +420,8 @@
     },
     {
       "path": "project.json",
-      "bytes": 4516,
-      "sha256": "9c0b06660f4377daa959911cec0b9c4178b15332b14aba2a04b8898b3123dfd7"
+      "bytes": 4563,
+      "sha256": "1f575683188c4c25a05464d6c3ed90cbdd53d099d01d43e9af1596c70044c36c"
     },
     {
       "path": "pyproject.toml",
@@ -754,6 +764,16 @@
       "sha256": "77b94ab77816167f0ec1a768d9d0e4f92dcd9e143f49439b7befd9915f2e7430"
     },
     {
+      "path": "tool/operations/flexible_queue.py",
+      "bytes": 14027,
+      "sha256": "eca4bb1085b133867231849c8773cc37521cddc9f233ff4d288eeaaf387d6fbe"
+    },
+    {
+      "path": "tool/operations/flexible_worker.py",
+      "bytes": 7281,
+      "sha256": "f9ff0a288c0cda6b7dc6c1331b5b703d7a8c0fb677e1fe7e3bb9920dc59f26e8"
+    },
+    {
       "path": "tool/operations/retire_auroc_release.py",
       "bytes": 4367,
       "sha256": "fb3355e5d2491790838d2602ecbd12ec1f812dc87737a0f6b5679f95594b9087"
@@ -929,6 +949,11 @@
       "sha256": "dd97d9dd51bd1a66d9ab9cac14a3f6365bdb2367c2f4dd7d580b848dd9126b69"
     },
     {
+      "path": "tool/tests/test_flexible_queue.py",
+      "bytes": 8618,
+      "sha256": "faf6b20f0631180480dab1acb4258f73da5722ebf63f3b3ec1bbd62db36cf511"
+    },
+    {
       "path": "tool/tests/test_graph.py",
       "bytes": 7818,
       "sha256": "5f03c93acfa793bc0d1d502b71a3d659b32085b2a98fcd84527d4a4be4beb8cf"
@@ -990,8 +1015,8 @@
     },
     {
       "path": "tool/tests/test_project_governance.py",
-      "bytes": 6553,
-      "sha256": "5fc064a4fab0ba3a5f7fc9f174cf0be21bc1a8a0543643e4bd35ba5e65300a48"
+      "bytes": 6533,
+      "sha256": "949773295e3f6d861e03fd9e224423ba0d11c1163c4fe3b11c72f2e9a79ff502"
     },
     {
       "path": "tool/tests/test_pruning.py",
@@ -1005,8 +1030,8 @@
     },
     {
       "path": "tool/tests/test_resumed_starts.py",
-      "bytes": 3336,
-      "sha256": "547a7622af5927a5f9e22a2d10ac6fceab3b19cb76693f7aed8f5a1147932580"
+      "bytes": 3869,
+      "sha256": "2b906a48a280b35c18fbaba2ebea7bb6cf6af71f9e34fc45653f8625287bd35f"
     },
     {
       "path": "tool/tests/test_retire_release.py",

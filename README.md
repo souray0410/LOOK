@@ -1,3 +1,11 @@
+# Current release: 2026_09_07_15_04_51 — flexible device execution
+
+Pipeline 48 supports arbitrary explicitly selected single/multiple GPUs and live
+drain/interrupt/add transitions. The existing study continues against its immutable
+2026_09_07_11_18_41 worker source and unchanged scientific plan. The per-card 14 GiB
+budget covers LOOK processes only. See [execution guide](home/docs/FLEXIBLE_GPU_EXECUTION.md).
+No new scientific cases or test access are introduced.
+
 # 2026_09_07_11_18_41: explicitly resumed full start analysis
 
 The user authorized completing the previously deferred remainder on 2026-09-07.
@@ -11,11 +19,11 @@ Historical studies and failed/interrupted records are retained unchanged. The pr
 empty pending plan describes the earlier idle state; this explicitly authorized
 continuation uses configs/resume_full_starts.json and its generated frozen plan.
 
-# Current release: 2026_09_07_11_03_06
+# Historical release: 2026_09_07_11_03_06
 
 Independent case parallelism: GPU 0 and GPU 1 each run one case, at most 14 GiB LOOK memory per card. No pending scientific jobs are added by this release. See home/docs/DUAL_GPU_QUEUE.md.
 
-# Current release: 2026_09_06_15_48_18
+# Historical release: 2026_09_06_15_48_18
 
 Bounded LOOK continuation: representative start evidence, existing 15+3 controls,
 14 GiB/device resource supervision, cohort provenance/sensitivity audit, and
