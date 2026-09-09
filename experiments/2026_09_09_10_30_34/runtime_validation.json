@@ -14,8 +14,21 @@
   "new_scientific_training": false,
   "parent_reference": "seed3407 layer3 complete-modality ResNet50 checkpoint",
   "project_memory_limit_gib": 14,
-  "gpu_allocation": "one A100 per application; two independent array tasks; each exits on completion/failure",
+  "gpu_allocation": "two A100 GPUs for each application, applications run sequentially; torchrun two ranks",
   "walltime_limit": "48h maximum; no idle holding",
   "new_study_protocol": "not_defined_by_this_validation",
-  "batch_note": "batch16 is an engineering acceptance batch; it is not a change to historical training protocols"
+  "batch_note": "batch16 is an engineering acceptance batch; it is not a change to historical training protocols",
+  "local_batch_size": 8,
+  "global_batch_size": 16,
+  "distributed_backend": "nccl",
+  "framework_parallel": "MHD_ParallelConfig(data_parallel=\"ddp\")",
+  "distributed_acceptance": [
+    "disjoint complete participant shards",
+    "identical reduced gradients at four optimizer steps",
+    "identical updated parameters",
+    "strict shared checkpoint reload",
+    "per-rank and global inference counts"
+  ],
+  "batchnorm": "ordinary per-rank BN, rank0 buffers selected for shared checkpoint",
+  "supersedes": "single-GPU pending array 51628359 cancelled before running"
 }

@@ -24,3 +24,5 @@ jobs:
           . .venv/bin/activate
           bash scripts/bootstrap.sh
       - run: .venv/bin/python scripts/manage.py test
+      - name: Two-rank MHD trainer reference
+        run: .venv/bin/python -m torch.distributed.run --standalone --nproc-per-node=2 -m tests.integration.runtime_ddp

@@ -1,0 +1,15 @@
+{
+  "status": "preparation_only_after_two_gpu_acceptance",
+  "project": "LOOK",
+  "framework": "V4",
+  "execution": "two GPUs per project, projects sequential",
+  "initial_backbone": "resnet50",
+  "future_backbone": "RETFound requires a separate adapter and checkpoint audit",
+  "actual_gpu_memory": "query allocated GPU; do not assume A100 has 80 GiB",
+  "reserve_free_gib_per_gpu": 10,
+  "memory_policy": "Do not fill memory for its own sake; account for project CUDA, NCCL and nonproject use, retain additional transient headroom",
+  "effective_batch": "select a common target after representative memory and throughput preflight; do not silently increase historical batch or LR",
+  "microbatch_policy": "may differ with explicit accumulation; ordinary BN is not equivalent across microbatches",
+  "scientific_training_authorized_by_this_file": false,
+  "original_data": "independent ongoing full raw transfer; use existing cache only for infrastructure preflight"
+}
