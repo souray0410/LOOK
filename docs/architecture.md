@@ -22,3 +22,13 @@ Internal imports are absolute package paths. `scripts/check_layout.py` verifies 
 See [module migration map](module_migration.json) for every previous module path. Python object pickles requiring historical import paths use [archived source](history.md); state_dict compatibility is checked independently.
 
 The installed MHD release selects the API. Import `mhd_framework` / `mhd_framework.utils`; this application pins the V4 release, never floating main. Packaging paths changed; V4 tensor implementations are preserved.
+
+## Reusable native models
+
+Optional architectures are owned by `mhd_framework.models` in the framework repository. The core does not import this package. Architecture documentation and configuration are under that repository's `models/` directory. The selected V4 source commit is pinned in `framework.lock.json`; installing the historical V4 tag alone does not provide these later optional additions.
+
+The project adapter `models/registry.py` resolves an exact training request, verifies and copies an accepted complete model into a project-owned directory, then loads it strictly. A missing match returns an explicit pending request; it does not silently substitute random weights or start a GPU job. The independent training workflow must satisfy that request before method experiments proceed.
+
+Dataset identity and split, preprocessing, architecture, framework source, initialization, seed and training protocol belong to artifact identity. A compatible tensor shape is not sufficient for reuse. Model artifacts include the task head, selected model and a separate stopping/resume state. Loss and optimization belong to the training workflow; their definitions remain recorded with the artifact. Project fine-tuning creates project-owned results and never modifies the shared native model. Restricted participant data and predictions are not distributed with source.
+
+The `models` extra is required for RETFound (`timm==0.9.2`); official pretrained weights require separate authorized access. No model import downloads weights.

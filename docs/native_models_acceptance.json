@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "framework_commit": "3559caa8d596d4438533a69d39d8a2c32eb21e46",
+  "prior_framework_commit": "741eb29dce4829d0e0f37e0b300a8190fc30278b",
+  "core_utils_init_bytes_unchanged": true,
+  "unit_tests_passed": 87,
+  "strict_old_new_replay": [
+    "model_state",
+    "outputs",
+    "parameter_gradients",
+    "input_gradients",
+    "node_ids",
+    "optimizer_update"
+  ],
+  "native_model_consumer": {
+    "exact_request": true,
+    "independent_project_copy": true,
+    "development_replay_participants": 8,
+    "test_used": false
+  },
+  "log_sha256": {
+    "LOOK_native_adapter_tests.log": "6cd39968489f996283c505a50d306b9800e45b6854a514732b56c33a1a343b83",
+    "LOOK_native_layout.log": "4e69f4be3eb43df8e4870eb36de35d6ca9a0733fb181f01e7ec6c3b50e81bf77",
+    "LOOK_native_env.log": "dc13ed4a06ad2edc5804e2979f5cff9a4fce16324c340bfac6a27d870b80b0ab"
+  }
+}
