@@ -14,3 +14,7 @@ Install the fixed MHD checkout separately; do not bundle framework classes in th
 ## Internal architecture
 
 Follow [architecture.md](architecture.md). Keep the source and test role directories identical to the peer application. Run `python scripts/manage.py check` before committing; this checks real modules and import targets, not just top-level folders. Run integration scripts as `python -m tests.integration.<module>` from the repository root. New method-specific files belong under the matching role.
+
+## GPU execution
+
+See [GPU development and batch execution](gpu_workflow.md): ws02 debugging, Ibex A100 preflight and finite batches within one allocation, with project-independent artifacts.
