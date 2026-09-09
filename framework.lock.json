@@ -4,7 +4,7 @@
   "release": "2026_09_09_10_30_34",
   "api_version": "V4",
   "upstream_repository": "https://github.com/souray0410/MHD_Framework",
-  "upstream_commit": "4b0c784ee135d88749c91c0e90e593b0bcdf31a8",
+  "upstream_commit": "741eb29dce4829d0e0f37e0b300a8190fc30278b",
   "distribution": "git_submodule",
   "files": [
     {
