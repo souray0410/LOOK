@@ -11,5 +11,11 @@
   "effective_batch": "select a common target after representative memory and throughput preflight; do not silently increase historical batch or LR",
   "microbatch_policy": "may differ with explicit accumulation; ordinary BN is not equivalent across microbatches",
   "scientific_training_authorized_by_this_file": false,
-  "original_data": "independent ongoing full raw transfer; use existing cache only for infrastructure preflight"
+  "original_data": "independent ongoing full raw transfer; use existing cache only for infrastructure preflight",
+  "initial_backbone_status": "planned; requires R&B 2D/3D bottleneck adapter and fresh parent/basis validation",
+  "cohort": "expanded original paired UKB after complete-copy and label/split audit",
+  "disease_targets": "review public UKB phenotype definitions before choosing disease-specific binary tasks or shared multi-label heads",
+  "hyperparameters": "retune on development only under a prespecified shared search budget; old test is not a tuning set",
+  "superseded_proposal": "ResNet34",
+  "bridge_width": "recalculate stage channels and use explicit r/h; do not blindly carry old rho to a larger backbone"
 }
