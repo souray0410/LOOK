@@ -28,6 +28,7 @@ def main():
     parser.add_argument('--data-root', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--manifest-sha', required=True)
+    parser.add_argument('--artifact-root', type=Path, required=True, help='Project-owned verified weights and bases')
     args = parser.parse_args()
     import torch
     import torch.distributed as dist
@@ -43,11 +44,20 @@ def main():
     context = initialize_mhd_distributed('nccl')
     rank, device = context.rank, context.device
     root, output = args.data_root, args.output
+    artifacts = args.artifact_root
+    artifact_manifest = json.loads((artifacts/'artifacts_manifest.json').read_text())
+    assert artifact_manifest['project'] == args.project
+    assert artifact_manifest['source_manifest_sha256'] == args.manifest_sha
+    assert artifact_manifest['files'] and len(artifact_manifest['files']) == len({row['path'] for row in artifact_manifest['files']})
+    for entry in artifact_manifest['files']:
+        path = artifacts/entry['path']
+        assert path.resolve().is_relative_to(artifacts.resolve()) and not path.is_symlink()
+        assert path.stat().st_size == entry['bytes'] and file_sha(path) == entry['sha256']
     out = output / f'rank{rank}'
     out.mkdir(parents=True, exist_ok=True)
     assert file_sha(root / 'manifest.json') == args.manifest_sha
     assert json.loads((root / 'accepted.json').read_text())['manifest_sha256'] == args.manifest_sha
-    os.environ['TORCH_HOME'] = str(root / 'weights')
+    os.environ['TORCH_HOME'] = str(artifacts / 'weights')
     limit = 10 if args.project == 'Radon_Bridge' else 14
     torch.cuda.set_per_process_memory_fraction((limit - 1) * 1024**3 / torch.cuda.get_device_properties(device).total_memory, device)
     torch.manual_seed(9181)
@@ -56,7 +66,7 @@ def main():
         world_size=2, global_batch=16, local_batch=8, backend=dist.get_backend(),
         test_used=False, scientific_training_result=False, state='running',
         project_memory_limit_gib=limit, manifest_sha256=args.manifest_sha,
-        pid=os.getpid(), device=str(device), gpu=torch.cuda.get_device_name(device),
+        artifact_manifest_sha256=file_sha(artifacts/'artifacts_manifest.json'), pid=os.getpid(), device=str(device), gpu=torch.cuda.get_device_name(device),
         batchnorm='ordinary per-rank BN; rank0 buffers define the checkpoint',
         scope='four disposable DDP updates and finite sharded inference')
 
@@ -100,7 +110,7 @@ def main():
         dep = json.loads((root/'radon/dependencies_relative.json').read_text())
         def parents(model):
             for branch, ref in dep['parents']['3416'].items():
-                path = root/ref['path']
+                path = artifacts/ref['path']
                 assert file_sha(path) == ref['sha256']
                 model.load_native_state(torch.load(path, map_location='cpu', weights_only=False)['model'], branch=branch)
         def inputs(batch):
@@ -113,7 +123,7 @@ def main():
         del plain
         gc.collect()
         torch.cuda.empty_cache()
-        refs = {key:dict(path=str(root/ref['path']), sha256=ref['sha256']) for key,ref in dep['bases']['3416'].items()}
+        refs = {key:dict(path=str(artifacts/ref['path']), sha256=ref['sha256']) for key,ref in dep['bases']['3416'].items()}
         model = PilotGraph(seed=3416, device=device, bridge_configs=[dict(nodes=['cfp_stage3','oct_stage3'],
             M=32, S=64, rho=.125, mode='radon', kernel_size=3,
             compression='fixed_svd_channel', basis_files=refs)])
@@ -137,7 +147,7 @@ def main():
             clip_task_gradients(model, 5.)
     else:
         from look.models.graph import build_resnet50_mhd_graph, optimizer_parameter_groups, reset_and_forward
-        checkpoint = torch.load(root/'look/parent/best.pt',map_location='cpu',weights_only=False)
+        checkpoint = torch.load(artifacts/'look/parent/best.pt',map_location='cpu',weights_only=False)
         config = checkpoint['config']
         graph = build_resnet50_mhd_graph('layer3', batch_size=8, device=device, pretrained=False,
             classifier_dropout=config.get('classifier_dropout',0.), label_smoothing=config.get('label_smoothing',0.))
