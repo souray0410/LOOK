@@ -1,0 +1,20 @@
+{
+  "scope": "repository_restructure_and_CPU_core_checks",
+  "new_training": false,
+  "test_data_access": false,
+  "project": "LOOK",
+  "core_tests_passed": 80,
+  "framework_CPU_tests_passed": 168,
+  "framework_tests_skipped": 18,
+  "framework_commit": "69936fb906ed3fb5395ac4c856a3d899d0100ca3",
+  "framework_API": "V4",
+  "framework_runtime_changed": false,
+  "wheels_built": [
+    "mhd-project",
+    "ukb-look",
+    "radon_bridge"
+  ],
+  "hosted_CI": "inactive_example_workflow_scope_unavailable",
+  "historical_full_suite": "retained_on_archive_branch; not identical to current core suite",
+  "installed_environment_acceptance": "separate deployment receipt required"
+}

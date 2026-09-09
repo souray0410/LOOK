@@ -1,4 +1,2 @@
 # Repository instructions
-
-## Shared workspace management
-Read workspace/README.zh-CN.md before deployment, path changes, or releases. Keep the shared registry and tooling byte-identical across LOOK, Radon_Bridge, and MHD_Project; run workspace/check.py with peer checkouts. Preserve approved scientific protocols and active releases. This preparation does not authorize training or GPU submission.
+Read workspace/REPOSITORY_STANDARD.md and docs/development.md before changes. This is a new research preparation branch, not a continuation of archived queues. Do not restore legacy folder layouts or copy historical reports into this branch. Preserve scientific operators and MHD Node semantics. Install the fixed third_party/MHD_Project as its own package; do not embed it in this project wheel. New training or test access requires the applicable data and study protocol. Shared management files and scripts must match the peer research project. Validate installation, structure, imports, tests and source digests before deployment.

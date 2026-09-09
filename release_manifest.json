@@ -1,8 +1,0 @@
-{
-  "schema": "souray_preparation_release_v1",
-  "release_id": "2026_09_09_10_30_34",
-  "status": "preparation_not_scientific_acceptance",
-  "api_version": "V4",
-  "framework_lock": "framework.lock.json",
-  "prior_release_manifest": "docs/history/pre_ibex_20260909/release_manifest.json"
-}

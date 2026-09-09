@@ -1,0 +1,7 @@
+{
+  "status": "preparing",
+  "training_authorized": false,
+  "test_authorized": false,
+  "framework_api": "V4",
+  "resume_old_queue": false
+}

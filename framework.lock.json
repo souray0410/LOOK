@@ -4,7 +4,7 @@
   "release": "2026_09_09_10_30_34",
   "api_version": "V4",
   "upstream_repository": "https://github.com/souray0410/MHD_Project",
-  "upstream_commit": "20fb7366706882fa84be5847e7c2a7ae90b43b78",
+  "upstream_commit": "69936fb906ed3fb5395ac4c856a3d899d0100ca3",
   "distribution": "git_submodule",
   "files": [
     {
@@ -18,5 +18,7 @@
       "sha256": "695214c85c510631aa7ef51f8f9a8b4e65cd801b70bec530f7874c8e10b005dc"
     }
   ],
-  "submodule_path": "third_party/MHD_Project"
+  "submodule_path": "third_party/MHD_Project",
+  "package_distribution": "mhd-project",
+  "package_version": "0.5.0.dev0"
 }

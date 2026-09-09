@@ -4,14 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ukb-look"
-version = "2026.9.9"
-description = "Reproducible single- or multi-GPU bilateral CFP-OCT glaucoma LOOK study"
+version = "2026.9.9.dev0"
+description = "LOOK research application using a fixed MHD API"
 requires-python = ">=3.10,<3.14"
+dependencies = ["mhd-project==0.5.0.dev0", "torch>=2.8", "torchvision>=0.23", "numpy", "pandas", "Pillow", "scikit-learn", "scipy"]
 
-[tool.setuptools]
-packages = ["look_core", "V4"]
-package-dir = {"look_core" = "tool/look_core", "V4" = "third_party/MHD_Project/V4"}
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["look_core*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tool/tests"]
+testpaths = ["tests/unit"]
 addopts = "-ra -p no:cacheprovider"

@@ -1,0 +1,43 @@
+{
+  "deployment_defaults": {
+    "project_root": "/ibex/project/c2377/souray/home/mengh/LOOK/2026_09_09_10_30_34",
+    "data_root": "/ibex/project/c2377/souray/data/mengh/LOOK",
+    "dataset_root": "/ibex/project/c2377/souray/data/mengh/LOOK/dataset/2026_09_09_10_30_34",
+    "image_root": "/ibex/project/c2377/souray/data/mengh/LOOK/dataset/2026_09_09_10_30_34/images",
+    "cohort_root": "/ibex/project/c2377/souray/data/mengh/LOOK/dataset/2026_09_09_10_30_34/cohorts/pending_protocol",
+    "labels_csv": "/ibex/project/c2377/souray/data/mengh/LOOK/dataset/2026_09_09_10_30_34/cohorts/pending_protocol/primary/reference_labels.csv",
+    "natural_labels_csv": "/ibex/project/c2377/souray/data/mengh/LOOK/dataset/2026_09_09_10_30_34/cohorts/pending_protocol/not_authorized/reference_labels.csv",
+    "preprocess_cache_root": "/ibex/project/c2377/souray/data/mengh/LOOK/cache/2026_09_09_10_30_34/preprocessed_pairs",
+    "venv_path": "/ibex/project/c2377/souray/home/mengh/environments/look_2026_09_09_10_30_34",
+    "ssh_host": "ibex-vscode",
+    "ukb_source_uuid": "not_a_local_block_device_on_ibex",
+    "ukb_source_mount": "/ibex/project/c2377/souray/data/mengh/UKBiobank/ophthalmology",
+    "ukb_source_root": "/ibex/project/c2377/souray/data/mengh/UKBiobank/ophthalmology/raw",
+    "ukb_label_uuid": "not_a_local_block_device_on_ibex",
+    "ukb_label_mount": "/ibex/project/c2377/souray/data/mengh/UKBiobank/ophthalmology",
+    "ukb_label_root": "/ibex/project/c2377/souray/data/mengh/UKBiobank/ophthalmology/raw/labels",
+    "torch_index_url": "https://download.pytorch.org/whl/cu128",
+    "torch_version": "2.8.0",
+    "torchvision_version": "0.23.0"
+  },
+  "directories": {
+    "tool": "src",
+    "pipeline": "scripts",
+    "dataset": "dataset",
+    "cache": "cache",
+    "runs": "runs"
+  },
+  "compute": {
+    "default_gpu_devices": [
+      0,
+      1
+    ],
+    "maximum_visible_gpus_per_case": 1,
+    "execution": "flexible_independent_single_gpu_cases",
+    "maximum_concurrent_cases": "selected_device_count",
+    "look_memory_budget_gib_per_device": 14,
+    "device_policy": "external_atomic_runtime_control",
+    "historical_backbone_execution": "sequential_ddp",
+    "runtime_entrypoint_status": "pending_new_protocol"
+  }
+}

@@ -1,9 +1,0 @@
-{
-  "protocol": "resumed_full_suffix_v1",
-  "test_access": false,
-  "expected_remaining": 182,
-  "historical_summary": "/data/mengh/LOOK/2026_09_05_09_12_55/runs/start_study/e04ec79fb5fc/summary.json",
-  "source_inventory": "/data/mengh/LOOK/2026_09_05_09_12_55/runs/start_study/e04ec79fb5fc/source_inventory.json",
-  "drain_complete": "/data/mengh/LOOK/2026_09_06_15_48_18/runs/bounded/drain_complete.json",
-  "parent_source": "/home/mengh/LOOK/2026_09_04_19_18_07"
-}

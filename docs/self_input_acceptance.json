@@ -1,9 +1,0 @@
-{
-  "status": "passed",
-  "test_access": false,
-  "cpu_regression_passed": 189,
-  "explicit_gpu_test_skipped": 1,
-  "real_data_acceptance": "6 train and 6 validation participants, both directions, 2 pre-fusion sites and final participant feature, d=8, factor=16, resume and frozen random evaluation",
-  "report_acceptance": "360 saved prediction bundles reproduced; pending supplemental cases stay pending",
-  "scope": "acceptance_only; no test access or formal self-input metrics"
-}

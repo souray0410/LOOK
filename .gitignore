@@ -1,60 +1,19 @@
 .DS_Store
-**/__pycache__/
-**/.pytest_cache/
-**/.venv/
-**/*.egg-info/
-data/dataset/*
-data/cache/*/*
-data/runs/*/*
-!data/dataset/.gitkeep
-!data/cache/pipeline_state/.gitkeep
-!data/cache/partial/.gitkeep
-!data/cache/quarantine/.gitkeep
-!data/cache/preprocessed_pairs/.gitkeep
-!data/runs/experiments/.gitkeep
-!data/runs/backbones/.gitkeep
-!data/runs/baseline_selection/.gitkeep
-!data/runs/generators/.gitkeep
-!data/runs/freezes/.gitkeep
-!data/runs/sweeps/.gitkeep
-!data/runs/smoke/.gitkeep
-!data/runs/task_scout/.gitkeep
-!data/runs/logs/.gitkeep
-
-# Local environments and Python caches
-tool/environment/.venv/
-tool/*.egg-info/
-**/__pycache__/
+._*
+__pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# Interrupted and temporary writes
+.venv/
+build/
+dist/
+outputs/
+data/
+runs/
+cache/
 *.partial
 *.tmp
-*.lock
 
-# Editors and operating systems
-.DS_Store
-.idea/
-.vscode/
-!.vscode/
-!.vscode/settings.json
-
-# LaTeX build products; sources and final PDFs remain tracked
-*.aux
-*.fdb_latexmk
-*.fls
-*.log
-*.nav
-*.out
-*.snm
-*.synctex.gz
-*.toc
-missfont.log
-
-# Runtime data belongs under /data, never in the source tree
-dataset/
-cache/
-runs/
+*.egg-info/
+build/
+dist/
