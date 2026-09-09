@@ -32,4 +32,4 @@ For finite MHD V4 versus native PyTorch verification, select microbatch from act
 
 New explicit user tasks take priority over the finite framework verification list. Handoff must occur at a bounded test boundary or a verified checkpoint, and the old process must release its CUDA context. Suspending a process without freeing GPU memory is insufficient. Completed cases are not repeated to retain resources. The adaptive validator and cooperative priority controller still require implementation and acceptance before use; the JSON policy records intended behavior, not a running service.
 
-The UKB training scope is clarified in [UKB model bank](ukb_model_bank.md). Background work includes protocol-locked real UKB native model training after implementation acceptance, with complete artifact retention.
+The UKB training scope is clarified in [UKB models](ukb_models.md). Background work includes protocol-locked real UKB native model training after implementation acceptance, with complete artifact retention.

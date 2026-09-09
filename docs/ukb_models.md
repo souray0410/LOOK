@@ -1,4 +1,4 @@
-# UKB model bank: architecture verification and reusable native training
+# UKB models: architecture verification and reusable native training
 
 Status: design for the current research cycle; no training matrix, new GPU allocation or test access is created by this document. This supersedes the interpretation that the framework background work consists only of synthetic checks or reproduction on original paper datasets.
 
@@ -65,8 +65,12 @@ Sources: [Torchvision model references](https://docs.pytorch.org/vision/stable/m
 
 ## Latest scope: start on the historical small cohort
 
-The user requests a persistent MHD_Framework model-zoo workstream, beginning with V4 and standard ResNet18/34/50/101/152 initialized from traceable pretrained sources, then trained on the existing small UKB train/development cohort. This supersedes waiting for the full original cohort before all model-bank training. Use accepted 1264-train/296-development cache views and prior exposure records; this does not reopen the historical test set. Full-cohort models and V5 models are later separate artifacts, not replacements.
+The user requests a persistent MHD_Framework models workstream, beginning with V4 and standard ResNet18/34/50/101/152 initialized from traceable pretrained sources, then trained on the existing small UKB train/development cohort. This supersedes waiting for the full original cohort before all models training. Use accepted 1264-train/296-development cache views and prior exposure records; this does not reopen the historical test set. Full-cohort models and V5 models are later separate artifacts, not replacements.
 
 Keep CFP 2D, OCT 2D and OCT 3D as distinct input tracks, each with an accepted preprocessing/prediction contract. Implement the standard 2D family first, then validate the existing volumetric inflation policy for BasicBlock and Bottleneck families; a declared candidate is not a passed 3D model. Initial weights, binary head replacement and eye aggregation are part of the training configuration. First measure feasibility and lock the finite seed/input/model matrix, effective batch, independent-native loss and convergence policy before training; do not silently run every future architecture as a Cartesian product.
 
-The generic catalog and provenance schema live in MHD_Framework. The model-bank owner is MHD_Framework rather than a third method competing with LOOK/Radon_Bridge. Restricted UKB training execution and artifacts stay outside the public toolbox source, under its separately managed research artifact area. The previously proposed independent UKB_Model_Bench public repository is not required. Reuse accepted parents through verified independent copies in each research project.
+The generic catalog and provenance schema live in MHD_Framework. The models owner is MHD_Framework rather than a third method competing with LOOK/Radon_Bridge. Restricted UKB training execution and artifacts stay outside the public toolbox source, under its separately managed research artifact area. The previously proposed independent UKB_Model_Bench public repository is not required. Reuse accepted parents through verified independent copies in each research project.
+
+Canonical framework registry: [MHD_Framework models](https://github.com/souray0410/MHD_Framework/tree/main/models). Architecture configuration digests, complete training configuration IDs, run UUIDs and checkpoint-derived artifact IDs uniquely distinguish records.
+
+See [native models training and reuse](native_models_training.md) for separation of native hyperparameter selection, repeated-seed parents and downstream method tuning.

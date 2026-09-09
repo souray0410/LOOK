@@ -49,5 +49,5 @@
     "memory_occupancy_is_not_utilization": true,
     "automatic_pause_resume_implemented": false
   },
-  "study_design": "docs/ukb_model_bank.md"
+  "study_design": "docs/ukb_models.md"
 }
