@@ -1,0 +1,22 @@
+{
+  "schema": "mhd_source_lock_v1",
+  "project": "LOOK",
+  "release": "2026_09_09_10_30_34",
+  "api_version": "V4",
+  "upstream_repository": "https://github.com/souray0410/MHD_Project",
+  "upstream_commit": "20fb7366706882fa84be5847e7c2a7ae90b43b78",
+  "distribution": "git_submodule",
+  "files": [
+    {
+      "local_path": "third_party/MHD_Project/V4/MHD_Framework_V4.py",
+      "upstream_path": "V4/MHD_Framework_V4.py",
+      "sha256": "6f499046ff3068b76c01a69e25d11398f2d2c0ff3ebb18f2faf825ff0199e6ba"
+    },
+    {
+      "local_path": "third_party/MHD_Project/V4/MHD_Utils_V4.py",
+      "upstream_path": "V4/MHD_Utils_V4.py",
+      "sha256": "695214c85c510631aa7ef51f8f9a8b4e65cd801b70bec530f7874c8e10b005dc"
+    }
+  ],
+  "submodule_path": "third_party/MHD_Project"
+}

@@ -1,0 +1,3 @@
+[submodule "third_party/MHD_Project"]
+	path = third_party/MHD_Project
+	url = https://github.com/souray0410/MHD_Project.git
