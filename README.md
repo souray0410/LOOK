@@ -1,3 +1,7 @@
+# Workspace preparation: 2026_09_09_10_30_34
+
+[三项目统一目录与Ibex准备约定](workspace/README.zh-CN.md)。This adds a shared naming/path registry only; no scientific code, running release, framework API, data split or GPU workload is changed.
+
 # Current release: 2026_09_07_19_27_25 — bounded diagnostic supplement
 
 Step 50 adds validation temperature diagnostics and three fixed-seed GPU jobs for
