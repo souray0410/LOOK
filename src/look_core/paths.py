@@ -25,6 +25,29 @@ def discover_project_root(start: Path | None = None) -> Path:
     raise FileNotFoundError(f"Could not find {PROJECT_FILE} above {origin}")
 
 
+def rooted_path(root: Path, value: str | Path) -> Path:
+    """Configuration and override paths are relative to the project, never cwd."""
+    path = Path(value).expanduser()
+    return (path if path.is_absolute() else root / path).resolve()
+
+
+def load_project_config(root: Path, environ: Mapping[str, str] | None = None) -> dict:
+    env = os.environ if environ is None else environ
+    config = json.loads((root / PROJECT_FILE).read_text(encoding="utf-8"))
+    if "application_config" in config:
+        config.update(json.loads(rooted_path(root, config["application_config"]).read_text(encoding="utf-8")))
+    machine = env.get("SOURAY_MACHINE")
+    if machine:
+        if not machine.replace("_", "").replace("-", "").isalnum():
+            raise ValueError("Invalid SOURAY_MACHINE profile")
+        profile = json.loads((root / "configs/deployment" / (machine + ".json")).read_text())
+        if profile["project"] != config["project_name"]:
+            raise ValueError("Deployment project differs")
+        config["deployment_defaults"]["data_root"] = str(rooted_path(root, profile["data_root"]) / config["project_name"])
+        config["deployment_defaults"]["ssh_host"] = profile.get("ssh_host", machine)
+    return config
+
+
 @dataclass(frozen=True)
 class ProjectPaths:
     project_root: Path
@@ -57,50 +80,49 @@ class ProjectPaths:
     ) -> "ProjectPaths":
         env = os.environ if environ is None else environ
         root = (project_root or discover_project_root()).expanduser().resolve()
-        config = json.loads((root / PROJECT_FILE).read_text(encoding="utf-8"))
-        if "application_config" in config:
-            config.update(json.loads((root / config["application_config"]).read_text(encoding="utf-8")))
+        config = load_project_config(root, env)
+        portable = config.get("path_policy") == "project_root_relative_v1"
         directories = config["directories"]
         configured_data = data_root or env.get("LOOK_DATA_ROOT") or config["deployment_defaults"]["data_root"]
-        resolved_data = Path(configured_data).expanduser()
+        resolved_data = rooted_path(root, configured_data)
         configured_dataset = config["deployment_defaults"].get(
-            "dataset_root", resolved_data / directories["dataset"]
+            "dataset_root", resolved_data / directories["dataset"] / (config.get("release_id", "") if portable else "")
         )
-        dataset = Path(dataset_root or env.get("LOOK_DATASET_ROOT", configured_dataset))
+        dataset = rooted_path(root, dataset_root or env.get("LOOK_DATASET_ROOT", configured_dataset))
         defaults = config["deployment_defaults"]
-        images = Path(
-            image_root or env.get("LOOK_IMAGE_ROOT") or defaults.get("image_root", dataset)
+        images = rooted_path(root,
+            image_root or env.get("LOOK_IMAGE_ROOT") or defaults.get("image_root", dataset / "images" if portable else dataset)
         )
-        default_cohort = dataset / "cohorts" / "ukb_record_glaucoma_binary_bilateral"
-        cohort = Path(
+        default_cohort = dataset / "cohorts" / ("pending_protocol" if portable else "ukb_record_glaucoma_binary_bilateral")
+        cohort = rooted_path(root,
             cohort_root
             or env.get("LOOK_COHORT_ROOT")
             or defaults.get("cohort_root", default_cohort)
         )
-        primary_labels = Path(
+        primary_labels = rooted_path(root,
             labels_csv
             or env.get("LOOK_LABELS_CSV")
             or defaults.get(
-                "labels_csv", default_cohort / "primary" / "reference_labels.csv"
+                "labels_csv", cohort / "primary" / "reference_labels.csv"
             )
         )
-        natural_labels = Path(
+        natural_labels = rooted_path(root,
             natural_labels_csv
             or env.get("LOOK_NATURAL_LABELS_CSV")
             or defaults.get(
-                "natural_labels_csv", default_cohort / "natural" / "reference_labels.csv"
+                "natural_labels_csv", cohort / ("not_authorized" if portable else "natural") / "reference_labels.csv"
             )
         )
-        preprocess_cache = Path(
+        preprocess_cache = rooted_path(root,
             preprocess_cache_root
             or env.get("LOOK_PREPROCESS_CACHE_ROOT")
             or defaults.get(
                 "preprocess_cache_root",
-                resolved_data / directories["cache"] / "preprocessed_pairs",
+                resolved_data / directories["cache"] / (config.get("release_id", "") if portable else "") / "preprocessed_pairs",
             )
         )
-        cache = Path(cache_root or env.get("LOOK_CACHE_ROOT", resolved_data / directories["cache"]))
-        runs = Path(runs_root or env.get("LOOK_RUNS_ROOT", resolved_data / directories["runs"]))
+        cache = rooted_path(root,cache_root or env.get("LOOK_CACHE_ROOT", resolved_data / directories["cache"]))
+        runs = rooted_path(root,runs_root or env.get("LOOK_RUNS_ROOT", resolved_data / directories["runs"]))
         return cls(
             project_root=root,
             data_root=resolved_data.resolve(),

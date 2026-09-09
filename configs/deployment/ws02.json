@@ -3,5 +3,6 @@
   "project": "LOOK",
   "study": "2026_09_09_10_30_34",
   "code_root": "/home/mengh",
-  "data_root": "/data/mengh"
+  "data_root": "/data/mengh",
+  "ssh_host": "ws02"
 }
