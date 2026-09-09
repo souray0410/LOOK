@@ -1,81 +1,44 @@
-# Current release: 2026_09_07_19_27_25 — bounded diagnostic supplement
+# LOOK
 
-Step 50 adds validation temperature diagnostics and three fixed-seed GPU jobs for
-train/validation accepted-prefix stability and matched inference costs. It reuses
-frozen layer3/normalized_mean original LOOK, self-input LOOK, SSF and logit affine.
-No new backbone, W/b, PCA, start selection, or test configuration is introduced.
+LOOK（inear one-one korrektur）：基于固定 MHD V4 的研究项目。`main` 是与 Radon_Bridge 统一的当前开发结构；`2026_09_09_10_30_34` 是本次研究批次标识。修改前的完整代码、配置和报告见[历史复现](docs/history.md)。
 
-CPU analysis runs immediately. GPU acceptance/replay follows completion of the
-existing validation and test queues, sharing their live arbitrary-device policy
-and 14 GiB LOOK-per-card memory budget. Existing source releases stay immutable.
-See [diagnostic protocol](home/docs/SUPPLEMENT_DIAGNOSTICS.md).
+```text
+src/look/
+│   ├── data/            数据读取、标签、队列及预处理
+│   ├── models/          MHD 原生网络搭建与前后向接口
+│   ├── methods/         LOOK 矫正或 R&B 通信算子
+│   ├── training/        训练、优化、收敛和分布式执行
+│   ├── evaluation/      预测、指标、检查点重放及评价
+│   ├── analysis/        统计、诊断和报告图表
+│   ├── runtime/         配置、路径、状态、调度及管理入口
+│   ├── studies/         实验矩阵、协议及研究流程
+configs/deployment/     机器路径与部署配置
+scripts/                两项目相同的安装、结构校验和管理命令
+tests/unit/<role>/      与 src 相同的八类职责
+tests/integration/      显式执行的合成集成验证
+tests/helpers/          测试辅助工具
+docs/                   架构、方法、开发、路径与历史索引
+experiments/2026_09_09_10_30_34/  本批协议与状态
+third_party/MHD_Framework/ 固定 Git 提交的独立依赖
+workspace/              共享服务器与仓库管理规范
+```
 
-# Historical release: 2026_09_07_16_28_16 — test after validation
+两项目统一目录职责、公共模块名、命令和配置格式；方法特有模块使用各自准确的名称。内部导入使用 `look.<role>.<module>`。完整规范和模块迁移表见[架构](docs/architecture.md)。
 
-Step 49 is an inference-only test follow-on. It waits for the unchanged validation
-queue, freezes 87 comparison configurations, verifies all validation replays, and
-then evaluates the existing 290-participant test. Natural test is withdrawn.
-It inherits the current arbitrary-GPU policy and 14 GiB LOOK-only per-card limit.
-No test is opened while validation is running. Results include all seeds, negative
-findings, paired intervals and calibration metrics. See [test queue](home/docs/TEST_QUEUE.md).
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+bash scripts/bootstrap.sh
+python -m look check
+python -m look test
+python -m look preflight --machine local
+python -m look verify-env
+```
 
-# Historical release: 2026_09_07_15_04_51 — flexible device execution
+上述命令也可统一写为 `python scripts/manage.py <command>`。检查不启动训练、不申请 GPU、不读取研究数据。可复用代码使用项目根目录相对路径；外部影像、CSV、缓存和结果由[路径配置](docs/paths.md)指定。
 
-Pipeline 48 supports arbitrary explicitly selected single/multiple GPUs and live
-drain/interrupt/add transitions. The existing study continues against its immutable
-2026_09_07_11_18_41 worker source and unchanged scientific plan. The per-card 14 GiB
-budget covers LOOK processes only. See [execution guide](home/docs/FLEXIBLE_GPU_EXECUTION.md).
-No new scientific cases or test access are introduced.
+MHD V4 包版本 `4`，固定提交 `4b0c784ee135d88749c91c0e90e593b0bcdf31a8`，API 为 V4。它独立安装，不随 MHD_Framework 的后续修改自动升级。本仓库 wheel 只包含 `look`。
 
-# 2026_09_07_11_18_41: explicitly resumed full start analysis
+新训练需要独立验收数据和协议，不自动继承历史队列或 test 使用权限。受限影像、CSV、参与者预测和检查点保留在授权存储，GitHub 只保存代码与可公开汇总。
 
-The user authorized completing the previously deferred remainder on 2026-09-07.
-Pipeline 47 verifies and freezes 61 existing results, then queues exactly 182 new
-start cases through the two independent GPU workers in pipeline 46. The four already
-selected contexts are reused after verification; the remaining 23 selected-context
-evaluations follow their nine starts. Those evaluations are not extra start fits.
-Full scope: three frozen fusion positions × three fillings × three seeds × nine starts.
-No backbone/PCA/generator retraining, new hyperparameters or test access.
-Historical studies and failed/interrupted records are retained unchanged. The prior
-empty pending plan describes the earlier idle state; this explicitly authorized
-continuation uses configs/resume_full_starts.json and its generated frozen plan.
-
-# Historical release: 2026_09_07_11_03_06
-
-Independent case parallelism: GPU 0 and GPU 1 each run one case, at most 14 GiB LOOK memory per card. No pending scientific jobs are added by this release. See home/docs/DUAL_GPU_QUEUE.md.
-
-# Historical release: 2026_09_06_15_48_18
-
-Bounded LOOK continuation: representative start evidence, existing 15+3 controls,
-14 GiB/device resource supervision, cohort provenance/sensitivity audit, and
-future MHD model-adapter design. See home/docs/ADVISOR_QUESTIONS.md and
-home/docs/MHD_MODEL_ADAPTER_DESIGN.md. Historical runs are preserved.
-
-# Runtime recovery: 2026_09_05_16_44_54
-
-See [runtime recovery and validation](home/RUNTIME_RECOVERY_20260905.md). This operations-only update resumes the existing parent and supplement through explicit --project-root paths; it does not start a new scientific study. The isolated tests passed, but the intermittent NCCL hang was not deterministically reproduced.
-
-# Correction-start supplement: 2026_09_05_09_12_55
-
-The latest release adds the suffix-start study after the unchanged parent 52-stage queue. See [START_STUDY.md](home/START_STUDY.md). Parent paths and status snapshots below are historical; use the read-only monitors for current status.
-
-# LOOK 2026_09_04_19_18_07
-
-Current unified Macro-F1 research release. Read [the handoff](home/HANDOFF.md) first.
-Screen seven fusion positions with seed 3407 by validation Macro-F1; replicate only
-the selected layer3, feature and layer2 positions with seeds 3408 and 3409. Run all
-three filling strategies with joint sequential LOOK, then ablations and six unimodal
-controls (52 stages). Keep all factor/scenario results and negative findings.
-
-Deploy home/ to /home/mengh/LOOK/2026_09_04_19_18_07; outputs belong in
-/data/mengh/LOOK/2026_09_04_19_18_07. data/ is an empty runtime skeleton. Controlled
-images, identities, checkpoints and runtime results are never committed to this repo.
-
-See [fixed specification](home/configs/unified_study.json), [protocol](home/JOINT_LOOK_PROTOCOL.md),
-[project standard](GENERAL_PROJECT_STANDARD.md) and [timeline](PROJECT_TIMELINE.md).
-The paused previous release is preserved by snapshot/2026_09_04_10_49_20 and
-2026_09_04_10_49_20. Older AUROC source remains in archive/superseded-auroc-2026-09-03.
-
-### Simple-control supplement and advisor snapshots
-
-Current method-evidence protocol v2 adds bias-only and train-fitted positive logit-affine controls (15 total method cases, 280 combined stages). See `home/docs/METHOD_EVIDENCE.md`. `home/pipeline/41_refresh_advisor_report.py` creates timestamped validation-only reports without waiting for the entire queue.
+The installed MHD release selects the API. Import `mhd_framework` / `mhd_framework.utils`; this application pins the V4 release, never floating main. Packaging paths changed; V4 tensor implementations are preserved.

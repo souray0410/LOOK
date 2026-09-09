@@ -1,2 +1,0 @@
-# Preserve the user-supplied notebook export byte-for-byte, including CRLF.
-references/260810_source.txt -text -whitespace

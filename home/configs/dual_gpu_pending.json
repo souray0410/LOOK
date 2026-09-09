@@ -1,6 +1,0 @@
-{
-  "protocol": "independent_single_gpu_cases_v1",
-  "test_access": false,
-  "jobs": [],
-  "scope_note": "All authorized compact experiments are complete. No automatic deferred-search expansion."
-}

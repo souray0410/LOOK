@@ -1,0 +1,26 @@
+{
+  "scope": "unified_source_layout_and_pinned_V4_package_migration",
+  "project": "LOOK",
+  "new_training": false,
+  "test_data_access": false,
+  "cpu_unit_tests_passed": 86,
+  "framework_V4_cpu_tests_passed": 32,
+  "framework_V5_development_cpu_tests_passed": 129,
+  "framework_V5_tests_skipped": 18,
+  "framework_commit": "4b0c784ee135d88749c91c0e90e593b0bcdf31a8",
+  "framework_API": "V4",
+  "framework_package": "mhd-framework",
+  "framework_package_version": "4",
+  "tensor_implementation_changed": false,
+  "numerical_migration": {
+    "strict_state_dict": true,
+    "outputs_exact": true,
+    "parameter_gradients_exact": true,
+    "input_gradients_exact": true,
+    "node_ids_preserved": true,
+    "optimizer_update_exact": true
+  },
+  "wheels_built_and_imported_outside_checkout": true,
+  "hosted_CI": "workflow enabled; exact commit results available on GitHub Actions",
+  "installed_server_acceptance": "separate deployment receipt"
+}

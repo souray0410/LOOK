@@ -1,0 +1,33 @@
+{
+  "schema": "mhd_source_lock_v2",
+  "project": "LOOK",
+  "release": "2026_09_09_10_30_34",
+  "api_version": "V4",
+  "upstream_repository": "https://github.com/souray0410/MHD_Framework",
+  "upstream_commit": "4b0c784ee135d88749c91c0e90e593b0bcdf31a8",
+  "distribution": "git_submodule",
+  "files": [
+    {
+      "local_path": "third_party/MHD_Framework/src/mhd_framework/core.py",
+      "upstream_path": "src/mhd_framework/core.py",
+      "module": "mhd_framework.core",
+      "sha256": "6f499046ff3068b76c01a69e25d11398f2d2c0ff3ebb18f2faf825ff0199e6ba"
+    },
+    {
+      "local_path": "third_party/MHD_Framework/src/mhd_framework/utils.py",
+      "upstream_path": "src/mhd_framework/utils.py",
+      "module": "mhd_framework.utils",
+      "sha256": "4040d6f836d81b88a812ab8923e915fa7b8a5715d12f2167b21b2251b9747dda"
+    },
+    {
+      "local_path": "third_party/MHD_Framework/src/mhd_framework/__init__.py",
+      "upstream_path": "src/mhd_framework/__init__.py",
+      "module": "mhd_framework",
+      "sha256": "029dca49b31371f665fc67338197e993b3dd50b24589791fc65a56381c3f12ad"
+    }
+  ],
+  "submodule_path": "third_party/MHD_Framework",
+  "package_distribution": "mhd-framework",
+  "package_version": "4",
+  "import_package": "mhd_framework"
+}

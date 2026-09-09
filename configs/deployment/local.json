@@ -1,0 +1,8 @@
+{
+  "schema": "research_deployment_v1",
+  "project": "LOOK",
+  "study": "2026_09_09_10_30_34",
+  "code_root": "../home",
+  "data_root": "../data",
+  "ssh_host": ""
+}

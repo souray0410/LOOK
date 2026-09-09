@@ -1,0 +1,32 @@
+{
+  "deployment_defaults": {
+    "torch_index_url": "https://download.pytorch.org/whl/cu128",
+    "torch_version": "2.8.0",
+    "torchvision_version": "0.23.0",
+    "data_root": "../data/LOOK",
+    "ssh_host": "",
+    "ukb_source_uuid": "not_configured",
+    "ukb_label_uuid": "not_configured"
+  },
+  "directories": {
+    "tool": "src",
+    "pipeline": "scripts",
+    "dataset": "dataset",
+    "cache": "cache",
+    "runs": "runs"
+  },
+  "compute": {
+    "default_gpu_devices": [
+      0,
+      1
+    ],
+    "maximum_visible_gpus_per_case": 1,
+    "execution": "flexible_independent_single_gpu_cases",
+    "maximum_concurrent_cases": "selected_device_count",
+    "look_memory_budget_gib_per_device": 14,
+    "device_policy": "external_atomic_runtime_control",
+    "historical_backbone_execution": "sequential_ddp",
+    "runtime_entrypoint_status": "pending_new_protocol"
+  },
+  "path_policy": "project_root_relative_v1"
+}

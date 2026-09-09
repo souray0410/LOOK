@@ -1,0 +1,12 @@
+{
+  "status": "preparing",
+  "training_authorized": false,
+  "test_authorized": false,
+  "framework_api": "V4",
+  "resume_old_queue": false,
+  "state": "preparing_new_study",
+  "source_layout": "unified_roles_v2",
+  "framework_package_version": "4.0.0",
+  "training_started": false,
+  "test_access": false
+}

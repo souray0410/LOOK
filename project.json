@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "project_name": "LOOK",
+  "package_name": "look",
+  "release_id": "2026_09_09_10_30_34",
+  "repository_role": "research",
+  "study_status": "preparing_new_study",
+  "framework_api": "V4",
+  "training_authorized": false,
+  "test_authorized": false,
+  "archive_branch": "archive/2026_09_09_10_30_34_before_rename",
+  "selected_task_profile": "pending_new_protocol",
+  "task_selection_manifest": "pending_protocol/task_selection.json",
+  "application_config": "configs/application.json"
+}
