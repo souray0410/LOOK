@@ -1,0 +1,51 @@
+{
+  "schema": "gpu_validation_execution_policy_v1",
+  "status": "preparation_policy_not_a_submitted_job",
+  "allocation_preference": "interactive_salloc",
+  "account": "pi-mengy",
+  "gpu_count": 2,
+  "gpu_type": "explicit_per_submission_a100_or_v100",
+  "framework_api": "V4",
+  "purpose": "finite_native_pytorch_vs_mhd_correctness_validation",
+  "memory": {
+    "target_fraction_of_actual_total": 0.5,
+    "meaning": "initial workload sizing target, not a minimum occupancy requirement",
+    "minimum_free_gib": 10,
+    "transient_headroom_required": true,
+    "measure": "complete forward, backward, optimizer step; include process and allocator peaks",
+    "no_dummy_memory_or_compute": true
+  },
+  "batch": {
+    "selection": "bounded increasing candidates, fresh process per probe; choose a measured safe candidate",
+    "match_reference_and_mhd": true,
+    "record": [
+      "gpu_model",
+      "gpu_memory_total",
+      "world_size",
+      "input_shape",
+      "microbatch",
+      "effective_batch",
+      "dtype",
+      "seed",
+      "peak_memory",
+      "steps_per_second"
+    ],
+    "validation_only": true,
+    "scientific_training_batch_changes_require_protocol": true
+  },
+  "priority": {
+    "foreground": "explicit user project tasks",
+    "background": "finite predeclared MHD validation cases",
+    "handoff": "finish bounded case or verified checkpoint, terminate worker to release CUDA memory before foreground",
+    "resume": "only unfinished cases; accepted cases never loop to retain allocation"
+  },
+  "lifecycle": {
+    "ready_work_required_before_request": true,
+    "launch_with_srun_in_allocation": true,
+    "release_when_no_ready_work": true,
+    "release_on_walltime": true,
+    "track_compute_utilization_and_progress": true,
+    "memory_occupancy_is_not_utilization": true,
+    "automatic_pause_resume_implemented": false
+  }
+}

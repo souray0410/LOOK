@@ -23,3 +23,11 @@ Use independent job arrays, with explicit concurrency caps, when tasks need inde
 Record allocation/job ID, task ID, source and framework commits, environment, rank count, selected devices, effective/microbatch, timing, peak project memory and acceptance state. Keep outputs project-local. Do not conflate successful runtime checks with trained-model performance or introduce holdout access through a debug command.
 
 References: [Slurm sbatch](https://slurm.schedmd.com/sbatch.html), [job arrays](https://slurm.schedmd.com/job_array.html).
+
+## Interactive validation preference (2026-09-09)
+
+The user prefers an interactive `salloc` allocation for the next development/validation session. Launch compute commands through `srun` inside that allocation. The same resource, readiness, walltime and release rules apply to interactive and batch jobs; an interactive shell does not make allocation duration unlimited.
+
+For finite MHD V4 versus native PyTorch verification, select microbatch from actual GPU capacity. About 50% of total device memory is an initial workload sizing target, never a required minimum occupancy. Measure full forward/backward/optimizer peaks with transient headroom and at least 10 GiB free. Keep the reference and MHD inputs, weights, batch and numerical settings matched. Record the selected batch separately for each device class; this is not permission to alter scientific training batches. Memory allocation alone does not demonstrate useful GPU work.
+
+New explicit user tasks take priority over the finite framework verification list. Handoff must occur at a bounded test boundary or a verified checkpoint, and the old process must release its CUDA context. Suspending a process without freeing GPU memory is insufficient. Completed cases are not repeated to retain resources. The adaptive validator and cooperative priority controller still require implementation and acceptance before use; the JSON policy records intended behavior, not a running service.
