@@ -1,0 +1,21 @@
+{
+  "scope": "finite_infrastructure_acceptance",
+  "project": "LOOK",
+  "manifest_sha256": "35d5b24d08e1a1592282d828797174fb531e4ff143503da60d35f4a4ebbec985",
+  "training_participants": 1264,
+  "development_participants": 296,
+  "test_images_used": false,
+  "test_evaluation": false,
+  "framework_api": "V4",
+  "batch_size": 16,
+  "disposable_optimizer_updates": 4,
+  "full_train_development_finite_inference": true,
+  "checkpoint_roundtrip": true,
+  "new_scientific_training": false,
+  "parent_reference": "seed3407 layer3 complete-modality ResNet50 checkpoint",
+  "project_memory_limit_gib": 14,
+  "gpu_allocation": "one A100 per application; two independent array tasks; each exits on completion/failure",
+  "walltime_limit": "48h maximum; no idle holding",
+  "new_study_protocol": "not_defined_by_this_validation",
+  "batch_note": "batch16 is an engineering acceptance batch; it is not a change to historical training protocols"
+}
