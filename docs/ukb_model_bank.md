@@ -62,3 +62,11 @@ GitHub stores code, protocols, non-identifying aggregate evidence and artifact d
 - The generic adaptive/priority runner and complete resume contract are not yet accepted; documentation alone is not an active training queue.
 
 Sources: [Torchvision model references](https://docs.pytorch.org/vision/stable/models.html), [official RETFound implementation and checkpoints](https://github.com/rmaphoh/RETFound).
+
+## Latest scope: start on the historical small cohort
+
+The user requests a persistent MHD_Framework model-zoo workstream, beginning with V4 and standard ResNet18/34/50/101/152 initialized from traceable pretrained sources, then trained on the existing small UKB train/development cohort. This supersedes waiting for the full original cohort before all model-bank training. Use accepted 1264-train/296-development cache views and prior exposure records; this does not reopen the historical test set. Full-cohort models and V5 models are later separate artifacts, not replacements.
+
+Keep CFP 2D, OCT 2D and OCT 3D as distinct input tracks, each with an accepted preprocessing/prediction contract. Implement the standard 2D family first, then validate the existing volumetric inflation policy for BasicBlock and Bottleneck families; a declared candidate is not a passed 3D model. Initial weights, binary head replacement and eye aggregation are part of the training configuration. First measure feasibility and lock the finite seed/input/model matrix, effective batch, independent-native loss and convergence policy before training; do not silently run every future architecture as a Cartesian product.
+
+The generic catalog and provenance schema live in MHD_Framework. The model-bank owner is MHD_Framework rather than a third method competing with LOOK/Radon_Bridge. Restricted UKB training execution and artifacts stay outside the public toolbox source, under its separately managed research artifact area. The previously proposed independent UKB_Model_Bench public repository is not required. Reuse accepted parents through verified independent copies in each research project.
