@@ -1,0 +1,24 @@
+{
+  "scope": "source_audit_not_GPU_production_acceptance",
+  "project": "LOOK",
+  "large_cohort_project_running": false,
+  "resource_rule": "all admitted workers together leave approximately10GiB on80GiB GPU",
+  "legacy_allocator_caps": [
+    {
+      "path": "src/look/runtime/bounded.py",
+      "gib": 12
+    },
+    {
+      "path": "src/look/runtime/evaluation.py",
+      "gib": 11
+    }
+  ],
+  "interpretation": "These are legacy path constraints, not measured current expanded-project consumption. Preserve historic reproducibility; expanded admission must select an explicit resource profile.",
+  "required_before_dispatch": [
+    "accepted complete native parents",
+    "full project numerical and GPU resource preflight",
+    "host memory and I/O assessment",
+    "own checkpoints and verified resource-aware handover"
+  ],
+  "current_measurement": "pending; single ResNet50 footprint is insufficient evidence"
+}

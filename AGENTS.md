@@ -6,3 +6,5 @@ Read docs/architecture.md. src and tests/unit use data, models, methods, trainin
 The installed MHD release selects the API. Import `mhd_framework` / `mhd_framework.utils`; this application pins the V4 release, never floating main. Packaging paths changed; V4 tensor implementations are preserved.
 
 Read workspace/MODEL_RUN_STANDARD.md for model/run identity, timestamps, provenance, reuse and retention. Apply it to all new model families and studies, not only current UKB work. Copying accepted parents is distinct from creating a new training execution. Preserve pinned scientific entrypoints and historical artifacts.
+
+Read workspace/GPU_EXECUTION_STANDARD.md for whole-device budgets, measured concurrency and replacement safety. Project/native admission is separate from architecture correctness.

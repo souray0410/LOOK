@@ -6,7 +6,7 @@ Use ws02 for bounded functional debugging on explicitly available GPUs. Use Ibex
 
 `sbatch file.sh` submits a new allocation request each time. Running an ordinary Python/shell command does not request Slurm resources. An `srun` step inside an existing allocation uses that allocation; outside one it can request resources. Avoid nested `sbatch` for each trial when the intended execution is a single sequential batch.
 
-For the current two-GPU preparation, both projects use two GPUs sequentially. The completed runtime acceptance already executed LOOK then Radon_Bridge in one allocation. Future scientific batches should similarly contain a finite manifest of ready tasks and immediately dispatch the next eligible task after acceptance. This is a scheduling policy, not authorization for an unspecified training matrix.
+In the earlier two-GPU preparation, both projects used two GPUs sequentially. This is historical runtime acceptance, not the current allocation policy. The completed runtime acceptance already executed LOOK then Radon_Bridge in one allocation. Future scientific batches should similarly contain a finite manifest of ready tasks and immediately dispatch the next eligible task after acceptance. This is a scheduling policy, not authorization for an unspecified training matrix.
 
 ## Batch readiness and lifecycle
 
@@ -28,8 +28,10 @@ References: [Slurm sbatch](https://slurm.schedmd.com/sbatch.html), [job arrays](
 
 The user prefers an interactive `salloc` allocation for the next development/validation session. Launch compute commands through `srun` inside that allocation. The same resource, readiness, walltime and release rules apply to interactive and batch jobs; an interactive shell does not make allocation duration unlimited.
 
-For finite MHD V4 versus native PyTorch verification, select microbatch from actual GPU capacity. About 50% of total device memory is an initial workload sizing target, never a required minimum occupancy. Measure full forward/backward/optimizer peaks with transient headroom and at least 10 GiB free. Keep the reference and MHD inputs, weights, batch and numerical settings matched. Record the selected batch separately for each device class; this is not permission to alter scientific training batches. Memory allocation alone does not demonstrate useful GPU work.
+For finite MHD V4 versus native PyTorch verification, select microbatch from actual GPU capacity. The earlier 50% sizing suggestion is superseded by the whole-device reserve and measured-throughput contract. Measure full forward/backward/optimizer peaks with transient headroom and at least 10 GiB free. Keep the reference and MHD inputs, weights, batch and numerical settings matched. Record the selected batch separately for each device class; this is not permission to alter scientific training batches. Memory allocation alone does not demonstrate useful GPU work.
 
 New explicit user tasks take priority over the finite framework verification list. Handoff must occur at a bounded test boundary or a verified checkpoint, and the old process must release its CUDA context. Suspending a process without freeing GPU memory is insufficient. Completed cases are not repeated to retain resources. The adaptive validator and cooperative priority controller still require implementation and acceptance before use; the JSON policy records intended behavior, not a running service.
 
 The UKB training scope is clarified in [UKB models](ukb_models.md). Background work includes protocol-locked real UKB native model training after implementation acceptance, with complete artifact retention.
+
+Current resource and safe replacement contract: [GPU_EXECUTION_STANDARD.md](../workspace/GPU_EXECUTION_STANDARD.md). Native parents may use every allocated lane while project methods wait for accepted parents.
