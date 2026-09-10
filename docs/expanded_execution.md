@@ -47,10 +47,22 @@ recovery matched uninterrupted full states and logits exactly. This is operation
 evidence, not a scientific result or a full LOOK/expanded-cohort trainer acceptance.
 CPU tests also validate supervisor crash reattachment without duplicate workers.
 
-Remaining launch gates: complete scientific trainer adapters, accepted expanded
-cohort/masks/cache, frozen comparison manifests, and actual Slurm three-step isolation
-and allocation-owner checks. The GPU application has not been submitted by this
-acceptance. No test performance was read and no accepted model store was overwritten.
+The latest native-first protocol in Model_Training `expanded/LAUNCH_PROTOCOL.md`
+supersedes the earlier all-adapters-first launch gate. Native parents can start after
+their own data/trainer acceptance, while both project adapters remain separately gated.
+The frozen candidates cover record-derived glaucoma, cataract and macular degeneration,
+with CFP2D, central OCT2D and complete128-plane OCT3D inputs; no balanced subsampling.
+Formal observed-eye ResNet50 training supports safe model/BN/optimizer/scheduler/RNG
+and sampler recovery. Allocation startup uses concurrent Slurm GPU-isolation checks
+and full-resolution resource preflights before scientific training. Job IDs and current
+state belong to execution receipts; this document is not evidence that a GPU is running.
+
+Project admission still requires the grouped comparison manifest and an adapter that
+consumes the complete participant model, including valid-eye feature aggregation.
+Do not pass these new artifacts to the historical fixed-two-eye loader, or silently
+substitute a per-eye graph. Accepted parents are copied into project-owned storage.
+Historical comparison groups remain required; they are not replaced by the native HPO
+matrix. Old UKB parents/test-selected configurations are not used as new native weights.
 
 See [validate before switching](validation_workflow.md) for the host-independent
 development process. ws02 is preferred when available, never a mandatory dependency.
