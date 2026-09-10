@@ -1,4 +1,4 @@
-# Souray repository standard, version 1
+# Souray repository standard, version 2
 
 LOOK and Radon_Bridge are reference research repositories. Their root directories,
 common commands and deployment configuration schema must match; domain packages and
@@ -68,3 +68,10 @@ not the process working directory. External data and results are configured thro
 explicit machine profiles or environment overrides; absolute external roots are valid.
 Never embed a developer's home/server directories into reusable scientific code.
 Historical original paths remain evidence; relocate them only through explicit maps.
+
+## Model and training execution records
+
+Follow [MODEL_RUN_STANDARD.md](MODEL_RUN_STANDARD.md) for all current and future
+models and studies. Architecture, recipe, execution and accepted artifact are
+distinct identities. Each model training execution has its own timestamp; study
+metadata and scheduling queues do not substitute for that execution identity.

@@ -42,3 +42,5 @@ MHD V4 包版本 `4`，固定提交 `3559caa8d596d4438533a69d39d8a2c32eb21e46`�
 新训练需要独立验收数据和协议，不自动继承历史队列或 test 使用权限。受限影像、CSV、参与者预测和检查点保留在授权存储，GitHub 只保存代码与可公开汇总。
 
 The installed MHD release selects the API. Import `mhd_framework` / `mhd_framework.utils`; this application pins the V4 release, never floating main. Packaging paths changed; V4 tensor implementations are preserved.
+
+模型定义、时间戳训练记录、来源映射和保留规则统一遵循[长期模型与训练规范](workspace/MODEL_RUN_STANDARD.md)，适用于后续所有模型、数据集和研究项目。

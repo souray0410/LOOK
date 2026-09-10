@@ -32,3 +32,5 @@ The project adapter `models/registry.py` resolves an exact training request, ver
 Dataset identity and split, preprocessing, architecture, framework source, initialization, seed and training protocol belong to artifact identity. A compatible tensor shape is not sufficient for reuse. Model artifacts include the task head, selected model and a separate stopping/resume state. Loss and optimization belong to the training workflow; their definitions remain recorded with the artifact. Project fine-tuning creates project-owned results and never modifies the shared native model. Restricted participant data and predictions are not distributed with source.
 
 The `models` extra is required for RETFound (`timm==0.9.2`); official pretrained weights require separate authorized access. No model import downloads weights.
+
+The permanent [model/run standard](../workspace/MODEL_RUN_STANDARD.md) separates reusable definitions, configuration identity, timestamped training executions and accepted artifacts. Read-only project materialization can remain content-addressed; new training receives its own execution identity.
