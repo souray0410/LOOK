@@ -1,4 +1,4 @@
-# GPU execution standard — version 1
+# GPU execution standard — version 2
 
 ## Capacity is a whole-device budget
 
@@ -66,6 +66,37 @@ remain historical behavior; new production entrypoints must explicitly bind the
 current resource profile and cannot inherit a silent9/10/12GiB cap.
 
 Current project-native adapters still require large-cohort production acceptance.
-The bounded packed companion is implemented; a universal model/project handover
-controller is not certified merely by this policy. Announce deployed capability
+The measured companion controller is separate from frozen scientific workers;
+its accepted resource profiles do not certify a universal model/project handover. Announce deployed capability
 and pending acceptance separately.
+
+## Measured dynamic companion admission
+
+Model_Training/scheduling implements finite companion ownership inside existing
+allocations. No replacement allocation is required. Profile initialization, five
+warmup plus twenty optimizer updates, validation, checkpoint save and reload, and
+compare the resumed next update exactly with uninterrupted execution. Profiles
+key architecture, input/max eyes, micro/effective batch, precision, optimizer,
+framework/trainer and hardware; LR-only variants may share a mapped profile.
+
+Use B=min(0.875*T,T-10GiB). Require conservative existing resident peaks plus
+1.2 times incoming measured peak plus2GiB to fit B. Include unknown physical GPU
+load once. Preserve original two threads/worker, allocated CPU, and15% host working
+memory headroom. Record full cgroup charge separately; only clean inactive file
+cache may be discounted as reclaimable, never dirty/writeback/anonymous memory.
+
+Add one execution at a time. Compare three120-second stable training windows before
+and after addition using aggregate committed participant progress divided by each
+run's train size and wall time. Require at least5% median improvement; otherwise
+checkpoint and pause the newest execution. Unstable observations time out after
+15minutes. GPU utilization or memory occupancy alone is not the objective. Resource
+limits, not a permanent four-worker constant, bound concurrent admissions.
+
+Use shared atomic claims with immutable run/config identity and allocation/step.
+Never steal stale claims. Reconcile actual step death, original acceptance receipts
+and plateau evidence before reuse. Preserve healthy primary owners, freeze their
+queue ownership, and retire companions ahead of unprofiled primary transitions.
+Pause only failed/newest owned work for scoped faults or reserve pressure. Begin
+checkpoint retirement900seconds before the allocation deadline. Manager restart
+reconciles live steps; missing launch identities require review. Keep all handover,
+resource, throughput and recovery receipts without altering scientific run IDs.
