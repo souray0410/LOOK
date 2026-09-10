@@ -1,0 +1,41 @@
+{
+  "status": "accepted",
+  "scope": "real_data_single_gpu_lane_and_recovery_acceptance",
+  "scientific_result": false,
+  "test_used": false,
+  "framework_api": "V4",
+  "project": "Radon_Bridge ResNet18 CFP2D/OCT3D fixed-SVD stage3",
+  "native": "MHD ResNet50 CFP2D",
+  "fallback": "MHD ResNet34 CFP2D",
+  "project_pause_fallback_return": true,
+  "dedicated_model_progress": true,
+  "native_sigkill_resume": true,
+  "final_parameters_bn_optimizer_scheduler_rng_sampler_losses_logits_exact": true,
+  "node_ids_preserved": true,
+  "gpu_uuids": [
+    "GPU-127282cd-e989-5453-7f24-2e6cdc195d9c",
+    "GPU-77ca0fd0-29bc-e2c6-9163-9f1c598b4a10"
+  ],
+  "peak_process_mib": {
+    "project": 2836,
+    "native": 1388,
+    "fallback": 1036
+  },
+  "limitations": [
+    "finite optimizer probes, not convergence",
+    "not expanded-cohort training",
+    "not Slurm three-lane acceptance",
+    "not distributed recovery",
+    "full scientific trainer adapters still require acceptance"
+  ],
+  "cpu_tests": {
+    "passed": 7,
+    "coverage": [
+      "dropout BN optimizer RNG recovery",
+      "partial accumulation rejection",
+      "supervisor crash reattachment",
+      "project pause fallback resume",
+      "source label audits"
+    ]
+  }
+}

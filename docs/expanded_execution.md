@@ -33,10 +33,28 @@ comparison generation. No test performance is accessed during preparation or tun
 LOOK: preserve the accepted missing-modality/correction question and project-specific
 loss, selection and missingness protocol.
 
-GPU allocation uses salloc with a persistent supervisor and immediate srun compute
-steps; CPU audits may still use sbatch. Default2 GPUs serve one two-rank project at
-a time; optional4 GPUs use disjoint two-rank project groups. A stopped project saves
-state then exits, never SIGSTOPs with resident GPU memory. Parameter edits create
-new versioned attempts; retain stopped runs and corresponding comparison amendments.
-The supervisor/stop-resume path still requires implementation and acceptance before
-GPU submission; these rules are not a claim that the new dispatcher is already running.
+Current cycle is `2026_09_10_11_11_31`. Allocate three A100 80GB GPUs for
+at most72h with salloc: one exclusive GPU per project and one for a finite native
+models queue. Freed project lanes may backfill from that queue; returning project
+work checkpoints/exits only its own fallback. Do not change locked parent models.
+Each Slurm step must have explicit GPU, CPU and host-memory resources; allocated
+GPU UUIDs must be distinct. Multi-GPU models require separately validated windows.
+
+The independent Model_Training runtime passed the WS02 two-lane finite acceptance
+recorded in experiments/2026_09_10_11_11_31: real Radon_Bridge ResNet18 CFP/OCT3D,
+native ResNet50, and ResNet34 fallback. Project pause/return and native SIGKILL
+recovery matched uninterrupted full states and logits exactly. This is operational
+evidence, not a scientific result or a full LOOK/expanded-cohort trainer acceptance.
+CPU tests also validate supervisor crash reattachment without duplicate workers.
+
+Remaining launch gates: complete scientific trainer adapters, accepted expanded
+cohort/masks/cache, frozen comparison manifests, and actual Slurm three-step isolation
+and allocation-owner checks. The GPU application has not been submitted by this
+acceptance. No test performance was read and no accepted model store was overwritten.
+
+See [validate before switching](validation_workflow.md) for the host-independent
+development process. ws02 is preferred when available, never a mandatory dependency.
+
+Unexpected project termination is also an automatic fallback trigger: observe process
+exit, block immediate retry, and dispatch a ready model on the freed lane. A diagnosed
+project resumes by a once-only retry command; do not repeatedly restart faulty code.
