@@ -12,9 +12,14 @@ checks, not accepted disease-cohort counts. Both label exports are audited separ
 
 GPU submission is gated on accepted data/cache, executable frozen task manifests,
 preloaded weights, environment/resource checks and tested checkpoint-safe dispatch.
-Allocation must immediately execute actual ready tasks. Initial GPU scope is the two projects and their exact native-model prerequisites.
-Automatic extra baseline/model search is disabled until explicitly requested again. Empty
-queues or errors exit/release; no placeholder occupancy or indefinite input waiting.
+Allocation must immediately execute actual ready tasks. Project work and its exact native-model prerequisites have priority. When a project
+ends, is user-paused/cancelled or fails, its freed GPU group automatically starts an
+already validated task from the finite baseline-model queue; the other project is
+unaffected. When that project is ready again, checkpoint and exit the baseline, then
+return the group to the project. Prepare fallback before allocation, preserve its
+independent complete model/recovery artifacts, and never change locked project parents
+or repeat accepted baselines. Release only when no ready project or baseline task
+remains; no placeholder occupancy or indefinite input waiting.
 The periodic assistant monitor is not the mechanism that starts an allocated GPU.
 
 Use new participant-level splits and newly trained native parents. Do not initialize
