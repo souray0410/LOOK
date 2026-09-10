@@ -1,4 +1,4 @@
-# Model and training-run standard — version 1
+# Model and training-run standard — version 2
 
 This is the common standard for current and future research projects, independent
 of disease, dataset, architecture, framework release, server and scheduler. It
@@ -149,30 +149,46 @@ Capture only an allowlist of relevant environment settings, never tokens, passwo
 an entire environment dump. Package-version inventory alone is not a dependency lock.
 Do not backfill a historical runtime using today's versions: mark absent evidence unknown.
 
-## Public and private distribution of the same workflow
+## One reproduction record; artifact-level access
 
-Public/private are access and disclosure profiles, not alternative algorithms or
-training implementations. Use the same configuration schema, stage entrypoints,
-model loading, artifact identity checks and numerical acceptance in both profiles.
-A profile must not change splits, labels, preprocessing, initialization, loss, batch,
-selection or defaults. Server paths and download locations are resolved separately
-from scientific identity. A deliberate scientific change creates a new recipe.
+Public/private are visibility attributes, not two model families, directory trees,
+recipe schemas or training pipelines. Every execution uses the same architecture,
+data definition and preparation, configuration, environment, weights, evaluation,
+provenance and reproduction-command record. Do not maintain public/private trainers
+or omit scientific stages from the public description. Keep unpublished project
+methods out of a generic model dependency, regardless of repository visibility.
 
-Private records retain complete authorized provenance and restricted artifacts.
-A public companion distributes the permitted source, recipes, environment locks,
-aggregate results and approved weights, with explicit versioned asset references
-and access requirements. Restricted resources remain declared as requiring access;
-missing data or weights fail with that reason, never trigger substitute training or
-synthetic input while claiming the same result. Public users with authorized assets
-run the same pipeline. Public distribution does not require raw data to be public.
+Record access separately for each artifact: public, restricted or private. Record
+availability separately: available, withheld or pending. Access is not availability,
+scientific acceptance or permission to publish. A private repository may reference
+public initialization weights and restricted data in the same execution. Approved
+weights may be public while their training data remain restricted.
 
-Keep one maintained implementation. Do not fork a simplified public trainer or
-ship unpublished project methods as a dependency of a generic model companion.
-An export maps each source artifact to a public included/reference/restricted status
-and preserves its identity; redaction does not rewrite the historical manifest or
-produce a falsely matching full-config digest. Restricted identifiers and paths are
-not exported. Release authorization and numerical reproducibility are independent
-checks. Do not publish data, weights or internal code solely by changing a profile.
+An additive distribution manifest references the original run ID and exact recipe
+checksum. It lists artifact roles, content checksums when known, dependencies and
+access/availability metadata. Changes in access or storage location do not create a
+new model/run or rewrite scientific configuration, historical digests or receipts.
+Local paths and credential-bearing URLs belong in separate authorized bindings,
+not the portable identity record. Changing scientific settings creates a new recipe.
+
+The complete canonical record stays in authorized storage. An authorized release
+is a reviewed view of that record; it is not a second maintained implementation.
+A withheld artifact remains an explicit dependency, with permitted acquisition or
+reconstruction instructions. Missing required assets block the applicable replay;
+never substitute synthetic inputs, another split, weights or automatic retraining
+while claiming the same result. Public users with authorized assets run the same
+stage commands and acceptance checks. No claim requires raw data to be public.
+
+Preserve a private source-to-release mapping and identify withheld metadata honestly.
+A redacted view cannot claim the byte checksum of the full record. Participant-level
+IDs, manifests, predictions, internal paths and sensitive source metadata require
+separate disclosure review; even hashes are not an automatic anonymization method.
+No access flag authorizes upload, a visibility change, deletion or publication.
+
+Model_Training runtime/distribution.py validates this additive metadata contract;
+it does not export files, resolve credentials, replace model loaders or certify a
+release as safe. Existing frozen workers/receipts remain valid and untouched.
+Numerical replay, disclosure review and publication are separate recorded gates.
 
 ## Retention and finalization
 
