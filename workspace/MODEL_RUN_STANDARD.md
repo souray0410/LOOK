@@ -1,4 +1,4 @@
-# Model and training-run standard — version 2
+# Model and training-run standard — version 3
 
 This is the common standard for current and future research projects, independent
 of disease, dataset, architecture, framework release, server and scheduler. It
@@ -79,6 +79,30 @@ choose whichever timestamp is newest or whichever filename looks similar. Projec
 consumers retain independent ownership of fine-tuned weights and map source models;
 shared parent models are immutable within a locked study. Missing parents create an
 explicit training request, never a silent random substitute.
+
+## Shared queue and explicit completion markers
+
+Every lane, including a project lane without ready project work, selects from the
+same finite native queue. A single locked owner dispatches unique run IDs; a CSV
+snapshot never grants ownership. The canonical queue lock is independent of the
+owner output directory. Claimed run-directory aliases are excluded from selection.
+Deliberate repeat executions are separate run IDs linked to the same recipe; do not
+confuse such repeats with duplicate dispatch of one execution. Different queues
+must have disjoint execution ownership or a separately accepted shared coordinator.
+
+Index `training_complete` only after matching configuration, required receipt files,
+SHA and plateau evidence have passed verification. Raw `state=completed` alone is
+not accepted. Expose not-started, awaiting-selection, active, paused/checkpoint,
+failed, acceptance-pending and evidence/liveness-needs-review states separately.
+A stale heartbeat does not authorize stealing a task. A checkpoint's existence is
+not successful strict resume validation. A protection cap or OOM is not completion.
+Failed versions need scoped review; do not blindly retry them or restart accepted
+models. Resource-compatible pending or safely resumable work may then be dispatched.
+
+Keep frozen existing owners authoritative until safe replacement is accepted.
+Introducing a new queue-lock implementation does not retroactively lock legacy
+owners; never launch another owner for their queue. Existing single-owner lanes
+already exclude in-flight IDs. New inventory readers are independent of training.
 
 ## Data processing and end-to-end reproducibility
 
