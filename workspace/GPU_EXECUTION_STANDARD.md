@@ -100,3 +100,10 @@ Pause only failed/newest owned work for scoped faults or reserve pressure. Begin
 checkpoint retirement900seconds before the allocation deadline. Manager restart
 reconciles live steps; missing launch identities require review. Keep all handover,
 resource, throughput and recovery receipts without altering scientific run IDs.
+
+Future allocation requests default to16 CPU cores per GPU and70GiB host memory
+per GPU, retaining two computation threads per native worker. A three-GPU request
+therefore asks for48 CPU cores. Existing pending/running allocations are not resized.
+The additional cores permit measured concurrent work; they do not change scientific
+batch, data-loader behavior or guarantee increased throughput. Default duration is
+48hours; a new request still requires useful finite work and normal submission gates.
