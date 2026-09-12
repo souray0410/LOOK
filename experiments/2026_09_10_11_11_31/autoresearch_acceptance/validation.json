@@ -1,0 +1,25 @@
+{
+  "source_commit": "9a9019f",
+  "validation_host": "ws02",
+  "unit_and_model_tests_passed": 44,
+  "wheel_sha256": "e32190437335466ea0a9ed682254c5aba7a9a2baa860dc95c9dcf1095191495a",
+  "wheel_import_passed": true,
+  "live_first_reconciliation": {
+    "updated_at": "2026-09-12T20:48:52.932521+00:00",
+    "discovered_configurations": 427,
+    "locked_round_candidates": 116,
+    "accepted_native_in_locked_round": 23,
+    "discovery_issues": 0,
+    "replication_queues_published": 0,
+    "formal_project_dispatch_ready": false,
+    "test_access": false
+  },
+  "daemon_host": "vsc509-29-r",
+  "daemon_session": "look_autoresearch",
+  "poll_seconds": 1800,
+  "scope": "continuous discovery and locked parent replication registration; full project adapters pending",
+  "source_sha256": {
+    "src/look/studies/autoresearch.py": "142225d9b51ce20d9ef1bc49ed2dc5661e566a351780be20da01213288353af1",
+    "tests/unit/studies/test_autoresearch.py": "2fab95952c75099d621ae388bdd0c9bd88275314656c8b61b847166c061eb22d"
+  }
+}
