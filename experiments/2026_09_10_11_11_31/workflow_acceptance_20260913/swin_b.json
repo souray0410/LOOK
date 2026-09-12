@@ -1,0 +1,14 @@
+{
+  "actual_mhd_architecture": "swin_b",
+  "correction_fit": true,
+  "exact_resume": true,
+  "explicit_mhd_backward": true,
+  "host_bn_unchanged": true,
+  "matched_evaluation": true,
+  "report": true,
+  "scope": "synthetic_runtime_not_scientific_results",
+  "selected_bank_reload": true,
+  "status": "accepted",
+  "test_access": false,
+  "views": 48
+}

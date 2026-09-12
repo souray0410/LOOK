@@ -4,7 +4,7 @@
   "release": "2026_09_09_10_30_34",
   "api_version": "V4",
   "upstream_repository": "https://github.com/souray0410/MHD_Framework",
-  "upstream_commit": "3559caa8d596d4438533a69d39d8a2c32eb21e46",
+  "upstream_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0",
   "distribution": "git_submodule",
   "files": [
     {
@@ -29,13 +29,25 @@
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/__init__.py",
       "upstream_path": "src/mhd_framework/models/__init__.py",
       "module": "mhd_framework.models",
-      "sha256": "78e70a7a3ef8eafd31ccb367c33eef27864e112fc5eda8676720bb0ffa61c8bf"
+      "sha256": "1118dec7799b38c6f639d10d6b6550068713e24ee239b8a04d31184e93f49ff8"
+    },
+    {
+      "local_path": "third_party/MHD_Framework/src/mhd_framework/models/_medicalnet.py",
+      "upstream_path": "src/mhd_framework/models/_medicalnet.py",
+      "module": "mhd_framework.models._medicalnet",
+      "sha256": "b2027785ff2fcfb86147c75509d0abc272edeb820bfca6ce9ba56cd122b768ca"
     },
     {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/artifacts.py",
       "upstream_path": "src/mhd_framework/models/artifacts.py",
       "module": "mhd_framework.models.artifacts",
-      "sha256": "b67e4ec3c9fcaeb82dde0d0c3d6a4ae66f2f95ad2b12e8a63f0c57263a869d35"
+      "sha256": "666d3fc2f0bcb3628daa0bb0944c40e42e06d4a709a8651d72424c49e09f3255"
+    },
+    {
+      "local_path": "third_party/MHD_Framework/src/mhd_framework/models/clip_visual.py",
+      "upstream_path": "src/mhd_framework/models/clip_visual.py",
+      "module": "mhd_framework.models.clip_visual",
+      "sha256": "aac4e535dc2d6adcd96ddee9c27255c911679348eb289ef525e78a9f3b102b99"
     },
     {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/densenet.py",
@@ -44,10 +56,22 @@
       "sha256": "4a0fa423120b41b76c28babff907eb8dba096a814ebdd4114c66ac21f87326cb"
     },
     {
+      "local_path": "third_party/MHD_Framework/src/mhd_framework/models/dinov2.py",
+      "upstream_path": "src/mhd_framework/models/dinov2.py",
+      "module": "mhd_framework.models.dinov2",
+      "sha256": "720c4e92e54806aa10e914bd0b0d95117a2b4290c7c230abd3223f6587336961"
+    },
+    {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/graph.py",
       "upstream_path": "src/mhd_framework/models/graph.py",
       "module": "mhd_framework.models.graph",
       "sha256": "d9f4e32de3f9b9dde9d723b3cde2494a31cf4e3c38599d9bdbe0f3e09e114cde"
+    },
+    {
+      "local_path": "third_party/MHD_Framework/src/mhd_framework/models/modern_cnn.py",
+      "upstream_path": "src/mhd_framework/models/modern_cnn.py",
+      "module": "mhd_framework.models.modern_cnn",
+      "sha256": "5834fe617f43aa47cd099b5f5a197b9e453a43e53700e651140dac15cfda7138"
     },
     {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/recipes.py",
@@ -68,10 +92,28 @@
       "sha256": "0be59f6e3b2fcdcee1b26d0d3ebfe9c63182c4d1913dfe1b3ea06762693a7e07"
     },
     {
+      "local_path": "third_party/MHD_Framework/src/mhd_framework/models/timm_encoders.py",
+      "upstream_path": "src/mhd_framework/models/timm_encoders.py",
+      "module": "mhd_framework.models.timm_encoders",
+      "sha256": "ff51ba8a0b5a18a10dd6247ac6ba3b92a630430f72ccfdf8c1f7d379b917c6b9"
+    },
+    {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/training.py",
       "upstream_path": "src/mhd_framework/models/training.py",
       "module": "mhd_framework.models.training",
-      "sha256": "dbc1bca8fdc641954be7ca3eeda14de5b2cfb1ee197b356b7e1fc4cc318921cc"
+      "sha256": "88b06487bdf46924fa73c1880c12c4a0ee36062c28b30cec39a8c0c57ad80957"
+    },
+    {
+      "local_path": "third_party/MHD_Framework/src/mhd_framework/models/vision_transformer.py",
+      "upstream_path": "src/mhd_framework/models/vision_transformer.py",
+      "module": "mhd_framework.models.vision_transformer",
+      "sha256": "a21d0ec3e8454d33995bfae318872a18a0913df50da815a3c9b736706e4ec2d3"
+    },
+    {
+      "local_path": "third_party/MHD_Framework/src/mhd_framework/models/volume_encoders.py",
+      "upstream_path": "src/mhd_framework/models/volume_encoders.py",
+      "module": "mhd_framework.models.volume_encoders",
+      "sha256": "4a0c383a4edb67a245b1ac35198a8adc533469a0a7f0bd03e088075fab16dc3a"
     }
   ],
   "submodule_path": "third_party/MHD_Framework",

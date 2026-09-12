@@ -39,7 +39,7 @@ def read_site(graph, name):
     states = [graph.get_node_by_name(n).feature_message.current_state for n in members(name)]
     if len(states) == 1:
         return states[0]
-    if name == 'joint_input':
+    if name == 'joint_input' and not getattr(graph, 'observed_eye_input', False):
         if any(x.ndim != 5 or x.shape[1] != 2 for x in states):
             raise ValueError('Joint input expects paired [B,2,C,H,W] tensors')
         states = [x.reshape(-1, *x.shape[2:]) for x in states]
@@ -54,7 +54,7 @@ def write_site(graph, name, value):
         graph.get_node_by_name(name).feature_message.current_state = value
         return
     old = [graph.get_node_by_name(n).feature_message.current_state for n in names]
-    channels = [x.shape[2] if name == 'joint_input' else x.shape[1] for x in old]
+    channels = [x.shape[2] if name == 'joint_input' and x.ndim == 5 else x.shape[1] for x in old]
     parts = value.split(channels, dim=1)
     for n, part, previous in zip(names, parts, old):
         graph.get_node_by_name(n).feature_message.current_state = part.reshape(previous.shape)

@@ -114,18 +114,26 @@ def materialize_selected(source, destination_root, expected_spec, verify_complet
             raise
 
 
-def load_selected(root, graph_factory, expected_spec=None, device="cpu"):
+def load_selected(root, graph_factory, expected_spec=None, device="cpu", allow_inference_equivalence=False):
     """Strict complete state loading; numerical development replay is separate."""
     import torch
     from mhd_framework.models.artifacts import verify_runtime
     from look.models.observed_participant import ObservedParticipantModel
     _, spec, receipt = verify_selected(root, expected_spec)
-    verify_runtime(spec["framework"])
+    compatibility = dict(scope="exact_original_runtime")
+    try:
+        verify_runtime(spec["framework"])
+    except ValueError:
+        if not allow_inference_equivalence:
+            raise
+        from look.models.parent_compatibility import verify_inference_equivalence
+        compatibility = verify_inference_equivalence(spec)
     graph = graph_factory(spec["model"], device=device)
     actual_nodes = [[node["id"], node["name"]] for node in graph.describe_nodes()]
     if actual_nodes != [list(row) for row in receipt["node_ids"]]:
         raise ValueError("Native MHD node identity mismatch")
     model = ObservedParticipantModel(graph)
+    model.inference_compatibility = compatibility
     state = torch.load(Path(root) / "best.pt", map_location="cpu", weights_only=False)
     if state["identity"] != receipt["identity"] or state["epoch"] != receipt["best_epoch"]:
         raise ValueError("Selected checkpoint identity/epoch mismatch")

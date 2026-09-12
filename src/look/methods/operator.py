@@ -192,9 +192,11 @@ def _prepare_inputs(
     return filler.fill(oct_tensor, cfp_tensor, missing_pattern)
 
 
-def _reset_inputs(graph, oct_tensor: torch.Tensor, cfp_tensor: torch.Tensor) -> None:
+def _reset_inputs(graph, oct_tensor: torch.Tensor, cfp_tensor: torch.Tensor, counts=None) -> None:
     for node in graph.nodes:
         node.reset()
+    from look.models.native_host import set_observed_counts
+    set_observed_counts(graph, counts, len(oct_tensor))
     for name, tensor in (("oct_input", oct_tensor), ("cfp_input", cfp_tensor)):
         node = graph.get_node_by_name(name)
         if node is not None:
@@ -228,8 +230,9 @@ def forward_with_look(
     cfp_tensor: torch.Tensor,
     artifacts: Sequence[LOOKArtifact] = (),
     stop_node: Optional[str] = None,
+    counts=None,
 ) -> torch.Tensor:
-    _reset_inputs(graph, oct_tensor, cfp_tensor)
+    _reset_inputs(graph, oct_tensor, cfp_tensor, counts)
     by_node = {artifact.node_name: artifact for artifact in artifacts}
     if len(by_node) != len(artifacts):
         raise ValueError('Duplicate LOOK sites')
@@ -256,7 +259,7 @@ def iter_complete_features(graph, loader, node_name, factor, device):
     graph.eval()
     for batch in loader:
         feature = forward_with_look(
-            graph, batch['oct'].to(device), batch['cfp'].to(device), stop_node=node_name
+            graph, batch['oct'].to(device), batch['cfp'].to(device), stop_node=node_name, **({'counts': batch['counts']} if 'counts' in batch else {})
         ).detach()
         flat, shape = downsample_flatten(feature, factor)
         yield flat.cpu(), tuple(feature.shape[1:]), shape
@@ -277,10 +280,10 @@ def iter_feature_pairs(
     filler = filler or NormalizedMeanFiller()
     for batch in loader:
         full_oct, full_cfp = _prepare_inputs(batch, device, "complete", filler)
-        full_feature = forward_with_look(graph, full_oct, full_cfp, stop_node=node_name).detach()
+        full_feature = forward_with_look(graph, full_oct, full_cfp, stop_node=node_name, **({'counts': batch['counts']} if 'counts' in batch else {})).detach()
         missing_oct, missing_cfp = _prepare_inputs(batch, device, missing_pattern, filler)
         missing_feature = forward_with_look(
-            graph, missing_oct, missing_cfp, upstream_artifacts, stop_node=node_name
+            graph, missing_oct, missing_cfp, upstream_artifacts, stop_node=node_name, **({'counts': batch['counts']} if 'counts' in batch else {})
         ).detach()
         full_flat, down_shape = downsample_flatten(full_feature, factor)
         missing_flat, observed_shape = downsample_flatten(missing_feature, factor)
@@ -376,7 +379,7 @@ def prepare_complete_pca_bank(
     graph.eval()
     first = next(iter(loader))
     with torch.no_grad():
-        forward_with_look(graph, first['oct'].to(device), first['cfp'].to(device))
+        forward_with_look(graph, first['oct'].to(device), first['cfp'].to(device), **({'counts': first['counts']} if 'counts' in first else {}))
     entries = []
     for node in correction_nodes:
         shape = read_site(graph, node).shape
@@ -566,6 +569,7 @@ def _fit_factor_bank(
     filler: MissingModalityFiller | None = None,
     primary_metric: str = "macro_f1",
     resume: bool = True,
+    force_enable: bool = False,
 ) -> Tuple[List[LOOKArtifact], List[Dict[str, object]], Dict[str, object]]:
     """Fit one node-wise LOOK bank with a single shared spatial factor."""
     from look.evaluation.evaluator import evaluate_missing, save_prediction_bundle
@@ -587,6 +591,7 @@ def _fit_factor_bank(
             factor=factor, latent_dims=list(latent_dims), pca_source_id=pca.source_id,
             missing_pattern=missing_pattern, filling=(filler or NormalizedMeanFiller()).name,
             primary_metric=primary_metric, upstream_decisions_sha256=stable_hash(decisions))
+        if force_enable: decision_identity['force_enable'] = True
         if resume and decision_path.exists():
             decision = json.loads(decision_path.read_text())
             if decision['identity'] != decision_identity:
@@ -658,14 +663,14 @@ def _fit_factor_bank(
                 node_best = candidate
         if node_best is None:
             raise RuntimeError(f"No valid LOOK candidate for {node_name}")
-        enabled = node_best_score > baseline_score
+        enabled = force_enable or node_best_score > baseline_score
         artifact_path = output_dir / 'candidates' / f'{node_name}_x{node_factor}_d{node_best.latent_dim}.pt'
         decision = dict(identity=decision_identity, baseline_score=baseline_score, baseline_metrics=baseline["metrics"],
             baseline_prediction=dict(path=str(baseline_path), sha256=file_sha256(baseline_path)),
             best_candidate_score=node_best_score, enabled=enabled,
             best_dimension=node_best.latent_dim,
             selected_score=node_best_score if enabled else baseline_score,
-            reason='strict_improvement' if enabled else 'no_strict_improvement',
+            reason='predeclared_all_on' if force_enable else 'strict_improvement' if enabled else 'no_strict_improvement',
             artifact=dict(path=str(artifact_path.relative_to(output_dir)), sha256=file_sha256(artifact_path)),
             candidates=node_records,
             best_candidate_matrix_diagnostics=analyze_correction_matrix(node_best))
@@ -740,6 +745,7 @@ def greedy_fit_look(
     filler: MissingModalityFiller | None = None,
     primary_metric: str = "macro_f1",
     resume: bool = True,
+    force_enable: bool = False,
 ) -> Tuple[List[LOOKArtifact], List[Dict[str, object]]]:
     """Select one shared spatial factor for the complete LOOK artifact bank."""
     unique_factors = list(dict.fromkeys(int(value) for value in factors))
@@ -768,7 +774,7 @@ def greedy_fit_look(
             pca_bank=pca_bank,
             filler=filler,
             primary_metric=primary_metric,
-            resume=resume,
+            resume=resume, force_enable=force_enable,
         )
         score = float(completion["primary_score"])
         factor_records.append(completion)

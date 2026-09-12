@@ -141,15 +141,20 @@ class Controller:
         # is not an alternative lease mechanism and never mutates live queues.
         atomic_write_json(dict(schema="look_native_work_feed_v1", updated_at=utc_now(),
                               queues=work, test_access=False), self.root / "native_work_feed.json")
+        projects = None
+        if self.config.get("project"):
+            from look.studies.project_orders import advance
+            projects = advance(self.config, groups, self.verify, self.reserve)
         status = dict(schema="look_autoresearch_status_v1", updated_at=utc_now(),
                       state="active", groups=groups, discovered=len(discovery["models"]),
                       discovery_issues=len(discovery["issues"]),
                       current_round_candidates=len(catalog["candidates"]),
                       accepted_native=sum(g["accepted_count"] for g in assessment["groups"].values()),
                       next_round_candidates=sum(not r["in_locked_round"] for r in discovery["models"]),
-                      formal_project_dispatch_ready=False, test_access=False,
-                      remaining_implementation=["full_fusion_host_adapter", "full_LOOK_correction_adapter",
-                                                "project_replay_and_resource_receipts"])
+                      formal_project_dispatch_ready=bool(projects and projects["tasks"]), test_access=False,
+                      projects=projects,
+                      remaining_implementation=[] if self.config.get("project") else
+                          ["full_fusion_host_adapter", "full_LOOK_correction_adapter", "project_replay_and_resource_receipts"])
         previous = read(self.root / "status.json") if (self.root / "status.json").exists() else {}
         transitions = [dict(group=name, before=previous.get("groups", {}).get(name, {}).get("state"),
                             after=row["state"]) for name, row in groups.items()
@@ -217,7 +222,10 @@ class Controller:
         for name, group in status["groups"].items():
             rows.append(f"| {name} | {group['state']} | {group.get('accepted', '—')}/{group.get('total', '—')} |")
         rows += ["", "新模型进入后续研究轮，不替换已锁定的父模型。",
-                 "完整融合/LOOK适配器尚未验收，当前不会派发正式LOOK训练，也不会读取test。"]
+                 ("融合训练、LOOK修正与匹配开发评价已接通；任务等待匹配父模型，GPU资源验收在正式训练之前自动执行。"
+                  if self.config.get("project") else "完整融合/LOOK适配器尚未验收，当前不会派发正式LOOK训练，也不会读取test。")]
+        if status.get("projects"):
+            rows += ["", f"已登记项目任务：{status['projects']['tasks']}，完整队列及逐任务阶段在projects目录。"]
         from look.runtime.state import atomic_write_text
         atomic_write_text("\n".join(rows) + "\n", self.root / "REPORT.zh-CN.md")
 

@@ -7,7 +7,7 @@ name = "ukb-look"
 version = "2026.9.9.dev0"
 description = "LOOK research application using a fixed MHD API"
 requires-python = ">=3.11,<3.14"
-dependencies = ["mhd-framework==4", "torch>=2.8", "torchvision>=0.23", "numpy", "pandas", "Pillow", "scikit-learn", "scipy"]
+dependencies = ["mhd-framework==4", "torch>=2.8", "torchvision>=0.23", "numpy", "pandas", "Pillow", "scikit-learn", "scipy", "tqdm", "psutil", "matplotlib"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

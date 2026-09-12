@@ -67,14 +67,22 @@ def evaluate_missing(
         for pattern in sorted(set(patterns)):
             indices = [index for index, value in enumerate(patterns) if value == pattern]
             index_tensor = torch.as_tensor(indices, device=device)
-            pattern_oct = oct_tensor.index_select(0, index_tensor)
-            pattern_cfp = cfp_tensor.index_select(0, index_tensor)
+            counts = batch.get("counts")
+            if counts is None:
+                eye_indices = index_tensor
+                selected_counts = None
+            else:
+                offsets = np.cumsum([0, *counts])
+                eye_indices = torch.tensor([j for i in indices for j in range(offsets[i], offsets[i+1])], device=device)
+                selected_counts = [counts[i] for i in indices]
+            pattern_oct = oct_tensor.index_select(0, eye_indices)
+            pattern_cfp = cfp_tensor.index_select(0, eye_indices)
             pattern_oct, pattern_cfp = filler.fill(pattern_oct, pattern_cfp, pattern)
             logits = forward_with_look(
                 graph,
                 pattern_oct,
                 pattern_cfp,
-                artifacts=artifact_banks.get(pattern, ()),
+                artifacts=artifact_banks.get(pattern, ()), **({'counts': selected_counts} if selected_counts is not None else {}),
             )
             batch_logits[index_tensor] = logits
         all_labels.append(batch["label"].numpy())
