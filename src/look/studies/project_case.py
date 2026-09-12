@@ -44,6 +44,16 @@ class CheckedLoader:
 def read(path):return json.loads(Path(path).read_text())
 
 
+def evidence_files(root):
+    root=Path(root)
+    # Nested acceptance receipts (in particular the host's plateau evidence)
+    # belong to the evidence. Only our own not-yet-written receipt is excluded.
+    return {str(p.relative_to(root)):file_sha256(p) for p in root.rglob('*')
+        if p.is_file() and p!=root/'accepted.json' and
+        p.name not in ('status.json','run.lock','pause.json') and
+        '.partial' not in p.name and 'quarantine' not in p.relative_to(root).parts}
+
+
 def verify_case(root,spec):
     root=Path(root);receipt=read(root/'accepted.json')
     if receipt.get('schema')!='look_project_case_v1' or receipt.get('identity')!=stable_hash(spec) or receipt.get('test_access') is not False or receipt.get('state')!='accepted':
@@ -163,8 +173,7 @@ def _execute(spec,out,device,should_pause):
     write_report(records,out/'report',spec['bootstrap_iterations'],spec['seed'])
     # Last/checkpoint, decisions and all prediction evidence remain available;
     # completion never means that an optimizer checkpoint merely exists.
-    files={str(p.relative_to(out)):file_sha256(p) for p in out.rglob('*') if p.is_file() and
-        p.name not in ('status.json','run.lock','accepted.json','pause.json') and '.partial' not in p.name and 'quarantine' not in p.parts}
+    files=evidence_files(out)
     receipt=dict(schema='look_project_case_v1',identity=identity,state='accepted',test_access=False,
         host_plateau=True,host_frozen_for_correction=True,records=len(records),files=files)
     atomic_write_json(receipt,out/'accepted.json');return verify_case(out,spec)

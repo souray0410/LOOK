@@ -1,4 +1,8 @@
 {
+  "final_regression": {
+    "new_test": "nested_host_acceptance_receipt_and_tamper_rejection",
+    "passed": 12
+  },
   "framework_api": "V4",
   "framework_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0",
   "production_resource_preflight": "required_per_case_on_granted_A10080_before_formal_training",
@@ -85,7 +89,7 @@
     "src/look/studies/methods.py": "86864eb003d6262eda247cc83de75b6fc8ed5b2b1df5ba2b07d82874e6c8f3dd",
     "src/look/studies/native_prerequisites.py": "b03d191ccaae85ae5b3cd961a12ad6256eaeabc7c9a9be85cd2b6a20f02b05a2",
     "src/look/studies/pipeline.py": "7680fd437b9edcce829fb93dd70f182bc54b25480c26a3ac4c89f9dfb46b5e7f",
-    "src/look/studies/project_case.py": "b8ed6faf6379328074e007dda7f0e2067a61bee5e1ab9c301863ce456f90dcc5",
+    "src/look/studies/project_case.py": "091f4eb6880f9d746e8a549d78fa57e196ad2dd1857557f71e61264f01345059",
     "src/look/studies/project_orders.py": "614140d73a7a8701680aec2dd595679f1630b21156a319f4f5f69d51f4e277b7",
     "src/look/studies/project_profile.py": "eae9064f08256f9a874f4b59030c69450101b36f273a8afc36cc4277e9e4cce9",
     "src/look/studies/protocol.py": "407c3f0a0f0b23af8da9e70ee4be8a7da53388dc1f8251c80668289227d0bcfc",
@@ -139,6 +143,7 @@
     "tests/unit/studies/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "tests/unit/studies/test_autoresearch.py": "2fab95952c75099d621ae388bdd0c9bd88275314656c8b61b847166c061eb22d",
     "tests/unit/studies/test_native_prerequisites.py": "07127fba1cab448ac30309112f1e5f4dee10ecb579dcd679157fa84a7aab7050",
+    "tests/unit/studies/test_project_case.py": "563bd2db34d28e6840355d64ba91f8490e99f3be90dafac883272b92cc6f221c",
     "tests/unit/studies/test_project_orders.py": "668fc371379ed6a0e17377cc1ac2c565494ea05d1b598a761b34fc525dda7a6d",
     "tests/unit/training/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "tests/unit/training/test_criteria.py": "9292f873879554361d7bf817813709454ee0dbe51f198137e0606229f9993b88"
