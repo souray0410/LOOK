@@ -1,0 +1,87 @@
+{
+  "formal_updates": 0,
+  "initialization": "random",
+  "results": [
+    {
+      "counts": [
+        1,
+        2
+      ],
+      "gradients_exact": true,
+      "logits_exact": true,
+      "manifest_sha256": "8c2cadad7e044997bd8bdf30b373d8e762494f0e3eec7387b16398456604d36f",
+      "model": "resnet50",
+      "original_node_ids": true,
+      "track": "cfp_2d",
+      "update_exact": true
+    },
+    {
+      "counts": [
+        1,
+        2
+      ],
+      "gradients_exact": true,
+      "logits_exact": true,
+      "manifest_sha256": "e62752c195ea1ee43b26d41dc1ade5d90666173b702434c225397a899e2ae625",
+      "model": "resnet50",
+      "original_node_ids": true,
+      "track": "oct_bscan_2d",
+      "update_exact": true
+    },
+    {
+      "counts": [
+        1,
+        2
+      ],
+      "gradients_exact": true,
+      "logits_exact": true,
+      "manifest_sha256": "8c2cadad7e044997bd8bdf30b373d8e762494f0e3eec7387b16398456604d36f",
+      "model": "densenet121",
+      "original_node_ids": true,
+      "track": "cfp_2d",
+      "update_exact": true
+    },
+    {
+      "counts": [
+        1,
+        2
+      ],
+      "gradients_exact": true,
+      "logits_exact": true,
+      "manifest_sha256": "e62752c195ea1ee43b26d41dc1ade5d90666173b702434c225397a899e2ae625",
+      "model": "densenet121",
+      "original_node_ids": true,
+      "track": "oct_bscan_2d",
+      "update_exact": true
+    },
+    {
+      "counts": [
+        1,
+        2
+      ],
+      "gradients_exact": true,
+      "logits_exact": true,
+      "manifest_sha256": "8c2cadad7e044997bd8bdf30b373d8e762494f0e3eec7387b16398456604d36f",
+      "model": "swin_b",
+      "original_node_ids": true,
+      "track": "cfp_2d",
+      "update_exact": true
+    },
+    {
+      "counts": [
+        1,
+        2
+      ],
+      "gradients_exact": true,
+      "logits_exact": true,
+      "manifest_sha256": "e62752c195ea1ee43b26d41dc1ade5d90666173b702434c225397a899e2ae625",
+      "model": "swin_b",
+      "original_node_ids": true,
+      "track": "oct_bscan_2d",
+      "update_exact": true
+    }
+  ],
+  "scope": "small_real_inputs_native_consumer_equivalence_not_LOOK_or_A100_admission",
+  "status": "accepted",
+  "test_used": false
+}

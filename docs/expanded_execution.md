@@ -1,5 +1,13 @@
 # Expanded-cohort execution gates (2026-09-10)
 
+**2026-09-12 update:** the authorized LOOK expansion and current gating order are
+in [the three-dataset protocol](../experiments/2026_09_10_11_11_31/MULTIDATASET_PROTOCOL.zh-CN.md).
+The earlier allocation shape below is historical. Current requests are independent
+single-A100 48h jobs, with account-wide running plus pending GPUs capped at24.
+The native prerequisite screen and observed-eye consumer do not yet constitute
+accepted expanded-cohort fusion/LOOK execution. Do not use the old bilateral-only
+loader or call a native validation job a LOOK experiment.
+
 The user authorized preparation and automatic GPU submission after readiness. Shared
 raw-data audit and native-model workflows are maintained in the private Model_Training
 repository (`expanded/PROTOCOL.md`, initial implementation 0c6a63b). Research methods,

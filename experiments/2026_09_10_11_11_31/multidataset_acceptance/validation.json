@@ -1,0 +1,18 @@
+{
+  "status": "accepted_for_preparation_only",
+  "test_used": false,
+  "regression_tests_passed": 37,
+  "real_native_model_input_cases": 6,
+  "framework_api": "V4",
+  "validation_framework_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0",
+  "framework_dependency_changed": false,
+  "full_LOOK_admission": false,
+  "source_sha256": {
+    "src/look/models/observed_participant.py": "80c0132f3860f7612aa5bb87413c9a278dbd2960ca5102351a8b585b21b189e7",
+    "src/look/studies/native_prerequisites.py": "b03d191ccaae85ae5b3cd961a12ad6256eaeabc7c9a9be85cd2b6a20f02b05a2",
+    "tests/integration/observed_native.py": "816e88157d663c7ec337b7595a176d0e4b81927bd21ffdb814790c1a1295c899",
+    "tests/unit/models/test_observed_participant.py": "5c0ab735b094dbd52a0ca08697490a7a55df4b9a094b47ace825ebbb1e760efc",
+    "tests/unit/studies/test_native_prerequisites.py": "07127fba1cab448ac30309112f1e5f4dee10ecb579dcd679157fa84a7aab7050"
+  },
+  "wheel_sha256": "0991605820165c876fc7840438bf48af6896fc007ab2c49bb808b5d284dc176e"
+}
