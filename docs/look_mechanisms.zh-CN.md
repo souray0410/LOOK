@@ -58,3 +58,6 @@ E的三组子集按参与者稳定标识的独立哈希排序嵌套，标签不�
 监控首次完整校验SHA后，使用收据及证据文件inode/大小/mtime作为缓存失效条件，避免每30分钟反复读取数百GB已完成权重。正式父模型加载、最终分析和test仍完整核验，不用监控缓存授予新训练资格。
 
 派发器接替保留原TTY/session leader及其salloc子进程：新CPU管理器先只读校验并等待；在同一账号提交锁内复制旧申请账本、仅暂停旧CPU派发器，再激活新派发器。旧allocation owner、训练进程和源码不受信号影响。旧管理器的所有直接子进程退出后才清理该暂停的CPU进程；申请ID、claims、每工作流上限不变。
+
+
+独立dev重放入口：`python -m look.evaluation.mechanism_test --replay-development --models <test_preparation.json> --output <independent_replay>`。逐模型重新加载已选完整MHD及修正产物，核对全部评价视图、参与者、标签、缺失状态、预测类别和logits（atol=1e-6、rtol=1e-5），单独输出模型注册表，不改历史训练摘要。该入口不拟合任何参数；正式test仍需全研究、比较和数据审计共同锁定，不能因为重放通过就自动解封。
