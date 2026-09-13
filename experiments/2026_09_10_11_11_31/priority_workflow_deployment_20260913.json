@@ -1,0 +1,22 @@
+{
+  "schema": "ukb_research_controller_deployment_v1",
+  "observed_at": "2026-09-13T09:43:07.685178+00:00",
+  "project": "LOOK",
+  "running_source_commit": "5f999ed",
+  "cpu_regression_tests_passed": 17,
+  "native_source_bindings_checked": 118,
+  "native_source_binding_issues": [],
+  "deployment": "multimodel_workflow_20260913_v2",
+  "controller": "active",
+  "formal_project_training": "waiting_three_seed_paired_parent_acceptance",
+  "healthy_gpu_workers_untouched": true,
+  "test_access": false,
+  "account_snapshot": {
+    "allocated_gpus": 18,
+    "pending_gpus": 6
+  },
+  "snapshot_is_not_live_status": true,
+  "monitor_interval_hours": 3,
+  "scope": "Current week UKB; future data and model expansion separately qualified",
+  "acceptance_limit": "Controller tests and source binding checks do not establish model convergence or project benefit; prior CUDA structural acceptance remains separate."
+}
