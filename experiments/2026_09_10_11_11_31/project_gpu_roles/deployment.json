@@ -1,0 +1,67 @@
+{
+  "time": 1789319829.9493456,
+  "test_access": false,
+  "source_commits": {
+    "Model_Training": "c187560",
+    "LOOK": "e74bb81",
+    "Radon_Bridge": "a730653"
+  },
+  "validation": {
+    "ws02_management_and_LOOK_tests_passed": 51,
+    "ws02_Radon_tests_passed": 12,
+    "production_preemption_occurred": false
+  },
+  "roles": {
+    "account_limit": 24,
+    "account_running_and_pending": 24,
+    "native_new_allowance": 0,
+    "non_project_running_and_pending": 20,
+    "note": "unclassified non-project jobs conservatively consume the native budget; no cancellation",
+    "project_running_and_pending": {
+      "LOOK": 2,
+      "Radon_Bridge": 2
+    },
+    "project_unfilled_reservation": 0
+  },
+  "dispatchers": {
+    "look_mechanisms_20260913_v2": {
+      "error": null,
+      "pid": 3765452,
+      "state": "workflow_allocations_active",
+      "test_access": false,
+      "updated_at": 1789319806.8035922
+    },
+    "radon_bridge_priority_20260913_v3": {
+      "error": null,
+      "pid": 3765455,
+      "state": "workflow_allocations_active",
+      "test_access": false,
+      "updated_at": 1789319828.8331227
+    }
+  },
+  "look_supplement": {
+    "accepted_base_hosts": 0,
+    "complete": false,
+    "counts": {},
+    "errors": [],
+    "expected": 7182,
+    "registered": 0,
+    "schema": "look_mechanism_progress_v1",
+    "scientific_completion": "accepted_only; infeasible_is_a_technical_exclusion",
+    "test_access": false,
+    "time": 1789319673.1663253,
+    "waiting_dependencies": 7182
+  },
+  "preserved_project_allocations": [
+    "51849530 RUNNING gpu203-09-l",
+    "51851643 RUNNING gpu109-23-l",
+    "51849527 RUNNING gpu202-02-r",
+    "51849528 RUNNING gpu202-02-r"
+  ],
+  "limitations": [
+    "Old GPU owners retain immutable source until natural allocation turnover",
+    "Each new co-resident project probe still needs actual resource acceptance",
+    "External method adaptation and sealed test require their protocol gates",
+    "No old receipt dependencies or model weights deleted"
+  ]
+}
