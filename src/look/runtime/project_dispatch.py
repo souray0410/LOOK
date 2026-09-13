@@ -42,6 +42,12 @@ def work(config):
     if feed:
         if feed.get('schema')!='look_project_work_feed_v1' or feed.get('test_access') is not False:raise ValueError('Unsealed project feed')
         result.extend(dict(t,execution='look') for t in feed['tasks'])
+    for path in config.get('supplement_feeds',[]):
+        supplement=read(path)
+        if not supplement:continue
+        if supplement.get('schema')!='look_mechanism_work_feed_v1' or supplement.get('test_access') is not False:
+            raise ValueError('Unsealed supplement feed')
+        result.extend(dict(t,execution='look_mechanism') for t in supplement['tasks'])
     native=read(config['native_feed'])
     if native:
         if native.get('schema')!='look_native_work_feed_v1' or native.get('test_access') is not False:raise ValueError('Unsealed replication feed')
@@ -68,7 +74,10 @@ def eligible(task,claims):
             from runtime.training_state import verify_completion
             verify_completion(task['run_dir'],spec)
         else:
-            from look.studies.project_case import verify_case
+            if task['execution']=='look_mechanism':
+                from look.studies.mechanism_case import verify_case
+            else:
+                from look.studies.project_case import verify_case
             verify_case(task['run_dir'],spec)
         return False
     return True
@@ -103,8 +112,12 @@ def reconcile_expired(config):
         if len(rows)!=1:continue
         state=rows[0][1].split()[0]
         if state not in ('TIMEOUT','PREEMPTED','NODE_FAIL'):continue
-        checkpoint=run/('last.pt' if task['execution']=='native' else 'host/last.pt')
-        if not checkpoint.is_file():continue
+        checkpoint=run/('last.pt' if task['execution']=='native' else 'training/last.pt' if task['execution']=='look_mechanism' else 'host/last.pt')
+        if not checkpoint.is_file():
+            if task['execution']!='look_mechanism':continue
+            # Fitting can restart at its last accepted site; prior process death
+            # has been established above, never inferred from heartbeat age.
+            checkpoint=Path(task['spec'])
         claims.release(run,record['owner'],'paused',step_dead=True)
         event=dict(run=str(run),allocation=job,terminal_state=state,checkpoint_sha256=file_sha256(checkpoint),
                    next_step='full_resource_resume_preflight_before_formal_continuation')
@@ -194,7 +207,17 @@ def gpu_owner(config_path):
     while time.time()<end-1800:
         candidates=[t for t in work(config) if eligible(t,claims)]
         if not candidates:break
-        task=candidates[0];run=Path(task['run_dir']);spec=read(task['spec'])
+        prior=read(root/'last_execution.json').get('kind')
+        primary=[t for t in candidates if t['execution']=='look']
+        supplement=[t for t in candidates if t['execution']=='look_mechanism']
+        if supplement and (not primary or prior=='look'):
+            # Neural continuations first, then controls, then sample curves.
+            priority={'host_training':0,'student_training':1,'correction':2,'sample_curve':3}
+            supplement.sort(key=lambda t:priority[read(t['spec'])['task']['kind']])
+            task=supplement[0]
+        else:task=primary[0] if primary else candidates[0]
+        atomic_write_json(dict(kind=task['execution']),root/'last_execution.json')
+        run=Path(task['run_dir']);spec=read(task['spec'])
         try:token=claims.acquire(run,task['spec_sha256'],owner,job)
         except RuntimeError:continue
         attempt=root/(run.name+'_'+str(token['generation']));attempt.mkdir()
@@ -219,12 +242,15 @@ def gpu_owner(config_path):
         if step is None or step_presence(job,step) is not False:
             claims.update(run,owner,state='liveness_needs_review');raise RuntimeError('Cannot prove worker step exit')
         state=read(run/'status.json').get('state')
-        if state=='completed':
+        if state=='completed' or (state=='infeasible' and task['execution']=='look_mechanism'):
             if task['execution']=='native':
                 from runtime.training_state import verify_completion
                 verify_completion(run,spec)
             else:
-                from look.studies.project_case import verify_case
+                if task['execution']=='look_mechanism':
+                    from look.studies.mechanism_case import verify_case
+                else:
+                    from look.studies.project_case import verify_case
                 verify_case(run,spec)
             claims.release(run,owner,'completed',step_dead=True)
         elif state=='paused':claims.release(run,owner,'paused',step_dead=True)
@@ -240,6 +266,10 @@ def execute_work(config_path,spec_path,run,kind,record):
     profile_root=Path(record).parent/'profile'
     environment=os.environ.copy()
     environment['CUBLAS_WORKSPACE_CONFIG']=':4096:8'
+    if kind=='look' and config.get('legacy_project_pythonpath'):
+        environment['PYTHONPATH']=config['legacy_project_pythonpath']
+        os.execvpe(config['python'],[config['python'],'-m','look.runtime.project_dispatch','--config',str(config_path),
+            '--execute',str(spec_path),'--run',str(run),'--kind','look','--record',str(record)],environment)
     if kind=='native':
         binding=source_binding(spec,config)
         environment['PYTHONPATH']=binding['pythonpath']
@@ -255,6 +285,16 @@ def execute_work(config_path,spec_path,run,kind,record):
         if receipt.get('peak_gpu_gib',float('inf'))*1.2+2>70:raise ValueError('Native GPU reserve failed')
         command=[config['python'],'-m','expanded.native','--spec',str(spec_path),'--output',str(run),'--mode','train']
         os.execvpe(config['python'],command,environment)
+    elif kind=='look_mechanism':
+        environment['LOOK_WORKER_MEMORY_BYTES']=str(100*1024**3)
+        subprocess.run([config['python'],'-m','look.runtime.project_dispatch','--config',str(config_path),
+            '--profile-mechanism',str(spec_path),'--run',str(profile_root)],env=environment,check=True)
+        receipt=read(profile_root/'accepted.json')
+        if receipt.get('status')!='accepted' or receipt.get('case_identity')!=stable_hash(spec):
+            raise ValueError('Supplement resource receipt mismatch')
+        # Exec releases every profile allocation before formal loading.
+        os.execvpe(config['python'],[config['python'],'-m','look.studies.mechanism_case',
+            '--spec',str(spec_path),'--output',str(run)],environment)
     else:
         # Profiling runs in a subprocess so its optimizer, CUDA cache and limits
         # cannot leak into the formal model's RNG or memory accounting.
@@ -268,14 +308,33 @@ def execute_work(config_path,spec_path,run,kind,record):
         execute(spec,run)
 
 
+def standby(config_path):
+    config=read(config_path);out=Path(config['output']);out.mkdir(parents=True,exist_ok=True)
+    # Verify imports, finite feeds and source pins before the old CPU dispatcher
+    # is retired. No allocation or claim is touched in this phase.
+    from scheduling.policy import Claims
+    from look.studies.mechanism_case import verify_dependencies
+    work(config)
+    for row in config['source_pins']:
+        if file_sha256(row['path'])!=row['sha256']:raise ValueError('Dispatcher snapshot changed')
+    atomic_write_json(dict(state='ready',pid=os.getpid(),host=socket.gethostname(),config=str(config_path),time=time.time()),out/'handover_ready.json')
+    while not (out/'handover_armed.json').exists():time.sleep(2)
+    daemon(config_path)
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--config',required=True)
-    p.add_argument('--allocation-owner',action='store_true');p.add_argument('--gpu-owner',action='store_true')
-    p.add_argument('--execute');p.add_argument('--kind',choices=['native','look']);p.add_argument('--record');p.add_argument('--run');p.add_argument('--profile-project')
+    p.add_argument('--standby',action='store_true');p.add_argument('--allocation-owner',action='store_true');p.add_argument('--gpu-owner',action='store_true')
+    p.add_argument('--execute');p.add_argument('--kind',choices=['native','look','look_mechanism']);p.add_argument('--record');p.add_argument('--run');p.add_argument('--profile-project');p.add_argument('--profile-mechanism')
     a=p.parse_args()
-    if a.allocation_owner:allocation_owner(a.config)
+    if a.standby:standby(a.config)
+    elif a.allocation_owner:allocation_owner(a.config)
     elif a.gpu_owner:gpu_owner(a.config)
     elif a.execute:execute_work(a.config,a.execute,a.run,a.kind,a.record)
+    elif a.profile_mechanism:
+        import torch
+        from look.studies.mechanism_profile import profile
+        profile(read(a.profile_mechanism),a.run,torch.device('cuda:0'))
     elif a.profile_project:
         import torch
         from look.studies.project_profile import profile

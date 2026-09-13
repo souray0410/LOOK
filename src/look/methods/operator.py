@@ -204,6 +204,10 @@ def _reset_inputs(graph, oct_tensor: torch.Tensor, cfp_tensor: torch.Tensor, cou
 
 
 def apply_artifact(feature: torch.Tensor, artifact: LOOKArtifact) -> torch.Tensor:
+    # Versioned supplementary artifacts implement their own fixed writeback;
+    # ordinary LOOKArtifact and all historical checkpoint fields are unchanged.
+    if hasattr(artifact, 'apply_feature'):
+        return artifact.apply_feature(feature)
     device = feature.device
     flat, down_shape = downsample_flatten(feature, artifact.factor)
     if tuple(down_shape) != tuple(artifact.downsample_shape):

@@ -1,0 +1,38 @@
+{
+  "schema": "look_external_audit_sources_v1",
+  "sources": [
+    {
+      "method": "MMTM",
+      "url": "https://github.com/haamoon/mmtm",
+      "commit": "1c81cfefad5532cfb39193b8af3840ac3346e897",
+      "files": {
+        "mmtm.py": "ead3eedc2567fffc7a9f17a82e8c6647514143b950e8e4baf115f00e582b98a5",
+        "README.md": "5e2ed3fb9e17169e3f5c21a323021d6334426ee6e7eb5891227ee34ae0f9b560"
+      },
+      "training_enabled": false
+    },
+    {
+      "method": "EyeMoSt+",
+      "url": "https://github.com/Cocofeat/EyeMoSt",
+      "commit": "7f146ac7839567952c22a14777a1f44fb5e3d048",
+      "files": {
+        "MedIA\u201924/model.py": "5bca3b39e072741e7173cba165deae76e7fa0131fdda1abec0f0fadbf551003c",
+        "MedIA\u201924/train3_trans.py": "4b80ed32b695283552e2fc28b957cd1316dfd44a834eb22fb0760767ff59dcff",
+        "README.md": "8ab7007f7c7f394df6777d8c836a1487388a1e4eb23dc05a9bfce542a96482ff"
+      },
+      "training_enabled": false
+    },
+    {
+      "method": "EDRL",
+      "url": "https://github.com/xinkunwang111/Robust-Multimodal-Learning-for-Ophthalmic-Disease-Grading-via-Disentangled-Representation",
+      "commit": "50dc7d54cc78813ee4716b037d71100b7bc7249d",
+      "files": {
+        "code/fusion_net.py": "f781316f9ed16aec7ddb89be87f94a3be2368b577e5d6aacf94f847b8564cb46",
+        "code/fusion_train.py": "98407e9b2a14e7316979542f9600c91089c2a6de7edb94d1135f271e90e8f8a9",
+        "code/data_harvard.py": "66fb26d8daaeff5231a4b73e35671b23f11e2ed2478811861d031db962456446",
+        "README.md": "7b1013c484f343b5a8253d03ec8ec0cf408ce413b80558f875fdc3f3113637d6"
+      },
+      "training_enabled": false
+    }
+  ]
+}

@@ -24,6 +24,7 @@ def stable_hash(payload: Any) -> str:
 
 
 def file_sha256(path: Path) -> str:
+    path = Path(path)
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b""):
@@ -32,6 +33,7 @@ def file_sha256(path: Path) -> str:
 
 
 def atomic_write_json(payload: Any, path: Path) -> None:
+    path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".partial", dir=path.parent)
     temporary = Path(name)

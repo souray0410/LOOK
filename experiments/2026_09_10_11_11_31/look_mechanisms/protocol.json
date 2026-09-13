@@ -1,0 +1,67 @@
+{
+  "schema": "look_ukb_mechanisms_v1",
+  "test_access": false,
+  "training": {
+    "epochs": 100,
+    "patience": 15,
+    "minimum_epochs": 8,
+    "warmup_epochs": 5,
+    "microbatch": 16,
+    "effective_batch": 128,
+    "pretrained_lr": 1e-05,
+    "new_layer_lr": 0.0001,
+    "weight_decay": 0.0001,
+    "clip": 5.0,
+    "precision": "fp32",
+    "num_workers": 0,
+    "loss": "unweighted_cross_entropy",
+    "primary_metric": "macro_f1"
+  },
+  "mlp": {
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "batch": 256,
+    "epochs": 200,
+    "patience": 20,
+    "relative_improvement": 0.0001,
+    "fitting_fraction": 0.9
+  },
+  "teacher_temperature": 2.0,
+  "distillation_weights": {
+    "ce": 1.0,
+    "kl": 1.0
+  },
+  "patterns": [
+    "oct_missing",
+    "cfp_missing"
+  ],
+  "missing_probabilities": [
+    0.3333333333333333,
+    0.3333333333333333,
+    0.3333333333333333
+  ],
+  "fractions": [
+    0.01,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0
+  ],
+  "subset_repeats": 3,
+  "base_host_cases": 81,
+  "neural_training_tasks": 378,
+  "logical_tasks": 7182,
+  "matrix_sha256": "56ad65aef84cc4a993ce59c851223708734fcf87286828ff1e5537332919ff6d",
+  "seed": 7341618,
+  "bootstrap_iterations": 10000,
+  "reference_margin": 0.01,
+  "external_candidates": [
+    "MMTM",
+    "EyeMoSt+",
+    "EDRL"
+  ],
+  "external_training": "blocked_until_separate_adaptation_protocol",
+  "current_split_changes": false,
+  "deployment": "source_fit_frozen_target"
+}

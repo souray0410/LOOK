@@ -1,0 +1,71 @@
+{
+  "schema": "look_mechanism_comparisons_v1",
+  "families": {
+    "original": [
+      "look_minus_host",
+      "look_minus_bias",
+      "look_minus_affine",
+      "look_minus_single_final",
+      "look_minus_all_on",
+      "look_minus_available_parent"
+    ],
+    "regime": [
+      "look_minus_host_original",
+      "look_minus_host_continue_complete",
+      "look_minus_host_continue_missing",
+      "look_gain_missing_minus_original",
+      "look_gain_missing_minus_complete_continuation"
+    ],
+    "practical": [
+      "look_minus_distill",
+      "look_minus_ce_student",
+      "look_minus_available_parent",
+      "distill_minus_ce_student"
+    ],
+    "mechanism": [
+      "look_minus_independent",
+      "look_minus_shuffle_mean",
+      "look_minus_missing_readout",
+      "look_minus_available_readout",
+      "look_minus_missing_refit",
+      "look_minus_available_refit",
+      "look_minus_mlp",
+      "look_minus_affine_equivalence"
+    ],
+    "sample_efficiency": [
+      "subset_minus_full_fixed",
+      "subset_minus_full_reselect"
+    ]
+  },
+  "architecture_aggregation": [
+    "all_equal",
+    "resnet50",
+    "densenet121",
+    "swin_b"
+  ],
+  "disease_aggregation": [
+    "all_equal",
+    "glaucoma",
+    "cataract",
+    "macular_degeneration"
+  ],
+  "directions": [
+    "oct_missing",
+    "cfp_missing"
+  ],
+  "positions": "equal_mean_three",
+  "seeds": "equal_mean_three",
+  "shuffle_repeats": "equal_mean_three",
+  "subset_repeats": "equal_mean_three",
+  "subset_fractions": [
+    0.01,
+    0.05,
+    0.1,
+    0.25,
+    0.5
+  ],
+  "iterations": 10000,
+  "global_scope": "all_primary_comparisons_with_shared_union_participant_resampling",
+  "missing_views": "not_estimable_never_change_weights",
+  "reference_margin": 0.01
+}
