@@ -47,9 +47,13 @@ def live_children(pid):
     return found
 
 
-def guard(pid,config,output):
+def guard(pid,config,output,module="look.runtime.project_dispatch"):
     out=Path(output);out.mkdir(parents=True,exist_ok=True)
-    original=process(pid);validate_manager(original,config)
+    original=process(pid)
+    if module not in ('look.runtime.project_dispatch','radon_bridge.runtime.project_dispatch'):raise ValueError('Invalid dispatcher module')
+    if module not in original['args']:raise ValueError('Wrong dispatcher module')
+    checked=dict(original,args=[v.replace(module,'look.runtime.project_dispatch') for v in original['args']])
+    validate_manager(checked,config)
     # The tracer has no training duty. Unexpected termination resumes only this
     # old CPU process; monitor must then reject competing dispatcher admission.
     park(pid)
@@ -77,7 +81,7 @@ def guard(pid,config,output):
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--pid',type=int,required=True);p.add_argument('--config',required=True);p.add_argument('--output',required=True)
-    a=p.parse_args();guard(a.pid,a.config,a.output)
+    p=argparse.ArgumentParser();p.add_argument('--pid',type=int,required=True);p.add_argument('--config',required=True);p.add_argument('--output',required=True);p.add_argument('--module',default='look.runtime.project_dispatch')
+    a=p.parse_args();guard(a.pid,a.config,a.output,a.module)
 
 if __name__=='__main__':main()

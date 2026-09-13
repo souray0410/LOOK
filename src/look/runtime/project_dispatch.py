@@ -147,7 +147,9 @@ def submit_one(config,path,journal):
                 if any(not str(r.get('job_id','')).isdigit() and not failed_before_submission(r) for r in value['requests']):
                     return 'prior_submission_identity_needs_review'
         active=sum(str(e['job_id']) in snap['jobs'] for e in journal['requests'])
-        if active>=config['maximum_workflow_allocations']:return 'workflow_allocations_active'
+        from scheduling.project_priority import project_limit
+        maximum=project_limit(config,config['maximum_workflow_allocations'],'LOOK')
+        if active>=maximum:return 'workflow_allocations_active'
         if snap['total_gpus']>=snap['limit']:return 'waiting_account_capacity'
         name='look_auto_'+str(time.time_ns());log=Path(config['output'])/(name+'.log')
         entry=dict(name=name,state='intent',log=str(log),time=time.time())
@@ -181,6 +183,9 @@ def daemon(config_path):
             try:
                 from look.runtime.mechanism_handover import retire_parent
                 retire_parent(out)
+                if config.get('session_guard_receipts'):
+                    from scheduling.project_priority import verify_session_guards
+                    verify_session_guards(config)
                 reconcile_expired(config)
                 state=submit_one(config,config_path,journal);error=None
             except Exception as exc:state='needs_review';error=repr(exc)
@@ -232,14 +237,23 @@ def gpu_owner(config_path):
         with (attempt/'worker.log').open('x') as log:
             child=subprocess.Popen(command,env=environment,stdout=log,stderr=subprocess.STDOUT)
         step=None
+        priority=None
+        if config.get('project_priority_enabled'):
+            from scheduling.project_priority import PriorityProbe
+            priority=PriorityProbe(config_path,config,job,attempt,task,'look')
         while child.poll() is None:
             r=read(record)
             if r.get('step') and step is None:
                 step=r['step'];claims.update(run,owner,state='running',step=step)
+            if priority is not None:
+                try:priority.poll([t for t in work(config) if t['execution']!='native' and eligible(t,claims)])
+                except Exception as exc:
+                    atomic_write_json(dict(state='priority_deferred',error=repr(exc)),attempt/'priority_error.json')
             if time.time()>end-900:
                 atomic_write_json(dict(reason='allocation_expiry_checkpoint'),run/'pause.json')
             atomic_write_json(dict(state='running',task=task['id'],run=str(run),step=step,updated_at=time.time()),root/'status.json')
             time.sleep(10)
+        if priority is not None:priority.finish()
         # A terminated client is not proof that its remote step is dead.
         if step is None or step_presence(job,step) is not False:
             claims.update(run,owner,state='liveness_needs_review');raise RuntimeError('Cannot prove worker step exit')
@@ -324,11 +338,23 @@ def standby(config_path):
     daemon(config_path)
 
 
+def configure_control_imports(config):
+    # Add only new management modules; keep expanded.native and scientific data
+    # adapters bound to the existing immutable dependency source.
+    if config.get('control_source'):
+        import scheduling
+        control=str(Path(config['control_source'])/'scheduling')
+        for row in config.get('control_source_pins',[]):
+            if file_sha256(Path(row['path']))!=row['sha256']:raise ValueError('Management snapshot changed')
+        if control not in scheduling.__path__:scheduling.__path__.append(control)
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--config',required=True)
     p.add_argument('--standby',action='store_true');p.add_argument('--allocation-owner',action='store_true');p.add_argument('--gpu-owner',action='store_true')
     p.add_argument('--execute');p.add_argument('--kind',choices=['native','look','look_mechanism']);p.add_argument('--record');p.add_argument('--run');p.add_argument('--profile-project');p.add_argument('--profile-mechanism')
     a=p.parse_args()
+    configure_control_imports(read(a.config))
     if a.standby:standby(a.config)
     elif a.allocation_owner:allocation_owner(a.config)
     elif a.gpu_owner:gpu_owner(a.config)

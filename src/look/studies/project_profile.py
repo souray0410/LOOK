@@ -1,5 +1,6 @@
 """Isolated complete host-update/save/reload resource verification on real train data."""
 import gc
+import os
 from pathlib import Path
 import time
 import numpy as np
@@ -27,7 +28,8 @@ def profile(spec,output,device):
     total=torch.cuda.get_device_properties(device).total_memory
     budget=min(.875*total,total-10*1024**3)
     if total<78*1024**3:raise ValueError('This production profile requires the requested A10080')
-    torch.cuda.set_per_process_memory_fraction((budget-2*1024**3)/1.2/total,device)
+    probe_cap=min((budget-2*1024**3)/1.2,float(os.environ.get('LOOK_PROBE_MAX_BYTES','inf')))
+    torch.cuda.set_per_process_memory_fraction(probe_cap/total,device)
     torch.manual_seed(spec['seed']);np.random.seed(spec['seed'])
     torch.cuda.reset_peak_memory_stats(device)
     specs=[read(Path(spec['parents'][k]['path'])/'spec.json') for k in ('first','second')]

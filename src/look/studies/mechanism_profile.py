@@ -29,8 +29,12 @@ def profile(spec,out,device):
     free,_=torch.cuda.mem_get_info(device)
     # No optimistic concurrent probe: this workflow owns an otherwise empty card.
     existing=max(0,total-free-torch.cuda.memory_reserved(device))
-    if existing>2*1024**3:raise ValueError('Unknown co-resident GPU work; keep old work, defer resource probe')
-    torch.cuda.set_per_process_memory_fraction(max(.01,(budget-existing-2*1024**3)/total))
+    declared=int(os.environ.get('LOOK_EXISTING_RESERVED_BYTES',0))
+    if existing>2*1024**3 and declared<existing:raise ValueError('Unknown co-resident GPU work; keep old work, defer resource probe')
+    existing=max(existing,declared)
+    probe_cap=min(budget-existing-2*1024**3,float(os.environ.get('LOOK_PROBE_MAX_BYTES','inf')))
+    if probe_cap<=0:raise ValueError('No safe coexistence budget')
+    torch.cuda.set_per_process_memory_fraction(probe_cap/total)
     torch.cuda.reset_peak_memory_stats(device)
     base,parents,graph,data=context(spec,device)
     ds=data['train'];counts=ds.counts
