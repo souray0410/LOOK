@@ -44,3 +44,31 @@ def test_monitor_cache_rechecks_changed_evidence(tmp_path):
     assert len(calls)==1
     artifact.write_bytes(b'bad')
     with pytest.raises(ValueError,match='changed'):monitored_acceptance(root,{},verifier,tmp_path/'cache')
+
+
+def test_handover_refuses_gpu_owners_and_other_config():
+    from look.runtime.mechanism_handover import validate_manager
+    p=dict(args=['python','-m','look.runtime.project_dispatch','--config','exact.json'])
+    validate_manager(p,'exact.json')
+    for flag in ('--allocation-owner','--gpu-owner','--execute'):
+        with pytest.raises(ValueError):validate_manager(dict(args=p['args']+[flag]),'exact.json')
+    with pytest.raises(ValueError):validate_manager(p,'other.json')
+
+
+def test_handover_copies_journal_and_signals_only_old_cpu(tmp_path,monkeypatch):
+    from look.runtime import mechanism_handover as h
+    from look.runtime.state import atomic_write_json
+    import signal
+    oldroot=tmp_path/'old';newroot=tmp_path/'new';oldroot.mkdir();newroot.mkdir()
+    lock=tmp_path/'account.lock';lock.touch()
+    old=tmp_path/'old.json';new=tmp_path/'new.json'
+    common=dict(claims='same',account_submission_lock=str(lock),maximum_workflow_allocations=2)
+    atomic_write_json(dict(common,output=str(oldroot)),old);atomic_write_json(dict(common,output=str(newroot)),new)
+    journal=dict(requests=[dict(job_id='123'),dict(job_id='456')]);atomic_write_json(journal,oldroot/'requests.json')
+    atomic_write_json(dict(pid=2,state='ready'),newroot/'handover_ready.json')
+    def process(pid):return dict(pid=pid,start='stable',state='S',args=['python','-m','look.runtime.project_dispatch','--config',str(old if pid==1 else new)]+([] if pid==1 else ['--standby']))
+    monkeypatch.setattr(h,'process',process);signals=[];monkeypatch.setattr(h.os,'kill',lambda p,s:signals.append((p,s)))
+    h.handover(old,new,1)
+    assert signals==[(1,signal.SIGSTOP)]
+    assert json.loads((newroot/'requests.json').read_text())==journal
+    assert (newroot/'handover_armed.json').exists()

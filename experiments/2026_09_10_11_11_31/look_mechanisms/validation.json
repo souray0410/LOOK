@@ -281,7 +281,7 @@
     "src/look/runtime/paths.py": "748960f47bff6909f49ca88580b7e9356485047324a45095a2c965aec853e1d6",
     "src/look/runtime/monitoring.py": "87e715adff64cc9577f4934531e57fba4bbb604cc728b7f4b98430b5abbe84a9",
     "src/look/runtime/arguments.py": "c4fe0538e92a2b094e35a0dfba09ad1c15c6936f29cf620c346a495a56e33812",
-    "src/look/runtime/project_dispatch.py": "88632b4581dfb0e6049319473165200d8c8805cc5c8926e564278ec97523fd44",
+    "src/look/runtime/project_dispatch.py": "3d30f79b65303b0cce33c8d8659960ab5cd3a6143d11eb17a41f07df094b5e61",
     "src/look/runtime/evaluation.py": "8307f2ac394bd161744dcb4b8a9756f87fd8cc7c38fabc1ddb34b60261f0f88c",
     "src/look/runtime/__init__.py": "d7d7b1c3edce33b865c0b30a75f48054b3cb6fa49feb63a054069b9586089464",
     "src/look/runtime/cleanup.py": "3976281d222a3e578b066529884812ceffa0be3bce3697a042842d99245d8bb3",
@@ -295,6 +295,7 @@
     "src/look/runtime/host_checkpoint.py": "50798ea7399673f0b3888da75e005b3775663b1aacc575b650e8f3f1cc2f0f38",
     "src/look/runtime/supplement.py": "472284ce48bb888d6f761514d4463dae349072d24d55382b2f2ed250814d9f98",
     "src/look/runtime/state.py": "f7d5281d4e71781f46f207fb44dc4abe91bcf6650d3821219cd6dd2a6231c50b",
+    "src/look/runtime/mechanism_handover.py": "5238115e7ddcd59d5b14dd1b2636417a83fe4fd71474add2d0a849d82fb16bb4",
     "src/look/models/observed_participant.py": "91c76861a32bcad8690d9673dc75fccae8be3de8c724fc816f75f83b62f323b1",
     "src/look/models/native_host.py": "d2a640269b93ffbcb43d17aa407a44e3f8f890670b5da5f4944d5d0b7ed90a0b",
     "src/look/models/native_materialization.py": "e90eac23d5e947d9de8e347ec6c51a66feddec3e5e82cfed7006d6419ef40dcd",
@@ -323,5 +324,6 @@
     "src/look/data/dataset.py": "83ebc048c6dc7820411d9e15320dc6716a101c1201b08d4f64045966eb72c1ca",
     "src/look/data/quality.py": "c4f7b324b7da5654b6fe74016eeb3d906c0b15ebf4ba339cc3a35629cba6781a"
   },
-  "scope": "implementation_validation; synthetic_inputs; no_new_UKB_performance_or_test"
+  "scope": "implementation_validation; synthetic_inputs; no_new_UKB_performance_or_test",
+  "handover": "CPU_dispatcher_only; same_claims_and_account_lock; no_GPU_worker_signals"
 }

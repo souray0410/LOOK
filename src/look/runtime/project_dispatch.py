@@ -179,6 +179,8 @@ def daemon(config_path):
         journal=read(out/'requests.json',dict(schema='look_workflow_requests_v1',requests=[]))
         while not (out/'stop.json').exists():
             try:
+                from look.runtime.mechanism_handover import retire_parent
+                retire_parent(out)
                 reconcile_expired(config)
                 state=submit_one(config,config_path,journal);error=None
             except Exception as exc:state='needs_review';error=repr(exc)
