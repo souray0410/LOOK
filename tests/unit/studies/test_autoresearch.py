@@ -137,3 +137,13 @@ def test_replication_changes_seed_and_seed_provenance_only(tmp_path):
     assert r["train_manifest_sha256"] == s["train_manifest_sha256"]
     with pytest.raises(ValueError):
         replica_spec(s, 3420, {})
+
+
+def test_existing_parent_priority_keeps_original_identity(tmp_path):
+    c,tasks=setup(tmp_path)
+    c.config['prioritize_existing_parents']=True
+    c.tick()
+    queue=json.loads((c.root/'existing_parent_queue.json').read_text())
+    assert {t['run_dir'] for t in queue['tasks']}=={t['run_dir'] for t in tasks}
+    assert not list((tmp_path/'models').glob('*'))
+    assert c.tick()['state']=='active'

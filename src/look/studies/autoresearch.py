@@ -137,6 +137,15 @@ class Controller:
             groups[name] = result
             if result.get("queue"):
                 work.append({k: result[k] for k in ("queue", "queue_sha256", "state")})
+        # Put unresolved, already registered parents behind replications in the
+        # same atomic-claim scheduler. No new scientific run or recipe is made.
+        if self.config.get("prioritize_existing_parents", False):
+            tasks = [dict(id="parent__"+stable_hash(r["run_dir"])[:20],role="model",
+                spec=r["spec"],spec_sha256=r["spec_sha256"],run_dir=r["run_dir"])
+                for r in catalog["candidates"]]
+            queue=self.root/"existing_parent_queue.json"
+            immutable(queue,dict(schema="existing_native_parent_priority_v1",tasks=tasks,test_used=False))
+            work.append(dict(queue=str(queue),queue_sha256=file_sha256(queue),state="existing_parent_priority"))
         # This feed is a durable handoff to the existing resource scheduler. It
         # is not an alternative lease mechanism and never mutates live queues.
         atomic_write_json(dict(schema="look_native_work_feed_v1", updated_at=utc_now(),
