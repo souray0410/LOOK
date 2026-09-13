@@ -65,12 +65,13 @@ def retire_parent(root):
     try:
         current=process(pid)
         if current['start']!=old['start']:raise ValueError('Previous PID reused; no signal sent')
+        if current['state'] not in ('T','t'):raise ValueError('Previous manager unexpectedly resumed')
         children=Path(f'/proc/{pid}/task/{pid}/children').read_text().split()
         for child in children:
             try:
                 if process(int(child))['state']!='Z':return
             except FileNotFoundError:pass
-        if current['state']!='T':raise ValueError('Previous manager unexpectedly resumed')
+        if current['state']=='t':return  # The session guardian owns tracer cleanup.
         os.kill(pid,signal.SIGKILL)
         atomic_write_json(dict(previous_pid=pid,state='retired_after_children_exit',time=time.time()),root/'previous_retired.json')
     except FileNotFoundError:

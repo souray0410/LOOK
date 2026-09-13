@@ -61,3 +61,5 @@ E的三组子集按参与者稳定标识的独立哈希排序嵌套，标签不�
 
 
 独立dev重放入口：`python -m look.evaluation.mechanism_test --replay-development --models <test_preparation.json> --output <independent_replay>`。逐模型重新加载已选完整MHD及修正产物，核对全部评价视图、参与者、标签、缺失状态、预测类别和logits（atol=1e-6、rtol=1e-5），单独输出模型注册表，不改历史训练摘要。该入口不拟合任何参数；正式test仍需全研究、比较和数据审计共同锁定，不能因为重放通过就自动解封。
+
+Ibex实际接替发现tmux会自动恢复被SIGSTOP暂停的面板进程。旧CPU派发器仍承载现有salloc的终端，因此不直接终止；独立会话保护进程仅暂停该CPU派发器，保留所有子进程，待其全部结束再清理。新GPU任务使用独立不可变快照。会话保护的进程身份、状态、子进程和结束原因均记账，ws02以独立CPU父子进程验证“父暂停、子继续、可恢复”。
