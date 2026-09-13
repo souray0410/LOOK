@@ -1,4 +1,4 @@
-# GPU execution standard — version 2
+# GPU execution standard — version 3
 
 ## Capacity is a whole-device budget
 
@@ -101,9 +101,34 @@ checkpoint retirement900seconds before the allocation deadline. Manager restart
 reconciles live steps; missing launch identities require review. Keep all handover,
 resource, throughput and recovery receipts without altering scientific run IDs.
 
-Future allocation requests default to16 CPU cores per GPU and70GiB host memory
-per GPU, retaining two computation threads per native worker. A three-GPU request
-therefore asks for48 CPU cores. Existing pending/running allocations are not resized.
-The additional cores permit measured concurrent work; they do not change scientific
-batch, data-loader behavior or guarantee increased throughput. Default duration is
-48hours; a new request still requires useful finite work and normal submission gates.
+## Current allocation contract (2026-09-13)
+
+All new LOOK, Radon_Bridge and native-model allocations request at least48hours,
+by default48hours, with16CPU cores and128GiB host memory per GPU unless a separately
+accepted full-workload profile requires more.12h/24h manifests remain historical
+reproduction records; they do not authorize new submissions. Existing healthy
+allocations finish normally. Slurm's time limit is never a training completion rule.
+
+Reserve at least four GPU slots for ready finite native-model work. Allocate the
+remaining verified account budget between ready LOOK and Radon_Bridge tasks, with
+round-robin fairness; idle project reservations can be borrowed by native work.
+Count actual requested/allocated GPUs, not job count. Running, pending and unresolved
+submission intents all consume the local budget. Read actual Slurm association,
+QOS and account inventory; a24GPU local ceiling is not a universal school policy.
+Future admission must use the shared account lock, ownership journals and role policy.
+
+Keep at least15% of allocated host memory free. Native formal workers require at
+least40GiB step memory, increased by actual profiling. Co-resident work requires
+measured throughput benefit; a high memory footprint alone is never an objective.
+
+A complete source-parallel experiment uses the least feasible number of GPUs inside
+one allocation. Never join unrelated allocations into one model. Placement and
+transfer transport are part of recovery provenance. Validate loss, BN, gradients,
+updates and full recovery against a runnable single-device fixture. Do not silently
+change effective batch or precision to make a configuration fit. The production
+resource gate covers every participating device and the complete model lifecycle.
+
+Healthily running source snapshots remain immutable. The current research expansion
+must pass source-specific runtime gates before it can displace native work. A protocol
+registry, a submitted allocation, a unit test or a source-parallel toy fixture does not
+certify real-data scientific completion or production memory admission.
