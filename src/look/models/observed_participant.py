@@ -12,6 +12,18 @@ class ObservedParticipantModel(nn.Module):
         super().__init__()
         self.graph = graph
 
+    def to(self, *args, **kwargs):
+        # Module.to recurses through _apply; it does not call the nested graph's
+        # to override, which also migrates MHD messages and topology tensors.
+        self.graph.to(*args, **kwargs)
+        return self
+
+    def cpu(self):
+        return self.to(torch.device('cpu'))
+
+    def cuda(self, device=None):
+        return self.to(torch.device('cuda', torch.cuda.current_device() if device is None else device))
+
     def forward(self, x, counts):
         if (not counts or any(type(n) is not int or n not in (1, 2) for n in counts)
                 or sum(counts) != len(x)):

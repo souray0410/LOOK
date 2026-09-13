@@ -33,4 +33,7 @@ def summarize(tasks,output):
         '| 任务 | 状态 | 当前阶段 |','|---|---|---|']
     for row in progress:lines.append(f"| {row['task']} | {row['state']} | {row.get('stage') or '—'} |")
     (root/'README.zh-CN.md').write_text('\n'.join(lines)+'\n')
+    from look.analysis.research_findings import summarize as analyze
+    result["research_findings"]=analyze(tasks,root/"findings")
+    atomic_write_json(result,root/"progress.json")
     return result
