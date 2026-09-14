@@ -113,3 +113,8 @@ Ibex独立目录 `OPS/look_admission_validation_20260914/acceptance.xml` 7项针
 ## 2026-09-14：两项目研究链衔接
 
 共享RESEARCH_AUDIT_STANDARD新增关联研究规则：补充必须映射到既有问题、匹配对照、改变因素、先前证据、可复用产物及下一阶段验收，周报优先完整匹配小组。Radon的[跨队列研究链](https://github.com/souray0410/Radon_Bridge/blob/2026_09_14_19_43_11/docs/research_chain_20260914.zh-CN.md)区分几何、参数化与容量；LOOK继续独立比较三种空间处理/PCA路径，不引入可学习分解或额外反传，不混用最终分类与分支平均指标。共享范式不改变正在执行的协议。
+
+
+## 2026-09-14 21:25：两项目全链路审查
+
+见[完整范围与执行差距审查](../project_audit_20260914.zh-CN.md)。该文按研究包区分已实现、已接线、真实验收、运行和科学接受；LOOK已出现4个持续更新宿主，但方法完整case接受0；Radon完整父准备和新多来源/分解生产接入仍有缺口。MHD_Models新增只读pipeline_coverage审计覆盖全部活跃项目/补充feed及registry，独立Ibex227测试通过；不把状态文件和合成GPU通过当作真实研究完成。部署证据及未关闭事项由现有UKB维护继续处理；所有健康科学worker保留。
