@@ -72,7 +72,7 @@ and pending acceptance separately.
 
 ## Measured dynamic companion admission
 
-Model_Training/scheduling implements finite companion ownership inside existing
+MHD_Models/scheduling implements finite companion ownership inside existing
 allocations. No replacement allocation is required. Profile initialization, five
 warmup plus twenty optimizer updates, validation, checkpoint save and reload, and
 compare the resumed next update exactly with uninterrupted execution. Profiles
