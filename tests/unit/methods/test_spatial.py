@@ -34,3 +34,26 @@ def test_artifact_fit_inference_identity_and_reload(method,tmp_path):
 
 def test_direct_rejects_hidden_compression():
     with pytest.raises(ValueError):reduce_spatial(torch.ones(2,3,8,8),4,'direct')
+
+
+@pytest.mark.parametrize('method',METHODS)
+def test_real_mhd_writeback_matches_explicit_input_correction(method):
+    from look.models.graph import build_resnet50_mhd_graph
+    from look.methods.operator import forward_with_look
+    from look.methods.joint import read_site
+    torch.manual_seed(18)
+    graph=build_resnet50_mhd_graph('layer3',batch_size=1,pretrained=False,device='cpu').eval()
+    ids=[(n.id,n.name) for n in graph.nodes]
+    x=torch.randn(1,2,3,32,32);y=torch.randn_like(x)
+    with torch.no_grad():
+        joined=forward_with_look(graph,x,y,stop_node='joint_input').clone()
+        factor=1 if method=='direct' else 4;flat,shape=downsample_flatten(joined,factor,method);d=flat.shape[1]
+        a=LOOKArtifact(node_name='joint_input',missing_pattern='oct_missing',filling_strategy='normalized_mean',factor=factor,latent_dim=2,
+            feature_shape=tuple(joined.shape[1:]),downsample_shape=shape,mean=torch.zeros(d),std=torch.ones(d),pca_mean=torch.zeros(d),
+            components=torch.randn(2,d)/d**.5,weight=torch.eye(2)*.1,bias=torch.ones(2)*.03,
+            ridge_lambda=1.,train_r2=0.,train_mse=0.,spatial_method=method)
+        expected=apply_artifact(joined,a)
+        manual=forward_with_look(graph,expected[:,:3].reshape_as(x),expected[:,3:].reshape_as(y),stop_node='joint_stem').clone()
+        actual=forward_with_look(graph,x,y,[a],stop_node='joint_stem').clone()
+    torch.testing.assert_close(actual,manual,rtol=0,atol=0)
+    assert ids==[(n.id,n.name) for n in graph.nodes]
