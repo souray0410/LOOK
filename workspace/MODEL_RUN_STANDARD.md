@@ -209,7 +209,7 @@ IDs, manifests, predictions, internal paths and sensitive source metadata requir
 separate disclosure review; even hashes are not an automatic anonymization method.
 No access flag authorizes upload, a visibility change, deletion or publication.
 
-Model_Training runtime/distribution.py validates this additive metadata contract;
+MHD_Models runtime/distribution.py validates this additive metadata contract;
 it does not export files, resolve credentials, replace model loaders or certify a
 release as safe. Existing frozen workers/receipts remain valid and untouched.
 Numerical replay, disclosure review and publication are separate recorded gates.
@@ -238,7 +238,7 @@ numbers. A server migration preserves execution identity and content hashes thro
 an audited location mapping; it is not a new scientific run.
 
 New project templates reference this file and their model/run entrypoints declare
-how they implement it. Model_Training's runtime/run_registry.py is the current
+how they implement it. MHD_Models's runtime/run_registry.py is the current
 reference execution registrar; it is independent of MHD core. A project may use a
 different backend implementing the same contract, without forcing unrelated
 frameworks through an MHD-only API. No model architecture or arbitrary model export
