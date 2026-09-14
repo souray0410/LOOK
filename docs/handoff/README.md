@@ -118,3 +118,11 @@ Ibex独立目录 `OPS/look_admission_validation_20260914/acceptance.xml` 7项针
 ## 2026-09-14 21:25：两项目全链路审查
 
 见[完整范围与执行差距审查](../project_audit_20260914.zh-CN.md)。该文按研究包区分已实现、已接线、真实验收、运行和科学接受；LOOK已出现4个持续更新宿主，但方法完整case接受0；Radon完整父准备和新多来源/分解生产接入仍有缺口。MHD_Models新增只读pipeline_coverage审计覆盖全部活跃项目/补充feed及registry，独立Ibex227测试通过；不把状态文件和合成GPU通过当作真实研究完成。部署证据及未关闭事项由现有UKB维护继续处理；所有健康科学worker保留。
+
+## 2026-09-14 model-format transition
+
+The shared model standard is now v4; see [migration](../model_migration.md).
+New releases use one canonical artifact format. Current immutable study snapshots
+finish unchanged. MHD_Models owns one-time conversion; no WS02/Ibex or V4/V5
+fallback is to be added to the new project runtime. Parent replay and deployment
+remain explicit acceptance gates; this documentation does not claim they passed.
