@@ -82,3 +82,14 @@ MHD_Models main 0859bfe implements the new package and one-time converters. Runn
 models and research projects retain original immutable snapshots until accepted
 transition. See [migration](../model_migration.md); package-layout deployment is not
 permission to change scientific protocols or follow main at runtime.
+
+
+## Permanent contract review gate (2026-09-14)
+
+The shared [research audit standard](../../workspace/RESEARCH_AUDIT_STANDARD.md)
+and AGENTS.md now require one current contract and explicit version migration.
+This gate covers the whole workflow, not only the model catalog. New consumers
+must reject unconverted legacy inputs; old pinned workers finish unchanged.
+Migration, downstream replay and release evidence are required before switching.
+This documentation update does not certify remaining production migration or
+upgrade MHD V4. See the standard for the mandatory review checklist.

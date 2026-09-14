@@ -15,3 +15,13 @@ Read workspace/RESEARCH_AUDIT_STANDARD.md for every progress report, scheduled r
 Proactively review assumptions, implementation and conclusions throughout all work, including the limits of your own checks. Investigate contradictions, correct authorized issues and independently verify the result; do not wait for user detection or generalize a narrow pass into overall readiness.
 
 Autonomous corrective maintenance is mandatory for authorized workflows: follow workspace/RESEARCH_AUDIT_STANDARD.md through repair, acceptance, safe restoration and verified downstream progress. Detection or an alert alone does not complete maintenance; keep each open incident owned with a concrete automatic continuation where safe. Preserve healthy work and scientific standards.
+
+Current-version uniformity is a mandatory design, review and release gate: follow
+"One current contract; explicit version migration" in workspace/RESEARCH_AUDIT_STANDARD.md.
+New readers, execution paths and outputs use one current contract; do not add
+host-dispatched legacy schemas, try-new-then-old fallbacks or compatibility modes
+to normal runtime. Keep old releases/executors pinned for old jobs and reproduction;
+convert completed artifacts with separate versioned migration tools, validate state
+and downstream consumers, then admit the canonical outputs. Preserve legitimate
+architecture/dimension/task variants. Record migration and rollout evidence in the
+handoff; CI or directory renaming alone does not establish migration acceptance.
