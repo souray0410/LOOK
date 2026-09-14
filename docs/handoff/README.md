@@ -109,3 +109,7 @@ Ibex独立目录 `OPS/look_admission_validation_20260914/acceptance.xml` 7项针
 空间注册器look_spatial_registry_20260914已运行，按81宿主/243路线视图登记；3416同宿主三路线全部技术接受和报告后才自动释出3417/3418，不设性能门槛。控制绑定见OPS/look_active_workflow.json。原宿主训练、来源和allocation均保留，新增控制快照只服务后续worker。旧CPU dispatcher拥有salloc子进程，使用session guardian保持其会话；不得直接杀会话。
 
 首个cataract/resnet50/3416/middle宿主已实际更新；空间拟合尚无接受结果。以[本周阶段安排](../weekly_delivery_20260920.zh-CN.md)中的完整小组验收作为交付，不把基础模型或控制代码完成数充当项目结论。
+
+## 2026-09-14：两项目研究链衔接
+
+共享RESEARCH_AUDIT_STANDARD新增关联研究规则：补充必须映射到既有问题、匹配对照、改变因素、先前证据、可复用产物及下一阶段验收，周报优先完整匹配小组。Radon的[跨队列研究链](https://github.com/souray0410/Radon_Bridge/blob/2026_09_14_19_43_11/docs/research_chain_20260914.zh-CN.md)区分几何、参数化与容量；LOOK继续独立比较三种空间处理/PCA路径，不引入可学习分解或额外反传，不混用最终分类与分支平均指标。共享范式不改变正在执行的协议。

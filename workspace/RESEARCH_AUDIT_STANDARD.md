@@ -121,3 +121,26 @@ all possible faults can be detected or repaired automatically. Re-examine the
 checks themselves, investigate contradictory evidence, and correct inaccurate
 status claims. Monitoring automation and source changes must respect the same
 review, acceptance and resource boundaries as the workflows they maintain.
+
+## Connected research and staged delivery
+
+A supplement must connect to an existing research question before it is counted
+as scope: record the hypothesis, matched control, exact changed and held-fixed
+factors, predecessor evidence, reusable artifacts, target-cohort validation, and
+which claim the result can or cannot support. Review interaction contrasts when
+a new implementation changes more than one scientific factor. Do not mistake
+a new module, protocol file, or server-specific queue for an independent finding.
+
+Share validated operator definitions and provenance across environments, but
+revalidate data roles, parents, dimensions, numeric policy and resource classes.
+Small-cohort scores are not large-cohort evidence; UKB organ expansion is not an
+independent external dataset. Resource validation and replication gates must not
+depend on favorable method performance. Preserve complete matched groups when
+prioritizing weekly outputs, then replicate seeds and expand the declared scope.
+
+Before reusing an ablation on a changed parameterization, rederive its meaning
+and test its actual input/output and gradient structure. A mask in latent factor
+coordinates need not remove an edge between original sources. Keep unsupported
+controls explicitly unavailable until their mathematical and runtime contracts
+are established. For every open integration gap, distinguish implemented, tested,
+deployed, queued, running and scientifically accepted states in the handoff.
