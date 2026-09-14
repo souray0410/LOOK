@@ -74,3 +74,11 @@ GitHub负责独立安装和代码检查；Ibex是实际GPU完整链路验收环�
 实际入口改为 `OPS/look_admission_20260914/dispatcher.json`，证据在同目录及 `look_admission_validation_20260914`。新CPU dispatcher当次PID1678754已实际运行、无错误、等待账户容量；64个当时可领取任务API拒绝数0。旧CPU dispatcher2931336由独立会话守护保持，原salloc子进程807373及其健康GPU父训练持续更新到第7轮。不得杀旧会话或重复启动管理器；旧子进程全部自然结束后守护才退休旧CPU。新journal加入原角色政策，复制原三条请求身份，没有取消或重复提交allocation。
 
 此为控制路径安全接替，新的正式GPU worker仍须逐任务完整资源及恢复验收，不是LOOK方法研究完成。Radon独立长GPU恢复探针仍在进行，不能重复启动或提前解除其派发保护。下一维护继续推进首个项目参考匹配组执行依赖与实际验收，不以该控制修复代替科学链路实现。
+
+## 2026-09-14 current-format migration boundary
+
+Shared model standard v4: new releases use one canonical artifact format and reader.
+MHD_Models main 0859bfe implements the new package and one-time converters. Running
+models and research projects retain original immutable snapshots until accepted
+transition. See [migration](../model_migration.md); package-layout deployment is not
+permission to change scientific protocols or follow main at runtime.

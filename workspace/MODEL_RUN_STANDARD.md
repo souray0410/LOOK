@@ -1,4 +1,4 @@
-# Model and training-run standard — version 3
+# Model and training-run standard — version 4
 
 This is the common standard for current and future research projects, independent
 of disease, dataset, architecture, framework release, server and scheduler. It
@@ -238,7 +238,7 @@ numbers. A server migration preserves execution identity and content hashes thro
 an audited location mapping; it is not a new scientific run.
 
 New project templates reference this file and their model/run entrypoints declare
-how they implement it. MHD_Models's runtime/run_registry.py is the current
+how they implement it. MHD_Models's src/mhd_models/runtime/run_registry.py is the current
 reference execution registrar; it is independent of MHD core. A project may use a
 different backend implementing the same contract, without forcing unrelated
 frameworks through an MHD-only API. No model architecture or arbitrary model export
@@ -249,3 +249,25 @@ Update its version and peer checks together. Preserve old checkpoints, pinned so
 and immutable scientific records; do not mass-migrate archives merely to restyle them.
 New studies inherit management conventions, not data access, GPU authorization,
 clinical assumptions or another study's optimization/selection decisions.
+
+## One current format; version-scoped migration
+
+New releases contain one canonical implementation and artifact contract. Old
+releases retain their own readers/executors and finish already running tasks.
+Do not accumulate host-specific or historical-version fallbacks in new runtime
+readers, project loaders, configuration handlers or schedulers. Source format
+adapters belong only in explicit one-time migration commands.
+
+After original completion acceptance, migrate selected complete states into
+`models/artifacts/<artifact_id>/`: `manifest.json`, `configuration.json`, `model.pt`,
+`source_receipt.json`, `migration.json`, `README.md`. All sites use the same
+`mhd_model_artifact_v1` manifest and `mhd_model_state_v1` selected-state envelope.
+`runs/` continues to hold execution logs and full recovery evidence. New consumers
+load canonical artifacts only. Partial migrations are never accepted. Migrations
+preserve original execution IDs, source checksums, framework versions, architecture,
+aggregation, all tensor state and source evidence; they are not new training runs.
+
+Storage/schema migration and framework conversion are separate operations. This
+standard does not authorize V4-to-V5 conversion or change scientific protocols.
+Update downstream pinned references only after strict loading and required replay.
+Old active study versions remain unchanged until that transition is accepted.
