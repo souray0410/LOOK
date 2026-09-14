@@ -42,6 +42,7 @@ class FullFeaturePCA:
     member_shapes: tuple = ()
     protocol: str = PROTOCOL
     split_rule: str = "channel_split_and_restore_member_shapes_v1"
+    spatial_method: str = "interpolate"
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -80,6 +81,7 @@ class LOOKArtifact:
     member_shapes: tuple = ()
     protocol: str = PROTOCOL
     split_rule: str = "channel_split_and_restore_member_shapes_v1"
+    spatial_method: str = "interpolate"
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -169,16 +171,10 @@ class LatentSufficientStatistics:
         return cxx, cxy, float(yty), mean_x, mean_y, n
 
 
-def downsample_flatten(feature: torch.Tensor, factor: int) -> Tuple[torch.Tensor, Tuple[int, ...]]:
-    if feature.ndim == 2:
-        return feature, tuple(feature.shape[1:])
-    if feature.ndim != 4:
-        raise ValueError(f"Expected 2D or 4D feature tensor, got {feature.shape}")
-    height = max(1, feature.shape[-2] // factor)
-    width = max(1, feature.shape[-1] // factor)
-    downsampled = F.interpolate(feature, size=(height, width), mode='bilinear',
-                               align_corners=False, antialias=False)
-    return downsampled.flatten(1), tuple(downsampled.shape[1:])
+def downsample_flatten(feature: torch.Tensor, factor: int, spatial_method="interpolate") -> Tuple[torch.Tensor, Tuple[int, ...]]:
+    from look.methods.spatial import reduce_spatial
+    reduced = reduce_spatial(feature, factor, spatial_method)
+    return reduced.flatten(1), tuple(reduced.shape[1:])
 
 
 def _prepare_inputs(
@@ -209,7 +205,7 @@ def apply_artifact(feature: torch.Tensor, artifact: LOOKArtifact) -> torch.Tenso
     if hasattr(artifact, 'apply_feature'):
         return artifact.apply_feature(feature)
     device = feature.device
-    flat, down_shape = downsample_flatten(feature, artifact.factor)
+    flat, down_shape = downsample_flatten(feature, artifact.factor, artifact.spatial_method)
     if tuple(down_shape) != tuple(artifact.downsample_shape):
         raise ValueError(f"Artifact shape {artifact.downsample_shape} != observed {down_shape}")
     mean = artifact.mean.to(device)
@@ -258,14 +254,14 @@ def forward_with_look(
 
 
 @torch.no_grad()
-def iter_complete_features(graph, loader, node_name, factor, device):
+def iter_complete_features(graph, loader, node_name, factor, device, spatial_method="interpolate"):
     """Only original complete inputs: no filler, correction or missing forward."""
     graph.eval()
     for batch in loader:
         feature = forward_with_look(
             graph, batch['oct'].to(device), batch['cfp'].to(device), stop_node=node_name, **({'counts': batch['counts']} if 'counts' in batch else {})
         ).detach()
-        flat, shape = downsample_flatten(feature, factor)
+        flat, shape = downsample_flatten(feature, factor, spatial_method)
         yield flat.cpu(), tuple(feature.shape[1:]), shape
 
 
@@ -279,6 +275,7 @@ def iter_feature_pairs(
     device: torch.device,
     upstream_artifacts: Sequence[LOOKArtifact] = (),
     filler: MissingModalityFiller | None = None,
+    spatial_method: str = "interpolate",
 ) -> Iterator[Tuple[torch.Tensor, torch.Tensor, Tuple[int, ...], Tuple[int, ...]]]:
     graph.eval()
     filler = filler or NormalizedMeanFiller()
@@ -289,8 +286,8 @@ def iter_feature_pairs(
         missing_feature = forward_with_look(
             graph, missing_oct, missing_cfp, upstream_artifacts, stop_node=node_name, **({'counts': batch['counts']} if 'counts' in batch else {})
         ).detach()
-        full_flat, down_shape = downsample_flatten(full_feature, factor)
-        missing_flat, observed_shape = downsample_flatten(missing_feature, factor)
+        full_flat, down_shape = downsample_flatten(full_feature, factor, spatial_method)
+        missing_flat, observed_shape = downsample_flatten(missing_feature, factor, spatial_method)
         if down_shape != observed_shape:
             raise RuntimeError("Full and missing feature shapes differ")
         yield full_flat.cpu(), missing_flat.cpu(), tuple(full_feature.shape[1:]), down_shape
@@ -329,9 +326,9 @@ def _process_peak_rss_bytes() -> int:
     return peak if sys.platform == "darwin" else peak * 1024
 
 
-def fit_complete_pca(graph, loader, node_name, factor, max_rank, device, source_id):
+def fit_complete_pca(graph, loader, node_name, factor, max_rank, device, source_id, spatial_method="interpolate", strict_rank=False):
     def features():
-        return iter_complete_features(graph, loader, node_name, factor, device)
+        return iter_complete_features(graph, loader, node_name, factor, device, **({"spatial_method": spatial_method} if spatial_method != "interpolate" else {}))
 
     moments = StreamingMoments()
     feature_shape = down_shape = None
@@ -349,6 +346,8 @@ def fit_complete_pca(graph, loader, node_name, factor, max_rank, device, source_
         spatial = int(np.prod(down_shape[1:]))
         mean, std = mean.repeat_interleave(spatial), std.repeat_interleave(spatial)
     rank = min(max_rank, samples - 1, mean.numel())
+    if strict_rank and rank != max_rank:
+        raise ValueError("Requested PCA rank is infeasible; no implicit rank reduction")
     started = time.perf_counter()
     pca = _fit_incremental_pca(features, mean, std, rank)
     if pca.n_samples_seen_ != samples:
@@ -361,14 +360,14 @@ def fit_complete_pca(graph, loader, node_name, factor, max_rank, device, source_
         explained_variance_ratio=torch.from_numpy(pca.explained_variance_ratio_).float(),
         sample_count=samples, fit_seconds=time.perf_counter() - started,
         peak_rss_bytes=_process_peak_rss_bytes(), source_id=source_id,
-        member_names=members(node_name), member_shapes=member_shapes(graph, node_name),
+        member_names=members(node_name), member_shapes=member_shapes(graph, node_name), spatial_method=spatial_method,
     )
 
 
 def prepare_complete_pca_bank(
     graph, loader, correction_nodes, factors, max_rank, device,
     pca_root: Path, identity: Mapping[str, object], quarantine_root: Path,
-    *, load_only: bool = False,
+    *, load_only: bool = False, spatial_method="interpolate", strict_rank=False,
 ) -> Dict[Tuple[str, int], FullFeaturePCA]:
     """Build/verify a complete-training-only bank shared by all missing scenarios."""
     if getattr(loader.dataset, 'split', 'train') != 'train' or getattr(loader.dataset, 'augment', False):
@@ -378,6 +377,7 @@ def prepare_complete_pca_bank(
     identity = dict(identity, max_rank=max_rank, protocol=PROTOCOL,
                     joint_code_sha256=file_sha256(Path(__file__).with_name('joint.py')),
                     pca_code_sha256=file_sha256(Path(__file__)))
+    identity.update(spatial_method=spatial_method, strict_rank=strict_rank)
     bank_id = stable_hash(identity)[:16]
     output = Path(pca_root) / bank_id
     graph.eval()
@@ -407,7 +407,7 @@ def prepare_complete_pca_bank(
                     if metadata['source_id'] != source_id or metadata['sha256'] != file_sha256(path):
                         raise ValueError('PCA source identity or hash mismatch')
                     basis = FullFeaturePCA.load(path)
-                    if basis.source_id != source_id or basis.node_name != node or basis.factor != factor:
+                    if basis.source_id != source_id or basis.node_name != node or basis.factor != factor or basis.spatial_method != spatial_method:
                         raise ValueError('PCA metadata mismatch')
                     if not all(torch.isfinite(t).all() for t in
                                (basis.mean, basis.std, basis.pca_mean, basis.components, basis.explained_variance_ratio)):
@@ -423,7 +423,7 @@ def prepare_complete_pca_bank(
                 if load_only:
                     raise FileNotFoundError(path)
                 print(f'FIT shared PCA {source_id} (complete train only)', flush=True)
-                basis = fit_complete_pca(graph, loader, node, factor, max_rank, device, source_id)
+                basis = fit_complete_pca(graph, loader, node, factor, max_rank, device, source_id, spatial_method, strict_rank)
                 basis.save(path)
                 write_json_atomic(dict(source_id=source_id, sha256=file_sha256(path),
                     bytes=path.stat().st_size, samples=basis.sample_count), metadata_path)
@@ -477,7 +477,8 @@ def fit_look_node(
 ) -> Dict[int, LOOKArtifact]:
     def pairs():
         return iter_feature_pairs(
-            graph, loader, node_name, missing_pattern, factor, device, upstream_artifacts, filler
+            graph, loader, node_name, missing_pattern, factor, device, upstream_artifacts, filler,
+            **({"spatial_method": pca.spatial_method} if pca.spatial_method != "interpolate" else {})
         )
 
     if pca.node_name != node_name or pca.factor != factor:
@@ -525,7 +526,7 @@ def fit_look_node(
             pca_fit_seconds=pca.fit_seconds,
             pca_peak_rss_bytes=pca.peak_rss_bytes,
             pca_source_id=pca.source_id,
-            member_names=pca.member_names, member_shapes=pca.member_shapes,
+            member_names=pca.member_names, member_shapes=pca.member_shapes, spatial_method=pca.spatial_method,
         )
     return artifacts
 
