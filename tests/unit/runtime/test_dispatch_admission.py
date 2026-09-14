@@ -54,3 +54,33 @@ def test_additional_feed_reuses_run_without_double_claim(tmp_path):
     result=m.work({'project_feed':str(tmp_path/'no_project'),'native_feed':feeds[0],
                    'additional_native_feeds':[feeds[1]]})
     assert len(result)==1 and result[0]['id']=='0'
+
+
+def test_short_worker_exit_and_unknown_liveness():
+    seen=iter([True,None,False]);waits=[]
+    assert m.exited_step('1','2',lambda *a:next(seen),sleep=waits.append)
+    assert waits==[2,2]
+    assert not m.exited_step('1',None,lambda *a:False)
+    assert not m.exited_step('1','2',lambda *a:None,attempts=2,sleep=lambda _:None)
+
+
+def test_nested_step_does_not_inherit_owner_cpu_request():
+    original={'SLURM_JOB_ID':'1','SLURM_CPUS_PER_TASK':'1','SLURM_TRES_PER_TASK':'cpu=1','CUDA_VISIBLE_DEVICES':'0','OMP_NUM_THREADS':'2'}
+    result=m.worker_environment(original)
+    assert 'SLURM_CPUS_PER_TASK' not in result and 'SLURM_TRES_PER_TASK' not in result
+    assert result['SLURM_JOB_ID']=='1' and result['CUDA_VISIBLE_DEVICES']=='0' and result['OMP_NUM_THREADS']=='2'
+    assert original['SLURM_CPUS_PER_TASK']=='1'
+
+
+def test_incompatible_probe_is_excluded_before_allocation(tmp_path,monkeypatch):
+    tasks=[{'run_dir':'old','execution':'native'},{'run_dir':'ready','execution':'look'}]
+    monkeypatch.setattr(m,'work',lambda _:tasks);monkeypatch.setattr(m,'eligible',lambda *a:True)
+    def fail(*a):raise ValueError('unsupported pinned API')
+    monkeypatch.setattr(m,'native_api_preflight',fail)
+    assert m.admissible_work({'output':str(tmp_path)},object())==tasks[1:]
+    assert json.loads((tmp_path/'api_admission.json').read_text())['rejected'][0]['run']=='old'
+
+
+def test_incident_hold_prevents_repeated_submission(tmp_path):
+    (tmp_path/'admission_hold.json').write_text('{}')
+    assert m.submit_one({'output':str(tmp_path),'claims':str(tmp_path)},'config',{})=='waiting_incident_repair'

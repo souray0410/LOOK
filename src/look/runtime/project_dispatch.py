@@ -89,6 +89,59 @@ def eligible(task,claims):
     return True
 
 
+def native_api_preflight(task, config):
+    """No torch/data/GPU allocation: reject incompatible probes before salloc."""
+    spec = read(task['spec']); binding = source_binding(spec, config)
+    script = Path(config['native_profile_source'])/'scheduling/profile_native.py'
+    helper = script.with_name('native_profile_api.py')
+    key = (task['spec_sha256'], binding['source'], file_sha256(script), file_sha256(helper))
+    cache = config.setdefault('_native_api_receipts', {})
+    if key not in cache:
+        env = os.environ.copy(); env['PYTHONPATH'] = binding['pythonpath']
+        result = subprocess.run([config['python'], str(script), '--source', binding['source'],
+            '--spec', task['spec'], '--check-api'], env=env, text=True, capture_output=True, timeout=30)
+        if result.returncode:
+            raise ValueError('Native API preflight rejected: '+result.stderr[-2000:])
+        value = json.loads(result.stdout)
+        if value.get('test_access') is not False or not value.get('adapter'):
+            raise ValueError('Malformed API preflight receipt')
+        cache[key] = value
+    return cache[key]
+
+
+def admissible_work(config, claims):
+    result = []; rejected = []
+    for task in work(config):
+        if not eligible(task, claims): continue
+        if task.get('execution') == 'native':
+            try: native_api_preflight(task, config)
+            except (ValueError, OSError, subprocess.SubprocessError) as exc:
+                rejected.append(dict(run=task['run_dir'], error=str(exc))); continue
+        result.append(task)
+    if config.get('output'):
+        atomic_write_json(dict(rejected=rejected, ready=len(result), updated_at=time.time(),
+                               test_access=False), Path(config['output'])/'api_admission.json')
+    return result
+
+
+def worker_environment(environ):
+    env = dict(environ)
+    # The lightweight owner uses one CPU; the child step explicitly requests14.
+    for key in ('SLURM_CPUS_PER_TASK', 'SLURM_TRES_PER_TASK', 'SLURM_MEM_PER_CPU', 'SLURM_MEM_PER_NODE'):
+        env.pop(key, None)
+    return env
+
+
+def exited_step(job, step, presence, attempts=30, sleep=time.sleep):
+    if step is None: return False
+    for index in range(attempts):
+        try: observed = presence(job, step)
+        except (OSError, subprocess.SubprocessError): observed = None
+        if observed is False: return True
+        if index + 1 < attempts: sleep(2)
+    return False
+
+
 def allocation_command(config_path,name,python):
     return ['salloc','--account=pi-mengy','--nodes=1','--ntasks=1','--cpus-per-task=16',
         '--mem=128G','--gres=gpu:a100:1','--constraint=gpu_a100','--time=48:00:00',
@@ -136,7 +189,8 @@ def submit_one(config,path,journal):
     from scheduling.renewal import job_from_log
     from scheduling.policy import Claims
     claims=Claims(config['claims'])
-    candidates=[t for t in work(config) if eligible(t,claims)]
+    if config.get('output') and (Path(config['output'])/'admission_hold.json').exists():return 'waiting_incident_repair'
+    candidates=admissible_work(config,claims)
     if not candidates:return 'waiting_dependencies'
     lock=Path(config['account_submission_lock'])
     with lock.open('a') as handle:
@@ -221,7 +275,7 @@ def gpu_owner(config_path):
     if torch.cuda.device_count()!=1 or torch.cuda.get_device_properties(0).total_memory<78*1024**3:raise ValueError('A10080 single-device binding required')
     root=Path(config['output'])/job;root.mkdir(exist_ok=True);claims=Claims(config['claims']);owner='look-workflow-'+job
     while time.time()<end-1800:
-        candidates=[t for t in work(config) if eligible(t,claims)]
+        candidates=admissible_work(config,claims)
         if not candidates:break
         prior=read(root/'last_execution.json').get('kind')
         primary=[t for t in candidates if t['execution']=='look']
@@ -237,7 +291,7 @@ def gpu_owner(config_path):
         try:token=claims.acquire(run,task['spec_sha256'],owner,job)
         except RuntimeError:continue
         attempt=root/(run.name+'_'+str(token['generation']));attempt.mkdir()
-        record=attempt/'step.json';environment=os.environ.copy()
+        record=attempt/'step.json';environment=worker_environment(os.environ)
         command=['srun','--jobid='+job,'--overlap','--exact','--nodes=1','--ntasks=1','--gpus=1',
             '--cpus-per-task=14','--mem=100G','--unbuffered',config['python'],'-m','look.runtime.project_dispatch',
             '--config',str(config_path),'--execute',task['spec'],'--run',str(run),
@@ -264,8 +318,15 @@ def gpu_owner(config_path):
             time.sleep(10)
         if priority is not None:priority.finish()
         # A terminated client is not proof that its remote step is dead.
-        if step is None or step_presence(job,step) is not False:
+        step = step or read(record).get('step')  # Worker may exit before the first poll.
+        if not exited_step(job,step,step_presence):
             claims.update(run,owner,state='liveness_needs_review');raise RuntimeError('Cannot prove worker step exit')
+        if child.returncode not in (0, 75):
+            claims.release(run,owner,'failed',step_dead=True)
+            atomic_write_json(dict(reason='worker_failed', run=str(run), job=job, step=step,
+                returncode=child.returncode, log=str(attempt/'worker.log'), time=time.time()),
+                Path(config['output'])/'admission_hold.json')
+            break  # No retry of a deterministic probe failure or fresh allocation loop.
         state=read(run/'status.json').get('state')
         if state=='completed' or (state=='infeasible' and task['execution']=='look_mechanism'):
             if task['execution']=='native':
