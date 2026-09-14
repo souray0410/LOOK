@@ -325,7 +325,7 @@ def gpu_owner(config_path):
             if r.get('step') and step is None:
                 step=r['step'];claims.update(run,owner,state='running',step=step)
             if priority is not None:
-                try:priority.poll([t for t in work(config) if t['execution']!='native' and eligible(t,claims)])
+                try:priority.poll([t for t in work(config) if t['execution'] not in ('native','look_spatial') and eligible(t,claims)])
                 except Exception as exc:
                     atomic_write_json(dict(state='priority_deferred',error=repr(exc)),attempt/'priority_error.json')
             if time.time()>end-900:
