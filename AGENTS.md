@@ -13,3 +13,5 @@ Read docs/handoff/README.md when continuing work or coordinating with another pr
 
 Read workspace/RESEARCH_AUDIT_STANDARD.md for every progress report, scheduled review, repair and deployment. Compare approved scope against actual feeds and acceptance; operational health never certifies full research readiness. Advance authorized missing work and keep a verifiable repair ledger.
 Proactively review assumptions, implementation and conclusions throughout all work, including the limits of your own checks. Investigate contradictions, correct authorized issues and independently verify the result; do not wait for user detection or generalize a narrow pass into overall readiness.
+
+Autonomous corrective maintenance is mandatory for authorized workflows: follow workspace/RESEARCH_AUDIT_STANDARD.md through repair, acceptance, safe restoration and verified downstream progress. Detection or an alert alone does not complete maintenance; keep each open incident owned with a concrete automatic continuation where safe. Preserve healthy work and scientific standards.
