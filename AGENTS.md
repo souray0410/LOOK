@@ -8,3 +8,5 @@ The installed MHD release selects the API. Import `mhd_framework` / `mhd_framewo
 Read workspace/MODEL_RUN_STANDARD.md for model/run identity, timestamps, provenance, reuse and retention. Apply it to all new model families and studies, not only current UKB work. Copying accepted parents is distinct from creating a new training execution. Preserve pinned scientific entrypoints and historical artifacts.
 
 Read workspace/GPU_EXECUTION_STANDARD.md for whole-device budgets, measured concurrency and replacement safety. Project/native admission is separate from architecture correctness.
+
+Read docs/handoff/README.md when continuing work or coordinating with another project. It is a dated snapshot: refresh live bindings and acceptance evidence before action. Update it after deployment, protocol or dependency changes, acceptance failures/fixes, phase completion or material blockers. Ibex is the default full-runtime acceptance environment; WS02 is optional, not a prerequisite. Keep healthy running snapshots unchanged.
