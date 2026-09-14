@@ -1,4 +1,4 @@
-# GPU execution standard — version 3
+# GPU execution standard — version 4
 
 ## Capacity is a whole-device budget
 
@@ -132,3 +132,30 @@ Healthily running source snapshots remain immutable. The current research expans
 must pass source-specific runtime gates before it can displace native work. A protocol
 registry, a submitted allocation, a unit test or a source-parallel toy fixture does not
 certify real-data scientific completion or production memory admission.
+
+## Acceptance environment and handoff (2026-09-14)
+
+Ibex is the default and authoritative target for complete runtime acceptance of
+Ibex workloads. WS02 is optional development/debugging, not a prerequisite.
+Keep clean-environment GitHub installation/unit checks: they detect undeclared
+dependencies that an established server environment may hide. A CPU CI pass does
+not certify GPU, data, recovery, production deployment or scientific completion.
+
+Use an admitted independent validation step inside an appropriate allocation,
+never a GPU workload on a login node. Verify actual input dimensions, forward,
+backward, optimizer update, validation, checkpoint save/reload/resume, MHD nodes,
+BN/RNG state, diagnostics and reporting. Record code/config/data/framework SHA,
+hardware, CUDA/software environment and complete GPU/host peaks. Multi-device
+checks must use the intended Ibex placement; CPU Gloo success or a WS02 check
+cannot stand in for that acceptance. Respect data roles and the sealed test gate.
+Protect healthy workers and allocation owners. A changed resource class needs
+new acceptance; do not alter scientific batch/precision/stop rules to force it.
+
+Each repository maintains docs/handoff/README.md, linked from its root README
+and AGENTS.md. Update it after deployment, protocol/dependency changes, acceptance
+failures/fixes, phase completion or material blockers. Record the checked time,
+preparation and deployed versions separately, evidence links, remaining gates,
+next actions and cross-project artifact contracts. Consumers refresh the actual
+bindings, Slurm steps and acceptance records before acting; a handoff snapshot
+is not a live status service or permission to modify another project's queue.
+Only aggregate and non-identifying references belong on GitHub.

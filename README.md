@@ -1,5 +1,7 @@
 # LOOK
 
+[维护与交接 / Handoff](docs/handoff/README.md) — 当前版本、部署状态、验收证据与跨项目调用；读取后请刷新实时状态。
+
 LOOK（inear one-one korrektur）：基于固定 MHD V4 的研究项目。`main` 是与 Radon_Bridge 统一的当前开发结构；`2026_09_09_10_30_34` 是本次研究批次标识。修改前的完整代码、配置和报告见[历史复现](docs/history.md)。
 
 ```text

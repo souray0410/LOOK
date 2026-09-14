@@ -18,3 +18,7 @@ Follow [architecture.md](architecture.md). Keep the source and test role directo
 ## GPU execution
 
 See [GPU development and batch execution](gpu_workflow.md): ws02 debugging, Ibex A100 preflight and finite batches within one allocation, with project-independent artifacts.
+
+## Target-environment acceptance
+
+Full GPU and end-to-end validation runs on Ibex after resource admission; WS02 is optional debugging, not a required gate. Keep clean-install GitHub checks alongside target-environment acceptance. Maintain the dated [handoff](handoff/README.md), and follow the shared GPU execution standard.
