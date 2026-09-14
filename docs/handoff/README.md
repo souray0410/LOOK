@@ -84,3 +84,12 @@ GitHub负责独立安装和代码检查；Ibex是实际GPU完整链路验收环�
 将Radon已定位的相邻调度风险补入LOOK：新增申请前按原生科学源码与框架SHA检查预检接口；不兼容候选记录拒绝原因；短worker退出后重新读取step记录并有限等待终态；失败保留原run并阻止重复申卡。子step移除继承的owner CPU/内存请求字段，保留实际工作线程与科学配置。
 
 Ibex独立目录 `OPS/look_admission_validation_20260914/acceptance.xml` 7项针对测试通过；首轮上传缺少包依赖导致的collection失败保留为attempt1记录，补齐原包源码后通过。结构检查通过。此记录仅为控制代码准备和CPU测试，不是已接替生产或方法实验完成。新控制器必须使用经过SHA锁定的兼容profile实现并完成实际候选API清单验收；原LOOK调度器有活跃salloc子进程，不能直接杀会话。生产切换须独立验证待机入口和会话保护，现有健康GPU owner继续旧源。
+
+
+## 2026-09-14 15:56：LOOK控制补丁已安全接替
+
+控制提交 `e25910c` 的 [CI 34845530283](https://github.com/souray0410/LOOK/actions/runs/34845530283) 已成功；Ibex七项针对测试、124/124父任务API清单及合成会话保护测试通过。线上使用旧 `look_execution_09be3be` 源副本，仅替换 `runtime/project_dispatch.py` 为该提交版本，并绑定已核验的 `models_023d471` 预检脚本；其他科学模块逐文件保持原SHA。
+
+实际入口改为 `OPS/look_admission_20260914/dispatcher.json`，证据在同目录及 `look_admission_validation_20260914`。新CPU dispatcher当次PID1678754已实际运行、无错误、等待账户容量；64个当时可领取任务API拒绝数0。旧CPU dispatcher2931336由独立会话守护保持，原salloc子进程807373及其健康GPU父训练持续更新到第7轮。不得杀旧会话或重复启动管理器；旧子进程全部自然结束后守护才退休旧CPU。新journal加入原角色政策，复制原三条请求身份，没有取消或重复提交allocation。
+
+此为控制路径安全接替，新的正式GPU worker仍须逐任务完整资源及恢复验收，不是LOOK方法研究完成。Radon独立长GPU恢复探针仍在进行，不能重复启动或提前解除其派发保护。下一维护继续推进首个项目参考匹配组执行依赖与实际验收，不以该控制修复代替科学链路实现。
