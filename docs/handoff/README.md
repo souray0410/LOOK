@@ -224,3 +224,7 @@ No scientific worker was killed or acceptance criterion relaxed.
 LOOK253d2a9与ce6c32c、RB135bb68、MHD_Models3420288的精确CI均成功。live audit仍16项已知缺口、fingerprint a8c2e050...未变。22GPU运行/2待批；末级4/81、observer healthy。两个3418宿主epoch17训练/12验证新鲜；两个3417到期暂停且共享claim paused，未被误记为failed，不盲抢。20209源SHA81001/89303文件且临时hash文件新鲜，4/5数据组验收，不报全完成。巡检记录OPS/heartbeat_20260915_2145/review.json。
 
 新增analysis.affine_spectrum紧凑谱诊断及测试，Ibex独立目录look_terminal_20260915/affine_spectrum_validation_2145的9项测试通过。只完成代码/数值接受，真实高维数据计算尚未派发；不替换terminal_78b8962、ce6c32c报告observer或其他健康科学快照。具体边界见linear_maps_explained.zh-CN.md，后续独立只读资源准入后再接真实谱结果。
+
+## 2026-09-16：单种子贯通的父模型登记修正
+
+核查发现末级/空间/线性对照registry已设置3416技术接受后放行重复种子，但project_orders仍等待两模态三种子全部接受才登记宿主，造成不必要的前置等待。现改为锁定配方后，按同一种子的两路已验收父模型交集登记；3416优先，未锁定配方或单边未接受仍拒绝。不改已有spec、run ID、训练源码、数据角色或三种子最终统计门槛。Ibex隔离3项测试通过，覆盖原9任务恒等、部分配对、后续重复、重复执行和接受失败。该变更不等于完整逐层LOOK已贯通；高维拟合/空间资源验收仍须分别处理。部署证据另记，健康运行重复种子不强停。

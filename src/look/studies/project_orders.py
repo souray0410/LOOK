@@ -16,17 +16,24 @@ def advance(config,groups,verify_native,reserve):
         for architecture in MODELS:
             name=disease+'/'+architecture
             pair=[groups[name+'/'+track] for track in ('cfp_2d','oct_bscan_2d')]
-            if not all(g['state']=='waiting_project_adapter' for g in pair):
-                states[name]='waiting_paired_three_seed_parents';continue
+            if not all(g.get('state') in ('waiting_project_adapter', 'waiting_replications')
+                       and g.get('selected') for g in pair):
+                states[name]='waiting_locked_paired_parents';continue
             selected={}
             for role,group in zip(('first','second'),pair):
-                sources=[group['selected']['run_dir']]+[r['run_dir'] for r in group['replicas']]
+                # A locked, accepted 3416 pair can proceed while replicas train.
+                # The controller has verified the nomination; materialization
+                # independently verifies each actual native artifact again.
+                sources=[group['selected']['run_dir']]+[r['run_dir'] for r in group['replicas']
+                    if r.get('state') == 'accepted' or group['state'] == 'waiting_project_adapter']
                 selected[role]={}
                 for source in sources:
                     spec=read(Path(source)/'spec.json');seed=spec['training']['seed']
                     destination=materialize_selected(source,root/'parents',spec,verify_native)
                     selected[role][seed]=dict(path=str(destination),manifest_sha256=file_sha256(destination/'selected_artifact.json'))
+            ready_seeds=set(selected['first']) & set(selected['second'])
             for seed in (3416,3417,3418):
+                if seed not in ready_seeds:continue
                 for position in ('middle','deep','features'):
                     spec=dict(schema='look_project_case_v1',model={'name':architecture},disease=disease,seed=seed,position=position,
                         parents={role:selected[role][seed] for role in selected},training=project['training'],look=project['look'],
@@ -38,7 +45,10 @@ def advance(config,groups,verify_native,reserve):
                     run=reserve(root,'look_expanded_host_'+config['catalog']['sha256'][:16],key,spec,
                         source={'protocol':config['protocol'],'native_groups':name},refresh_summary=False)
                     tasks.append(dict(id=key,spec=str(path),spec_sha256=file_sha256(path),run_dir=str(run),role='look_project'))
-            states[name]='project_tasks_registered'
+            states[name]=('project_tasks_registered' if ready_seeds == {3416,3417,3418}
+                          else 'pilot_registered_waiting_paired_replications')
+    # Prioritize ready pilots across groups without changing task identities.
+    tasks.sort(key=lambda t:(read(t['spec'])['seed'], t['id']))
     queue=dict(schema='look_project_work_feed_v1',test_access=False,tasks=tasks,groups=states)
     atomic_write_json(queue,root/'queue.json')
     from look.analysis.project_rollup import summarize

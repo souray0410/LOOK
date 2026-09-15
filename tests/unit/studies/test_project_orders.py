@@ -48,3 +48,44 @@ def test_incomplete_pair_creates_no_gpu_work(tmp_path,monkeypatch):
     groups={'cataract/resnet50/'+track:{'state':'waiting_replications'} for track in ('cfp_2d','oct_bscan_2d')}
     def forbidden(*args,**kwargs):raise AssertionError('No premature registration')
     assert project_orders.advance(config,groups,forbidden,forbidden)['tasks']==0
+
+
+def test_locked_pilot_pair_releases_before_replications(tmp_path, monkeypatch):
+    monkeypatch.setattr(project_orders, 'DISEASES', ['cataract'])
+    monkeypatch.setattr(project_orders, 'MODELS', ['resnet50'])
+    gate=tmp_path/'gate.json';atomic_write_json({'status':'accepted'},gate)
+    config=dict(catalog={'sha256':'a'*64},protocol={'sha256':'b'*64},source_pins=[],
+        project=dict(output=str(tmp_path/'projects'),training={},look={},
+                     runtime_gate=dict(path=str(gate),sha256=file_sha256(gate))))
+    groups={}; verified=[]; reservations={}
+    for track in ('cfp_2d','oct_bscan_2d'):
+        rows=[]
+        for seed in (3416,3417,3418):
+            root=tmp_path/track/str(seed);root.mkdir(parents=True)
+            atomic_write_json({'training':{'seed':seed}},root/'spec.json')
+            atomic_write_json({'seed':seed},root/'selected_artifact.json')
+            rows.append(dict(run_dir=str(root),state='awaiting_native_acceptance'))
+        groups['cataract/resnet50/'+track]=dict(state='waiting_replications',selected=rows[0],replicas=rows[1:])
+    def materialize(source,*args):
+        verified.append(source);return Path(source)
+    monkeypatch.setattr(project_orders,'materialize_selected',materialize)
+    def reserve(root,namespace,key,spec,**kwargs):
+        if key in reservations:assert reservations[key]==spec
+        reservations[key]=spec;return root/'runs'/key
+    first=project_orders.advance(config,groups,None,reserve)
+    assert first['tasks']==3
+    assert {s['seed'] for s in reservations.values()}=={3416}
+    assert len(verified)==2
+    # One-sided replica acceptance cannot create a mismatched parent pair.
+    groups['cataract/resnet50/cfp_2d']['replicas'][0]['state']='accepted'
+    assert project_orders.advance(config,groups,None,reserve)['tasks']==3
+    groups['cataract/resnet50/oct_bscan_2d']['replicas'][0]['state']='accepted'
+    second=project_orders.advance(config,groups,None,reserve)
+    assert second['tasks']==6
+    before=Path(second['queue']).read_bytes()
+    project_orders.advance(config,groups,None,reserve)
+    assert Path(second['queue']).read_bytes()==before
+    # A verification failure must not be converted into permission to dispatch.
+    monkeypatch.setattr(project_orders,'materialize_selected',lambda *a: (_ for _ in ()).throw(ValueError('bad receipt')))
+    with pytest.raises(ValueError,match='bad receipt'):
+        project_orders.advance(config,groups,None,reserve)
