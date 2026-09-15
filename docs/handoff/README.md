@@ -141,3 +141,9 @@ Isolated Ibex management acceptance: 272 tests passed in
 `lease_continuity_20260915/validation2/`; the first failed fixture run is preserved.
 Shared document hashes match across all three repositories. This source is for
 new validated owners; original worker bindings and runtime states were not changed.
+
+## 2026-09-15：仿射向量修正与统一秩预算补充
+
+用户确认允许独立线性替代对照，强调各方法使用合适的保留量描述、用共同维数预算匹配，而不是预设最佳实现。新准备入口见[协议与数学定义](../look_linear_vectors.zh-CN.md)。已加入共享PCA岭回归、保持同截距的残差低秩回归、自由截距低秩回归；原空间处理与旧科学代码不变。`linear_registry`及现有dispatcher的可选`linear_feeds`提供依赖/预检/复现入口。新增秩预算工具拒绝将截断谱自归一化成100%，能量阈值仅描述、不事后选型。
+
+本条不是上线或科学结果接受声明：需按精确提交完成CI和Ibex完整资源/数据重放验收；生产绑定未切换。密集求解的高维可行性、PCA特征复用提速、PLS与独立配置选型不是已完成事项。健康旧任务继续旧版本。
