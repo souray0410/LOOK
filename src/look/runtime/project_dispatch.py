@@ -61,6 +61,12 @@ def work(config):
         if linear.get('schema')!='look_linear_work_feed_v1' or linear.get('test_access') is not False:
             raise ValueError('Unsealed linear feed')
         result.extend(dict(t,execution='look_linear') for t in linear['tasks'])
+    for path in config.get('terminal_feeds',[]):
+        stage=read(path)
+        if not stage:continue
+        if stage.get('schema')!='look_terminal_work_feed_v1' or stage.get('test_access') is not False:
+            raise ValueError('Unsealed terminal stage feed')
+        result.extend(dict(t,execution='look_terminal') for t in stage['tasks'])
     native_paths=[config['native_feed']]+config.get('additional_native_feeds',[])
     for native_path in native_paths:
         native=read(native_path)
@@ -93,7 +99,9 @@ def eligible(task,claims):
             from runtime.training_state import verify_completion
             verify_completion(task['run_dir'],spec)
         else:
-            if task['execution']=='look_linear':
+            if task['execution']=='look_terminal':
+                from look.studies.terminal_case import verify_case
+            elif task['execution']=='look_linear':
                 from look.studies.linear_case import verify_case
             elif task['execution']=='look_spatial':
                 from look.studies.spatial_case import verify_case
@@ -191,7 +199,7 @@ def reconcile_expired(config):
         if state not in ('TIMEOUT','PREEMPTED','NODE_FAIL'):continue
         checkpoint=run/('last.pt' if task['execution']=='native' else 'training/last.pt' if task['execution']=='look_mechanism' else 'host/last.pt')
         if not checkpoint.is_file():
-            if task['execution'] not in ('look_mechanism','look_spatial','look_linear'):continue
+            if task['execution'] not in ('look_mechanism','look_spatial','look_linear','look_terminal'):continue
             # Fitting can restart at its last accepted site; prior process death
             # has been established above, never inferred from heartbeat age.
             checkpoint=Path(task['spec'])
@@ -303,11 +311,11 @@ def gpu_owner(config_path):
         if not candidates:break
         prior=read(root/'last_execution.json').get('kind')
         primary=[t for t in candidates if t['execution']=='look']
-        supplement=[t for t in candidates if t['execution'] in ('look_mechanism','look_spatial','look_linear')]
-        if supplement and (not primary or prior=='look'):
+        supplement=[t for t in candidates if t['execution'] in ('look_mechanism','look_spatial','look_linear','look_terminal')]
+        if supplement and (not primary or prior=='look' or any(t['execution']=='look_terminal' for t in supplement)):
             # Neural continuations first, then controls, then sample curves.
             priority={'host_training':0,'student_training':1,'correction':2,'sample_curve':3}
-            supplement.sort(key=lambda t: -1 if t['execution'] in ('look_spatial','look_linear') else priority[read(t['spec'])['task']['kind']])
+            supplement.sort(key=lambda t: -2 if t['execution']=='look_terminal' else -1 if t['execution'] in ('look_spatial','look_linear') else priority[read(t['spec'])['task']['kind']])
             task=supplement[0]
         else:task=primary[0] if primary else candidates[0]
         atomic_write_json(dict(kind=task['execution']),root/'last_execution.json')
@@ -357,7 +365,9 @@ def gpu_owner(config_path):
                 from runtime.training_state import verify_completion
                 verify_completion(run,spec)
             else:
-                if task['execution']=='look_linear':
+                if task['execution']=='look_terminal':
+                    from look.studies.terminal_case import verify_case
+                elif task['execution']=='look_linear':
                     from look.studies.linear_case import verify_case
                 elif task['execution']=='look_spatial':
                     from look.studies.spatial_case import verify_case
@@ -399,6 +409,16 @@ def execute_work(config_path,spec_path,run,kind,record):
         if receipt.get('peak_gpu_gib',float('inf'))*1.2+2>70:raise ValueError('Native GPU reserve failed')
         command=[config['python'],'-m','expanded.native','--spec',str(spec_path),'--output',str(run),'--mode','train']
         os.execvpe(config['python'],command,environment)
+    elif kind=='look_terminal':
+        environment['LOOK_WORKER_MEMORY_BYTES']=str(100*1024**3)
+        subprocess.run([config['python'],'-m','look.studies.terminal_case','--spec',str(spec_path),
+            '--output',str(profile_root),'--profile'],env=environment,check=True)
+        receipt_path=profile_root/'profile_accepted.json';receipt=read(receipt_path)
+        if receipt.get('state')!='accepted' or receipt.get('identity')!=stable_hash(spec):
+            raise ValueError('Terminal resource preflight failed')
+        environment['LOOK_TERMINAL_PROFILE_RECEIPT']=str(receipt_path)
+        os.execvpe(config['python'],[config['python'],'-m','look.studies.terminal_case',
+            '--spec',str(spec_path),'--output',str(run)],environment)
     elif kind=='look_linear':
         environment['LOOK_WORKER_MEMORY_BYTES']=str(384*1024**3)
         subprocess.run([config['python'],'-m','look.studies.linear_case','--spec',str(spec_path),
@@ -469,7 +489,7 @@ def configure_control_imports(config):
 def main():
     p=argparse.ArgumentParser();p.add_argument('--config',required=True)
     p.add_argument('--standby',action='store_true');p.add_argument('--allocation-owner',action='store_true');p.add_argument('--gpu-owner',action='store_true')
-    p.add_argument('--execute');p.add_argument('--kind',choices=['native','look','look_mechanism','look_spatial','look_linear']);p.add_argument('--record');p.add_argument('--run');p.add_argument('--profile-project');p.add_argument('--profile-mechanism')
+    p.add_argument('--execute');p.add_argument('--kind',choices=['native','look','look_mechanism','look_spatial','look_linear','look_terminal']);p.add_argument('--record');p.add_argument('--run');p.add_argument('--profile-project');p.add_argument('--profile-mechanism')
     a=p.parse_args()
     configure_control_imports(read(a.config))
     if a.standby:standby(a.config)

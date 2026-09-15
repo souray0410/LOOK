@@ -326,9 +326,9 @@ def _process_peak_rss_bytes() -> int:
     return peak if sys.platform == "darwin" else peak * 1024
 
 
-def fit_complete_pca(graph, loader, node_name, factor, max_rank, device, source_id, spatial_method="interpolate", strict_rank=False):
+def fit_complete_pca(graph, loader, node_name, factor, max_rank, device, source_id, spatial_method="interpolate", strict_rank=False, *, feature_factory=None):
     def features():
-        return iter_complete_features(graph, loader, node_name, factor, device, **({"spatial_method": spatial_method} if spatial_method != "interpolate" else {}))
+        return feature_factory() if feature_factory is not None else iter_complete_features(graph, loader, node_name, factor, device, **({"spatial_method": spatial_method} if spatial_method != "interpolate" else {}))
 
     moments = StreamingMoments()
     feature_shape = down_shape = None
@@ -474,8 +474,11 @@ def fit_look_node(
     pca: FullFeaturePCA,
     upstream_artifacts: Sequence[LOOKArtifact] = (),
     filler: MissingModalityFiller | None = None,
+    *, feature_pairs=None,
 ) -> Dict[int, LOOKArtifact]:
     def pairs():
+        if feature_pairs is not None:
+            return feature_pairs()
         return iter_feature_pairs(
             graph, loader, node_name, missing_pattern, factor, device, upstream_artifacts, filler,
             **({"spatial_method": pca.spatial_method} if pca.spatial_method != "interpolate" else {})
