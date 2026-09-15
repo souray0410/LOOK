@@ -177,3 +177,32 @@ single-final correction pulled forward, with equal-q linear comparisons; it is n
 full progressive LOOK or spatial-route acceptance. Original PCA workers continue.
 At 15:46 the new dispatcher was waiting for account capacity; check the subsequent
 `borrow_51898877` handover receipts before claiming formal execution or completion.
+
+### Existing allocation handover accepted at 15:59 Saudi
+
+Allocation `51898877` remains RUNNING. Its generic ConvNeXt-L worker saved the
+original run at epoch18 / offset41152 / update16164; the complete checkpoint loaded
+with model, optimizer, scheduler, RNG and Node IDs, and the shared claim is paused.
+This review did not rerun a next-update equivalence test. The original scientific
+source, configuration and run ID remain unchanged and eligible for later recovery.
+
+An independent terminal-stage GPU probe passed while the native worker remained
+healthy. Only then did the native worker checkpoint and exit. The old family manager
+is held under a supervised, identity-checked one-time handover; its allocation and
+original step remain present. The new LOOK owner runs in that same allocation.
+The wrapper resumes the old family manager only after its project child exits.
+Do not independently resume the old manager while LOOK is live.
+
+LOOK step13 is now executing `terminal/cataract/resnet50/middle/3416`, run
+`2026_09_15_15_32_32_778633`. Real train feature-cache shards advanced from153 to408
+in independent reads. This is actual method execution, not accepted performance.
+The terminal owner uses the shared claims and existing finite feed; no replacement
+GPU request was submitted. The demand publisher now counts LOOK8 / Radon_Bridge10
+/ generic6, including pending jobs; recheck before future decisions.
+
+Evidence under `OPS/look_terminal_20260915/borrow_51898877`: probe receipt, original
+process identity, `checkpoint_accepted.json`, `borrow_v2.py`, borrowed request journal,
+project owner logs and handover status. `OPS/heartbeat_20260915_1545/handover_review.json`
+records independent progress. V1 waited for a nonexistent final companion status;
+V2 checks actual Slurm step death instead, preserving the recorded `stopping` status.
+No scientific worker was killed or acceptance criterion relaxed.
