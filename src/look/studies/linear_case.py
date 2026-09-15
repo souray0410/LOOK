@@ -129,7 +129,9 @@ def run(spec,out,device,pause,profile=False):
             for ratio in base['look']['ratios']:
                 publish(arm,f'mixed_{ratio:.1f}',assemble_mixed(predictions['complete'],{p:predictions[p] for p in patterns},ratio,base['look']['mask_seed']))
             atomic_write_json(diagnostics,out/arm/'diagnostics.json')
-            costs[arm]=dict(seconds=time.time()-begin,artifact_bytes=sum(p.stat().st_size for p in (out/arm).rglob('*') if p.is_file()),
+            costs[arm]=dict(seconds=time.time()-begin,
+                            retained_fit_bytes=sum(p.stat().st_size for p in (out/arm).rglob('*') if p.is_file()),
+                            inference_bank_bytes=sum(p.stat().st_size for p in (out/arm).glob('*/bank.pt')),
                             gpu_peak_reserved_bytes=torch.cuda.max_memory_reserved(device),rank_is_not_equal_parameter_budget=True)
             state_equal(graph,frozen)
         if node_ids!=[(n.id,n.name) for n in graph.nodes]:raise ValueError('Node IDs changed')
