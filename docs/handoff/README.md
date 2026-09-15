@@ -104,3 +104,13 @@ be separately claimable for parallel execution. Real scientific dependencies rem
 MHD_Models prepares a CPU demand publisher for the existing budget contract; it
 does not replace this project's running source or automatically split old cases.
 Live policy deployment and per-arm parallel execution are separate acceptance gates.
+
+
+## 2026-09-15 revised allocation targets: 10 / 10 / 4
+
+This supersedes the no-generic-floor policy earlier today: preserve four generic
+model slots, cap LOOK and Radon_Bridge targets at ten each, and lend every currently
+unused project slot to generic models. Targets govern new admission, not forced
+termination of healthy existing work. Explicit publisher configuration and live
+consumption must be verified. Independent project-arm parallelism remains a
+separate task-DAG integration gate, not automatically solved by quota changes.

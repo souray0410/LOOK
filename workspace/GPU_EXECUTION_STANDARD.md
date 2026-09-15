@@ -110,9 +110,12 @@ reproduction records; they do not authorize new submissions. Existing healthy
 allocations finish normally. Slurm's time limit is never a training completion rule.
 
 Project work and its explicitly registered prerequisite models take priority over
-generic model exploration. There is no guaranteed generic-model floor. Allocate
-the verified account budget to current executable project demand first, balancing
-projects without permanent equal caps; only unused capacity admits generic models.
+generic model exploration. Under the latest 2026-09-15 user instruction, preserve four generic-model GPU
+slots within the verified 24-GPU budget. LOOK and Radon_Bridge each have a
+ten-GPU target cap. Allocate only against current executable demand; all unused
+project capacity is available to generic models. One project does not automatically
+borrow the other project's ten-slot target. Reduced actual account limits constrain
+new admissions; live over-budget jobs retire normally, never by forced cancellation.
 Do not count unimplemented experiment positions as executable GPU demand.
 Count actual requested/allocated GPUs, not job count. Running, pending and unresolved
 submission intents all consume the local budget. Read actual Slurm association,
