@@ -1,4 +1,4 @@
-# Model and training-run standard — version 4
+# Model and training-run standard — version 5
 
 This is the common standard for current and future research projects, independent
 of disease, dataset, architecture, framework release, server and scheduler. It
@@ -271,3 +271,13 @@ Storage/schema migration and framework conversion are separate operations. This
 standard does not authorize V4-to-V5 conversion or change scientific protocols.
 Update downstream pinned references only after strict loading and required replay.
 Old active study versions remain unchanged until that transition is accepted.
+
+
+## Cross-allocation execution continuity
+
+The mandatory resource-lease contract is in
+[GPU_EXECUTION_STANDARD.md](GPU_EXECUTION_STANDARD.md#resource-leases-are-independent-of-scientific-executions).
+Keep one execution identity across allocation expiry, verified recovery and stage
+continuation. Accepted completion, recoverable pause and a technical failure are
+different states. This covers PCA/SVD, correction, evaluation and reporting as well
+as neural training; record each stage's actual recovery granularity and acceptance.

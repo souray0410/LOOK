@@ -15,3 +15,10 @@ Read workspace/RESEARCH_AUDIT_STANDARD.md for every progress report, scheduled r
 Proactively review assumptions, implementation and conclusions throughout all work, including the limits of your own checks. Investigate contradictions, correct authorized issues and independently verify the result; do not wait for user detection or generalize a narrow pass into overall readiness.
 
 Autonomous corrective maintenance is mandatory for authorized workflows: follow workspace/RESEARCH_AUDIT_STANDARD.md through repair, acceptance, safe restoration and verified downstream progress. Detection or an alert alone does not complete maintenance; keep each open incident owned with a concrete automatic continuation where safe. Preserve healthy work and scientific standards.
+
+Resource-lease continuity is a mandatory cross-project design/review gate. Read
+"Resource leases are independent of scientific executions" in
+workspace/GPU_EXECUTION_STANDARD.md before changing submission, expiry, checkpoints,
+recovery, stage caching or completion. Enforce the same rule for neural training,
+PCA/SVD/correction, evaluation and reporting; never equate a 48-hour lease with
+scientific completion or claim deployed recovery from documentation alone.
