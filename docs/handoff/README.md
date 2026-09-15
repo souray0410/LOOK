@@ -150,3 +150,30 @@ new validated owners; original worker bindings and runtime states were not chang
 
 
 本补充实现提交`6b0626e`已推送至`2026_09_14_21_37_57`。Ibex完整Git检出的针对性检查77项通过，含原子恢复、MHD节点/冻结状态、秩与能量语义及调度读取；这里是CPU数值/接口测试，非真实队列GPU验收。对应CI为34965862964（状态需刷新）。准备清单位于OPS/look_linear_20260915/registry_prepared.json，首次登记81宿主、243臂视图，均等待原完整LOOK接受；base feed当前9宿主任务、0完整接受。没有切换生产dispatcher、启用新GPU申请或读取test。下一步由该受验来源完成真实资源预检和安全控制器衔接，不能把登记清单当作已上线自动运行。后续小改将推理bank大小与完整拟合存储分别记账。
+
+## 2026-09-15 afternoon resource handoff
+
+The latest user instruction supersedes the four-card generic minimum: retain two
+generic GPUs and distribute other capacity dynamically to ready project work. The
+sole deployed publisher is `project_demand_floor2_20260915`; the old publisher is
+retired, with GPU workers and allocation owners preserved. Its 15:46 Saudi snapshot
+reported LOOK 7, Radon_Bridge 10 and other work 7 (running plus pending), with demand
+targets 11/11/2. These counts require a fresh Slurm/role check before action.
+
+The policy implementation passed 13 targeted tests on Ibex, including the two-card
+floor, borrowing, reduced limits and uncertain ownership. Healthy project work and
+registered project prerequisite models are distinct from generic exploration.
+Extra generic workers may yield at a verified checkpoint after a project preflight;
+quota publication alone does not transfer an existing allocation. The staged
+legacy-to-project handover must verify process identity, source-specific recovery,
+old step death, shared claims and actual downstream execution. Never cancel the
+allocation owner to rebalance. All new requests remain 48 hours.
+
+The terminal-stage control overlay is deployed from `78b8962`, with 26 targeted
+tests and a real GPU resource/reload preflight. `look_active_workflow.json` binds
+`look_terminal_20260915/control/dispatcher.json` and `registry_v2.json`. Three
+accepted 3416 hosts have independently runnable terminal tasks. This is the approved
+single-final correction pulled forward, with equal-q linear comparisons; it is not
+full progressive LOOK or spatial-route acceptance. Original PCA workers continue.
+At 15:46 the new dispatcher was waiting for account capacity; check the subsequent
+`borrow_51898877` handover receipts before claiming formal execution or completion.
