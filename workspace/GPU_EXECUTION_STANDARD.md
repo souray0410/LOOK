@@ -109,9 +109,11 @@ accepted full-workload profile requires more.12h/24h manifests remain historical
 reproduction records; they do not authorize new submissions. Existing healthy
 allocations finish normally. Slurm's time limit is never a training completion rule.
 
-Reserve at least four GPU slots for ready finite native-model work. Allocate the
-remaining verified account budget between ready LOOK and Radon_Bridge tasks, with
-round-robin fairness; idle project reservations can be borrowed by native work.
+Project work and its explicitly registered prerequisite models take priority over
+generic model exploration. There is no guaranteed generic-model floor. Allocate
+the verified account budget to current executable project demand first, balancing
+projects without permanent equal caps; only unused capacity admits generic models.
+Do not count unimplemented experiment positions as executable GPU demand.
 Count actual requested/allocated GPUs, not job count. Running, pending and unresolved
 submission intents all consume the local budget. Read actual Slurm association,
 QOS and account inventory; a24GPU local ceiling is not a universal school policy.
@@ -159,3 +161,29 @@ next actions and cross-project artifact contracts. Consumers refresh the actual
 bindings, Slurm steps and acceptance records before acting; a handoff snapshot
 is not a live status service or permission to modify another project's queue.
 Only aggregate and non-identifying references belong on GitHub.
+
+
+## Project-first demand and parallel experiments (2026-09-15)
+
+Allocation admission and task granularity are separate requirements. Independent
+configurations, matched controls, seeds and hosts must be individually claimable
+and able to run concurrently across cards. Preserve real dependencies: accepted
+parents before host/bridge work, accepted host before frozen LOOK fitting, upstream
+progressive correction before downstream fitting, and complete matched results
+before group statistics. Shared immutable inputs do not imply a serial dependency.
+Do not change scientific identity, data order or statistical weights to parallelize.
+
+Fresh project dispatch admission records include ready required parent training.
+A single CPU policy publisher may update the existing role-budget input under the
+shared submission lock; it must not submit, claim, cancel or become another GPU
+owner. Existing executors still enforce source, resource, recovery and test gates.
+Running and pending allocations remain occupied; healthy work is not cancelled to
+rebalance quotas. With ready demand, future released slots go to projects first.
+If demand, ownership or account state is uncertain, hold new generic submissions
+and retain healthy execution while investigating. Generic candidates retain their
+original run and checkpoint when a validated safe handover pauses them.
+
+Report allocated project slots, actual project work, required-parent work and generic
+models separately. A dynamic admission budget does not prove that all research
+arms have been split into independently dispatched tasks. Record unimplemented
+parallel case boundaries and resource handovers in the acceptance ledger.

@@ -93,3 +93,14 @@ must reject unconverted legacy inputs; old pinned workers finish unchanged.
 Migration, downstream replay and release evidence are required before switching.
 This documentation update does not certify remaining production migration or
 upgrade MHD V4. See the standard for the mandatory review checklist.
+
+
+## 2026-09-15 project-first resource policy
+
+The user superseded the generic-model reservation: project work and required
+parent models have priority; generic models get only unused capacity. The shared
+GPU standard now also requires independent configurations, controls and seeds to
+be separately claimable for parallel execution. Real scientific dependencies remain.
+MHD_Models prepares a CPU demand publisher for the existing budget contract; it
+does not replace this project's running source or automatically split old cases.
+Live policy deployment and per-arm parallel execution are separate acceptance gates.
