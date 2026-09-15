@@ -30,7 +30,7 @@ from look.data.observed_pair import collate_observed
 from look.evaluation.evaluator import evaluate_missing, save_prediction_bundle
 from look.evaluation.observed_suite import check_matched, assemble_mixed
 from look.evaluation.stability import logit_metrics, probabilities_from_logits
-from look.analysis.linear_report import report
+from look.analysis.terminal_report import report, COMPARISONS
 
 VERSION='look_terminal_stage_v1'
 SITE='fusion_participant_feature'
@@ -43,7 +43,7 @@ def protocol():
         rank_penalty='all_three_arms_share_PCA_best_candidate_rank_and_lambda',
         disabled_candidate='report_original_on_off_choice_separately; compare_candidate_even_if_disabled',
         spatial_reduction='not_applicable_to_terminal_vector',test_access=False,
-        bootstrap_iterations=10000,seed_gate='technical_acceptance_only_not_positive_performance')
+        comparisons=COMPARISONS,bootstrap_iterations=10000,seed_gate='technical_acceptance_only_not_positive_performance')
 
 
 def dependencies(spec):
@@ -74,6 +74,7 @@ def verify_case(root,spec):
     if (r.get('schema')!=VERSION or r.get('identity')!=stable_hash(spec) or r.get('state')!='accepted'
         or r.get('test_access') is not False or not r.get('full_development_mhd_replay')
         or not r.get('host_frozen') or not r.get('reload_exact')):raise ValueError('Terminal stage not accepted')
+    if not {'spec.json','development/suite.json','report/paired_statistics.json','costs.json','pca.pt'}.issubset(r['files']):raise ValueError('Stage evidence incomplete')
     for name,sha in r['files'].items():
         p=(root/name).resolve()
         if not p.is_relative_to(root.resolve()) or file_sha256(p)!=sha:raise ValueError('Stage evidence changed')
@@ -153,7 +154,11 @@ def run(spec,out,device,pause,profile=False):
     if limit<=0:raise ValueError('RAM admission required')
     if not profile:
         receipt=read(os.environ['LOOK_TERMINAL_PROFILE_RECEIPT'])
-        if receipt.get('identity')!=stable_hash(spec) or receipt.get('state')!='accepted':raise ValueError('Profile missing')
+        if receipt.get('identity')!=stable_hash(spec) or receipt.get('state')!='accepted' or receipt.get('profile') is not True:raise ValueError('Profile missing')
+        profile_root=Path(os.environ['LOOK_TERMINAL_PROFILE_RECEIPT']).parent.resolve()
+        for name,sha in receipt['files'].items():
+            p=(profile_root/name).resolve()
+            if not p.is_relative_to(profile_root) or file_sha256(p)!=sha:raise ValueError('Profile evidence changed')
     torch.set_num_threads(min(2,int(os.environ.get('SLURM_CPUS_PER_TASK','2'))));torch.use_deterministic_algorithms(True)
     torch.backends.cudnn.benchmark=False;torch.backends.cudnn.deterministic=True
     torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
