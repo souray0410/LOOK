@@ -385,6 +385,19 @@ def gpu_owner(config_path):
 def execute_work(config_path,spec_path,run,kind,record):
     import torch
     config=read(config_path);spec=read(spec_path);run=Path(run)
+    if kind in ('look_mechanism','look_spatial','look_linear','look_terminal'):
+        # Each scientific task executes its own immutable pin, including when a
+        # newer management overlay dispatches an older accepted study.
+        import look
+        roots={str(Path(row['path'].split('/src/look/')[0])/'src')
+               for row in spec.get('source_pins',[]) if '/src/look/' in row['path']}
+        if len(roots)!=1:raise ValueError('Ambiguous pinned scientific package')
+        source=next(iter(roots))
+        if Path(look.__file__).resolve().parent!=Path(source)/'look':
+            env=os.environ.copy();env['PYTHONPATH']=source+':'+env.get('PYTHONPATH','')
+            os.execvpe(config['python'],[config['python'],'-m','look.runtime.project_dispatch',
+                '--config',str(config_path),'--execute',str(spec_path),'--run',str(run),
+                '--kind',kind,'--record',str(record)],env)
     step=dict(job_id=os.environ['SLURM_JOB_ID'],step=os.environ['SLURM_STEP_ID'],pid=os.getpid(),run=str(run),time=time.time())
     atomic_write_json(step,Path(record))
     profile_root=Path(record).parent/'profile'
