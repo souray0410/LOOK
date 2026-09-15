@@ -55,8 +55,13 @@ def dependencies(spec):
     m=read(spec['pca']['path']);identity=m['identity']
     if identity.get('case')!=stable_hash(base) or identity.get('host_best_sha256')!=s['best_sha256']:
         raise ValueError('PCA belongs to another host')
-    if identity.get('max_rank')!=base['look']['max_rank'] or identity.get('spatial_method')!='interpolate':
+    from look.methods.joint import PROTOCOL
+    if identity.get('max_rank')!=base['look']['max_rank'] or identity.get('protocol')!=PROTOCOL:
         raise ValueError('PCA fitting protocol mismatch')
+    # Verify the actual producer, not a field absent in the original locked bank.
+    for key,relative in [('joint_code_sha256','methods/joint.py'),('pca_code_sha256','methods/operator.py')]:
+        pins=[p['sha256'] for p in base['source_pins'] if p['path'].endswith('/look/'+relative)]
+        if pins!=[identity.get(key)]:raise ValueError('PCA producer does not match locked host source')
     if not spec.get('source_pins'):raise ValueError('Missing immutable source')
     for pin in spec['source_pins']:
         if file_sha256(pin['path'])!=pin['sha256']:raise ValueError('Suffix source changed')
