@@ -214,3 +214,7 @@ No scientific worker was killed or acceptance criterion relaxed.
 ## 2026-09-15：自由均值候选与持续汇总准备
 
 用户偏向自由均值RRR，但保留三臂匹配研究，不按当前排名删减。新增只读terminal_rollup观察器，独立输出并保留原模型/研究身份；其核验范围为报告/spec摘要和原接受条件，不替代原注册器完整预测/缓存验收。当前live核查4/81末级接受，77等待宿主，两个3418宿主仍在更新；原完整逐层与扩展包不能据此宣称全自动完成。本地缺pytest，结构检查通过；目标环境测试与部署另行记录。
+
+### 持续汇总已在Ibex上线
+
+`ce6c32c`的4项报告完整性/负结果/重复清单/test拒绝/三种子门槛测试在Ibex通过；结构检查通过。真实首轮汇总4个接受案例116行，report/spec核验无异常，完整三种子组为0；不重新读参与者数组或训练缓存。独立源码`OPS/look_terminal_20260915/rollup_ce6c32c`，绑定`rollup_binding.json`，输出`continuous_report`；观察器实际存活并写出healthy状态。原GPU训练与registry快照未修改。三小时UKB监控已加入观察器状态核对和安全单实例恢复；无法解释的SHA矛盾需隔离调查，不自动改证据。终端四案例完成后的原借卡owner已恢复通用模型，不得依据旧15:59条目再次迁移。精确CI状态须刷新，Ibex针对性通过不替代CI。
