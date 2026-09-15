@@ -25,3 +25,10 @@ convert completed artifacts with separate versioned migration tools, validate st
 and downstream consumers, then admit the canonical outputs. Preserve legitimate
 architecture/dimension/task variants. Record migration and rollout evidence in the
 handoff; CI or directory renaming alone does not establish migration acceptance.
+
+Resource-lease continuity is a mandatory cross-project design/review gate. Read
+"Resource leases are independent of scientific executions" in
+workspace/GPU_EXECUTION_STANDARD.md before changing submission, expiry, checkpoints,
+recovery, stage caching or completion. Enforce the same rule for neural training,
+PCA/SVD/correction, evaluation and reporting; never equate a 48-hour lease with
+scientific completion or claim deployed recovery from documentation alone.

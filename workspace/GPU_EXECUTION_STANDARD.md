@@ -1,4 +1,4 @@
-# GPU execution standard — version 4
+# GPU execution standard — version 5
 
 ## Capacity is a whole-device budget
 
@@ -190,3 +190,66 @@ Report allocated project slots, actual project work, required-parent work and ge
 models separately. A dynamic admission budget does not prove that all research
 arms have been split into independently dispatched tasks. Record unimplemented
 parallel case boundaries and resource handovers in the acceptance ledger.
+
+
+## Resource leases are independent of scientific executions
+
+This is a permanent design and release requirement for every project, native
+model, data-fitting pipeline, evaluation and future framework version. Under the
+current allocation policy, request 48 hours. A resource lease expiring does not
+complete, reset or create a scientific execution. Reaching a protection cap is
+not acceptance either. Historical request manifests remain evidence and cannot
+be replayed as new shorter or unguarded submissions.
+
+Use one durable task state machine across allocations: eligible -> atomically
+claimed -> running -> checkpointed/paused or acceptance-pending -> accepted.
+Failed/unknown states require scoped diagnosis. On a new grant, re-read the finite
+approved queue, dependency receipts, live claims and recovery evidence. Verify and
+skip accepted tasks; resume eligible unfinished executions with the same run ID,
+configuration, seed and source; otherwise claim the next ready task. A new
+allocation/attempt ID is provenance, not a new replicate. Missing required recovery
+state must not silently trigger fresh initialization.
+
+Begin graceful retirement at least 900 seconds before the actual Slurm EndTime,
+earlier when measured save/validation latency requires it. Keep regular durable
+checkpoints during work: a final signal alone cannot protect against node failure.
+At an optimizer boundary persist model/BN, optimizer, scheduler/selection/platform
+state, AMP scaler when applicable, random streams, sampler/data position and
+accumulation state or a verified empty-accumulation boundary. Atomically publish a
+complete checkpoint; retain a verified predecessor until replacement is durable.
+Changing hardware or placement requires recorded numerical/resource acceptance,
+not an unqualified claim of bitwise reproducibility.
+
+Non-training work also has recovery units: validated PCA/SVD entries, progressive
+correction candidates/sites, prediction shards, diagnostics and report stages.
+Bind every completed unit to inputs, configuration, source and output hashes.
+Reuse only accepted units with satisfied dependencies. An interrupted unsaved
+unit may be recomputed from its last valid boundary; explicitly report its
+recovery granularity and maximum lost work. Do not claim batch-exact fitting
+resume from an entry-level cache. If a unit repeatedly exceeds a lease without
+committing progress, isolate that problem and implement accepted finer recovery;
+do not repeatedly allocate and redo it without progress.
+
+Duration admission asks whether a validated useful checkpointable work segment
+fits, including load/probe/save/exit reserves, not whether the entire model will
+converge within one lease. Long tasks must not be permanently starved by full-run
+estimates. This does not lower the original epoch, plateau or performance rules.
+Resource feasibility and minimum useful segment measurements remain required.
+
+Before reassignment establish old allocation/step death using the scheduler and
+accounting; stale heartbeats or a missing local client alone are insufficient.
+Unknown submission/ownership blocks new claims. A verified TIMEOUT, preemption or
+node failure can resume the unchanged run from valid state. OOM, corrupted state,
+scientific protection-cap and deterministic software failures require their own
+reviewed repair; no blind restart. A failure of one task does not cancel healthy
+workers or the owner. Release resources when no real safe work is available.
+
+Acceptance must exercise interruption/restart at training and non-training stage
+boundaries, exact next-update/state equivalence where applicable, completed-unit
+reuse, corrupt/missing checkpoints, terminal-versus-unknown ownership, concurrent
+claim races, manager restart, and complete-task-to-next-task dispatch. Record
+implemented, tested, deployed, live-restored and scientifically accepted separately.
+Tests or a policy document alone never certify all current executors. Preserve old
+immutable workers until validated retirement; use explicit versioned migration for
+changed contracts. Keep a stage-by-stage evidence ledger and automatic continuation
+for unfinished recovery gates. Apply this review before every new workflow release.
