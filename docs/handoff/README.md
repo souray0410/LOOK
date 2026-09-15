@@ -234,3 +234,16 @@ LOOK253d2a9与ce6c32c、RB135bb68、MHD_Models3420288的精确CI均成功。live
 ## 2026-09-16：恢复独立校正起点
 
 见[后缀起点协议](../suffix_starts_20260916.zh-CN.md)。新增suffix_protocol/case/registry/report及原dispatcher feed；原81宿主×7中间起点=567拟合任务，首尾复用原LOOK/single_final。逐宿主3416全部起点技术完成后才放重复种子，不按性能筛范围。当前补丁通过Ibex隔离CPU回归，正式GPU资源验收与上线凭远端deployment.json确认；此文档不声称已得到全部实验结果。
+
+
+## 2026-09-16：独立起点已部署并开始正式拟合
+
+科学源f3c8a475d3348a818ae637e35033808d1b0a535f，[CI35029091261](https://github.com/souray0410/LOOK/actions/runs/35029091261)成功，完整CPU和双rank检查通过。Ibex225项CPU通过；Git archive缺submodule元数据的2项布局失败已补齐锁定Git证据后复测通过。真实GPU两方向拟合、冻结宿主、保存重载及主动中断后恢复通过，8条原已提交节点决策SHA保持不变。
+
+OPS/look_suffix_20260916保存独立源码、registry.json、runtime_environment.json、deployment.json和验证证据；生产数据根为DATA/LOOK/2026_09_10_11_11_31/suffix_starts_20260916_v1。当前3个3416宿主已准备21条新增后缀，首尾复用原完整案例。正式首条deep/start8已在51898670.13执行，须继续核对run/status、Slurm、worker.log与接受文件，不把资源探针当正式结果。现阶段完整后缀接受数仍为0。
+
+唯一CPU dispatcher切换至OPS/look_suffix_20260916/control/dispatcher.json，旧CPU session由guardian保留，所有旧GPU科学worker不改。look_active_workflow.json、需求publisher及三小时监控已更新。原通用ConvNeXt-B按同run保存完整checkpoint后paused回候选池；borrow_51898670监督仅在新项目owner退出后恢复旧family，严禁手工提前SIGCONT。第二条borrow_51896678为有限共存资格验证→断点验收→接替链，通过前保留旧模型，基础模型最低2卡约束不变。第二条不是已完成交接。
+
+每宿主全部9起点完成后自动生成两种缺失方向完整表、10000次配对区间与dev起点选择，再解锁对应3417/3418；无正收益门槛。本周优先完整3416匹配结论，所有批准范围保留。原15主案例、其他机制/空间/线性范围继续按依赖滚动，不把基础模型数替代项目完成数。
+
+关联自审还发现R&B3D Swin预检在50GiB allocator上限下OOM；失败step已死、2个相同资源候选隔离，保留完整失败证据后移除全局新派发hold，其他合格任务恢复准入。这不表示Swin资源问题已解决，不修改batch/精度，也不把资源失败解释为性能差。证据OPS/look_suffix_20260916/rb_resource_incident。跨项目需求publisher已恢复健康、指向新LOOK控制器。
