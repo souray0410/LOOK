@@ -206,3 +206,7 @@ project owner logs and handover status. `OPS/heartbeat_20260915_1545/handover_re
 records independent progress. V1 waited for a nonexistent final companion status;
 V2 checks actual Slurm step death instead, preserving the recorded `stopping` status.
 No scientific worker was killed or acceptance criterion relaxed.
+
+## 2026-09-15：末级线性对照名称纠正
+
+展示层统一采用PCA约束残差岭回归、低秩残差回归（PCA约束均值）、低秩残差回归（自由均值）。后两组并非直接完整特征与残差目标之比；同配置斜率相同，均值约束不同。见[解释与覆盖边界](../linear_maps_explained.zh-CN.md)。本次不改方法ID、拟合、预测或运行快照。

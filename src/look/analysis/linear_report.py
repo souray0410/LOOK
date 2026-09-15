@@ -6,6 +6,7 @@ import numpy as np
 from look.runtime.state import atomic_write_json,file_sha256
 from look.analysis.observed_report import simultaneous_bootstrap
 from look.studies.linear_protocol import protocol
+from look.analysis.linear_labels import METHOD_EXPLANATION, method_label
 from look.methods.linear_operator import ARMS as ROUTES
 
 
@@ -46,8 +47,8 @@ def report(records,out):
         'PCA preserves complete-feature variance; reduced-rank regression optimizes residual prediction. Neither objective guarantees classification gain.',
         'Pilot acceptance depends on integrity and completeness, never effect sign or significance. Intervals are conditional on development selection.',
         'No test was accessed. A single seed is not the final three-seed conclusion.','',
-        '| Method | Input | Macro-F1 (%) |','|---|---|---|']
-    lines += [f"| {r['method']} | {r['scenario']} | {100*r['macro_f1']:.3f} |" for r in rows]
+        METHOD_EXPLANATION, '', '| Method | Input | Macro-F1 (%) |','|---|---|---|']
+    lines += [f"| {method_label(r['method'])} | {r['scenario']} | {100*r['macro_f1']:.3f} |" for r in rows]
     (out/'README.md').write_text('\n'.join(lines)+'\n')
     return stats
 

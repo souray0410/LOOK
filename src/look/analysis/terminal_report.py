@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 from look.runtime.state import atomic_write_json,file_sha256
 from look.analysis.observed_report import simultaneous_bootstrap
+from look.analysis.linear_labels import METHOD_EXPLANATION, method_label
 from look.methods.linear_operator import ARMS
 
 COMPARISONS=[['rrr_shared_intercept','shared_pca_ridge'],['residual_rrr','rrr_shared_intercept'],
@@ -44,7 +45,7 @@ def report(records,out):
         'The original on/off-selected single_final result is separate from the candidate map even when disabled. No positive-result acceptance gate.',
         'All fitting uses full unaugmented train. All map predictions replay the complete development MHD forward.',
         'Intervals are conditional on these development-selected models. One seed cannot establish multi-seed stability. No test access.',
-        '', '| Method | Input | Macro-F1 (%) |','|---|---|---|']
-    lines += [f"| {r['method']} | {r['scenario']} | {100*r['macro_f1']:.3f} |" for r in rows]
+        '', METHOD_EXPLANATION, '', '| Method | Input | Macro-F1 (%) |','|---|---|---|']
+    lines += [f"| {method_label(r['method'])} | {r['scenario']} | {100*r['macro_f1']:.3f} |" for r in rows]
     (out/'README.md').write_text('\n'.join(lines)+'\n')
     return stats
