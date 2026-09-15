@@ -218,3 +218,9 @@ No scientific worker was killed or acceptance criterion relaxed.
 ### 持续汇总已在Ibex上线
 
 `ce6c32c`的4项报告完整性/负结果/重复清单/test拒绝/三种子门槛测试在Ibex通过；结构检查通过。真实首轮汇总4个接受案例116行，report/spec核验无异常，完整三种子组为0；不重新读参与者数组或训练缓存。独立源码`OPS/look_terminal_20260915/rollup_ce6c32c`，绑定`rollup_binding.json`，输出`continuous_report`；观察器实际存活并写出healthy状态。原GPU训练与registry快照未修改。三小时UKB监控已加入观察器状态核对和安全单实例恢复；无法解释的SHA矛盾需隔离调查，不自动改证据。终端四案例完成后的原借卡owner已恢复通用模型，不得依据旧15:59条目再次迁移。精确CI状态须刷新，Ibex针对性通过不替代CI。
+
+## 2026-09-15 21:45例行核查与谱诊断准备
+
+LOOK253d2a9与ce6c32c、RB135bb68、MHD_Models3420288的精确CI均成功。live audit仍16项已知缺口、fingerprint a8c2e050...未变。22GPU运行/2待批；末级4/81、observer healthy。两个3418宿主epoch17训练/12验证新鲜；两个3417到期暂停且共享claim paused，未被误记为failed，不盲抢。20209源SHA81001/89303文件且临时hash文件新鲜，4/5数据组验收，不报全完成。巡检记录OPS/heartbeat_20260915_2145/review.json。
+
+新增analysis.affine_spectrum紧凑谱诊断及测试，Ibex独立目录look_terminal_20260915/affine_spectrum_validation_2145的9项测试通过。只完成代码/数值接受，真实高维数据计算尚未派发；不替换terminal_78b8962、ce6c32c报告observer或其他健康科学快照。具体边界见linear_maps_explained.zh-CN.md，后续独立只读资源准入后再接真实谱结果。
