@@ -1,16 +1,16 @@
 {
   "schema": "look_search_deployment_note_v1",
-  "updated_at": "2026-09-16T11:35:49.546102+00:00",
+  "updated_at": "2026-09-16T22:02:11.678206+00:00",
   "scientific_source_commit": "253878686271f839b6d2b685719bf13f495ec1c0",
   "ci_run": 35090424510,
   "ci_conclusion": "success",
   "states": {
     "implemented": true,
     "ibex_cpu_tests_passed": true,
-    "registered_cases": 6,
+    "registered_cases": 15,
     "dispatcher_handover_armed": true,
-    "gpu_preflight": "not_yet_verified",
-    "formal_execution": "not_yet_verified",
+    "gpu_preflight": "running_not_yet_accepted",
+    "formal_execution": "waiting_independent_qualification",
     "accepted_new_results": 0,
     "dispatcher_runtime": "verified_waiting_account_capacity"
   },
@@ -28,11 +28,11 @@
     ],
     "seed": 3416
   },
-  "dependency_policy": "matched first-seed technical acceptance releases 3417 and 3418 regardless of performance",
+  "dependency_policy": "whole finite weekly 3416 package including report and diagnostics; unresolved independent affine search blocks release",
   "legacy_all_starts": {
     "weekly_prerequisite": false,
     "deferral_script_dispatched": true,
-    "deferral_completion": "unverified_due_to_SSH_failure",
+    "deferral_completion": "accepted; existing live worker preserved",
     "required_receipt": "look_forward_20260916/suffix_deferral.json"
   },
   "operational_binding": "look_active_workflow.json",
@@ -44,13 +44,17 @@
     "inspect real Slurm steps and GPU profile acceptance",
     "verify full train/dev fit, replay, and matched evidence"
   ],
-  "access_failure": "SSH to Ibex timed out or closed during post-handover verification; not evidence of training failure",
   "dispatcher_evidence": {
-    "pid": 3820754,
+    "pid": 3560453,
     "error": null,
-    "ready_tasks_all_feeds": 60,
-    "rejected": [],
-    "status_updated_at": 1789558204.787744,
-    "search_tasks": 6
-  }
+    "search_tasks": 15,
+    "binding": "look_active_workflow.json"
+  },
+  "management_source_commit": "ea76569e827678829cca3ddb45a4af9f87d44bc1",
+  "representative_control_ordinals": [
+    1,
+    2,
+    5,
+    9
+  ]
 }

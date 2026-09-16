@@ -2,6 +2,8 @@
 
 ## 2026-09-17：预检到期与接续修复
 
+管理源`ea76569`已部署到Ibex独立source_ea76569。活动dispatcher已切换到lease_recovery_20260917/dispatcher.json，现场核验新PID3560453无错误，旧salloc子进程3383965/3420130继续保留。预检step51898670.17持续工作，独立qualification_guard已运行；等待者升级activate_v4.py，原GPU源码未改。缓存真正跨allocation恢复与正式结果仍待后续证据，不将守护存活计为完成。
+
 新增搜索管理层把预检保存在原run的resource_profile下，暂停返回码75保持为暂停，allocation到期同时通知正式运行和预检；科学search_case仍从原SHA锁定源码执行。独立预检通过显式迁移接入同一目录，须核对完整spec及原writer锁，不能覆盖既有产物。到期守护只请求自己的预检保存，不停止健康worker或allocation。Ibex23项针对测试通过；部署是否完成及下一实际GPU步骤从live binding和deployment receipt核验。当前独立仿射全搜索仍未接通，不能将本修复称为全部研究已自动完成。
 
 ## 2026-09-16 晚：整周首种子与四起点对照
