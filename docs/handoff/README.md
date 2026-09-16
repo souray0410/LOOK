@@ -243,3 +243,9 @@ passed on Ibex. Production gate-review deployment is not accepted here. Alternat
 methods still require independent per-node greedy trajectories and real MHD
 acceptance; whole-bank fallback does not close this gate. Original PCA greedy
 implementation is distinct and must not be described as absent.
+
+## 2026-09-16：统一阶段引用与周报衔接
+
+workspace/stage_registry.py与Radon_Bridge保持逐字相同：阶段引用精确科学身份，复用/恢复调用所属项目验收器，不复制重训、不自动解封test或抢任务。原LOOK算法、生产worker和既定实验范围不变。本条只同步已在准备分支验证过的共享管理工具到main，不宣称LOOK全部研究已完成。
+
+本周KAUST已建立2026-09-20准备目录；周六证据快照，周日06:45英文PPTX/中文讲稿、09:45刷新、09:55交付10:00汇报。既有ukb自动化继续按独立LOOK协议验收；病例/指标/逐层策略不得套用R&B分支平均。年底前投稿目标保持。
