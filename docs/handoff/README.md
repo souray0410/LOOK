@@ -254,3 +254,16 @@ OPS/look_suffix_20260916保存独立源码、registry.json、runtime_environment
 用户批准将LOOK作为一般线性/仿射修正家族研究，新增[关联协议](../look_affine_family_20260916.zh-CN.md)。现有三臂不改；新增PCA自由均值、无秩约束残差岭回归、PLS-SVD方向岭回归、对角岭回归和正交对齐。前四臂形成均值×子空间2×2因素设计，51项预定每宿主scope比较；不声称容量相同或各方法独立最优。全部81宿主的末级/逐层分别登记，共162新case、810新方法视图、神经训练0，3416完整技术接受后放其他种子。
 
 新增独立family schema、拟合/恢复、报告和registry/feed接口；原健康运行快照不变。Ibex隔离30项初步数值/恢复及旧路径回归已通过；实际GPU全路径、CI、部署与正式结果尚须远端证据验收，不以本条视为完成。与空间处理及起点实验通过同宿主引用关联，不盲目扩成全部组合。新增PLS明确是PLS-SVD方向后接岭回归，不是假称迭代PLSRegression。新的家族估计器尚无性能结论。
+
+
+### 2026-09-16 08:59 Saudi：仿射家族管理层已接通
+
+科学快照`d32380197fd0faf9e1f91e6e3f8ad2cd3323c6a9`，[CI35061029793](https://github.com/souray0410/LOOK/actions/runs/35061029793)成功。Ibex完整CPU运行236项通过，另2项因Git archive不含submodule实体失败；补齐锁定V4检出后，部署/结构与本次相关25项全部通过。另有初步30项算子/旧路径/恢复测试。真实A100预检完成五新臂、两缺失方向、冻结宿主、完整MHD重载和RNG恢复；GPU峰值1,765,801,984 bytes、主机峰值2,678,476,800 bytes。预检使用1024训练参与者与32训练探针，不计正式性能。
+
+`OPS/look_affine_20260916/registry_v2.json`和独立源码`source_d323801`已部署；数据输出`DATA/LOOK/2026_09_10_11_11_31/affine_family_20260916_v2`。初始`v1`仅预登记、从未派发，因最终资源边界补丁另建v2，不改写其原身份。3个白内障ResNet50/3416末级host已登记，正式接受0；逐层等待原完整三臂接受，其他种子等待对应3416家族完整技术接受。
+
+唯一CPU dispatcher现为`OPS/look_affine_20260916/control/dispatcher.json`，PID1686933；registry PID1671215。旧CPU243090在确认无子owner后通过guardian退休；原51898670.13、51896678.21及其他GPU worker持续原快照。管理层handover初次记录缺previous字段导致KeyError，已从guardian验收恢复规范schema，并重新观察到error=null、72项就绪、0接口拒绝、waiting_account_capacity。不是修改训练标准排除错误。共享claims、账户锁、48h和最低2张generic保持不变。
+
+look_active_workflow.json、需求publisher及独立audit门槛已更新。新实验确已进现有调度器，当前24张运行/待批额度占满，因此尚无新family正式worker；不能将预检或72项总就绪解释为72项新实验完成。当前三条新case排在同优先级已就绪补充后，未抢停健康项目；维护时应检查完整3416组交付与队列等待，不能只看进程存活。
+
+下一步：按新feed逐case完成预检与正式拟合/重放，汇总51项配对比较，再自动释放同组重复种子；3种子齐全触发独立CPU报告。统计族内区间不替代全研究全局区间。原起点/空间/扩展研究及Radon未完成门槛继续保留，test仍封存。
