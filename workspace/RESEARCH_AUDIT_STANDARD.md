@@ -200,3 +200,10 @@ version difference at migration/release boundaries instead of patching it into
 normal operation. Keep this standard identical in the companion research repos
 and make it a mandatory AGENTS.md instruction so future work follows it without
 another user reminder. Framework V4-to-V5 is not authorized by this policy alone.
+
+## Scientific comparison and conclusion review
+
+Apply [SCIENTIFIC_REVIEW_STANDARD.md](SCIENTIFIC_REVIEW_STANDARD.md) before
+design, deployment and reporting. Preserve a concrete scientific review record,
+including unresolved algorithm/coverage gates; operational acceptance alone is
+insufficient. This is a review requirement, not a claim of automated enforcement.

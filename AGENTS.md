@@ -32,3 +32,10 @@ workspace/GPU_EXECUTION_STANDARD.md before changing submission, expiry, checkpoi
 recovery, stage caching or completion. Enforce the same rule for neural training,
 PCA/SVD/correction, evaluation and reporting; never equate a 48-hour lease with
 scientific completion or claim deployed recovery from documentation alone.
+
+Scientific validity is a mandatory design, deployment and reporting gate. Read
+workspace/SCIENTIFIC_REVIEW_STANDARD.md and record the question, changed/held-fixed
+factors, executed algorithm, acceptance evidence and conclusion limits. Audit the
+full selection policy independently from fixed-configuration ablations. Do not
+wait for user detection; missing scientific coverage stays open even when CI and
+workers are healthy. Documentation does not certify automated enforcement.

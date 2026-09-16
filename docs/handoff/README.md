@@ -228,3 +228,18 @@ OPS/look_suffix_20260916保存独立源码、registry.json、runtime_environment
 look_active_workflow.json、需求publisher及独立audit门槛已更新。新实验确已进现有调度器，当前24张运行/待批额度占满，因此尚无新family正式worker；不能将预检或72项总就绪解释为72项新实验完成。当前三条新case排在同优先级已就绪补充后，未抢停健康项目；维护时应检查完整3416组交付与队列等待，不能只看进程存活。
 
 下一步：按新feed逐case完成预检与正式拟合/重放，汇总51项配对比较，再自动释放同组重复种子；3种子齐全触发独立CPU报告。统计族内区间不替代全研究全局区间。原起点/空间/扩展研究及Radon未完成门槛继续保留，test仍封存。
+
+## 2026-09-16: Scientific review obligations
+
+Added the identical SCIENTIFIC_REVIEW_STANDARD.md to LOOK, Radon_Bridge and
+MHD_Models and linked it from AGENTS and RESEARCH_AUDIT_STANDARD. This documents
+mandatory comparison/algorithm/evidence checks; no runtime checker, training
+snapshot, scientific result, GPU owner or test access changes in this update.
+
+LOOK open incident: forced candidate comparisons were described too broadly.
+See [correction selection audit](../correction_selection_audit_20260916.zh-CN.md).
+Branch commit 680ec38 supplies additive gate review code; its 11 targeted tests
+passed on Ibex. Production gate-review deployment is not accepted here. Alternative
+methods still require independent per-node greedy trajectories and real MHD
+acceptance; whole-bank fallback does not close this gate. Original PCA greedy
+implementation is distinct and must not be described as absent.
