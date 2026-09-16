@@ -1,0 +1,47 @@
+{
+  "schema": "look_search_deployment_note_v1",
+  "updated_at": "2026-09-16T11:35:49.546102+00:00",
+  "scientific_source_commit": "253878686271f839b6d2b685719bf13f495ec1c0",
+  "ci_run": 35090424510,
+  "ci_conclusion": "success",
+  "states": {
+    "implemented": true,
+    "ibex_cpu_tests_passed": true,
+    "registered_cases": 6,
+    "dispatcher_handover_armed": true,
+    "gpu_preflight": "not_yet_verified",
+    "formal_execution": "not_yet_verified",
+    "accepted_new_results": 0
+  },
+  "main": "best_forward",
+  "matched_control": "greedy",
+  "control_worker_limit": 2,
+  "test_access": false,
+  "reference_hosts": {
+    "disease": "cataract",
+    "architecture": "resnet50",
+    "positions": [
+      "deep",
+      "features",
+      "middle"
+    ],
+    "seed": 3416
+  },
+  "dependency_policy": "matched first-seed technical acceptance releases 3417 and 3418 regardless of performance",
+  "legacy_all_starts": {
+    "weekly_prerequisite": false,
+    "deferral_script_dispatched": true,
+    "deferral_completion": "unverified_due_to_SSH_failure",
+    "required_receipt": "look_forward_20260916/suffix_deferral.json"
+  },
+  "operational_binding": "look_active_workflow.json",
+  "remote_snapshot": "look_forward_20260916/source_2538786",
+  "protected": "existing GPU workers, allocation owners and immutable source untouched",
+  "next_checks": [
+    "read dispatcher status and API admission",
+    "confirm suffix deferral receipt before any retry",
+    "inspect real Slurm steps and GPU profile acceptance",
+    "verify full train/dev fit, replay, and matched evidence"
+  ],
+  "access_failure": "SSH to Ibex timed out or closed during post-handover verification; not evidence of training failure"
+}
