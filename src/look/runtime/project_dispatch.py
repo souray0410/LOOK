@@ -399,7 +399,8 @@ def gpu_owner(config_path):
                 except Exception as exc:
                     atomic_write_json(dict(state='priority_deferred',error=repr(exc)),attempt/'priority_error.json')
             if time.time()>end-900:
-                atomic_write_json(dict(reason='allocation_expiry_checkpoint'),run/'pause.json')
+                from look.runtime.profile_lifecycle import request_expiry_pause
+                request_expiry_pause(run,attempt)
             atomic_write_json(dict(state='running',task=task['id'],run=str(run),step=step,updated_at=time.time()),root/'status.json')
             time.sleep(10)
         if priority is not None:priority.finish()
@@ -453,7 +454,7 @@ def execute_work(config_path,spec_path,run,kind,record):
                for row in spec.get('source_pins',[]) if '/src/look/' in row['path']}
         if len(roots)!=1:raise ValueError('Ambiguous pinned scientific package')
         source=next(iter(roots))
-        if Path(look.__file__).resolve().parent!=Path(source)/'look':
+        if kind != 'look_search' and Path(look.__file__).resolve().parent!=Path(source)/'look':
             env=os.environ.copy();env['PYTHONPATH']=source+':'+env.get('PYTHONPATH','')
             os.execvpe(config['python'],[config['python'],'-m','look.runtime.project_dispatch',
                 '--config',str(config_path),'--execute',str(spec_path),'--run',str(run),
@@ -493,9 +494,22 @@ def execute_work(config_path,spec_path,run,kind,record):
         os.execvpe(config['python'],[config['python'],'-m','look.studies.affine_case',
             '--spec',str(spec_path),'--output',str(run)],environment)
     elif kind=='look_search':
+        from look.runtime.profile_lifecycle import run_profile, profile_pause_state
+        # Management may evolve, while the original scientific module always
+        # executes from its exact pinned source in a fresh interpreter.
+        environment['PYTHONPATH']=source+':'+environment.get('PYTHONPATH','')
         environment['LOOK_WORKER_MEMORY_BYTES']=str(100*1024**3)
-        subprocess.run([config['python'],'-m','look.studies.search_case','--spec',str(spec_path),
-            '--output',str(profile_root),'--profile'],env=environment,check=True)
+        profile_root=run/'resource_profile'
+        profile_root.mkdir(parents=True,exist_ok=True)
+        existing=read(profile_root/'spec.json')
+        if existing and existing != spec:raise ValueError('Persistent resource profile identity changed')
+        (profile_root/'pause.json').unlink(missing_ok=True)
+        try:
+            run_profile([config['python'],'-m','look.studies.search_case','--spec',str(spec_path),
+                '--output',str(profile_root),'--profile'],environment)
+        except SystemExit as error:
+            if error.code==75:profile_pause_state(run,profile_root)
+            raise
         receipt_path=profile_root/'profile_accepted.json';receipt=read(receipt_path)
         if receipt.get('state')!='accepted' or receipt.get('identity')!=stable_hash(spec):
             raise ValueError('Search resource preflight failed')
