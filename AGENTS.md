@@ -39,3 +39,5 @@ factors, executed algorithm, acceptance evidence and conclusion limits. Audit th
 full selection policy independently from fixed-configuration ablations. Do not
 wait for user detection; missing scientific coverage stays open even when CI and
 workers are healthy. Documentation does not certify automated enforcement.
+
+Maintain docs/handoff/status.json alongside its README after material evidence review. Preserve goal, phase/dependencies, exact source/evidence dates, separate planned/implemented/deployed/running/accepted states, limitations and traceable evidence. Repository-only checks cannot certify runtime or scientific completion. Do not renew verification timestamps just because a polling request succeeded; no restricted data or credentials belong in status records.
