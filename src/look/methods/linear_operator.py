@@ -73,13 +73,17 @@ class LinearVectorArtifact:
 
 
 def fit_bank(graph, loader, templates, arm, device, output, *, identity, workspace_bytes,
-             should_pause=lambda:False):
+             should_pause=lambda:False, family=False):
     """Fixed LOOK-selected sites/factors/ranks/penalties, sequential per arm.
 
     This is a conditional mechanism comparison, NOT independently optimized methods.
     It must not be called on development/test or augmented training data.
     """
-    if arm not in ARMS:raise ValueError('Unregistered linear arm')
+    artifact_type=LinearVectorArtifact; version=VERSION; allowed=ARMS
+    if family:
+        from look.methods.affine_family import FamilyArtifact, ARMS as allowed, VERSION as version
+        artifact_type=FamilyArtifact
+    if arm not in allowed:raise ValueError('Unregistered linear arm')
     if getattr(loader.dataset,'split',None)!='train' or getattr(loader.dataset,'augment',None) is not False:
         raise ValueError('Only unaugmented training features may fit corrections')
     if loader.drop_last:raise ValueError('Cannot discard fitting participants')
@@ -92,14 +96,14 @@ def fit_bank(graph, loader, templates, arm, device, output, *, identity, workspa
         # Budget applies to additional dense fitting workspace, not total allocation.
         estimate=estimated_workspace_bytes(dim,rank)
         if estimate>workspace_bytes:raise MemoryError(f'Linear dense workspace {estimate} > {workspace_bytes}; no silent compression')
-        node_id=fingerprint(dict(protocol=VERSION,identity=identity,arm=arm,template=asdict(a),
+        node_id=fingerprint(dict(protocol=version,identity=identity,arm=arm,template=asdict(a),
                                  upstream=[x.record() for x in selected]))
         path=out/f'{index:03d}.pt';resume=out/f'{index:03d}_resume.pt'
         if path.exists():
             r=torch.load(path,map_location='cpu',weights_only=False)
             if r['identity']!=node_id or fingerprint(r['artifact'])!=r['artifact_sha256']:
                 raise ValueError('Completed linear fit identity or artifact changed')
-            fitted=LinearVectorArtifact.from_record(r['artifact'])
+            fitted=artifact_type.from_record(r['artifact'])
             selected.append(fitted);diagnostics.append(fitted.mapping.diagnostics);continue
         stats=ResidualMoments.empty(dim);cursor=0
         if resume.exists():
@@ -123,11 +127,15 @@ def fit_bank(graph, loader, templates, arm, device, output, *, identity, workspa
         if should_pause():checkpoint(batches);raise LinearFitPaused()
         kwargs={'basis':a.components} if arm=='shared_pca_ridge' else (
             {'intercept_basis':a.components} if arm=='rrr_shared_intercept' else {})
-        mapping=solve(stats,rank,a.ridge_lambda,**kwargs)
+        if family:
+            from look.methods.affine_family import fit_map
+            mapping=fit_map(stats,rank,a.ridge_lambda,arm=arm,basis=a.components)
+        else:
+            mapping=solve(stats,rank,a.ridge_lambda,**kwargs)
         mapping.diagnostics.update(reference_pca_explained_variance=a.pca_explained_variance,
             reference_pca_source=a.pca_source_id,
             fraction_comparison='PCA variance and regularized residual gain are different quantities')
-        fitted=LinearVectorArtifact(a,mapping);record=fitted.record()
+        fitted=artifact_type(a,mapping);record=fitted.record()
         atomic_save(path,dict(identity=node_id,artifact=record,artifact_sha256=fingerprint(record)))
         selected.append(fitted);diagnostics.append(mapping.diagnostics)
     return selected,diagnostics
