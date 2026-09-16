@@ -173,7 +173,12 @@ def active_search_modes(config, claims):
 def admissible_work(config, claims):
     result = []; rejected = []
     counts=active_search_modes(config,claims)
-    for task in work(config):
+    candidates = work(config)
+    if config.get('weekly_delivery_policy'):
+        from look.runtime.weekly_delivery import filter_tasks
+        candidates, held = filter_tasks(candidates, config['weekly_delivery_policy'])
+        rejected.extend(held)
+    for task in candidates:
         if (task.get('execution')=='look_search' and task.get('search_mode')=='greedy'
             and counts['greedy']>=config.get('search_control_maximum',2)):continue
         if not eligible(task, claims): continue

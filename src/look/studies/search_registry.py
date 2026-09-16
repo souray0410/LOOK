@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from look.runtime.state import atomic_write_json, file_sha256, stable_hash
 from look.studies.project_case import read
-from look.studies.search_protocol import VERSION, protocol, sites
+from look.studies.search_protocol import VERSION, protocol, sites, representative_starts
 from look.studies.search_case import verify_case
 from look.runtime.mechanism_receipts import monitored_acceptance
 
@@ -20,10 +20,16 @@ def tick(config):
             raise ValueError('Unsealed host feed')
         tasks=[];waiting={};errors=[];accepted=0;complete=[];by_host={}
         rows=sorted(feed['tasks'],key=lambda r:(read(r['spec'])['seed'],r['id']))
+        weekly = None
+        if config.get('weekly_delivery_policy'):
+            from look.runtime.weekly_delivery import release_state
+            weekly = release_state(config['weekly_delivery_policy'])
         for row in rows:
             base=read(row['spec']);root=Path(row['run_dir'])
             h=dict(disease=base['disease'],architecture=base['model']['name'],position=base['position'],seed=base['seed'])
             name='/'.join(map(str,h.values()));key=stable_hash(h)
+            if weekly and not weekly['released'] and h['seed'] != weekly['first_seed']:
+                waiting[name] = weekly['reason']; continue
             if not (root/'host/accepted.json').exists():waiting[name]='waiting_accepted_host';continue
             manifests=[m for m in root.glob('pca/*/bank_manifest.json') if read(m)['identity'].get('case')==stable_hash(base)]
             if not manifests:waiting[name]='waiting_frozen_complete_train_PCA';continue
@@ -34,30 +40,43 @@ def tick(config):
                 pilot=[]
                 if h['seed']!=3416:
                     pilot=by_host.get(stable_hash(dict(h,seed=3416)),[])
-                    if len(pilot)!=2:waiting[name]='waiting_matched_first_seed_technical_acceptance';continue
+                    if len(pilot)!=(5 if config.get('representative_starts') else 2):waiting[name]='waiting_matched_first_seed_technical_acceptance';continue
                 source=dict(run_dir=str(root),spec_path=row['spec'],spec_sha256=row['spec_sha256'],
                     host_accepted_sha256=file_sha256(root/'host/accepted.json'),best_sha256=hr['files']['best.pt'])
                 ordered=sites(h['architecture'],h['position']);done=[]
-                for mode in ('best_forward','greedy'):
+                routes = [('best_forward',1),('greedy',1)]
+                if config.get('representative_starts'):
+                    routes += [('greedy',i) for i in representative_starts(h['architecture'],h['position'])[1:]]
+                for mode,start in routes:
                     spec=dict(schema=VERSION,protocol=protocol(),host=h,mode=mode,candidate_sites=ordered,eligible_sites=ordered,
                         source=source,pca=dict(path=str(manifests[0]),sha256=file_sha256(manifests[0])),
                         source_pins=config['source_pins'],test_access=False)
+                    if start != 1:
+                        spec.update(start_ordinal=start,eligible_sites=ordered[start-1:],
+                                    source_pins=config['representative_source_pins'])
                     if pilot:spec['pilot']=pilot
-                    taskid=stable_hash(dict(host=h,mode=mode));sp=out/'specs'/(taskid+'.json')
+                    identity=dict(host=h,mode=mode)
+                    if start != 1:identity['start_ordinal']=start
+                    taskid=stable_hash(identity);sp=out/'specs'/(taskid+'.json')
                     if sp.exists() and read(sp)!=spec:raise ValueError('Registered scientific identity changed')
                     atomic_write_json(spec,sp)
                     run=Path(reserve(out,VERSION,taskid,spec,source=source,refresh_summary=False))
-                    task=dict(id='search/'+name+'/'+mode,spec=str(sp),spec_sha256=file_sha256(sp),
+                    task=dict(id='search/'+name+'/'+mode+('' if start==1 else '/start'+str(start)),spec=str(sp),spec_sha256=file_sha256(sp),
                         run_dir=str(run),execution='look_search',search_mode=mode)
                     if (run/'accepted.json').exists():
                         monitored_acceptance(run,spec,verify_case,out/'cache');accepted+=1
                         done.append(dict(path=str(run),sha256=file_sha256(run/'accepted.json')))
                     tasks.append(task)
-                if len(done)==2:by_host[key]=done;complete.append(dict(host=h,cases=done))
+                if len(done)==len(routes):
+                    by_host[key]=done;complete.append(dict(host=h,cases=done))
+                    if config.get('representative_starts') and config.get('analysis'):
+                        from look.runtime.suffix_analysis import request
+                        request(config['analysis'],dict(analysis_kind='search',host=h,runs=[r['path'] for r in done],
+                            output=str(out/'reports'/key),test_access=False))
             except Exception as e:errors.append(dict(host=name,error=repr(e)))
         result=dict(schema='look_search_work_feed_v1',test_access=False,tasks=tasks,accepted_cases=accepted,
             matched_groups=complete,waiting=waiting,errors=errors,updated_at=time.time(),
-            expected_hosts=81,expected_search_trajectories=162,all_starts_required=False)
+            expected_hosts=81,expected_search_trajectories=405 if config.get("representative_starts") else 162,all_starts_required=False)
         atomic_write_json(result,out/'queue.json')
         atomic_write_json({k:v for k,v in result.items() if k!='tasks'},out/'status.json')
         return result

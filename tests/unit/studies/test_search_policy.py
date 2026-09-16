@@ -43,3 +43,18 @@ def test_only_control_admission_is_capped(tmp_path):
     feed=tmp_path/'queue.json';feed.write_text(json.dumps(dict(schema='look_search_work_feed_v1',test_access=False,tasks=tasks)))
     cfg=dict(project_feed=str(tmp_path/'none'),native_feed=str(tmp_path/'none'),search_feeds=[str(feed)],search_control_maximum=2)
     assert [t['id'] for t in admissible_work(cfg,claims)]==['3']
+
+
+def test_four_preregistered_representative_starts():
+    from look.studies.search_protocol import representative_starts
+    for architecture in ('resnet50','densenet121'):
+        for position in ('deep','middle','features'):
+            candidates=sites(architecture,position)
+            starts=representative_starts(architecture,position)
+            assert starts==[1,2,(len(candidates)+1)//2,len(candidates)]
+            for start in starts:
+                s=spec();s['host'].update(architecture=architecture,position=position)
+                s.update(candidate_sites=candidates,eligible_sites=candidates[start-1:],mode='greedy',start_ordinal=start)
+                validate(s)
+                if start>1:
+                    with pytest.raises(ValueError):validate(dict(s,mode='best_forward'))

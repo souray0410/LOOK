@@ -3,6 +3,12 @@ from look.studies.suffix_protocol import sites, PATTERNS
 VERSION='look_search_policy_v1'
 
 
+def representative_starts(architecture, position):
+    ordered = sites(architecture, position)
+    # Anatomical/network order fixed before reading scores; median canonical node.
+    return [1, 2, (len(ordered)+1)//2, len(ordered)]
+
+
 def protocol():
     return dict(schema=VERSION,test_access=False,patterns=list(PATTERNS),
         main='best_forward',control='greedy',baseline='frozen_uncorrected_host',
@@ -21,6 +27,9 @@ def validate(spec):
     h=spec['host'];ordered=sites(h['architecture'],h['position'])
     if h['seed'] not in (3416,3417,3418) or spec.get('mode') not in ('greedy','best_forward'):
         raise ValueError('Invalid seed or search mode')
-    if spec['candidate_sites']!=ordered or spec['eligible_sites']!=ordered:
-        raise ValueError('Search requires all canonical candidate sites')
+    start = spec.get('start_ordinal', 1)
+    if start != 1 and (spec['mode'] != 'greedy' or start not in representative_starts(h['architecture'],h['position'])):
+        raise ValueError('Only preregistered representative sequential starts are allowed')
+    if spec['candidate_sites']!=ordered or spec['eligible_sites']!=ordered[start-1:]:
+        raise ValueError('Search candidate sites or suffix changed')
     if h['seed']!=3416 and not spec.get('pilot'):raise ValueError('Matched 3416 acceptance required')

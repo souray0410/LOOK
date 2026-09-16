@@ -29,7 +29,10 @@ def request(config,manifest):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--manifest',required=True);a=p.parse_args();m=json.loads(Path(a.manifest).read_text())
-    from look.analysis.suffix_report import report
+    if m.get('analysis_kind') == 'search':
+        from look.analysis.search_report import report
+    else:
+        from look.analysis.suffix_report import report
     try:report(m)
     except Exception as e:
         atomic_write_json(dict(state='needs_review',error=repr(e),time=time.time()),Path(m['output'])/'status.json');raise
