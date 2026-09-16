@@ -100,7 +100,9 @@ def run(spec,out,device,pause,profile=False):
     torch.set_num_threads(min(4,int(os.environ.get('SLURM_CPUS_PER_TASK','4'))))
     torch.use_deterministic_algorithms(True);torch.backends.cudnn.benchmark=False;torch.backends.cudnn.deterministic=True
     torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
-    props=torch.cuda.get_device_properties(device);total=props.total_memory;budget=min(.875*total,total-10*1024**3)
+    props=torch.cuda.get_device_properties(device);total=props.total_memory
+    budget=min(.875*total,total-10*1024**3,int(os.environ.get('LOOK_AFFINE_GPU_BUDGET_BYTES',str(total))))
+    if budget<=2*1024**3:raise MemoryError('Insufficient admitted GPU budget')
     torch.cuda.set_per_process_memory_fraction((budget-2*1024**3)/1.2/total,device);torch.cuda.reset_peak_memory_stats(device)
     rng=capture_rng();_,parents,graph,data=load_original(base,host_root,device);del parents
     graph.eval()
@@ -158,7 +160,11 @@ def run(spec,out,device,pause,profile=False):
                         workspace_bytes=int(.85*limit-psutil.Process().memory_info().rss),should_pause=check,family=True)
                     saved=[a.record() for a in bank];atomic_save(bank_path,dict(identity=identity,bank=saved,sha256=fingerprint(saved)))
                 loaded=[FamilyArtifact.from_record(a) for a in torch.load(bank_path,map_location='cpu',weights_only=False)['bank']]
-                r=evaluate_missing(graph,dev_loader,device,fixed_pattern=pattern,artifact_banks={pattern:bank})
+                if spec['scope']=='terminal' and not profile:
+                    classifier=graph.get_edge_by_name('fusion_classifier_edge').edge_operations[0].function
+                    r=terminal_case.result_from_cache(reference/'cache/development',pattern,classifier,device,bank[0])
+                else:
+                    r=evaluate_missing(graph,dev_loader,device,fixed_pattern=pattern,artifact_banks={pattern:bank})
                 replay=evaluate_missing(graph,dev_loader,device,fixed_pattern=pattern,artifact_banks={pattern:loaded})
                 check_matched(r,replay)
                 if not np.array_equal(r['logits'],replay['logits']):raise ValueError('Reload changed full MHD predictions')
