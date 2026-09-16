@@ -267,3 +267,8 @@ OPS/look_suffix_20260916保存独立源码、registry.json、runtime_environment
 look_active_workflow.json、需求publisher及独立audit门槛已更新。新实验确已进现有调度器，当前24张运行/待批额度占满，因此尚无新family正式worker；不能将预检或72项总就绪解释为72项新实验完成。当前三条新case排在同优先级已就绪补充后，未抢停健康项目；维护时应检查完整3416组交付与队列等待，不能只看进程存活。
 
 下一步：按新feed逐case完成预检与正式拟合/重放，汇总51项配对比较，再自动释放同组重复种子；3种子齐全触发独立CPU报告。统计族内区间不替代全研究全局区间。原起点/空间/扩展研究及Radon未完成门槛继续保留，test仍封存。
+
+
+### 2026-09-16：修正算子与贪心策略口径缺陷
+
+用户指出三方法表只对原PCA保存single_final开关后结果，替代方法为强制候选，不能称公平最终方法比较。新增独立look_gate_review_v1只读报告，原证据保持不变：每方法/缺失方向按dev严格改善独立选择，保留forced_on与dev_selected双视图。逐层整bank最终回退不等于逐节点贪心。参见docs/correction_selection_audit_20260916.zh-CN.md。主方法必须各自独立逐级拟合与选择；固定原PCA站点的linear/affine任务仍仅为机制消融。该更完整逐级补齐门槛仍未通过，不得把报告补算算作实现完成。CPU部署与实际修复结果在后续收据记录。

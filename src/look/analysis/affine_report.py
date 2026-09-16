@@ -54,7 +54,8 @@ def report(cases, out, *, iterations=10000):
     with (out/'metrics.csv').open('w') as f:
         writer=csv.DictWriter(f,fieldnames=['seed','method','scenario','macro_f1']);writer.writeheader();writer.writerows(rows)
     lines=['# LOOK统一仿射修正：开发集配对比较','',
-        '表中macro-F1为最终宿主分类指标，越高越好。差值方向见每项系数，正值有利于被加的方法。',
+        '表中为宿主分类macro-F1，越高越好，但八方法列均强制应用候选映射/bank，不是每方法独立开关后的最终策略。',
+        '末级仅一个节点；progressive仅原LOOK选中位置，不等于全部可用节点。独立开关结果见版本化gate-review报告。',
         '末级比较与逐层比较分别报告；宿主融合位置不等于校正起点。',
         '前四臂形成子空间×均值约束比较。无秩约束、对角、正交臂不是等参数或等秩实验。',
         'PLS-SVD方向后接岭回归，不等同于迭代PLSRegression。正交约束作用于标准化坐标，不声称原始特征距离保持。',

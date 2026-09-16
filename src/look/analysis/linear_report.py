@@ -42,7 +42,8 @@ def report(records,out):
         writer=csv.DictWriter(f,fieldnames=['method','scenario','macro_f1']);writer.writeheader();writer.writerows(rows)
     lines=['# LOOK linear preprocessing — matched development evidence','',
         'All routes fit train only; the host is frozen. Sites, spatial processing, ranks and penalties are fixed from accepted standard LOOK; no arm-specific selection.',
-        'Macro-F1 is final host prediction (higher is better), not a branch average. Differences are first minus second.',
+        'Macro-F1 scores the host output (higher is better), not a branch average. These columns apply the fixed candidate bank, not independently selected per-arm switches.',
+        'Read the versioned gate-review for the final whole-bank fallback; neither fixed sites nor whole-bank gating is independent per-node greedy search. Differences are first minus second.',
         'Direct PCA has no linear-factor search; interpolation and averaging each have three matching factors. This is not equal compute or identical search size.',
         'PCA preserves complete-feature variance; reduced-rank regression optimizes residual prediction. Neither objective guarantees classification gain.',
         'Pilot acceptance depends on integrity and completeness, never effect sign or significance. Intervals are conditional on development selection.',

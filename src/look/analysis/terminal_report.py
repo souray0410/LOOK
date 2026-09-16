@@ -39,7 +39,8 @@ def report(records,out):
     with (out/'metrics.csv').open('w') as f:
         w=csv.DictWriter(f,fieldnames=['method','scenario','macro_f1']);w.writeheader();w.writerows(rows)
     lines=['# Accepted-host single-final mechanism stage','',
-        'These are final host classification scores; higher macro-F1 is better. Differences are first minus second.',
+        'Host classification macro-F1 is reported, but shared_pca_ridge and both RRR columns FORCE ON one terminal candidate. They are not the on/off-selected strategy. Higher is better.',
+        'Only single_final here includes the original PCA gate. Read the versioned gate-review report for independently gated outputs of every method. Differences are first minus second.',
         'This is a single terminal-node comparison, not full progressive LOOK or a spatial-reduction experiment.',
         'PCA selects its candidate rank by the original development grid and lambda by train GCV; all three maps share that rank/lambda.',
         'The original on/off-selected single_final result is separate from the candidate map even when disabled. No positive-result acceptance gate.',
