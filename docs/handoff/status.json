@@ -11,13 +11,13 @@
   "source_commit": "16678d4136e1289ce260277a530c8927dd785c79",
   "evidence_cutoff": "2026-09-16T19:11:49.284377+00:00",
   "verified_at": "2026-09-16T19:11:49.284377+00:00",
-  "verification_scope": "Ibex source tests, live registry/dispatcher/guardian, Slurm qualification and fresh logs; no formal search acceptance",
+  "verification_scope": "runtime_and_evidence",
   "layers": {
-    "planned": "weekly_first_seed_and_four_fixed_sequential_starts",
-    "implemented": "search_registry_reporting_and_delivery_gate; affine_independent_search_incomplete",
-    "deployed": "source_16678d4; immutable scientific source preserved",
-    "running": "15 first-seed search tasks registered; independent qualification active; new dispatcher live",
-    "accepted": "17 targeted target-environment tests; zero accepted formal search cases"
+    "planned": "documented",
+    "implemented": "partial",
+    "deployed": "partial",
+    "running": "partial",
+    "accepted": "partial"
   },
   "results": [],
   "limitations": [
