@@ -282,7 +282,7 @@ def submit_one(config,path,journal):
         name='look_auto_'+str(time.time_ns());log=Path(config['output'])/(name+'.log')
         entry=dict(name=name,state='intent',log=str(log),time=time.time())
         journal['requests'].append(entry);atomic_write_json(journal,Path(config['output'])/'requests.json')
-        memory_gib=512 if any(t['execution'] in ('look_spatial','look_linear','look_affine_progressive') for t in candidates) else 128
+        memory_gib=128 if any(t['execution']=='look_search' for t in candidates) else (512 if any(t['execution'] in ('look_spatial','look_linear','look_affine_progressive') for t in candidates) else 128)
         command=allocation_command(path,name,config['python'],memory_gib);entry['command']=command
         with log.open('x') as stream:
             child=subprocess.Popen(command,stdout=stream,stderr=subprocess.STDOUT,env=os.environ.copy())
