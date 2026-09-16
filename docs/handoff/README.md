@@ -201,3 +201,12 @@ OPS/look_suffix_20260916保存独立源码、registry.json、runtime_environment
 关联自审还发现R&B3D Swin预检在50GiB allocator上限下OOM；失败step已死、2个相同资源候选隔离，保留完整失败证据后移除全局新派发hold，其他合格任务恢复准入。这不表示Swin资源问题已解决，不修改batch/精度，也不把资源失败解释为性能差。证据OPS/look_suffix_20260916/rb_resource_incident。跨项目需求publisher已恢复健康、指向新LOOK控制器。
 
 实现源码位于[已部署提交f3c8a47](https://github.com/souray0410/LOOK/tree/f3c8a475d3348a818ae637e35033808d1b0a535f)，本main提交仅同步协议与交接记录，不替换正在运行的源码。参见[完整起点协议](../suffix_starts_20260916.zh-CN.md)。
+
+
+## 2026-09-16 03:50 Saudi：第二条起点执行与共享心脏数据验收
+
+第二条有限接替已通过独立GPU验证及原模型完整断点验收：51896678.21正式运行同一3416/deep宿主的start7；51898670.13继续start8。两条worker均有新鲜完整dev推理进度，尚无完整后缀或九起点组接受。阶段status超过两小时不等于进程卡死：本次pipeline审计提示后，以实际Slurm step和持续更新日志核查，没有重启健康worker。证据OPS/heartbeat_20260916_0345/live_suffix_liveness.json。
+
+实际pipeline_audit配置此前未收到只写入旧execution_audit配置的起点、周日完整匹配和Swin资源复检门槛。本次将三项追加到真正执行入口，保留原全部门槛及未完成状态；这是审计覆盖修正，不是研究验收通过。
+
+独立数据迁移范围的心脏五组（20205、6025.zip、20207、20208、20209）现共361888文件、8360335258048字节全部源/目标SHA验收。源盘保留，临时rsync授权已精确撤销，其他SSH授权不变。DATA/UKBiobank/multiorgan/manifests/transfer_completed_20260916.json为完成凭证。此状态仅为文件复制完整，标签、访视、配对与任务语义仍待审计；不自动开启其他器官项目实验，也不改变眼科数据划分或test封存。
