@@ -210,3 +210,8 @@ OPS/look_suffix_20260916保存独立源码、registry.json、runtime_environment
 实际pipeline_audit配置此前未收到只写入旧execution_audit配置的起点、周日完整匹配和Swin资源复检门槛。本次将三项追加到真正执行入口，保留原全部门槛及未完成状态；这是审计覆盖修正，不是研究验收通过。
 
 独立数据迁移范围的心脏五组（20205、6025.zip、20207、20208、20209）现共361888文件、8360335258048字节全部源/目标SHA验收。源盘保留，临时rsync授权已精确撤销，其他SSH授权不变。DATA/UKBiobank/multiorgan/manifests/transfer_completed_20260916.json为完成凭证。此状态仅为文件复制完整，标签、访视、配对与任务语义仍待审计；不自动开启其他器官项目实验，也不改变眼科数据划分或test封存。
+
+
+### 2026-09-16 06:55 Saudi：审计配置状态修复
+
+上次追加门槛把deployed_running/running_not_complete/needs_review写进了冻结审计器仅接受的门槛state，导致audit_input_error。本次保留原运行描述到execution_status，将门槛分别写为not_validated/waiting_dependencies/not_validated；pipeline与旧配置同步，全部门槛保留且没有改为接受。真实入口重跑确认输入错误消失。两条起点阶段status较旧，但Slurm步骤及持续更新日志均核实在推进，不重启健康任务。证据OPS/heartbeat_20260916_0645/{audit_gate_schema_repair,audit_after_repair,review}.json。现有实施缺口和Swin三维资源复检仍未完成，不据此宣布全研究健康或完成。
