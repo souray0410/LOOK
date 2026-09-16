@@ -3,35 +3,47 @@
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
   "phase": "ukb_eye_research",
-  "next_acceptance": "独立逐节点贪心策略及完整匹配组的生产验收",
+  "next_acceptance": "3416整周参考包的搜索/算子匹配实验、诊断、统计、图表和报告完成后放行其余种子",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "76366252f818be490aa849a4d030503cd4f09b77",
-  "evidence_cutoff": "2026-09-16T09:39:44.263419+00:00",
-  "verified_at": "2026-09-16T09:39:44.263419+00:00",
-  "verification_scope": "source_review_only",
+  "source_commit": "16678d4136e1289ce260277a530c8927dd785c79",
+  "evidence_cutoff": "2026-09-16T19:11:49.284377+00:00",
+  "verified_at": "2026-09-16T19:11:49.284377+00:00",
+  "verification_scope": "Ibex source tests, live registry/dispatcher/guardian, Slurm qualification and fresh logs; no formal search acceptance",
   "layers": {
-    "planned": "documented",
-    "implemented": "partial",
-    "deployed": "not_rechecked",
-    "running": "not_rechecked",
-    "accepted": "not_rechecked"
+    "planned": "weekly_first_seed_and_four_fixed_sequential_starts",
+    "implemented": "search_registry_reporting_and_delivery_gate; affine_independent_search_incomplete",
+    "deployed": "source_16678d4; immutable scientific source preserved",
+    "running": "15 first-seed search tasks registered; independent qualification active; new dispatcher live",
+    "accepted": "17 targeted target-environment tests; zero accepted formal search cases"
   },
   "results": [],
   "limitations": [
-    "逐层替代方法覆盖及生产验收仍需所属项目核验"
+    "当前搜索上线使用原PCA/GCV算子；不能代替其他线性修正方法独立搜索。",
+    "首种子五路线统计为dev探索结果，不代表多种子重复或独立test。",
+    "预检和任务登记不等于正式研究完成。"
   ],
-  "blockers": [],
+  "blockers": [
+    "独立仿射家族完整best-forward链路仍未部署，整周门槛保持关闭。",
+    "正式搜索等待独立预检及安全交接。"
+  ],
   "actions": [
-    "Source and current handoff inspected; no scientific execution changed."
+    "主线best-forward；顺序起点固定1/2/ceil(L/2)/L，三组首种子宿主保留原6项并新增9项。",
+    "新CPU派发管理器经guardian安全接替，保留旧salloc子进程及科学worker。",
+    "同宿主五路线完成后自动申请CPU统计/绘图，生成配对区间、路线与成本诊断和中文报告。",
+    "三小时维护入口已更新为新binding和activate_v3，不恢复旧v2或旧队列。"
   ],
   "decisions": [],
   "evidence": [
     {
-      "label": "Reviewed source snapshot",
-      "url": "https://github.com/souray0410/LOOK/blob/76366252f818be490aa849a4d030503cd4f09b77/docs/handoff/README.md"
+      "label": "Reviewed implementation and deployment handoff",
+      "url": "https://github.com/souray0410/LOOK/blob/52afe196fe42a2dcf424669d0d3c8ecbcc7c9693/docs/handoff/README.md"
+    },
+    {
+      "label": "Implementation CI passed",
+      "url": "https://github.com/souray0410/LOOK/actions/runs/35138337420"
     }
   ]
 }
