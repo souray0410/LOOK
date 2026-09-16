@@ -1,3 +1,7 @@
+## 2026-09-16 晚：整周首种子交付门槛
+
+[当前搜索实现和部署证据](https://github.com/souray0410/LOOK/blob/52afe196fe42a2dcf424669d0d3c8ecbcc7c9693/docs/handoff/README.md)：best-forward为主，四个固定起点为对照；先完成3416整周实验、诊断、统计、图表和报告再放行其余种子。Ibex17项测试通过，15条首种子搜索路线已登记，正式搜索仍等待独立预检；其他线性算子独立搜索仍有实施缺口，不宣称全项目完成。实时入口仍为look_active_workflow.json。
+
 # LOOK — 维护与交接
 
 最近核查：2026-09-14 08:46（Asia/Riyadh）。本页是有日期的交接快照，不是实时监控。
