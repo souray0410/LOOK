@@ -23,6 +23,7 @@ def import_run(run):
     from look.methods.linear_operator import ARMS as linear_arms
     from look.methods.affine_family import ARMS as family_arms
     from look.studies.affine_protocol import COMPARISONS
+    from look.studies.linear_protocol import protocol as linear_protocol
     schemas = {
         'look_terminal_stage_v1': ('terminal', linear_arms),
         'look_linear_vector_v1': ('progressive', linear_arms),
@@ -51,7 +52,8 @@ def import_run(run):
     required = {(m, p) for m in ('host', *methods) for p in ('oct_missing', 'cfp_missing')}
     if not required.issubset({(r['method'], r['scenario']) for r in records}):
         raise ValueError('Incomplete matched gate evidence')
-    comparisons = [list(p) for p in COMPARISONS if set(p) <= set(methods) | {'host'}]
+    source_comparisons = COMPARISONS if spec['schema']=='look_affine_family_v1' else linear_protocol()['comparisons']
+    comparisons = [list(p) for p in source_comparisons if set(p) <= set(methods) | {'host'}]
     for m in methods:
         if [m, 'host'] not in comparisons: comparisons.append([m, 'host'])
     body = dict(schema=VERSION, protocol=PROTOCOL, host=spec['host'], scope=scope,

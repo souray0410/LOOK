@@ -27,6 +27,7 @@ def fixture(root):
 def test_each_method_independent_same_rule_identity_no_mutation(tmp_path):
     root=fixture(tmp_path/'source');manifest=import_run(root)
     before={str(p):file_sha256(p) for p in root.rglob('*') if p.is_file()}
+    assert ['residual_rrr','shared_pca_ridge'] in manifest['comparisons']
     rows,gates,chosen,stats=compute(manifest,iterations=50)
     assert not gates['shared_pca_ridge','oct_missing']['enabled']
     assert gates['residual_rrr','oct_missing']['enabled']
