@@ -1,0 +1,37 @@
+{
+  "schema": "research_project_status_v1",
+  "project": "LOOK",
+  "goal": "缺失模态线性修正的可复现机制研究",
+  "phase": "ukb_eye_research",
+  "next_acceptance": "独立逐节点贪心策略及完整匹配组的生产验收",
+  "dependencies": [
+    "宿主验收",
+    "当前算法与匹配对照的实际执行证据"
+  ],
+  "source_commit": "76366252f818be490aa849a4d030503cd4f09b77",
+  "evidence_cutoff": "2026-09-16T09:39:44.263419+00:00",
+  "verified_at": "2026-09-16T09:39:44.263419+00:00",
+  "verification_scope": "source_review_only",
+  "layers": {
+    "planned": "documented",
+    "implemented": "partial",
+    "deployed": "not_rechecked",
+    "running": "not_rechecked",
+    "accepted": "not_rechecked"
+  },
+  "results": [],
+  "limitations": [
+    "逐层替代方法覆盖及生产验收仍需所属项目核验"
+  ],
+  "blockers": [],
+  "actions": [
+    "Source and current handoff inspected; no scientific execution changed."
+  ],
+  "decisions": [],
+  "evidence": [
+    {
+      "label": "Reviewed source snapshot",
+      "url": "https://github.com/souray0410/LOOK/blob/76366252f818be490aa849a4d030503cd4f09b77/docs/handoff/README.md"
+    }
+  ]
+}
