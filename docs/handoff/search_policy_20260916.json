@@ -11,7 +11,8 @@
     "dispatcher_handover_armed": true,
     "gpu_preflight": "not_yet_verified",
     "formal_execution": "not_yet_verified",
-    "accepted_new_results": 0
+    "accepted_new_results": 0,
+    "dispatcher_runtime": "verified_waiting_account_capacity"
   },
   "main": "best_forward",
   "matched_control": "greedy",
@@ -43,5 +44,13 @@
     "inspect real Slurm steps and GPU profile acceptance",
     "verify full train/dev fit, replay, and matched evidence"
   ],
-  "access_failure": "SSH to Ibex timed out or closed during post-handover verification; not evidence of training failure"
+  "access_failure": "SSH to Ibex timed out or closed during post-handover verification; not evidence of training failure",
+  "dispatcher_evidence": {
+    "pid": 3820754,
+    "error": null,
+    "ready_tasks_all_feeds": 60,
+    "rejected": [],
+    "status_updated_at": 1789558204.787744,
+    "search_tasks": 6
+  }
 }
