@@ -114,3 +114,35 @@ original owner and DenseNet worker remained present. Search-stage logging is
 quiet during shared extraction, so log age alone does not imply a stalled worker.
 The configuration still has no scientific `accepted.json`; complete two-state
 search, final report, real next-lease resume and whole-week acceptance remain open.
+
+### Unified allocation-owner entrypoint prepared
+
+`OPS/look_efficiency_20260917/priority_owner_v3/ready.json` contains the final
+pinned commands/environment for both allocation-owner and GPU-owner entrypoints.
+The wrapper attempts only the registered current search, then executes the original
+GPU owner with all 145 original fallback source/config pins verified. A normal zero
+return enters fallback; 75 retires the lease. A deterministic priority failure is
+recorded once under the shared binding digest and subsequent allocations skip that
+priority until explicit review, while unrelated fallback work remains available.
+
+Capacity rejection is distinct from a technical failure. The admission helper
+executes the exact resource guards extracted from the SHA-pinned original finite
+manager, including profile receipt/cost, current co-resident CPU/RAM and remaining
+lease time. Control-plane reads are bounded at 20 seconds. An unsupported memory
+class (the original manager requires 128 GiB), exhausted resource budget or unknown
+control-plane state skips priority on that allocation without global quarantine.
+The manager still rechecks admission immediately before any real launch.
+
+Five wrapper tests passed. Four checks against the original manager's extracted
+expressions accepted an empty 128 GiB allocation and rejected 512 GiB, full CPU and
+insufficient RAM scenarios. The real existing allocation was correctly rejected
+because its co-resident CPU budget was full. These read-only checks did not launch
+another worker. All v3 pins were checked again after staging completed.
+
+`priority_dispatch.py` runs the original CPU dispatcher's daemon and changes only
+its in-process allocation-command constructor to enter this wrapper. The prepared
+configuration preserves existing feeds, output, request journal and locks. The
+old CPU dispatcher must be confirmed childless and retired before the new process
+acquires that same lock; its TTY requirement remains. This preparation does not
+itself switch a live dispatcher or edit the cross-project lease plan. Activation
+and pending-request rebinding are separately recorded by the coordinating owner.
