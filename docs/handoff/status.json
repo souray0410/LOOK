@@ -9,8 +9,8 @@
     "当前算法与匹配对照的实际执行证据"
   ],
   "source_commit": "08bf6ccf503e0073afa96ed3fd1f933219d88682",
-  "evidence_cutoff": "2026-09-17T15:55:15.521359+00:00",
-  "verified_at": "2026-09-17T15:55:15.521359+00:00",
+  "evidence_cutoff": "2026-09-17T17:05:54.886369+00:00",
+  "verified_at": "2026-09-17T17:05:54.886369+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -44,6 +44,11 @@
       "summary": "同一Stage1前缀的6个下游已全部评价：融合特征73.1424%、参与者融合特征73.2999%，对Stage1 72.0771%分别+1.0653/+1.2228pp，保留两正扩展；另4项拒绝。12510名dev预测SHA及重算通过。仍低于首轮仅末端75.4662%，不是整树最终结果。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/positive_forward_tree_20260917.md"
+    },
+    {
+      "summary": "缺OCT正收益树已完成17候选/8前缀，18份唯一预测重算及SHA通过；12510名dev，3416/x16/q32。最终仍为单参与者融合特征：71.3331%→75.4662%，+4.1330pp；未发现比best-forward该状态更高的选中dev分数。完整双状态重放及周包尚未接受。",
+      "scope": "preliminary_single_seed",
+      "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
     }
   ],
   "limitations": [
@@ -138,6 +143,7 @@
     "state": "v6_cpu_cycle_verified_dependents_held",
     "scientific_evidence_cutoff_unchanged": true,
     "evidence": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/next_fusion_activation_20260917.md",
-    "remaining": "watcher full cycle and scientific progress verification; successor GPU acceptance"
+    "remaining": "watcher full cycle and scientific progress verification; successor GPU acceptance",
+    "watcher_followthrough": "16:45与17:04实际周期已核验；20历史pending均waiting_grant，两科学扫描产物持续推进；非科研接受。"
   }
 }
