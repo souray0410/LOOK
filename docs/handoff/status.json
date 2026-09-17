@@ -8,9 +8,9 @@
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "ea76569e827678829cca3ddb45a4af9f87d44bc1",
-  "evidence_cutoff": "2026-09-17T01:15:27.935467+00:00",
-  "verified_at": "2026-09-17T01:15:27.935467+00:00",
+  "source_commit": "567771ecc94e743077db368238be2791238c6088",
+  "evidence_cutoff": "2026-09-17T03:57:32.180765+00:00",
+  "verified_at": "2026-09-17T03:57:32.180765+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -29,15 +29,18 @@
     "独立仿射家族完整best-forward链路仍未部署，整周门槛保持关闭。"
   ],
   "actions": [
-    "主线best-forward；顺序起点固定1/2/ceil(L/2)/L；15项3416搜索登记，整周验收后放其他种子。",
-    "预检跨allocation续接完成；58份原候选SHA保持，最终69份缓存通过独立profile验收。",
-    "同身份正式任务2026_09_16_14_28_13_776837在51919716.7触发8GiB主机保护退出；调整到24GiB后同身份51919716.11恢复并越过原第330批失败点，原51919716.3保持。",
-    "有限接续复用共享Claims及原2538786科学源码；到期/主任务切换仅暂停自身并回原队列，不申请新卡。",
-    "尚无该正式搜索的验收结果；独立仿射完整搜索仍需实施，不把预检替代完整方法证据。",
-    "同宿主五路线接受后自动生成CPU统计/图表/报告；现有三小时维护已更新新绑定。"
+    "线上2538786原PCA/GCV best-forward仍在运行；完整782批初始dev重放后进入train拟合。51919716.11及原主step3日志实际推进，阶段JSON过期告警已另存活性核查证据，未重复领取。",
+    "567771e新增独立八算子搜索适配器；自由RRR/PLS秩不再额外受PCA保存秩限制；恢复同时核验被拒绝候选及基线预测SHA。",
+    "Ibex隔离CPU快照使用锁定MHD c0a27ab通过97项methods/search/weekly测试；初始缺子包的测试环境已补齐后重测，不修改运行环境。GitHub CI需独立跟踪。",
+    "独立仿射方法的正式case、锁定候选表、GPU资源验收、队列及报告仍需接通；不能用适配器单测替代科学完成，3416整周门槛保持。",
+    "三小时自动维护保持ACTIVE并已记录本次实现和下一接续工作；健康任务、原研究身份与test封存保持。"
   ],
   "decisions": [],
   "evidence": [
+    {
+      "label": "Independent affine adapter implementation and remaining integration",
+      "url": "https://github.com/souray0410/LOOK/blob/567771ecc94e743077db368238be2791238c6088/docs/handoff/family_adapter_20260917.md"
+    },
     {
       "label": "Cross-lease qualification and formal execution receipt",
       "url": "https://github.com/souray0410/LOOK/blob/f4bb293/docs/handoff/search_continuation_20260917.json"
