@@ -3,14 +3,14 @@
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
   "phase": "ukb_eye_research",
-  "next_acceptance": "3416整周参考包的搜索/算子匹配实验、诊断、统计、图表和报告完成后放行其余种子",
+  "next_acceptance": "新正收益分支树3416/x16/q32两缺失状态完整拟合、重放与报告；随后完成保留的有限周包，不用旧pilot放行新策略重复",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "c9270c3c60afaa3a534072a9c469a18456318a8a",
-  "evidence_cutoff": "2026-09-17T13:52:00.049136+00:00",
-  "verified_at": "2026-09-17T13:52:00.049136+00:00",
+  "source_commit": "08bf6ccf503e0073afa96ed3fd1f933219d88682",
+  "evidence_cutoff": "2026-09-17T14:22:59.626226+00:00",
+  "verified_at": "2026-09-17T14:22:59.626226+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -41,7 +41,8 @@
     "首种子五路线统计为dev探索结果，不代表多种子重复或独立test。",
     "预检和任务登记不等于正式研究完成。",
     "本次刷新核验管理实现、节点及计算进程；既有数值结果保留原evidence_cutoff，不作为本次新增结果。",
-    "Automatic next-lease continuation is bound, but a real expiry/resume has not yet occurred; current configuration and whole weekly package remain unaccepted."
+    "Automatic next-lease continuation is bound, but a real expiry/resume has not yet occurred; current configuration and whole weekly package remain unaccepted.",
+    "新树搜索已正式运行但两缺失状态/整周研究包未完成；最坏树规模指数增长，不能预先声称比单路径更快。既有数值结果不是本次新增树结果。"
   ],
   "blockers": [
     "首个q32完整拟合/报告尚未验收；本次内存故障仍观察后续峰值。",
@@ -58,10 +59,17 @@
     "五配置保留原run/spec编译为独立任务；当前主搜索活跃且首轮已有5个位置记录。登录管理器丢失后，已锁定原manager/claim接续只读生命周期观察，未重启GPU训练。四起点并行仍待派发交接验收。",
     "ec4dc8f共享特征提取通过103算子/搜索测试、3迁移测试、真实宿主逐位相同及512train全路径一致验收。保留7候选显式迁移，51909172.17正式推进；配置v3继承已验收MALLOC资源环境，先前短暂启动尝试与修复均保留。未改科学配置或解封test。",
     "2026-09-17 15:54 Saudi：有限同run租期恢复入口v3部署，三项管理测试及真实live/锁占用防重复通过；existing owner集成另有绑定凭证。只读累计发布observer运行，先发布覆盖、仅在单配置报告验收后发布四个匹配单元。正式共享cache 776→916，配置尚未完整接受。",
-    "Activated priority-owner v4 for10 pending and future LOOK allocations; real CPU daemon cycle error=null, original GPU steps retained. Versioned repair for missing scheduling dependency accepted."
+    "Activated priority-owner v4 for10 pending and future LOOK allocations; real CPU daemon cycle error=null, original GPU steps retained. Versioned repair for missing scheduling dependency accepted.",
+    "用户明确修订主线为positive_forward_tree：每位置保留自身最优且对本前缀严格提升的候选，全部正扩展递归。08bf6cc及158源码匹配；27+21针对测试与真实宿主profile通过。正式51919716.20迁移空前缀9候选形成3分支，Stage1下游统计256→320批，完整侧缓存命中，缺失侧按非空前缀重算。旧best-forward保持对照；没有新最终科研指标。"
   ],
-  "decisions": [],
+  "decisions": [
+    "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。"
+  ],
   "evidence": [
+    {
+      "label": "正收益分支树规则、缓存、迁移、资源验收与正式下游进度",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/positive_forward_tree_20260917.md"
+    },
     {
       "label": "Shared extraction exactness, source migration and verified formal continuation",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/look_efficiency_20260917.md"
