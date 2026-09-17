@@ -1,6 +1,9 @@
 """Weekly search-policy amendment; legacy all-start research remains archived."""
 from look.studies.suffix_protocol import sites, PATTERNS
 VERSION='look_search_policy_v1'
+TREE_MODE='positive_forward_tree'
+TREE_VERSION='look_positive_forward_tree_v1'
+SEARCH_MODES=('greedy','best_forward',TREE_MODE)
 
 
 def representative_starts(architecture, position):
@@ -9,7 +12,22 @@ def representative_starts(architecture, position):
     return [1, 2, (len(ordered)+1)//2, len(ordered)]
 
 
-def protocol():
+def protocol(mode=None):
+    if mode == TREE_MODE:
+        return dict(schema=TREE_VERSION,test_access=False,patterns=list(PATTERNS),
+            main=TREE_MODE,controls=['greedy','best_forward'],baseline='frozen_uncorrected_host',
+            search='at_each_prefix_try_every_strictly_downstream_site; keep_site_best_candidate; recurse_all_positive_extensions',
+            branch_acceptance='site_best_dev_score_strictly_greater_than_current_prefix; equal_score_rejected',
+            pruning='rejected_extensions_have_no_descendants',
+            node_order='fixed_candidate_sites_order',
+            candidate_ties='lexicographic_candidate_key',
+            selection='all_retained_prefixes_including_empty; higher_dev_score; fewer_corrections; lexicographic_position_candidate_path',
+            operator='original_complete_train_PCA_and_GCV; unchanged_parent_case_grid',
+            seed_gate='matched_3416_technical_acceptance_and_existing_whole_weekly_delivery_not_performance',
+            registration='independent_first_seed; legacy_finite_package_unchanged',
+            claims='exploratory_dev; optimum_only_over_positive_site_best_tree; no_global_optimum_or_lower_walltime_guarantee')
+    if mode not in (None, 'greedy', 'best_forward'):
+        raise ValueError('Unregistered search mode')
     return dict(schema=VERSION,test_access=False,patterns=list(PATTERNS),
         main='best_forward',control='greedy',baseline='frozen_uncorrected_host',
         search='all_remaining_sites_on_same_accepted_bank; select_one; strictly_downstream_refit',
@@ -22,11 +40,13 @@ def protocol():
 
 
 def validate(spec):
-    if spec.get('schema')!=VERSION or spec.get('protocol')!=protocol() or spec.get('test_access') is not False:
+    if spec.get('schema')!=VERSION or spec.get('protocol')!=protocol(spec.get('mode')) or spec.get('test_access') is not False:
         raise ValueError('Unregistered search policy or test access')
     h=spec['host'];ordered=sites(h['architecture'],h['position'])
-    if h['seed'] not in (3416,3417,3418) or spec.get('mode') not in ('greedy','best_forward'):
+    if h['seed'] not in (3416,3417,3418) or spec.get('mode') not in SEARCH_MODES:
         raise ValueError('Invalid seed or search mode')
+    if spec['mode']==TREE_MODE and h['seed']!=3416:
+        raise ValueError('Tree repeat seeds await registered whole weekly package acceptance; old pilot cannot release them')
     start = spec.get('start_ordinal', 1)
     if start != 1 and (spec['mode'] != 'greedy' or start not in representative_starts(h['architecture'],h['position'])):
         raise ValueError('Only preregistered representative sequential starts are allowed')

@@ -11,7 +11,7 @@ from look.evaluation.evaluator import evaluate_missing, save_prediction_bundle
 def fit_search(graph, train_loader, dev_loader, pattern, sites, factors, latent_dims,
                max_rank, device, output, pca_bank, *, identity, mode, should_pause=lambda:False,
                cache_identity=None, reference_root=None):
-    if mode not in ('greedy','best_forward'):raise ValueError('Unregistered search policy')
+    if mode not in ('greedy','best_forward','positive_forward_tree'):raise ValueError('Unregistered search policy')
     if getattr(train_loader.dataset,'split',None)!='train':raise ValueError('Train-only fitting')
     if getattr(dev_loader.dataset,'split',None) not in ('train','development'):
         raise ValueError('Test sealed; train-only profile or development required')
@@ -32,10 +32,11 @@ def fit_search(graph, train_loader, dev_loader, pattern, sites, factors, latent_
             # Deliberately the original candidate construction and train-GCV fit:
             # policy comparison changes only order/selection, not the operator.
             upstream_key=fingerprint([__import__('dataclasses').asdict(a) for a in upstream])
-            key=(upstream_key, None if mode=='best_forward' else site)
+            multi_site = mode in ('best_forward', 'positive_forward_tree')
+            key=(upstream_key, None if multi_site else site)
             if key not in ready:
                 start=max((sites.index(a.node_name) for a in upstream),default=-1)+1
-                targets=list(sites[start:]) if mode=='best_forward' else [site]
+                targets=list(sites[start:]) if multi_site else [site]
                 ready.clear()  # Earlier upstream moments are durable; bound resident memory.
                 ready[key]=fitter.statistics(pattern,upstream,targets)
                 atomic_write_json(fitter.metrics,folder/'feature_costs.json')

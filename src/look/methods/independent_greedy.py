@@ -34,6 +34,11 @@ def fit_trajectory(*, identity, sites, mode, output, fit_candidates, evaluate,
     finer recovery itself. The enclosing identity must bind method, host, data,
     candidate table, source and starting point. No test evaluation is permitted.
     """
+    if mode == 'positive_forward_tree':
+        from look.methods.positive_forward_tree import fit_positive_forward_tree
+        return fit_positive_forward_tree(identity=identity, sites=sites, output=output,
+            fit_candidates=fit_candidates, evaluate=evaluate, save_artifact=save_artifact,
+            load_artifact=load_artifact, should_pause=should_pause)
     if mode == 'best_forward':
         return fit_best_forward(identity=identity, sites=sites, output=output,
             fit_candidates=fit_candidates, evaluate=evaluate, save_artifact=save_artifact,
