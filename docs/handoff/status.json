@@ -8,9 +8,9 @@
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "567771ecc94e743077db368238be2791238c6088",
-  "evidence_cutoff": "2026-09-17T03:57:32.180765+00:00",
-  "verified_at": "2026-09-17T03:57:32.180765+00:00",
+  "source_commit": "b6bbc2727255f4cd7c63c2108bb19a8073f137c2",
+  "evidence_cutoff": "2026-09-17T06:17:17.037193+00:00",
+  "verified_at": "2026-09-17T06:17:17.037331+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -29,6 +29,8 @@
     "独立仿射家族完整best-forward链路仍未部署，整周门槛保持关闭。"
   ],
   "actions": [
+    "首16/32/3416完整配置源b6bbc27及CI通过；既有51909172.8实际执行预检并已写16个site cache。完成正式拟合、预测重放、诊断与报告后，顺序进入同维四个起点对照。复用原PCA，不声称跨任务所有特征统计已缓存。",
+    "原LOOK51919716步骤请求CPU/RAM超额，禁止新任务继续叠加；新1CPU/6GiB lane与51909172原父模型及owner共16CPU108GiB。保护旧任务及allocation，预检不等于科学接受。",
     "线上2538786原PCA/GCV best-forward仍在运行；完整782批初始dev重放后进入train拟合。51919716.11及原主step3日志实际推进，阶段JSON过期告警已另存活性核查证据，未重复领取。",
     "567771e新增独立八算子搜索适配器；自由RRR/PLS秩不再额外受PCA保存秩限制；恢复同时核验被拒绝候选及基线预测SHA。",
     "Ibex隔离CPU快照使用锁定MHD c0a27ab通过97项methods/search/weekly测试；初始缺子包的测试环境已补齐后重测，不修改运行环境。GitHub CI需独立跟踪。",
@@ -37,6 +39,10 @@
   ],
   "decisions": [],
   "evidence": [
+    {
+      "label": "Single-configuration delivery and live deployment",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/serial_delivery_20260917.md"
+    },
     {
       "label": "Independent affine adapter implementation and remaining integration",
       "url": "https://github.com/souray0410/LOOK/blob/567771ecc94e743077db368238be2791238c6088/docs/handoff/family_adapter_20260917.md"
