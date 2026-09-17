@@ -14,3 +14,9 @@
 实时观察器每30秒区分日志/产物进展与manager心跳，故障/600秒无进展记录open_incident。观察器无领取、启动、取消权限；维护仍由既有ukb自动化负责。本故障期其周期缩短为15分钟，第一配置交付且接续验收后再恢复三小时。确定性失败不盲目重试，未知错误不能宣称全自动可修。
 
 报告文案修正4fbfbae已提交，首best_forward不受旧文案影响。后续greedy报告须使用正确的顺序语义文案（部署时核验，不改历史数值/receipt）。
+
+## 持久化故障与恢复事件（同日更新）
+
+已部署只读观察器b8769d4：Ibex五项测试通过，版本目录OPS/look_incident_journal_20260917，部署回执deployment.json。仅替换原观察器，未停止训练、序列或allocation owner。运行目录仍为look_serial_20260917_allocator_recovery。execution_events.jsonl和incidents/<id>/observations.jsonl追加保存状态变化；原失败step9已以明确historical_import标记导入。恢复日志不能覆盖或自动关闭原故障。
+
+既有15分钟维护负责实际修复、验收、原身份恢复运行及下游核验，不要求用户再次启动。该观察器自身不执行任意代码修复或训练重启；不能将观察器上线称为两个项目全部自动恢复门槛通过。当前已核验首site候选/预测SHA，后续joint_stem继续拟合；完整配置及整周验收尚未完成。
