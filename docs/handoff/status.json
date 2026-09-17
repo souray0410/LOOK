@@ -51,7 +51,8 @@
     "本次重新核查7份宿主验收记录及6份末端报告CSV SHA；主力best-forward仍在第二位置拟合。完整病例为0，三种空间路线及独立仿射搜索尚无完整比较；全表与计划已发布，禁止用完成数代替研究结果。",
     "共同采用PHD完整交付优先与真实依赖并行准则；本地和Ibex独立代码测试通过，新队列准备不等于正式派发已验收。",
     "五配置保留原run/spec编译为独立任务；当前主搜索活跃且首轮已有5个位置记录。登录管理器丢失后，已锁定原manager/claim接续只读生命周期观察，未重启GPU训练。四起点并行仍待派发交接验收。",
-    "ec4dc8f共享特征提取通过103算子/搜索测试、3迁移测试、真实宿主逐位相同及512train全路径一致验收。保留7候选显式迁移，51909172.17正式推进；配置v3继承已验收MALLOC资源环境，先前短暂启动尝试与修复均保留。未改科学配置或解封test。"
+    "ec4dc8f共享特征提取通过103算子/搜索测试、3迁移测试、真实宿主逐位相同及512train全路径一致验收。保留7候选显式迁移，51909172.17正式推进；配置v3继承已验收MALLOC资源环境，先前短暂启动尝试与修复均保留。未改科学配置或解封test。",
+    "2026-09-17 15:54 Saudi：有限同run租期恢复入口v3部署，三项管理测试及真实live/锁占用防重复通过；existing owner集成另有绑定凭证。只读累计发布observer运行，先发布覆盖、仅在单配置报告验收后发布四个匹配单元。正式共享cache 776→916，配置尚未完整接受。"
   ],
   "decisions": [],
   "evidence": [
@@ -94,6 +95,10 @@
     {
       "label": "Accepted management source checks",
       "url": "https://github.com/souray0410/LOOK/actions/runs/35155207691"
+    },
+    {
+      "label": "Finite pinned lease continuation and cumulative publication; actual next-lease resume still pending",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/look_efficiency_20260917.md"
     }
   ]
 }

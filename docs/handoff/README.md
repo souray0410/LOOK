@@ -308,3 +308,12 @@ solutions, logits and selection tests, and an explicit source-only evidence conv
 Small real-host extraction probes improved by about 6.9–8.3 times; this is not an
 end-to-end speed claim. Production handover remains separately gated and must be
 verified through the live execution receipt and downstream progress.
+
+## 2026-09-17 15:54 Saudi: finite current-search continuation
+
+The [shared-search handoff](look_efficiency_20260917.md) now records a pinned,
+single-run continuation entrypoint for existing allocation owners, verified
+live/lock refusal, clean lease recovery attempt tests, and a detached cumulative
+publication observer. Formal scientific source is unchanged and shared shards
+advanced 776→916. Actual next-lease execution and the full two-state delivery
+remain pending; this does not certify the weekly matched package.

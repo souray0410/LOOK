@@ -71,3 +71,46 @@ The active search remains first-seed fixed16/q32 best-forward, with remaining ca
 fitted under the accepted upstream corrections and stopping only if no remaining
 candidate strictly improves its development score. New seeds remain behind the weekly
 matched delivery gate.
+
+## Finite lease continuation and cumulative publication (15:54 Saudi)
+
+The original `launch_bound.py` pauses before expiry and exits; its existing
+`launch.json` deliberately prevents blindly restarting that manager. It was not
+by itself an automatic next-allocation recovery mechanism.
+
+`finite_search_continuation_v3.py` and `continuation_binding_v3.json` now provide
+one bounded entrypoint for the existing allocation owner. They pin the original
+configuration, specification, scientific source bytes, manager and shared-claim
+implementation. The caller supplies only its allocated job ID. Live or unknown
+old-step state, an occupied continuation/manager/run lock, or absence of a proved
+recoverable lease transition cannot start a duplicate worker. Confirmed death
+plus a clean paused claim or TIMEOUT/PREEMPTED/NODE_FAIL permits a new management
+attempt with the same scientific run/spec/source/env. Each attempt retains the
+old claim, dead-step evidence and pause request; the accepted finite manager
+performs resource admission, fitting, both missing-state replay and reporting.
+No allocation is submitted by this entrypoint.
+
+Three isolated management tests passed on Ibex, including original run/env
+preservation and distinct attempt creation. A real held-lock check returned
+`already_owned`, and the live formal-step check started no new attempt. Receipt:
+`OPS/look_efficiency_20260917/continuation_validation_v3.json`. These checks are
+not a claim that the next real allocation expiry has already occurred. Integration
+into the existing pending/future allocation-owner entrypoint is a separate
+binding action recorded by that owner; the recovery script alone is not a scheduler.
+
+A detached read-only cumulative observer (PID 605155 at deployment) uses the
+existing `cumulative_delivery` collector/publisher. Its fixed output is
+`OPS/look_efficiency_20260917/continuation_v2/publication/current`. It published
+one configuration's coverage immediately and adds its four matched result cells
+only after the original manager has accepted the per-run delivery. It does not
+invoke the full representative-package report or release another seed. The
+publication is idempotent and retains the previous valid release on failure.
+
+The unchanged formal step `51909172.17` had 776 then 916 shared feature shards
+in two reads 119 seconds apart, with the latest write less than one second old.
+A node-level read observed worker RSS 2.08 GiB and GPU memory 2492 MiB; these are
+snapshots, not complete-run peaks. Formal log contained no traceback and the
+original owner and DenseNet worker remained present. Search-stage logging is
+quiet during shared extraction, so log age alone does not imply a stalled worker.
+The configuration still has no scientific `accepted.json`; complete two-state
+search, final report, real next-lease resume and whole-week acceptance remain open.
