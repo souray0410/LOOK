@@ -58,3 +58,12 @@
 正式非空前缀进一步推进至1184批，完整参考缓存命中1184次、缺失侧前向1184次、完整侧新增前向0次；对应文件最后写入距核查7秒。运行期间特征统计不逐批打印stdout，核验以实际统计文件、进程/step及manager状态交叉进行，不能仅按formal.log时间判定卡住。
 
 恢复证据：`look_efficiency_20260917/priority_owner_v5/{activation.json,cycle_validation.json}`及`lease_recovery_after_reboot_20260917/plan_radon_look_priority_v5.json`。已同步现有三小时监控的新主策略与来源，不新增调度器或定时任务。
+
+
+### 18:03 Saudi：首个下游组合结果与完整扫描成本
+
+当前白内障/ResNet50/deep/3416/x16/q32、缺OCT、12,510名dev：Stage1单独修正macro-F1为72.0771%；在同一已修正前缀下追加Stage2为66.6867%，相对前缀下降5.3904 pp，因此该扩展不保留，Stage1路径仍为72.0771%。已核对预测SHA并从保存预测重算macro-F1。当前已完成10次候选位置评价（9次迁移首轮＋1次新下游），尚无新树最终结果；已有最佳75.4662%仍来自参与者融合特征单位置，不能称为新组合收益。
+
+Stage1前缀的6个下游位置共享train统计完成3,651批，reference_hits=3,651、missing_forwards=3,651、full_forwards=0。量测loader_seconds=1,672.30，缺失侧前向360.99秒，参考读取19.10秒，统计105.23秒：数据加载等待是该扫描主要耗时，不能将全部时间归因于线性求解，也不据此承诺整树完成时间。后续候选直接使用同前缀统计，不各自重扫train；dev仍须逐候选计算最终分类。
+
+正式51919716.20、manager与supervisor存活；正式评价日志最后更新距核验4.5秒，统一dispatcher error=null。两缺失状态、整树最终重放和报告未验收。授权环境证据：`look_positive_tree_20260917/progress_review_20260917_1505.json`（实际核验15:03:45 UTC）。
