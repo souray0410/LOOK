@@ -59,7 +59,7 @@ def report(root):
         '误差分析、实际开启位置和候选评价数见diagnostics.json；差值及普通/本配置族同时区间见paired_statistics.json。',
         '首种子、开发集选优后的探索结果；区间未消除选择偏差，不是独立test或多种子复现。',
         '空间因子16指二维特征的高宽各除16；原网络输入未缩小。向量节点不进行空间插值。',
-        '先扫描剩余下游位置，选择最大正收益；后续拟合使用此前已接受修正。无正收益保留当前模型并停止。','',
+        ('先扫描剩余下游位置，选择最大正收益；后续拟合使用此前已接受修正。无正收益保留当前模型并停止。' if spec['mode']=='best_forward' else '从指定起点按顺序逐级拟合；每级仅接受正收益修正，否则跳过该级继续。后续拟合使用此前已接受修正。'),'',
         '![单配置结果](comparison.svg)']
     (out/'README.zh-CN.md').write_text('\n\n'.join(text)+'\n')
     names=['results.json','paired_statistics.json','diagnostics.json','comparison.svg','README.zh-CN.md']

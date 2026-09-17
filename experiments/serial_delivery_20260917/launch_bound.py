@@ -19,7 +19,7 @@ with (B/'manager.lock').open('a') as lock:
  claims=Claims(C['claims']);token=claims.acquire(R,C['task']['spec_sha256'],owner,job)
  write(dict(pid=os.getpid(),time=time.time(),task=C['task'],owner=owner,generation=token['generation']),B/'launch.json')
  try:
-  for phase,out in [('profile',profile),('formal',R)]:
+  for phase,out in ([('formal',R)] if C.get('reuse_profile') else [('profile',profile),('formal',R)]):
    stamp=B/(phase+'_step.json');worker=B/(phase+'_worker.py')
    args=[C['python'],'-m','look.studies.search_case','--spec',C['task']['spec'],'--output',str(out)]+(['--profile'] if phase=='profile' else [])
    worker.write_text('import os,json,pathlib\npathlib.Path('+repr(str(stamp))+').write_text(json.dumps({"step":os.environ["SLURM_STEP_ID"]}))\nos.execvpe('+repr(C['python'])+','+repr(args)+',os.environ)\n')
