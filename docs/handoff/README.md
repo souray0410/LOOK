@@ -300,3 +300,11 @@ Private research overview and weekly archive: [PHD](https://github.com/souray041
 ## 2026-09-17：耗时与文献核查
 
 见[重复扫描、3D配方和文献可比性审计](throughput_literature_audit_20260917.md)。发现LOOK重复特征扫描及3D microbatch1/BN配方待审；本次仅核查，不宣称已优化部署。
+
+## 2026-09-17: shared LOOK extraction acceptance
+
+The [shared extraction audit](look_efficiency_20260917.md) records exact moments,
+solutions, logits and selection tests, and an explicit source-only evidence converter.
+Small real-host extraction probes improved by about 6.9–8.3 times; this is not an
+end-to-end speed claim. Production handover remains separately gated and must be
+verified through the live execution receipt and downstream progress.

@@ -207,3 +207,7 @@ Apply [SCIENTIFIC_REVIEW_STANDARD.md](SCIENTIFIC_REVIEW_STANDARD.md) before
 design, deployment and reporting. Preserve a concrete scientific review record,
 including unresolved algorithm/coverage gates; operational acceptance alone is
 insufficient. This is a review requirement, not a claim of automated enforcement.
+
+## 主动性能与交付审计
+
+每次预检、阶段转换、维护和修复按[性能准则](EFFICIENCY_STANDARD.md)审计时间/空间、缓存与真实关键路径，并更新有限周交付估时。科研正确但不可避免性未经核验的缓慢仍是待处理事件。

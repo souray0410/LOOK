@@ -9,7 +9,8 @@ from look.evaluation.evaluator import evaluate_missing, save_prediction_bundle
 
 
 def fit_search(graph, train_loader, dev_loader, pattern, sites, factors, latent_dims,
-               max_rank, device, output, pca_bank, *, identity, mode, should_pause=lambda:False):
+               max_rank, device, output, pca_bank, *, identity, mode, should_pause=lambda:False,
+               cache_identity=None, reference_root=None):
     if mode not in ('greedy','best_forward'):raise ValueError('Unregistered search policy')
     if getattr(train_loader.dataset,'split',None)!='train':raise ValueError('Train-only fitting')
     if getattr(dev_loader.dataset,'split',None) not in ('train','development'):
@@ -21,12 +22,25 @@ def fit_search(graph, train_loader, dev_loader, pattern, sites, factors, latent_
             matches=[b for (n,f),b in pca_bank.items() if n==site and f==(1 if len(b.feature_shape)==1 else factor)]
             if len(matches)!=1:raise ValueError('Missing unique basis')
             basis[site]=matches[0]
+        from look.methods.shared_latent import SharedLatentFitter
+        from look.methods.linear_operator import fingerprint
+        fitter=SharedLatentFitter(graph,train_loader,basis,max_rank,device,folder/'latent_moments',
+            reference_root or root/'reference_latents',cache_identity or identity,should_pause)
+        ready={}
         def fit(site,upstream,where):
             b=basis[site]
             # Deliberately the original candidate construction and train-GCV fit:
             # policy comparison changes only order/selection, not the operator.
+            upstream_key=fingerprint([__import__('dataclasses').asdict(a) for a in upstream])
+            key=(upstream_key, None if mode=='best_forward' else site)
+            if key not in ready:
+                start=max((sites.index(a.node_name) for a in upstream),default=-1)+1
+                targets=list(sites[start:]) if mode=='best_forward' else [site]
+                ready.clear()  # Earlier upstream moments are durable; bound resident memory.
+                ready[key]=fitter.statistics(pattern,upstream,targets)
+                atomic_write_json(fitter.metrics,folder/'feature_costs.json')
             candidates=fit_look_node(graph,train_loader,site,pattern,b.factor,latent_dims,
-                max_rank,device,b,upstream_artifacts=upstream)
+                max_rank,device,b,upstream_artifacts=upstream,latent_statistics=ready[key][site])
             for q in sorted(candidates):yield f'{q:08d}',candidates[q]
         cache={}
         def evaluate(bank):

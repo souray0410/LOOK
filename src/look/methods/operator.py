@@ -474,7 +474,7 @@ def fit_look_node(
     pca: FullFeaturePCA,
     upstream_artifacts: Sequence[LOOKArtifact] = (),
     filler: MissingModalityFiller | None = None,
-    *, feature_pairs=None,
+    *, feature_pairs=None, latent_statistics=None,
 ) -> Dict[int, LOOKArtifact]:
     def pairs():
         if feature_pairs is not None:
@@ -490,11 +490,15 @@ def fit_look_node(
     feature_shape, down_shape = pca.feature_shape, pca.downsample_shape
     rank = min(max_rank, len(components))
     components = components[:rank]
-    statistics = LatentSufficientStatistics(rank)
-    for full, missing, _, _ in tqdm(pairs(), desc=f"Latent {node_name} x{factor}"):
-        full_z = (((full - mean) / std) - pca_mean) @ components.T
-        missing_z = (((missing - mean) / std) - pca_mean) @ components.T
-        statistics.update(missing_z, full_z)
+    statistics = latent_statistics
+    if statistics is None:
+        statistics = LatentSufficientStatistics(rank)
+        for full, missing, _, _ in tqdm(pairs(), desc=f"Latent {node_name} x{factor}"):
+            full_z = (((full - mean) / std) - pca_mean) @ components.T
+            missing_z = (((missing - mean) / std) - pca_mean) @ components.T
+            statistics.update(missing_z, full_z)
+    if statistics.xtx.shape != (rank, rank) or statistics.count < 2:
+        raise ValueError('Invalid latent sufficient statistics')
 
     artifacts = {}
     for dimension in sorted(set(min(value, rank) for value in latent_dims if value > 0)):

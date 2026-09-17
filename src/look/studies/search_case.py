@@ -153,7 +153,11 @@ def run(spec,out,device,pause,profile=False):
             else:
                 artifacts,_=fit_search(graph,train_loader,dev_loader,pattern,spec['eligible_sites'],
                     cfg['factors'],cfg['latent_dims'],cfg['max_rank'],device,target,bank,
-                    identity=stable_hash(spec),mode=spec['mode'],should_pause=check)
+                    identity=stable_hash(spec),mode=spec['mode'],should_pause=check,
+                    cache_identity=dict(host=spec['source']['best_sha256'],pca=spec['pca']['sha256'],
+                        parent_spec=spec['source']['spec_sha256'],batch=base['training']['microbatch'],
+                        train_count=len(fit),profile=profile),
+                    reference_root=out.parent.parent/'shared_latents')
             if any(a.node_name not in spec['eligible_sites'] for a in artifacts):raise ValueError('Disabled prefix was corrected')
             corrected=evaluate_missing(graph,dev_loader,device,fixed_pattern=pattern,artifact_banks={pattern:artifacts})
             loaded=load_selected_bank(target)

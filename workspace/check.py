@@ -5,7 +5,7 @@ import importlib.util
 import json
 from pathlib import Path
 
-FILES=('README.zh-CN.md','registry.json','paths.py','check.py','check_framework.py','REPOSITORY_STANDARD.md','MODEL_RUN_STANDARD.md','GPU_EXECUTION_STANDARD.md','RESEARCH_AUDIT_STANDARD.md','DELIVERY_STANDARD.md','stage_registry.py','STAGED_RESEARCH_STANDARD.md')
+FILES=('README.zh-CN.md','registry.json','paths.py','check.py','check_framework.py','REPOSITORY_STANDARD.md','MODEL_RUN_STANDARD.md','GPU_EXECUTION_STANDARD.md','RESEARCH_AUDIT_STANDARD.md','DELIVERY_STANDARD.md','EFFICIENCY_STANDARD.md','stage_registry.py','STAGED_RESEARCH_STANDARD.md')
 def check(root, peers=()):
     config=json.loads((root/'registry.json').read_text())
     spec=importlib.util.spec_from_file_location('workspace_paths',root/'paths.py')
