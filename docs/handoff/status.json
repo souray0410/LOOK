@@ -79,7 +79,8 @@
     "v5两层优先接续已绑定10份待批LOOK及未来申请，旧best-forward与原fallback保留；Slurm查询短暂超时后实际管理周期error=null恢复，统一20份旧申请waiting_grant，未重启GPU/重复申请。正式Stage1前缀统计推进至1184批，完整侧缓存命中1184、缺失侧重新前向1184、完整侧新增前向0。",
     "18:03 Saudi核验：Stage1前缀共享train统计3651批完成，完整参考缓存命中3651且新增完整前向0；10个候选评价已提交。新候选dev继续执行，日志新鲜，dispatcher error=null。扫描加载1672秒、缺失前向361秒，主要成本仍在数据供应；主任务未停止。",
     "18:21 Saudi：Stage1后追加Stage3/Stage4的dev macro-F1分别70.5513%/61.5176%，均低于前缀72.0771%，不保留；共12次候选评价，当前最佳75.4662%仍来自首轮，不是新组合收益。",
-    "18:55 Saudi：Stage1六下游齐全，decision保留两正子分支，后续前缀统计缓存持续更新。共15次候选，6个发现前缀；LOOK/R&B管理无新错误，3运行21待批。"
+    "18:55 Saudi：Stage1六下游齐全，decision保留两正子分支，后续前缀统计缓存持续更新。共15次候选，6个发现前缀；LOOK/R&B管理无新错误，3运行21待批。",
+    "2026-09-17 v6 CPU周期与watcher真实接续核验，原GPU扫描持续更新；middle/features仍等待科学依赖，未提前释放重复种子。管理层细节见next_fusion_activation_20260917.md。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。"
@@ -136,14 +137,10 @@
     {
       "label": "Priority continuation production activation",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/priority_owner_activation_20260917.md"
+    },
+    {
+      "label": "后继融合管理接续边界",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/next_fusion_activation_20260917.md"
     }
-  ],
-  "operational_update": {
-    "checked_at": "2026-09-17T16:42:45Z",
-    "state": "v6_cpu_cycle_verified_dependents_held",
-    "scientific_evidence_cutoff_unchanged": true,
-    "evidence": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/next_fusion_activation_20260917.md",
-    "remaining": "watcher full cycle and scientific progress verification; successor GPU acceptance",
-    "watcher_followthrough": "16:45与17:04实际周期已核验；20历史pending均waiting_grant，两科学扫描产物持续推进；非科研接受。"
-  }
+  ]
 }
