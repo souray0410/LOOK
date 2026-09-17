@@ -9,6 +9,8 @@ from look.analysis.observed_report import simultaneous_bootstrap
 
 
 def route_key(spec):
+    if spec['mode'] not in ('best_forward','greedy'):
+        raise ValueError('Tree requires its own report; not a legacy five-route control')
     return 'best_forward' if spec['mode']=='best_forward' else 'sequential_start_'+str(spec.get('start_ordinal',1))
 
 

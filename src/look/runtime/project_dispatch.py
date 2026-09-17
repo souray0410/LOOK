@@ -161,7 +161,7 @@ def native_api_preflight(task, config):
 
 
 def active_search_modes(config, claims):
-    counts={'greedy':0,'best_forward':0}
+    counts={'greedy':0,'best_forward':0,'positive_forward_tree':0}
     for task in work(config):
         if task.get('execution')!='look_search':continue
         state=read(claims.path(task['run_dir'])).get('state')

@@ -47,3 +47,12 @@ def test_proven_pre_submission_failure_is_not_ambiguous_request(tmp_path):
     assert failed_before_submission(dict(state='owner_exited',log=str(log)))
     log.write_text('salloc: Pending job allocation 123\n')
     assert not failed_before_submission(dict(state='owner_exited',log=str(log)))
+
+
+def test_active_positive_tree_count(tmp_path,monkeypatch):
+    import look.runtime.project_dispatch as module
+    claim=tmp_path/'claim.json';write(claim,dict(state='running'))
+    monkeypatch.setattr(module,'work',lambda config:[dict(execution='look_search',search_mode='positive_forward_tree',run_dir='tree')])
+    class Claims:
+        def path(self,run):return claim
+    assert module.active_search_modes({},Claims())['positive_forward_tree']==1
