@@ -982,5 +982,78 @@
   ],
   "host_receipts": 7,
   "full_project_receipts": 0,
-  "test_access": false
+  "test_access": false,
+  "search_round_current": {
+    "scope": "single_seed_development_round_selection_not_complete_configuration",
+    "run": "2026_09_17_15_28_21_422026",
+    "verified_at": 1789653120.0491357,
+    "decision_sha256": "5684a0f9181562892f02f95a15d305bc335e29c7d9dc274a2f8aa59213e0a5f0",
+    "participants": 12510,
+    "cases": 807,
+    "rows": [
+      {
+        "node": "uncorrected",
+        "macro_f1": 0.7133312819172412,
+        "delta_pp": 0.0,
+        "prediction_sha256": "cf8142ad804b62cc0fd21a5f912947df7954b136ec16759c1ee1c3b3f4e57302"
+      },
+      {
+        "node": "joint_input",
+        "macro_f1": 0.6514483840076851,
+        "delta_pp": -6.188289790955603,
+        "prediction_sha256": "1eee04ef71dc17a21d50d50df3d7c006d2dee3a5858b7c9d8153dd6878af8991"
+      },
+      {
+        "node": "joint_stem",
+        "macro_f1": 0.6560702297827073,
+        "delta_pp": -5.726105213453381,
+        "prediction_sha256": "385fddd87edf2e679b200d7e6831b2892b5292918f4d94f7a0e9c6eb9db514e0"
+      },
+      {
+        "node": "joint_stage1",
+        "macro_f1": 0.7207706970077243,
+        "delta_pp": 0.7439415090483181,
+        "prediction_sha256": "8b584b8a1ca3f648186c2e48135898c72a8502d940c5636f3b7b2348d9a2c1d2"
+      },
+      {
+        "node": "joint_stage2",
+        "macro_f1": 0.49692703084055634,
+        "delta_pp": -21.64042510766848,
+        "prediction_sha256": "112e30182f9d6008b3d7f4188145290b3f01c890a89860afdb98564848d43121"
+      },
+      {
+        "node": "joint_stage3",
+        "macro_f1": 0.4919154643959404,
+        "delta_pp": -22.141581752130072,
+        "prediction_sha256": "0530b2f166a899feec3321ac49399a01297373677a070d25d6059bfe8e891584"
+      },
+      {
+        "node": "joint_stage4",
+        "macro_f1": 0.5532366917768562,
+        "delta_pp": -16.009459014038498,
+        "prediction_sha256": "26969d89667b049d1204dc400905dafdad659f0931b11fde2520194ef782bfca"
+      },
+      {
+        "node": "fusion_stage4",
+        "macro_f1": 0.5499618124726292,
+        "delta_pp": -16.336946944461197,
+        "prediction_sha256": "efd1d5488ecb1d1917e6d5c3ac99ed3e991cd85901ae478f99c801201ef3e0c8"
+      },
+      {
+        "node": "fusion_features",
+        "macro_f1": 0.7528061463153402,
+        "delta_pp": 3.9474864398098997,
+        "prediction_sha256": "2534bd3386f8ef7bd1704fb1a11c70f6b1e4a4bfb4777666e056d592904c1088"
+      },
+      {
+        "node": "fusion_participant_feature",
+        "macro_f1": 0.7546616710574361,
+        "delta_pp": 4.133038914019494,
+        "prediction_sha256": "d72cc64dbbecd59bc6da535252e2663fb99a0d14b62c884d282965f737cb4b22"
+      }
+    ],
+    "selected": "fusion_participant_feature",
+    "complete_configuration": false,
+    "test_access": false
+  }
 }

@@ -8,9 +8,9 @@
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "05fd2219ca73d37d399edda59ccc78ba73ca1ece",
-  "evidence_cutoff": "2026-09-17T07:43:23.105640+00:00",
-  "verified_at": "2026-09-17T13:11:43.049500+00:00",
+  "source_commit": "c9270c3c60afaa3a534072a9c469a18456318a8a",
+  "evidence_cutoff": "2026-09-17T13:52:00.049136+00:00",
+  "verified_at": "2026-09-17T13:52:00.049136+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -29,6 +29,11 @@
       "summary": "白内障ResNet50特征融合3416缺CFP：原PCA候选54.50%低于不修正56.39%，实际single_final开关保留56.39%；候选负结果不能冒充最终部署性能。",
       "scope": "negative_result",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
+    },
+    {
+      "summary": "新best-forward首轮9/9候选齐全，白内障深层融合3416缺OCT：不修正71.33%，选参与者级融合特征75.47%（+4.13pp）；12510名dev，q32、空间16倍。预测重算与SHA通过；双缺失配置尚未接受。",
+      "scope": "preliminary_single_seed",
+      "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
     }
   ],
   "limitations": [
@@ -41,7 +46,6 @@
   "blockers": [
     "首个q32完整拟合/报告尚未验收；本次内存故障仍观察后续峰值。",
     "独立仿射家族完整best-forward链路仍未部署，整周门槛保持关闭。",
-    "登录管理进程消失后的待批申请owner及派发接续需核对；不能把Slurm待批状态当作获批后一定有执行者。",
     "共享提取已上线，但完整正式双缺失搜索及周交付仍未完成；中央调度的代表起点并行与其他线性算子路线尚需验收。"
   ],
   "actions": [
