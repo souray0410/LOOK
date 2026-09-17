@@ -1,5 +1,5 @@
 """Read-only finite-delivery watchdog. Never owns, restarts or cancels GPU work."""
-import argparse,json,time,os,fcntl
+import argparse,json,time,os,fcntl,hashlib
 from pathlib import Path
 
 def assess(manager, last_progress, now, alive, stall_seconds=600):
@@ -19,6 +19,41 @@ def alive(pid):
     try:os.kill(pid,0);return True
     except ProcessLookupError:return False
 
+def journal(root, record):
+    """Durable state transitions, including failures; never close on fresh logs."""
+    root=Path(root)
+    current=root/'journal_state.json'
+    previous=read(current)
+    run=record.get('sequence_state',{}).get('run')
+    state=record['state']
+    key=dict(run=run,state=state,step=record.get('manager',{}).get('step'))
+    if previous.get('key')==key:
+        return
+    failure=state.startswith('action_required')
+    incident=previous.get('incident')
+    if failure and not incident:
+        identity=json.dumps([run,record['time'],state],sort_keys=True)
+        incident=hashlib.sha256(identity.encode()).hexdigest()[:20]
+    event=dict(key=key,time=record['time'],incident=incident,
+               observation=record,automatic_repair_owner='existing_ukb_maintenance',
+               scientific_acceptance=False)
+    if failure:
+        event['next_action']='diagnose_versioned_repair_validate_restore_and_verify_downstream'
+    elif incident:
+        event['next_action']='verify_original_failure_and_repair_acceptance_before_closure'
+        event['incident_state']='progress_returned_requires_repair_acceptance'
+    else:
+        event['next_action']='continue_finite_workflow'
+    with (root/'execution_events.jsonl').open('a') as f:
+        f.write(json.dumps(event,sort_keys=True)+'\n');f.flush();os.fsync(f.fileno())
+    write(current,event)
+    if incident:
+        folder=root/'incidents'/incident;folder.mkdir(parents=True,exist_ok=True)
+        with (folder/'observations.jsonl').open('a') as f:
+            f.write(json.dumps(event,sort_keys=True)+'\n');f.flush();os.fsync(f.fileno())
+        # Maintenance owns repair/acceptance receipts separately. This cannot erase them.
+        write(folder/'latest_observation.json',event)
+
 def main():
     a=argparse.ArgumentParser();a.add_argument('--sequence',type=Path,required=True);a.add_argument('--interval',type=float,default=30);args=a.parse_args()
     c=read(args.sequence);root=args.sequence.parent;last_progress=time.time();previous=None
@@ -27,7 +62,8 @@ def main():
         while True:
             now=time.time();seq=read(Path(c['output'])/'status.json');launch=read(root/'launch.json')
             if seq.get('state')=='all_configurations_delivered':
-                write(root/'health.json',dict(state='finite_sequence_reported_complete',time=now,requires_receipt_verification=True));return
+                record=dict(state='finite_sequence_reported_complete',time=now,sequence_state=seq,requires_receipt_verification=True)
+                journal(root,record);write(root/'health.json',record);return
             current=next((read(Path(x['config'])) for x in c['tasks'] if x['run']==seq.get('run')),None)
             if current is None:
                 status='initializing';fingerprint=None;detail={}
@@ -38,6 +74,7 @@ def main():
                 if fingerprint!=previous:last_progress=now;previous=fingerprint
                 status=assess(detail,last_progress,now,alive(launch['pid']))
             record=dict(state=status,time=now,sequence_state=seq,manager=detail,last_experimental_progress=last_progress,seconds_without_progress=now-last_progress,read_only=True)
+            journal(root,record)
             write(root/'health.json',record)
             if status.startswith('action_required'):
                 # Owner is the existing maintenance automation, not this observer.
