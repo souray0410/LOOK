@@ -16,6 +16,17 @@ Proactively review assumptions, implementation and conclusions throughout all wo
 
 Autonomous corrective maintenance is mandatory for authorized workflows: follow workspace/RESEARCH_AUDIT_STANDARD.md through repair, acceptance, safe restoration and verified downstream progress. Detection or an alert alone does not complete maintenance; keep each open incident owned with a concrete automatic continuation where safe. Preserve healthy work and scientific standards.
 
+
+Current-version uniformity is a mandatory design, review and release gate: follow
+"One current contract; explicit version migration" in workspace/RESEARCH_AUDIT_STANDARD.md.
+New readers, execution paths and outputs use one current contract; do not add
+host-dispatched legacy schemas, try-new-then-old fallbacks or compatibility modes
+to normal runtime. Keep old releases/executors pinned for old jobs and reproduction;
+convert completed artifacts with separate versioned migration tools, validate state
+and downstream consumers, then admit the canonical outputs. Preserve legitimate
+architecture/dimension/task variants. Record migration and rollout evidence in the
+handoff; CI or directory renaming alone does not establish migration acceptance.
+
 Resource-lease continuity is a mandatory cross-project design/review gate. Read
 "Resource leases are independent of scientific executions" in
 workspace/GPU_EXECUTION_STANDARD.md before changing submission, expiry, checkpoints,
@@ -24,3 +35,14 @@ PCA/SVD/correction, evaluation and reporting; never equate a 48-hour lease with
 scientific completion or claim deployed recovery from documentation alone.
 
 Read workspace/DELIVERY_STANDARD.md before scheduling or reporting: prioritize a finite end-to-end delivery package, prepare real dependencies concurrently, reuse exact accepted artifacts, and distinguish single-configuration, matched-package and replication acceptance. No new scheduler or performance-dependent release. Documented rules are not runtime acceptance.
+
+Scientific validity is a mandatory design, deployment and reporting gate. Read
+workspace/SCIENTIFIC_REVIEW_STANDARD.md and record the question, changed/held-fixed
+factors, executed algorithm, acceptance evidence and conclusion limits. Audit the
+full selection policy independently from fixed-configuration ablations. Do not
+wait for user detection; missing scientific coverage stays open even when CI and
+workers are healthy. Documentation does not certify automated enforcement.
+
+Maintain docs/handoff/status.json alongside its README after material evidence review. Preserve goal, phase/dependencies, exact source/evidence dates, separate planned/implemented/deployed/running/accepted states, limitations and traceable evidence. Repository-only checks cannot certify runtime or scientific completion. Do not renew verification timestamps just because a polling request succeeded; no restricted data or credentials belong in status records.
+
+Read workspace/RESULT_CONTINUITY_STANDARD.md for incremental dependencies, cumulative reporting, and traceable attempts including failed, superseded and withdrawn configurations. Low performance does not invalidate evidence. Verify publication and archive acceptance; documentation alone is not deployed automation.

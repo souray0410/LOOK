@@ -54,7 +54,7 @@ known blockers need not trigger repeated notifications, but stay visible in the
 repair ledger. New failures, regressions, verified recovery and required user
 input are actionable notifications.
 
-`scheduling/research_audit.py` in MHD_Models checks configured controller/feed
+`src/mhd_models/scheduling/research_audit.py` in MHD_Models checks configured controller/feed
 coverage without importing models, touching test predictions or changing tasks.
 It complements, and cannot replace, live Slurm inspection, GPU lifecycle tests,
 scientific artifact acceptance and exact-SHA GitHub CI checks. Keep its report
@@ -144,3 +144,66 @@ coordinates need not remove an edge between original sources. Keep unsupported
 controls explicitly unavailable until their mathematical and runtime contracts
 are established. For every open integration gap, distinguish implemented, tested,
 deployed, queued, running and scientifically accepted states in the handoff.
+
+
+## One current contract; explicit version migration
+
+This is a permanent research and engineering acceptance rule across projects,
+models, data processing, configurations, artifacts, evaluation, reporting and
+scheduling. A new release implements one declared current contract. Do not make
+its ordinary execution depend on whether an artifact came from WS02, Ibex or an
+older layout. Site settings describe resource roots and hardware, not alternative
+artifact schemas. Preserve real execution origin as provenance.
+
+Keep old releases and their readers/executors reproducible at immutable source
+pins. Let healthy old jobs finish under their original code, configuration and
+recovery semantics. Do not hot-rewrite those jobs to enforce a new layout.
+Historical reproduction is served by the historical release, not by accumulating
+legacy branches in the current runtime.
+
+Convert completed old artifacts through explicit, versioned migration tools into
+the current contract before admitting them to new consumers. Importers may know
+source versions and old layouts; normal current readers must not silently try a
+new format and then an old one, guess a schema from a host/path, or retain a
+permanent legacy-mode dispatcher. Reject unsupported inputs with the required
+migration/version information. A catalog alias alone is not a migration.
+
+Migration acceptance must record source and destination identities, schema and
+framework pins, file hashes, conversion rules and acceptance evidence. Preserve
+scientific configuration, original provenance and necessary recovery evidence;
+verify tensor/state semantics, strict loading, relevant outputs/gradients and
+Node IDs according to the change. Recheck dependent loaders, project copies,
+schedulers, evaluation and reports before switching consumers. Do not relabel an
+old framework artifact as a newer version, or call retraining a lossless migration.
+Preserve the old reproducible copy until migration and downstream acceptance pass.
+A format-only migration does not require retraining or authorize new test access.
+
+### Required review and release evidence
+
+For every structural/version change, record in the handoff or acceptance ledger:
+
+1. The single target contract and its scope, including legitimate scientific
+   variants (architecture, 2D/3D, task and data semantics). Such explicit variants
+   remain necessary; this rule forbids legacy-format ambiguity, not model diversity.
+2. The unchanged old execution sources and dependencies still in use, their drain
+   condition, and the separate migration entrypoint/source-to-target mapping.
+3. Evidence that current readers reject unconverted legacy input; migration tests
+   cover supported source formats, state preservation, tampering/incomplete input,
+   idempotence and downstream use where applicable. A regex or CI pass alone is
+   not sufficient semantic acceptance.
+4. The consumers audited and remaining transitions, separately marked planned,
+   implemented, validated, deployed and accepted. Do not claim an entire platform
+   migrated because the directory or one representative model was converted.
+
+Review this boundary before adding a fallback or compatibility flag. Resolve the
+version difference at migration/release boundaries instead of patching it into
+normal operation. Keep this standard identical in the companion research repos
+and make it a mandatory AGENTS.md instruction so future work follows it without
+another user reminder. Framework V4-to-V5 is not authorized by this policy alone.
+
+## Scientific comparison and conclusion review
+
+Apply [SCIENTIFIC_REVIEW_STANDARD.md](SCIENTIFIC_REVIEW_STANDARD.md) before
+design, deployment and reporting. Preserve a concrete scientific review record,
+including unresolved algorithm/coverage gates; operational acceptance alone is
+insufficient. This is a review requirement, not a claim of automated enforcement.

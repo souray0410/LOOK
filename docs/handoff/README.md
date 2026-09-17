@@ -1,50 +1,41 @@
+# LOOK：当前交接入口
+
+最新实现：[完整交付与依赖并行](independent_delivery_20260917.md)。本地代码通过检查；远端部署尚待资源、领取和下游验收。下列历史运行记录保留其原核验日期。
+
+## 当前计划和数值对比（2026-09-17更新）
+
+先读[完整数值、方法含义、实际队列与限制](current_results_20260917.md)。包括6个已验收末端案例及原始/关闭分数，不能与正在运行的best-forward混用。
+
+## 当前故障恢复：全量dev已通过，正式拟合进行中
+
+详见[9月17日修复与下游证据](allocator_recovery_20260917.md)。新q32曾失败，现原任务恢复到51909172.10；782批验证已过，进入train拟合。不是完整配置接受。旧预检状态以下仅作历史记录。
+
+## 2026-09-17 完整配置优先已部署
+
+见[现场、来源及缓存边界](serial_delivery_20260917.md)。16/32/3416新任务已在
+51909172.8执行真实预检，自动衔接正式拟合与报告；尚无该配置正式接受结果。
+原16倍仍含10维网格，不能与新单维任务混为一谈。独立仿射家族缺口继续保留。
+
+## 2026-09-16 晚：整周首种子交付门槛
+
+[当前搜索实现和部署证据](https://github.com/souray0410/LOOK/blob/52afe196fe42a2dcf424669d0d3c8ecbcc7c9693/docs/handoff/README.md)：best-forward为主，四个固定起点为对照；先完成3416整周实验、诊断、统计、图表和报告再放行其余种子。Ibex17项测试通过，15条首种子搜索路线已登记，正式搜索仍等待独立预检；其他线性算子独立搜索仍有实施缺口，不宣称全项目完成。实时入口仍为look_active_workflow.json。
+
 # LOOK — 维护与交接
 
-最新实施：[2026-09-17独立交付与依赖并行](independent_delivery_20260917.md)。本地检查已通过，Ibex连接失败，部署和真实下游验收仍未完成；下文较早运行快照保留原日期。
+## 2026-09-17：正式最佳位置向后搜索启动
+
+预检跨租期续接通过，58份旧候选SHA不变；完整队列在8GiB主机保护退出后，版本化v2以24GiB额度恢复，51919716.11已越过原失败位置；健康原worker保持，完整规模峰值仍在验证。仍未产生该正式任务的验收结果；独立仿射完整搜索未部署，整周门槛继续关闭。详见[当前实施交接](https://github.com/souray0410/LOOK/blob/f4bb293/docs/handoff/README.md)及[验收记录](https://github.com/souray0410/LOOK/blob/f4bb293/docs/handoff/search_continuation_20260917.json)。
 
 
-## 2026-09-17：独立仿射搜索适配器与恢复证据检查
+## 2026-09-17：正式最佳位置向后搜索启动
 
-八种仿射方法的独立候选适配器已补齐基础实现，默认best-forward，后续候选在已接受上游修正下重新拟合。修复自由残差/PLS秩被PCA存储秩额外限制的问题，并为顺序及最佳位置搜索补查恢复时的基线与被拒绝候选预测SHA。Ibex隔离CPU快照使用锁定MHD V4通过97项针对测试；不修改线上科学源码，不等于完整GPU/正式数据验收。详细范围、证据和下一步见[适配器验收与未完成项](family_adapter_20260917.md)。完整家族case/有限候选清单/资源准入/报告仍须接通，整周阻塞不能移除。
-
-同时复核51919716.11及原51919716.3仍在实际推进，前者完整782批dev后已进入train的joint_stem拟合。审计器因阶段状态JSON超过阈值提示需检查活性；实际Slurm步骤及新鲜日志证明此时仍有进展，不能仅刷新状态时间或把它误判为可以重复领取。
-
-## 2026-09-17：完整队列主机内存不足已隔离并恢复
-
-上一条正式step51919716.7在第330/782批触发8GiB主机额度保护后退出，不能再显示为运行。原主任务未受影响。核查旧step退出和原配置SHA后，版本化接续器v2仅将主机额度调整为24GiB；同身份正式step51919716.11已越过原失败点（核查至少353批）。共享Claims保留原run、失败attempt和配置，不生成新种子、不改batch/精度/停止准则。
-
-完整队列资源验收仍在进行：小样本profile不能证明其主机峰值；有限进展检查器在完整782批dev遍历并进入train拟合后写progress_acceptance.json，但这也不等于整项科研验收。当前入口是live binding的qualified_search_continuation，v2状态、worker日志和resource_review都保存在同一operations目录。若再次触发保护则隔离，不自动盲重试。独立仿射家族全搜索仍是实施缺口。
+预检跨租期续接通过，58份旧候选SHA不变；原spec锁定的正式任务已在51919716.7执行完整dev评价，健康原worker保持。仍未产生该正式任务的验收结果；独立仿射完整搜索未部署，整周门槛继续关闭。详见[当前实施交接](https://github.com/souray0410/LOOK/blob/5da3a3d/docs/handoff/README.md)及[验收记录](https://github.com/souray0410/LOOK/blob/5da3a3d/docs/handoff/search_continuation_20260917.json)。
 
 
-## 2026-09-17：预检跨租期验收，正式最佳位置搜索已启动
+## 2026-09-17：搜索预检接续修复已上线
 
-原预检在51919716.5续接后完成；58份旧候选记录SHA不变，最终69份缓存。正式同身份任务在51919716.7启动，完整dev评价782批次已推进，健康原51919716.3未停止。执行的是原spec锁定`2538786`科学源码，管理源`ea76569`；不把预检候选或分数混入正式结果。
+新管理源`ea76569`经Ibex23项测试后部署，预检持久化、exit75暂停和到期保护已接通。当前独立GPU预检仍在运行，正式新搜索尚未验收。activate_v4与新dispatcher已现场核查，旧GPU任务保持。实际跨allocation续接和独立仿射搜索仍待完成；不能称整周研究已全自动验收。详见[当前实施交接](https://github.com/souray0410/LOOK/blob/f4e9fae/docs/handoff/README.md)。
 
-有限接续器复用共享Claims，只执行原队列这一任务，不申请新allocation、不生成新种子。检测原主任务切换或到期前900秒，仅暂停自身，原任务身份回现有队列。初次管理进程因未加载Python共享库而在领取前退出；加载`python/3.11.0`后已核验实际GPU步骤，无重复领取。
-
-当前实测整卡6557MiB；新进程RSS约5.04GiB，Slurm约8GiB包含可回收干净文件缓存，cgroup未见OOM。继续按实际工作内存及GPU余量保护，不能把当前低显存当成无限准入依据。仍有独立仿射家族完整搜索未接通，整周交付门槛保留；当前启动不等于科研结果验收。详细当前入口见live binding的`qualification_resume`及`qualified_search_continuation`，机器可读记录见[接续验收](search_continuation_20260917.json)。
-
-
-## 2026-09-17：预检到期与接续修复
-
-管理源`ea76569`已部署到Ibex独立source_ea76569。活动dispatcher已切换到lease_recovery_20260917/dispatcher.json，现场核验新PID3560453无错误，旧salloc子进程3383965/3420130继续保留。预检step51898670.17持续工作，独立qualification_guard已运行；等待者升级activate_v4.py，原GPU源码未改。缓存真正跨allocation恢复与正式结果仍待后续证据，不将守护存活计为完成。
-
-新增搜索管理层把预检保存在原run的resource_profile下，暂停返回码75保持为暂停，allocation到期同时通知正式运行和预检；科学search_case仍从原SHA锁定源码执行。独立预检通过显式迁移接入同一目录，须核对完整spec及原writer锁，不能覆盖既有产物。到期守护只请求自己的预检保存，不停止健康worker或allocation。Ibex23项针对测试通过；部署是否完成及下一实际GPU步骤从live binding和deployment receipt核验。当前独立仿射全搜索仍未接通，不能将本修复称为全部研究已自动完成。
-
-## 2026-09-16 晚：整周首种子与四起点对照
-
-最新用户要求：先完成3416整个周研究包（匹配实验、诊断、统计、图表、报告）再放行其他种子，不能按单个宿主两任务完成放行。主线best_forward保留；顺序策略固定四个代表起点1/2/ceil(L/2)/L。当前代码新增交付门槛、三种额外起点及五路线自动CPU报告。Ibex目标环境17项针对性测试通过（含合成预测的完整统计与SVG生成），不等于正式数据验收。
-
-线上主搜索尚在独立预检，不能报告正式结果。allocation51898670内step17已延至8小时，等待控制器activate_v3.py已替代旧CPU等待者；原科学worker、allocation owner和旧证据保留。完整仿射家族的独立逐节点搜索仍有未接通环节，周包不得因此虚报完成。当前状态始终从look_active_workflow.json重新核验。
-
-已部署source_16678d4：registry_weekly.json输出15条首种子搜索路线（原6条身份保留、新增9条）；weekly_delivery_20260916/dispatcher.json是新派发入口，复用claims与原申请账本。旧CPU dispatcher由session guardian保护其两个salloc子进程，新进程已核实运行、无错误，等待账户派发锁/容量。其他种子的新派发受整周门槛限制，已运行者不回滚。五路线同宿主全部验收后自动提交48h CPU统计/绘图作业；整个周包仍不得越过独立仿射搜索未接通的显式阻塞。
-
-
-## 2026-09-16 搜索策略调整
-
-用户授权以最佳位置前向搜索为本周主力，单次顺序贪心作为匹配对照；全部起点不再阻塞主线。详见[搜索协议](../look_search_policy_20260916.zh-CN.md)。新代码和任务有独立身份，旧worker源码不热改。新模式使用原PCA/GCV拟合器，各轮候选都基于已接受的上游修正重新拟合。实现、技术预检、正式运行和科研结果分别验收；不得把代码测试通过写成已获得收益。当前单元/MHD前向测试已通过，正式部署状态以 operations/look_active_workflow.json 与新任务接受记录为准。
-
-以下为较早的交接快照，不作当前任务计数依据。
 
 最近核查：2026-09-14 08:46（Asia/Riyadh）。本页是有日期的交接快照，不是实时监控。
 
@@ -108,28 +99,9 @@ GitHub负责独立安装和代码检查；Ibex是实际GPU完整链路验收环�
 
 通用自审原则见[RESEARCH_AUDIT_STANDARD](../../workspace/RESEARCH_AUDIT_STANDARD.md)：主动检查假设、实现、证据与检查本身的盲点，不依赖用户发现问题。监控须同时核对完整研究范围和运行事实，不以部分CI通过或进程存活概括整体就绪。OPS/execution_audit_20260914/{config,latest,repair_ledger}.json记录独立门槛、覆盖与修复状态；脚本只读，不替代完整模型/Slurm/真实GPU验收。
 
-## 2026-09-14：9月20日阶段交付优先级
-
-见[本周执行安排](../weekly_delivery_20260920.zh-CN.md)。眼科两项目完整参考匹配组优先于继续增加独立模型配置。现场24张GPU运行，但两项目方法接受数仍为0；LOOK旧父筛选50/116，RB旧6/14、完整父准备25/73，分母分开。未来准入策略已在共享锁内改为LOOK6/RB6/model最多12；现有2/2/20 allocation不强停，预留不等于实际已分配。OPS/weekly_delivery_20260920保存原策略和变更验收。三维父模型及完整case/资源/执行接受仍为阻塞；周中检查不以缩短训练或2D替代3D赶交付。心脏5组数据迁移，其他器官及颈动脉暂缓；test继续封存。本文档未上线新的科学worker。
-
-## 2026-09-14：学期投稿硬截止与分阶段授权
-
-用户明确2026-12-31前正式投稿，应尽早；允许首篇完整研究包与729六网络等长期矩阵分阶段，后续实验保留。见[学期交付安排](../semester_delivery_2026.zh-CN.md)。LOOK首篇优先、RB并行阶段推进；11月30日为LOOK内部争取目标，不是未经测量的完成保证。分阶段test入口尚未实现/验收，当前test保持封存。不能把已查看test在后续调参后再次当作未见证据。
-
-## 2026-09-14：阶段扩展复用管理层
-
-用户明确阶段必须可接续、扩展、复用，不能换阶段就重复训练。新增共用workspace/stage_registry.py和STAGED_RESEARCH_STANDARD.md；科学身份与stage分离、文件SHA、原run复用/恢复、不可变阶段与前驱摘要、跨进程锁、失败不自动重训。它仅做管理规划，必须由项目真实接受器/存活检查完成verify_live，未部署全部生产适配器，也不解封test；具体集成和真实模型恢复继续验收。
-
 ## 2026-09-14：长期自动纠错责任
 
 用户明确自动纠错必须成为通用长期规则，不能只适用于本次故障。AGENTS及共享RESEARCH_AUDIT_STANDARD已规定：已授权流程必须从发现推进到诊断、版本化修复、验收、安全恢复和真实进度复查；不能停在报警、CI通过或调度器重启。未关闭问题保留证据、责任主体、下一步及可执行自动续接。保护健康任务和原科学标准，限制瞬时重试，不盲重启确定性错误。规范适用于未来模型、数据、框架、项目与CI/资源/评价/报告链路，但不是保证所有故障都能自动解决。规则更新本身不表示任何当前训练或故障已完成验收。
-
-
-## 2026-09-14：原生预检接口与短任务失败防护
-
-将Radon已定位的相邻调度风险补入LOOK：新增申请前按原生科学源码与框架SHA检查预检接口；不兼容候选记录拒绝原因；短worker退出后重新读取step记录并有限等待终态；失败保留原run并阻止重复申卡。子step移除继承的owner CPU/内存请求字段，保留实际工作线程与科学配置。
-
-Ibex独立目录 `OPS/look_admission_validation_20260914/acceptance.xml` 7项针对测试通过；首轮上传缺少包依赖导致的collection失败保留为attempt1记录，补齐原包源码后通过。结构检查通过。此记录仅为控制代码准备和CPU测试，不是已接替生产或方法实验完成。新控制器必须使用经过SHA锁定的兼容profile实现并完成实际候选API清单验收；原LOOK调度器有活跃salloc子进程，不能直接杀会话。生产切换须独立验证待机入口和会话保护，现有健康GPU owner继续旧源。
 
 
 ## 2026-09-14 15:56：LOOK控制补丁已安全接替
@@ -140,38 +112,46 @@ Ibex独立目录 `OPS/look_admission_validation_20260914/acceptance.xml` 7项针
 
 此为控制路径安全接替，新的正式GPU worker仍须逐任务完整资源及恢复验收，不是LOOK方法研究完成。Radon独立长GPU恢复探针仍在进行，不能重复启动或提前解除其派发保护。下一维护继续推进首个项目参考匹配组执行依赖与实际验收，不以该控制修复代替科学链路实现。
 
-## 2026-09-14：Ibex三路线与本周实际结果优先
+## 2026-09-14 current-format migration boundary
 
-用户批准[三路线协议](../look_spatial_20260914.zh-CN.md)：插值/PCA、直接PCA、平均池化/PCA。81个宿主单元依赖原已训练宿主；每组3416三路线完整技术/重载/配对报告验收后，自动展开3417/3418，完全不按分数筛掉方法。新spatial feed复用既有dispatcher和原子领取，不新增GPU竞争管理器，test封存。
-
-本周优先形成项目完整参考匹配组，而非等待全部大矩阵。2026-09-14 20:00附近现场白内障ResNet50父模型三种子齐全，9项宿主已注册、方法接受仍0。接替预检漏传CUBLAS确定性环境导致报错，独立重跑通过25次更新及完整恢复，随后按原优先级接口请求当前基础模型保存断点；未取消allocation。证据OPS/look_priority_repair_20260914，后续须核查实际项目训练进度。
-
-三路线新代码在Ibex独立准备目录测试；旧健康科学源码不热改。原分辨率PCA尚无真实大队列资源接受，不能称已获得三路线效果。大矩阵、机制、其他疾病及架构保留后续阶段，逐组自动汇总，不能以新增代码数量代替本周结果交付。
-
-## 2026-09-14晚：空间比较实现与阶段推进
-
-新分支2026_09_14_19_56_49；科学快照7d141fd，CI34873729822成功，Ibex完整191项测试通过，另补三种路线实际MHD节点写回测试后相关13项通过。测试通过不是空间比较GPU整组接受；后者等待已冻结且验收的原宿主，并需384GiB worker内存/512GiB allocation资源类的实际预检。
-
-空间注册器look_spatial_registry_20260914已运行，按81宿主/243路线视图登记；3416同宿主三路线全部技术接受和报告后才自动释出3417/3418，不设性能门槛。控制绑定见OPS/look_active_workflow.json。原宿主训练、来源和allocation均保留，新增控制快照只服务后续worker。旧CPU dispatcher拥有salloc子进程，使用session guardian保持其会话；不得直接杀会话。
-
-首个cataract/resnet50/3416/middle宿主已实际更新；空间拟合尚无接受结果。以[本周阶段安排](../weekly_delivery_20260920.zh-CN.md)中的完整小组验收作为交付，不把基础模型或控制代码完成数充当项目结论。
-
-## 2026-09-14：两项目研究链衔接
-
-共享RESEARCH_AUDIT_STANDARD新增关联研究规则：补充必须映射到既有问题、匹配对照、改变因素、先前证据、可复用产物及下一阶段验收，周报优先完整匹配小组。Radon的[跨队列研究链](https://github.com/souray0410/Radon_Bridge/blob/2026_09_14_19_43_11/docs/research_chain_20260914.zh-CN.md)区分几何、参数化与容量；LOOK继续独立比较三种空间处理/PCA路径，不引入可学习分解或额外反传，不混用最终分类与分支平均指标。共享范式不改变正在执行的协议。
+Shared model standard v4: new releases use one canonical artifact format and reader.
+MHD_Models main 0859bfe implements the new package and one-time converters. Running
+models and research projects retain original immutable snapshots until accepted
+transition. See [migration](../model_migration.md); package-layout deployment is not
+permission to change scientific protocols or follow main at runtime.
 
 
-## 2026-09-14 21:25：两项目全链路审查
+## Permanent contract review gate (2026-09-14)
 
-见[完整范围与执行差距审查](../project_audit_20260914.zh-CN.md)。该文按研究包区分已实现、已接线、真实验收、运行和科学接受；LOOK已出现4个持续更新宿主，但方法完整case接受0；Radon完整父准备和新多来源/分解生产接入仍有缺口。MHD_Models新增只读pipeline_coverage审计覆盖全部活跃项目/补充feed及registry，独立Ibex227测试通过；不把状态文件和合成GPU通过当作真实研究完成。部署证据及未关闭事项由现有UKB维护继续处理；所有健康科学worker保留。
+The shared [research audit standard](../../workspace/RESEARCH_AUDIT_STANDARD.md)
+and AGENTS.md now require one current contract and explicit version migration.
+This gate covers the whole workflow, not only the model catalog. New consumers
+must reject unconverted legacy inputs; old pinned workers finish unchanged.
+Migration, downstream replay and release evidence are required before switching.
+This documentation update does not certify remaining production migration or
+upgrade MHD V4. See the standard for the mandatory review checklist.
 
-## 2026-09-14 model-format transition
 
-The shared model standard is now v4; see [migration](../model_migration.md).
-New releases use one canonical artifact format. Current immutable study snapshots
-finish unchanged. MHD_Models owns one-time conversion; no WS02/Ibex or V4/V5
-fallback is to be added to the new project runtime. Parent replay and deployment
-remain explicit acceptance gates; this documentation does not claim they passed.
+## 2026-09-15 project-first resource policy
+
+The user superseded the generic-model reservation: project work and required
+parent models have priority; generic models get only unused capacity. The shared
+GPU standard now also requires independent configurations, controls and seeds to
+be separately claimable for parallel execution. Real scientific dependencies remain.
+MHD_Models prepares a CPU demand publisher for the existing budget contract; it
+does not replace this project's running source or automatically split old cases.
+Live policy deployment and per-arm parallel execution are separate acceptance gates.
+
+
+## 2026-09-15 revised allocation targets: 10 / 10 / 4
+
+This supersedes the no-generic-floor policy earlier today: preserve four generic
+model slots, cap LOOK and Radon_Bridge targets at ten each, and lend every currently
+unused project slot to generic models. Targets govern new admission, not forced
+termination of healthy existing work. Explicit publisher configuration and live
+consumption must be verified. Independent project-arm parallelism remains a
+separate task-DAG integration gate, not automatically solved by quota changes.
+
 
 ## 2026-09-15 resource-lease continuity standard
 
@@ -187,15 +167,6 @@ Isolated Ibex management acceptance: 272 tests passed in
 `lease_continuity_20260915/validation2/`; the first failed fixture run is preserved.
 Shared document hashes match across all three repositories. This source is for
 new validated owners; original worker bindings and runtime states were not changed.
-
-## 2026-09-15：仿射向量修正与统一秩预算补充
-
-用户确认允许独立线性替代对照，强调各方法使用合适的保留量描述、用共同维数预算匹配，而不是预设最佳实现。新准备入口见[协议与数学定义](../look_linear_vectors.zh-CN.md)。已加入共享PCA岭回归、保持同截距的残差低秩回归、自由截距低秩回归；原空间处理与旧科学代码不变。`linear_registry`及现有dispatcher的可选`linear_feeds`提供依赖/预检/复现入口。新增秩预算工具拒绝将截断谱自归一化成100%，能量阈值仅描述、不事后选型。
-
-本条不是上线或科学结果接受声明：需按精确提交完成CI和Ibex完整资源/数据重放验收；生产绑定未切换。密集求解的高维可行性、PCA特征复用提速、PLS与独立配置选型不是已完成事项。健康旧任务继续旧版本。
-
-
-本补充实现提交`6b0626e`已推送至`2026_09_14_21_37_57`。Ibex完整Git检出的针对性检查77项通过，含原子恢复、MHD节点/冻结状态、秩与能量语义及调度读取；这里是CPU数值/接口测试，非真实队列GPU验收。对应CI为34965862964（状态需刷新）。准备清单位于OPS/look_linear_20260915/registry_prepared.json，首次登记81宿主、243臂视图，均等待原完整LOOK接受；base feed当前9宿主任务、0完整接受。没有切换生产dispatcher、启用新GPU申请或读取test。下一步由该受验来源完成真实资源预检和安全控制器衔接，不能把登记清单当作已上线自动运行。后续小改将推理bank大小与完整拟合存储分别记账。
 
 ## 2026-09-15 afternoon resource handoff
 
@@ -253,34 +224,6 @@ records independent progress. V1 waited for a nonexistent final companion status
 V2 checks actual Slurm step death instead, preserving the recorded `stopping` status.
 No scientific worker was killed or acceptance criterion relaxed.
 
-## 2026-09-15：末级线性对照名称纠正
-
-展示层统一采用PCA约束残差岭回归、低秩残差回归（PCA约束均值）、低秩残差回归（自由均值）。后两组并非直接完整特征与残差目标之比；同配置斜率相同，均值约束不同。见[解释与覆盖边界](../linear_maps_explained.zh-CN.md)。本次不改方法ID、拟合、预测或运行快照。
-
-## 2026-09-15：自由均值候选与持续汇总准备
-
-用户偏向自由均值RRR，但保留三臂匹配研究，不按当前排名删减。新增只读terminal_rollup观察器，独立输出并保留原模型/研究身份；其核验范围为报告/spec摘要和原接受条件，不替代原注册器完整预测/缓存验收。当前live核查4/81末级接受，77等待宿主，两个3418宿主仍在更新；原完整逐层与扩展包不能据此宣称全自动完成。本地缺pytest，结构检查通过；目标环境测试与部署另行记录。
-
-### 持续汇总已在Ibex上线
-
-`ce6c32c`的4项报告完整性/负结果/重复清单/test拒绝/三种子门槛测试在Ibex通过；结构检查通过。真实首轮汇总4个接受案例116行，report/spec核验无异常，完整三种子组为0；不重新读参与者数组或训练缓存。独立源码`OPS/look_terminal_20260915/rollup_ce6c32c`，绑定`rollup_binding.json`，输出`continuous_report`；观察器实际存活并写出healthy状态。原GPU训练与registry快照未修改。三小时UKB监控已加入观察器状态核对和安全单实例恢复；无法解释的SHA矛盾需隔离调查，不自动改证据。终端四案例完成后的原借卡owner已恢复通用模型，不得依据旧15:59条目再次迁移。精确CI状态须刷新，Ibex针对性通过不替代CI。
-
-## 2026-09-15 21:45例行核查与谱诊断准备
-
-LOOK253d2a9与ce6c32c、RB135bb68、MHD_Models3420288的精确CI均成功。live audit仍16项已知缺口、fingerprint a8c2e050...未变。22GPU运行/2待批；末级4/81、observer healthy。两个3418宿主epoch17训练/12验证新鲜；两个3417到期暂停且共享claim paused，未被误记为failed，不盲抢。20209源SHA81001/89303文件且临时hash文件新鲜，4/5数据组验收，不报全完成。巡检记录OPS/heartbeat_20260915_2145/review.json。
-
-新增analysis.affine_spectrum紧凑谱诊断及测试，Ibex独立目录look_terminal_20260915/affine_spectrum_validation_2145的9项测试通过。只完成代码/数值接受，真实高维数据计算尚未派发；不替换terminal_78b8962、ce6c32c报告observer或其他健康科学快照。具体边界见linear_maps_explained.zh-CN.md，后续独立只读资源准入后再接真实谱结果。
-
-## 2026-09-16：单种子贯通的父模型登记修正
-
-核查发现末级/空间/线性对照registry已设置3416技术接受后放行重复种子，但project_orders仍等待两模态三种子全部接受才登记宿主，造成不必要的前置等待。现改为锁定配方后，按同一种子的两路已验收父模型交集登记；3416优先，未锁定配方或单边未接受仍拒绝。不改已有spec、run ID、训练源码、数据角色或三种子最终统计门槛。Ibex隔离3项测试通过，覆盖原9任务恒等、部分配对、后续重复、重复执行和接受失败。该变更不等于完整逐层LOOK已贯通；高维拟合/空间资源验收仍须分别处理。部署证据另记，健康运行重复种子不强停。
-
-单种子登记修复`5628f93`精确CI35024412428成功，Ibex14项关联测试通过。CPU控制器已由1071876安全切换为独立`OPS/pilot_release_20260916/control_src`（仅project_orders.py与原控制器源码不同），原配置/source_pins和GPU workers保持不变；live binding增加controller_source与deployment_receipt。首次对账正在重新核验父模型best.pt，登记仍9项，尚未宣称新增宿主已开跑。复核deployment.json及原projects/queue.json，需证明原9项身份不变、新的同种子配对就绪项登记并被原dispatcher读取。完整逐层3416 PCA现场21/23、22/23、20/21，仍不是完整方法验收。末级种子门槛已上线；其他扩展链路保留各自真实验收限制。
-
-## 2026-09-16：恢复独立校正起点
-
-见[后缀起点协议](../suffix_starts_20260916.zh-CN.md)。新增suffix_protocol/case/registry/report及原dispatcher feed；原81宿主×7中间起点=567拟合任务，首尾复用原LOOK/single_final。逐宿主3416全部起点技术完成后才放重复种子，不按性能筛范围。当前补丁通过Ibex隔离CPU回归，正式GPU资源验收与上线凭远端deployment.json确认；此文档不声称已得到全部实验结果。
-
 
 ## 2026-09-16：独立起点已部署并开始正式拟合
 
@@ -294,9 +237,62 @@ OPS/look_suffix_20260916保存独立源码、registry.json、runtime_environment
 
 关联自审还发现R&B3D Swin预检在50GiB allocator上限下OOM；失败step已死、2个相同资源候选隔离，保留完整失败证据后移除全局新派发hold，其他合格任务恢复准入。这不表示Swin资源问题已解决，不修改batch/精度，也不把资源失败解释为性能差。证据OPS/look_suffix_20260916/rb_resource_incident。跨项目需求publisher已恢复健康、指向新LOOK控制器。
 
+实现源码位于[已部署提交f3c8a47](https://github.com/souray0410/LOOK/tree/f3c8a475d3348a818ae637e35033808d1b0a535f)，本main提交仅同步协议与交接记录，不替换正在运行的源码。参见[完整起点协议](../suffix_starts_20260916.zh-CN.md)。
 
-## 2026-09-16：统一仿射修正家族补充
 
-用户批准将LOOK作为一般线性/仿射修正家族研究，新增[关联协议](../look_affine_family_20260916.zh-CN.md)。现有三臂不改；新增PCA自由均值、无秩约束残差岭回归、PLS-SVD方向岭回归、对角岭回归和正交对齐。前四臂形成均值×子空间2×2因素设计，51项预定每宿主scope比较；不声称容量相同或各方法独立最优。全部81宿主的末级/逐层分别登记，共162新case、810新方法视图、神经训练0，3416完整技术接受后放其他种子。
+## 2026-09-16 03:50 Saudi：第二条起点执行与共享心脏数据验收
 
-新增独立family schema、拟合/恢复、报告和registry/feed接口；原健康运行快照不变。Ibex隔离30项初步数值/恢复及旧路径回归已通过；实际GPU全路径、CI、部署与正式结果尚须远端证据验收，不以本条视为完成。与空间处理及起点实验通过同宿主引用关联，不盲目扩成全部组合。新增PLS明确是PLS-SVD方向后接岭回归，不是假称迭代PLSRegression。新的家族估计器尚无性能结论。
+第二条有限接替已通过独立GPU验证及原模型完整断点验收：51896678.21正式运行同一3416/deep宿主的start7；51898670.13继续start8。两条worker均有新鲜完整dev推理进度，尚无完整后缀或九起点组接受。阶段status超过两小时不等于进程卡死：本次pipeline审计提示后，以实际Slurm step和持续更新日志核查，没有重启健康worker。证据OPS/heartbeat_20260916_0345/live_suffix_liveness.json。
+
+实际pipeline_audit配置此前未收到只写入旧execution_audit配置的起点、周日完整匹配和Swin资源复检门槛。本次将三项追加到真正执行入口，保留原全部门槛及未完成状态；这是审计覆盖修正，不是研究验收通过。
+
+独立数据迁移范围的心脏五组（20205、6025.zip、20207、20208、20209）现共361888文件、8360335258048字节全部源/目标SHA验收。源盘保留，临时rsync授权已精确撤销，其他SSH授权不变。DATA/UKBiobank/multiorgan/manifests/transfer_completed_20260916.json为完成凭证。此状态仅为文件复制完整，标签、访视、配对与任务语义仍待审计；不自动开启其他器官项目实验，也不改变眼科数据划分或test封存。
+
+
+### 2026-09-16 06:55 Saudi：审计配置状态修复
+
+上次追加门槛把deployed_running/running_not_complete/needs_review写进了冻结审计器仅接受的门槛state，导致audit_input_error。本次保留原运行描述到execution_status，将门槛分别写为not_validated/waiting_dependencies/not_validated；pipeline与旧配置同步，全部门槛保留且没有改为接受。真实入口重跑确认输入错误消失。两条起点阶段status较旧，但Slurm步骤及持续更新日志均核实在推进，不重启健康任务。证据OPS/heartbeat_20260916_0645/{audit_gate_schema_repair,audit_after_repair,review}.json。现有实施缺口和Swin三维资源复检仍未完成，不据此宣布全研究健康或完成。
+
+
+### 2026-09-16 08:59 Saudi：仿射家族管理层已接通
+
+科学快照`d32380197fd0faf9e1f91e6e3f8ad2cd3323c6a9`，[CI35061029793](https://github.com/souray0410/LOOK/actions/runs/35061029793)成功。Ibex完整CPU运行236项通过，另2项因Git archive不含submodule实体失败；补齐锁定V4检出后，部署/结构与本次相关25项全部通过。另有初步30项算子/旧路径/恢复测试。真实A100预检完成五新臂、两缺失方向、冻结宿主、完整MHD重载和RNG恢复；GPU峰值1,765,801,984 bytes、主机峰值2,678,476,800 bytes。预检使用1024训练参与者与32训练探针，不计正式性能。
+
+`OPS/look_affine_20260916/registry_v2.json`和独立源码`source_d323801`已部署；数据输出`DATA/LOOK/2026_09_10_11_11_31/affine_family_20260916_v2`。初始`v1`仅预登记、从未派发，因最终资源边界补丁另建v2，不改写其原身份。3个白内障ResNet50/3416末级host已登记，正式接受0；逐层等待原完整三臂接受，其他种子等待对应3416家族完整技术接受。
+
+唯一CPU dispatcher现为`OPS/look_affine_20260916/control/dispatcher.json`，PID1686933；registry PID1671215。旧CPU243090在确认无子owner后通过guardian退休；原51898670.13、51896678.21及其他GPU worker持续原快照。管理层handover初次记录缺previous字段导致KeyError，已从guardian验收恢复规范schema，并重新观察到error=null、72项就绪、0接口拒绝、waiting_account_capacity。不是修改训练标准排除错误。共享claims、账户锁、48h和最低2张generic保持不变。
+
+look_active_workflow.json、需求publisher及独立audit门槛已更新。新实验确已进现有调度器，当前24张运行/待批额度占满，因此尚无新family正式worker；不能将预检或72项总就绪解释为72项新实验完成。当前三条新case排在同优先级已就绪补充后，未抢停健康项目；维护时应检查完整3416组交付与队列等待，不能只看进程存活。
+
+下一步：按新feed逐case完成预检与正式拟合/重放，汇总51项配对比较，再自动释放同组重复种子；3种子齐全触发独立CPU报告。统计族内区间不替代全研究全局区间。原起点/空间/扩展研究及Radon未完成门槛继续保留，test仍封存。
+
+## 2026-09-16: Scientific review obligations
+
+Added the identical SCIENTIFIC_REVIEW_STANDARD.md to LOOK, Radon_Bridge and
+MHD_Models and linked it from AGENTS and RESEARCH_AUDIT_STANDARD. This documents
+mandatory comparison/algorithm/evidence checks; no runtime checker, training
+snapshot, scientific result, GPU owner or test access changes in this update.
+
+LOOK open incident: forced candidate comparisons were described too broadly.
+See [correction selection audit](../correction_selection_audit_20260916.zh-CN.md).
+Branch commit 680ec38 supplies additive gate review code; its 11 targeted tests
+passed on Ibex. Production gate-review deployment is not accepted here. Alternative
+methods still require independent per-node greedy trajectories and real MHD
+acceptance; whole-bank fallback does not close this gate. Original PCA greedy
+implementation is distinct and must not be described as absent.
+
+## 2026-09-16：统一阶段引用与周报衔接
+
+workspace/stage_registry.py与Radon_Bridge保持逐字相同：阶段引用精确科学身份，复用/恢复调用所属项目验收器，不复制重训、不自动解封test或抢任务。原LOOK算法、生产worker和既定实验范围不变。本条只同步已在准备分支验证过的共享管理工具到main，不宣称LOOK全部研究已完成。
+
+本周KAUST已建立2026-09-20准备目录；周六证据快照，周日06:45英文PPTX/中文讲稿、09:45刷新、09:55交付10:00汇报。既有ukb自动化继续按独立LOOK协议验收；病例/指标/逐层策略不得套用R&B分支平均。年底前投稿目标保持。
+
+## Current status publication
+
+Machine-readable current evidence is [status.json](status.json). Source review and live runtime verification are distinct; this publication does not change scientific jobs or certify unfinished experiments. Update this record after material evidence review.
+
+Private research overview and weekly archive: [PHD](https://github.com/souray0410/PHD). Adopted hub standards: research-standards-v1, 2026-09-16. Existing pinned study/runtime rules remain authoritative for current executions.
+
+## 连贯性规范采用（2026-09-17）
+
+采用PHD `62fd7e08770f3628a048fd59b82da2b9e545afab`，进入[固定累计结果入口](../reports/current/README.md)和[尝试档案](../archive/README.md)。完整规则见[共同契约](../../workspace/RESULT_CONTINUITY_STANDARD.md)。此次仅更新结果管理入口；未刷新运行事实、未迁移全量旧产物、未删除服务器文件，自动累计发布仍须独立验收。

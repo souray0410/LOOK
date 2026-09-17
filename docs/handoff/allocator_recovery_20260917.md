@@ -1,0 +1,22 @@
+# LOOK 正式全量扫描故障及恢复
+
+2026-09-17现场：小规模预检通过，但新q32正式任务在782批dev扫描的第241批后触发进程RSS保护。旧序列如实停为needs_review，没有自动完成修复；之前“预检正在运行”的快照不能作为当前健康证据。
+
+本次保留失败日志/原任务身份/科学源码b6bbc2727255f4cd7c63c2108bb19a8073f137c2。确认51909172.9已退出并复核共享claim、父模型和PCA SHA后，仅调整新进程glibc分配策略（MALLOC_ARENA_MAX=1，TRIM_THRESHOLD和MMAP_THRESHOLD均131072），不改6GiB上限、batch、数据、方法或选优。复用已核验的完整profile文件与receipt；旧训练源码未热改。
+
+恢复manager：OPS/look_serial_20260917_allocator_recovery；原run：search16_q32_20260917_v2/runs/2026_09_17_09_10_26_594899。
+当前实际step51909172.10已通过全部782批dev，并进入全量train的joint_input x16潜在统计拟合。18项原搜索/报告测试通过；新增只读进展watchdog三项测试通过。原3D主worker及allocation owner继续。
+
+状态是恢复后的下游进展已验证、拟合继续观察，不是该配置或整周研究完成。allocator修复与症状改善一致，不将其当严格内存根因证明。Slurm/cgroup内存与进程RSS不同，不能互相冒充。后续需要实际site产物、预测重放、完整报告接受。3D更大microbatch仍仅有探针，不能声称新正式配方已上线。
+
+原五配置序列保持：best_forward，随后四个代表性顺序起点。每个配置拟合、统计、图表、报告通过才推进下一项。独立仿射方法仍有部署缺口，不用PCA单配置代替全部研究。
+
+实时观察器每30秒区分日志/产物进展与manager心跳，故障/600秒无进展记录open_incident。观察器无领取、启动、取消权限；维护仍由既有ukb自动化负责。本故障期其周期缩短为15分钟，第一配置交付且接续验收后再恢复三小时。确定性失败不盲目重试，未知错误不能宣称全自动可修。
+
+报告文案修正4fbfbae已提交，首best_forward不受旧文案影响。后续greedy报告须使用正确的顺序语义文案（部署时核验，不改历史数值/receipt）。
+
+## 持久化故障与恢复事件（同日更新）
+
+已部署只读观察器b8769d4：Ibex五项测试通过，版本目录OPS/look_incident_journal_20260917，部署回执deployment.json。仅替换原观察器，未停止训练、序列或allocation owner。运行目录仍为look_serial_20260917_allocator_recovery。execution_events.jsonl和incidents/<id>/observations.jsonl追加保存状态变化；原失败step9已以明确historical_import标记导入。恢复日志不能覆盖或自动关闭原故障。
+
+既有15分钟维护负责实际修复、验收、原身份恢复运行及下游核验，不要求用户再次启动。该观察器自身不执行任意代码修复或训练重启；不能将观察器上线称为两个项目全部自动恢复门槛通过。当前已核验首site候选/预测SHA，后续joint_stem继续拟合；完整配置及整周验收尚未完成。

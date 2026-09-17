@@ -1,0 +1,82 @@
+{
+  "schema": "research_project_status_v1",
+  "project": "LOOK",
+  "goal": "缺失模态线性修正的可复现机制研究",
+  "phase": "ukb_eye_research",
+  "next_acceptance": "3416整周参考包的搜索/算子匹配实验、诊断、统计、图表和报告完成后放行其余种子",
+  "dependencies": [
+    "宿主验收",
+    "当前算法与匹配对照的实际执行证据"
+  ],
+  "source_commit": "b6bbc2727255f4cd7c63c2108bb19a8073f137c2",
+  "evidence_cutoff": "2026-09-17T07:43:23.105640+00:00",
+  "verified_at": "2026-09-17T07:43:23.105640+00:00",
+  "verification_scope": "runtime_and_evidence",
+  "layers": {
+    "planned": "documented",
+    "implemented": "partial",
+    "deployed": "partial",
+    "running": "partial",
+    "accepted": "partial"
+  },
+  "results": [
+    {
+      "summary": "白内障ResNet50深层融合3416，末端原PCA含开关策略：缺OCT macro-F1 71.33%→75.52%，缺CFP 53.14%→56.78%。这是已验收末端案例，不是新best-forward或test结果。",
+      "scope": "preliminary_single_seed",
+      "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
+    },
+    {
+      "summary": "白内障ResNet50特征融合3416缺CFP：原PCA候选54.50%低于不修正56.39%，实际single_final开关保留56.39%；候选负结果不能冒充最终部署性能。",
+      "scope": "negative_result",
+      "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
+    }
+  ],
+  "limitations": [
+    "当前搜索上线使用原PCA/GCV算子；不能代替其他线性修正方法独立搜索。",
+    "首种子五路线统计为dev探索结果，不代表多种子重复或独立test。",
+    "预检和任务登记不等于正式研究完成。"
+  ],
+  "blockers": [
+    "首个q32完整拟合/报告尚未验收；本次内存故障仍观察后续峰值。",
+    "独立仿射家族完整best-forward链路仍未部署，整周门槛保持关闭。"
+  ],
+  "actions": [
+    "新q32正式步骤因全量dev RSS增长失败，已确认旧step死亡；原run/spec恢复至51909172.10。allocator环境调整后通过782批完整dev，自动进入train joint_input×16拟合。不是科学完成，拟合验收仍待完成。",
+    "源方法仍b6bbc27；恢复orchestrator4fbfbae、只读进展watchdog b72124e；18原测试+3故障检查通过。watchdog每30秒，既有维护故障期15分钟。保护其他健康worker与owner。",
+    "五配置完整交付序列继续；完成拟合、重放、诊断与报告后才进入下一个。不同起点旧文案须由新版报告修正，不改研究数值。",
+    "其他线性算子best-forward正式部署仍未完成，不能用本PCA/GCV配置宣称整周研究已接通。",
+    "故障/恢复事件持久化观察器b8769d4已在Ibex部署，5项测试通过；历史失败与恢复观察追加记录。既有维护负责修复后运行和下游验收，不以健康状态自动关闭。完整配置仍未验收。",
+    "本次重新核查7份宿主验收记录及6份末端报告CSV SHA；主力best-forward仍在第二位置拟合。完整病例为0，三种空间路线及独立仿射搜索尚无完整比较；全表与计划已发布，禁止用完成数代替研究结果。"
+  ],
+  "decisions": [],
+  "evidence": [
+    {
+      "label": "Live plan, six terminal cases and candidate versus selected outputs",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
+    },
+    {
+      "label": "Actual full-dev recovery and downstream fit progress",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/allocator_recovery_20260917.md"
+    },
+    {
+      "label": "Single-configuration delivery and live deployment",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/serial_delivery_20260917.md"
+    },
+    {
+      "label": "Independent affine adapter implementation and remaining integration",
+      "url": "https://github.com/souray0410/LOOK/blob/567771ecc94e743077db368238be2791238c6088/docs/handoff/family_adapter_20260917.md"
+    },
+    {
+      "label": "Cross-lease qualification and formal execution receipt",
+      "url": "https://github.com/souray0410/LOOK/blob/f4bb293/docs/handoff/search_continuation_20260917.json"
+    },
+    {
+      "label": "Current implementation and remaining gates",
+      "url": "https://github.com/souray0410/LOOK/blob/f4bb293/docs/handoff/README.md"
+    },
+    {
+      "label": "Accepted management source checks",
+      "url": "https://github.com/souray0410/LOOK/actions/runs/35155207691"
+    }
+  ]
+}
