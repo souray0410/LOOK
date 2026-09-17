@@ -1,6 +1,6 @@
 {
   "schema": "look_search_continuation_v1",
-  "verified_at": "2026-09-17T01:06:15.698146+00:00",
+  "verified_at": "2026-09-17T01:15:09.288813+00:00",
   "scientific_source": "253878686271f839b6d2b685719bf13f495ec1c0",
   "management_source": "ea76569e827678829cca3ddb45a4af9f87d44bc1",
   "qualification": {
@@ -14,12 +14,13 @@
   },
   "formal": {
     "state": "running",
-    "step": "51919716.7",
+    "step": "51919716.11",
     "run": "2026_09_16_14_28_13_776837",
     "dev_batches": 782,
     "accepted": false,
     "scientific_identity_unchanged": true,
-    "seed": 3416
+    "seed": 3416,
+    "verified_dev_batches_at_least": 353
   },
   "primary": {
     "step": "51919716.3",
@@ -31,7 +32,8 @@
     "step_cgroup_bytes": 8609587200,
     "inactive_clean_file_bytes": 3696607232,
     "oom_events": 0,
-    "meaning": "live_resource_snapshot_not_complete_formal_peak"
+    "meaning": "live_resource_snapshot_not_complete_formal_peak",
+    "scope": "historical_initial_attempt_before_host_reserve_failure_not_current_v2_peak"
   },
   "recovery": "same_shared_claims; pause_only_this_execution; existing_queue_resumes",
   "test_access": false,
@@ -39,5 +41,23 @@
   "unresolved": [
     "independent_affine_best_forward_full_pipeline_not_yet_deployed"
   ],
-  "manager_sha256": "11cf2dc630f5f999fd1a896a2d1981dc38e4f1b992d65d4968a85a4fc8a798db"
+  "manager_sha256": "62f98efc52bbe95f857b3b7cec1894da0658d8ae31f421c17f67e17b27455c18",
+  "failed_attempt": {
+    "step": "51919716.7",
+    "state": "resource_guard_exit",
+    "reason": "Host RAM reserve breached",
+    "last_dev_batch": 330,
+    "host_memory_gib": 8,
+    "scientific_config_unchanged": true,
+    "primary_unaffected": true
+  },
+  "resource_review": {
+    "new_host_memory_gib": 24,
+    "source_config_unchanged": true,
+    "failed_step_death_verified": true,
+    "shared_claim_released_after_review": true,
+    "original_failure_point_passed": true,
+    "complete_cohort_resource_validation": "ongoing",
+    "scope": "no_new_allocation_no_batch_precision_or_stopping_change"
+  }
 }
