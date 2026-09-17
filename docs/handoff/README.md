@@ -296,3 +296,7 @@ Private research overview and weekly archive: [PHD](https://github.com/souray041
 ## 连贯性规范采用（2026-09-17）
 
 采用PHD `62fd7e08770f3628a048fd59b82da2b9e545afab`，进入[固定累计结果入口](../reports/current/README.md)和[尝试档案](../archive/README.md)。完整规则见[共同契约](../../workspace/RESULT_CONTINUITY_STANDARD.md)。此次仅更新结果管理入口；未刷新运行事实、未迁移全量旧产物、未删除服务器文件，自动累计发布仍须独立验收。
+
+## 2026-09-17：耗时与文献核查
+
+见[重复扫描、3D配方和文献可比性审计](throughput_literature_audit_20260917.md)。发现LOOK重复特征扫描及3D microbatch1/BN配方待审；本次仅核查，不宣称已优化部署。

@@ -40,7 +40,8 @@
   "blockers": [
     "首个q32完整拟合/报告尚未验收；本次内存故障仍观察后续峰值。",
     "独立仿射家族完整best-forward链路仍未部署，整周门槛保持关闭。",
-    "登录管理进程消失后的待批申请owner及派发接续需核对；不能把Slurm待批状态当作获批后一定有执行者。"
+    "登录管理进程消失后的待批申请owner及派发接续需核对；不能把Slurm待批状态当作获批后一定有执行者。",
+    "2026-09-17耗时审计：LOOK跨位置重复特征扫描、无分段计时；3D父候选microbatch1与正式准入需审查。见审计，未宣称修复部署。"
   ],
   "actions": [
     "新q32正式步骤因全量dev RSS增长失败，已确认旧step死亡；原run/spec恢复至51909172.10。allocator环境调整后通过782批完整dev，自动进入train joint_input×16拟合。不是科学完成，拟合验收仍待完成。",
@@ -53,6 +54,10 @@
   ],
   "decisions": [],
   "evidence": [
+    {
+      "label": "Throughput bottlenecks and primary-literature audit; fixes not deployed",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/throughput_literature_audit_20260917.md"
+    },
     {
       "label": "Independent delivery implementation and current activation limits",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/independent_delivery_20260917.md"
