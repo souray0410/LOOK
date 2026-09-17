@@ -8,9 +8,9 @@
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "7b4d34e0408fb234e1137df7b537d722b33c1dac",
+  "source_commit": "ec4dc8f05b20d38de89abfb7a39d5ec0784780bc",
   "evidence_cutoff": "2026-09-17T07:43:23.105640+00:00",
-  "verified_at": "2026-09-17T11:19:25.170363+00:00",
+  "verified_at": "2026-09-17T12:35:25.169919+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -41,7 +41,7 @@
     "首个q32完整拟合/报告尚未验收；本次内存故障仍观察后续峰值。",
     "独立仿射家族完整best-forward链路仍未部署，整周门槛保持关闭。",
     "登录管理进程消失后的待批申请owner及派发接续需核对；不能把Slurm待批状态当作获批后一定有执行者。",
-    "2026-09-17耗时审计：LOOK跨位置重复特征扫描、无分段计时；3D父候选microbatch1与正式准入需审查。见审计，未宣称修复部署。"
+    "共享提取已上线，但完整正式双缺失搜索及周交付仍未完成；中央调度的代表起点并行与其他线性算子路线尚需验收。"
   ],
   "actions": [
     "新q32正式步骤因全量dev RSS增长失败，已确认旧step死亡；原run/spec恢复至51909172.10。allocator环境调整后通过782批完整dev，自动进入train joint_input×16拟合。不是科学完成，拟合验收仍待完成。",
@@ -50,10 +50,15 @@
     "故障/恢复事件持久化观察器b8769d4已在Ibex部署，5项测试通过；历史失败与恢复观察追加记录。既有维护负责修复后运行和下游验收，不以健康状态自动关闭。完整配置仍未验收。",
     "本次重新核查7份宿主验收记录及6份末端报告CSV SHA；主力best-forward仍在第二位置拟合。完整病例为0，三种空间路线及独立仿射搜索尚无完整比较；全表与计划已发布，禁止用完成数代替研究结果。",
     "共同采用PHD完整交付优先与真实依赖并行准则；本地和Ibex独立代码测试通过，新队列准备不等于正式派发已验收。",
-    "五配置保留原run/spec编译为独立任务；当前主搜索活跃且首轮已有5个位置记录。登录管理器丢失后，已锁定原manager/claim接续只读生命周期观察，未重启GPU训练。四起点并行仍待派发交接验收。"
+    "五配置保留原run/spec编译为独立任务；当前主搜索活跃且首轮已有5个位置记录。登录管理器丢失后，已锁定原manager/claim接续只读生命周期观察，未重启GPU训练。四起点并行仍待派发交接验收。",
+    "ec4dc8f共享特征提取通过103算子/搜索测试、3迁移测试、真实宿主逐位相同及512train全路径一致验收。保留7候选显式迁移，51909172.17正式推进；配置v3继承已验收MALLOC资源环境，先前短暂启动尝试与修复均保留。未改科学配置或解封test。"
   ],
   "decisions": [],
   "evidence": [
+    {
+      "label": "Shared extraction exactness, source migration and verified formal continuation",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/look_efficiency_20260917.md"
+    },
     {
       "label": "Throughput bottlenecks and primary-literature audit; fixes not deployed",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/throughput_literature_audit_20260917.md"

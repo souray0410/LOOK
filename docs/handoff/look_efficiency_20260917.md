@@ -38,10 +38,34 @@ and predictions remain on Ibex. Healthy historical workers are not modified in p
 
 ## Deployment state
 
-Implementation and small numerical acceptance are complete. Formal handover is pending
-the complete resource profile, explicit checked candidate migration, new execution
-receipt, claim/observer transfer and independently observed formal downstream progress.
-No accepted formal speedup or new scientific outcome is asserted by this document.
+Source `ec4dc8f05b20d38de89abfb7a39d5ec0784780bc` passed GitHub CI
+[35220985827](https://github.com/souray0410/LOOK/actions/runs/35220985827).
+The complete 512-train fit / 32-train evaluation profile finished in 101.9 s,
+with GPU peak reserved 3,531,603,968 bytes and RSS 2,409,086,976 bytes. Both missing
+states exactly matched the old profile's full candidate scores, decisions, selected
+artifacts and predictions. The three-round CFP-missing probe exercised corrected
+upstream refitting. These are technical checks, not development research findings.
+
+Original formal step `51909172.10` exited normally after a pause request. Seven
+completed candidates were verified and explicitly converted, with their artifact and
+prediction SHA preserved, into run `2026_09_17_15_28_21_422026` in
+`search16_q32_shared_20260917_v1`. Original data and source were not rewritten.
+The old run is absent from the active dispatcher feeds and its standalone sequence
+is marked superseded; the original paused evidence remains available.
+
+The first new launch omitted an already accepted allocator environment; proactive
+review caught this before a memory failure. It paused normally and restarted the same
+new run/spec with `MALLOC_ARENA_MAX=1`, `MALLOC_TRIM_THRESHOLD_=131072` and
+`MALLOC_MMAP_THRESHOLD_=131072`. Both attempts and the incident are retained.
+The current immutable launch is `formal_config_v3.json`, manager `manager_v3`,
+step `51909172.17`. Its formal development replay advanced to 151/782 batches;
+allocation owner `.0` and DenseNet parent `.1` remained active. This verifies real
+computation after handover, not full formal completion or a measured end-to-end speedup.
+
+`look_active_workflow.json` now exposes `priority_search` and the current binding.
+The finite existing-allocation manager owns this task. Central dispatch expansion,
+automatic representative controls and the entire weekly package remain separate
+unaccepted gates; the handover does not silently declare them complete.
 
 The active search remains first-seed fixed16/q32 best-forward, with remaining candidates
 fitted under the accepted upstream corrections and stopping only if no remaining
