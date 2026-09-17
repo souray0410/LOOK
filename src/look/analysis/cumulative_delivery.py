@@ -32,13 +32,16 @@ def collect(sequence, verify):
         if str(root) in seen:
             raise ValueError('Duplicate run in sequence')
         seen.add(str(root))
-        spec = read(root/'spec.json')
-        if file_sha256(task['task']['spec']) != file_sha256(root/'spec.json'):
+        registered = Path(task['task']['spec'])
+        if file_sha256(registered) != task['task']['spec_sha256']:
+            raise ValueError('Registered specification changed')
+        spec = read(registered)
+        if (root/'spec.json').exists() and file_sha256(registered) != file_sha256(root/'spec.json'):
             raise ValueError('Run specification differs from registered specification')
-        case = dict(run=str(root), spec_sha256=file_sha256(root/'spec.json'),
+        case = dict(run=str(root), spec_sha256=file_sha256(registered),
                     host=spec['host'], mode=spec['mode'],
                     factors=spec['spatial_factors'], dimensions=spec['latent_dims'],
-                    state='awaiting_configuration_acceptance')
+                    state='awaiting_configuration_acceptance' if (root/'spec.json').exists() else 'not_started')
         if (root/'accepted.json').exists():
             verify(root, spec)
             case['state'] = 'awaiting_delivery_acceptance'

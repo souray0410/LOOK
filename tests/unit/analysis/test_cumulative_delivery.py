@@ -48,7 +48,7 @@ def test_pending_cases_are_not_metric_rows_and_changed_config_rejected(tmp_path)
     spec = run/'spec.json'
     spec.write_text(json.dumps(dict(host={'seed':3416},mode='best_forward',spatial_factors=[16],latent_dims=[32])))
     config = tmp_path/'config.json'
-    config.write_text(json.dumps(dict(task=dict(run_dir=str(run),spec=str(spec)))))
+    config.write_text(json.dumps(dict(task=dict(run_dir=str(run),spec=str(spec),spec_sha256=file_sha256(spec)))))
     sequence = tmp_path/'sequence.json'
     entry = dict(config=str(config),sha256=file_sha256(config))
     sequence.write_text(json.dumps(dict(tasks=[entry])))
@@ -72,7 +72,7 @@ def test_accepted_delivery_accumulates_all_cells_and_renders(tmp_path):
     spec.write_text(json.dumps(dict(host={'seed':3416},mode='best_forward',spatial_factors=[16],latent_dims=[32])))
     (run/'accepted.json').write_text('{"state":"accepted"}')
     config = tmp_path/'config.json'
-    config.write_text(json.dumps(dict(task=dict(run_dir=str(run),spec=str(spec)))))
+    config.write_text(json.dumps(dict(task=dict(run_dir=str(run),spec=str(spec),spec_sha256=file_sha256(spec)))))
     sequence = tmp_path/'sequence.json'
     sequence.write_text(json.dumps(dict(tasks=[dict(config=str(config),sha256=file_sha256(config))])))
     delivery = run/'delivery';delivery.mkdir()
@@ -95,3 +95,16 @@ def test_accepted_delivery_accumulates_all_cells_and_renders(tmp_path):
     (delivery/'results.json').write_text('[]')
     with pytest.raises(ValueError, match='evidence changed'):
         collect(sequence, lambda *args: None)
+
+
+def test_registered_unstarted_run_needs_no_run_directory(tmp_path):
+    spec = tmp_path/'registered.json'
+    spec.write_text(json.dumps(dict(host={}, mode='greedy', spatial_factors=[16],latent_dims=[32])))
+    config = tmp_path/'config.json'
+    config.write_text(json.dumps(dict(task=dict(run_dir=str(tmp_path/'not_created'),
+        spec=str(spec),spec_sha256=file_sha256(spec)))))
+    sequence = tmp_path/'sequence.json'
+    sequence.write_text(json.dumps(dict(tasks=[dict(config=str(config),sha256=file_sha256(config))])))
+    data = collect(sequence, lambda *args: (_ for _ in ()).throw(AssertionError('must not verify')))
+    assert data['cases'][0]['state'] == 'not_started' and data['rows'] == []
+    assert not (tmp_path/'not_created').exists()
