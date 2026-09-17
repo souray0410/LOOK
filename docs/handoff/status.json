@@ -8,9 +8,9 @@
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "ec4dc8f05b20d38de89abfb7a39d5ec0784780bc",
+  "source_commit": "05fd2219ca73d37d399edda59ccc78ba73ca1ece",
   "evidence_cutoff": "2026-09-17T07:43:23.105640+00:00",
-  "verified_at": "2026-09-17T12:35:25.169919+00:00",
+  "verified_at": "2026-09-17T13:11:43.049500+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -35,7 +35,8 @@
     "当前搜索上线使用原PCA/GCV算子；不能代替其他线性修正方法独立搜索。",
     "首种子五路线统计为dev探索结果，不代表多种子重复或独立test。",
     "预检和任务登记不等于正式研究完成。",
-    "本次刷新核验管理实现、节点及计算进程；既有数值结果保留原evidence_cutoff，不作为本次新增结果。"
+    "本次刷新核验管理实现、节点及计算进程；既有数值结果保留原evidence_cutoff，不作为本次新增结果。",
+    "Automatic next-lease continuation is bound, but a real expiry/resume has not yet occurred; current configuration and whole weekly package remain unaccepted."
   ],
   "blockers": [
     "首个q32完整拟合/报告尚未验收；本次内存故障仍观察后续峰值。",
@@ -52,7 +53,8 @@
     "共同采用PHD完整交付优先与真实依赖并行准则；本地和Ibex独立代码测试通过，新队列准备不等于正式派发已验收。",
     "五配置保留原run/spec编译为独立任务；当前主搜索活跃且首轮已有5个位置记录。登录管理器丢失后，已锁定原manager/claim接续只读生命周期观察，未重启GPU训练。四起点并行仍待派发交接验收。",
     "ec4dc8f共享特征提取通过103算子/搜索测试、3迁移测试、真实宿主逐位相同及512train全路径一致验收。保留7候选显式迁移，51909172.17正式推进；配置v3继承已验收MALLOC资源环境，先前短暂启动尝试与修复均保留。未改科学配置或解封test。",
-    "2026-09-17 15:54 Saudi：有限同run租期恢复入口v3部署，三项管理测试及真实live/锁占用防重复通过；existing owner集成另有绑定凭证。只读累计发布observer运行，先发布覆盖、仅在单配置报告验收后发布四个匹配单元。正式共享cache 776→916，配置尚未完整接受。"
+    "2026-09-17 15:54 Saudi：有限同run租期恢复入口v3部署，三项管理测试及真实live/锁占用防重复通过；existing owner集成另有绑定凭证。只读累计发布observer运行，先发布覆盖、仅在单配置报告验收后发布四个匹配单元。正式共享cache 776→916，配置尚未完整接受。",
+    "Activated priority-owner v4 for10 pending and future LOOK allocations; real CPU daemon cycle error=null, original GPU steps retained. Versioned repair for missing scheduling dependency accepted."
   ],
   "decisions": [],
   "evidence": [
@@ -99,6 +101,10 @@
     {
       "label": "Finite pinned lease continuation and cumulative publication; actual next-lease resume still pending",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/look_efficiency_20260917.md"
+    },
+    {
+      "label": "Priority continuation production activation",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/priority_owner_activation_20260917.md"
     }
   ]
 }
