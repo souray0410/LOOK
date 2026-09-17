@@ -44,6 +44,7 @@ def release_state(policy_path):
                 or accepted.get("profile", False) is not False
                 or accepted.get("test_access") is not False):
                 raise ValueError("Scientific acceptance changed")
+            verify_case_evidence(row)
         for section in SECTIONS:
             artifacts = receipt["sections"][section]
             if not artifacts:
@@ -55,6 +56,15 @@ def release_state(policy_path):
     except (OSError, ValueError, KeyError, TypeError) as error:
         return dict(released=False, first_seed=first,
                     reason="waiting_whole_weekly_delivery", detail=str(error))
+
+
+def verify_case_evidence(row):
+    from look.runtime.project_dispatch import verify_delivery_dependency
+    spec=read(row['spec'])
+    kinds={'look_search_policy_v1':'look_search'}
+    kind=row.get('execution',kinds.get(spec.get('schema')))
+    if kind is None:raise ValueError('Weekly case needs its owning execution verifier')
+    verify_delivery_dependency(dict(row,execution=kind))
 
 def task_seed(task):
     spec = read(task["spec"])

@@ -22,3 +22,5 @@ workspace/GPU_EXECUTION_STANDARD.md before changing submission, expiry, checkpoi
 recovery, stage caching or completion. Enforce the same rule for neural training,
 PCA/SVD/correction, evaluation and reporting; never equate a 48-hour lease with
 scientific completion or claim deployed recovery from documentation alone.
+
+Read workspace/DELIVERY_STANDARD.md before scheduling or reporting: prioritize a finite end-to-end delivery package, prepare real dependencies concurrently, reuse exact accepted artifacts, and distinguish single-configuration, matched-package and replication acceptance. No new scheduler or performance-dependent release. Documented rules are not runtime acceptance.

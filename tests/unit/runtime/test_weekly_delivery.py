@@ -10,6 +10,12 @@ def write(path, value):
     return str(path)
 
 
+@pytest.fixture(autouse=True)
+def owned_case_verifier(monkeypatch):
+    from look.runtime import weekly_delivery
+    monkeypatch.setattr(weekly_delivery,'verify_case_evidence',lambda row:None)
+
+
 def fixture(tmp_path):
     spec = write(tmp_path/'spec.json', {'seed': 3416})
     row = dict(spec=spec, spec_sha256=file_sha256(spec), run_dir=str(tmp_path/'run'))

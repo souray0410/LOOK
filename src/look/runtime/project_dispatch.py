@@ -174,12 +174,16 @@ def admissible_work(config, claims):
     result = []; rejected = []
     counts=active_search_modes(config,claims)
     candidates = work(config)
+    if config.get('delivery_policy'):
+        from look.runtime.delivery_policy import order_tasks
+        candidates, held = order_tasks(candidates,config['delivery_policy'],verify_delivery_dependency)
+        rejected.extend(held)
     if config.get('weekly_delivery_policy'):
         from look.runtime.weekly_delivery import filter_tasks
         candidates, held = filter_tasks(candidates, config['weekly_delivery_policy'])
         rejected.extend(held)
     for task in candidates:
-        if (task.get('execution')=='look_search' and task.get('search_mode')=='greedy'
+        if (not config.get('delivery_policy') and task.get('execution')=='look_search' and task.get('search_mode')=='greedy'
             and counts['greedy']>=config.get('search_control_maximum',2)):continue
         if not eligible(task, claims): continue
         if task.get('execution') == 'native':
@@ -191,6 +195,21 @@ def admissible_work(config, claims):
         atomic_write_json(dict(rejected=rejected, ready=len(result), updated_at=time.time(),
                                test_access=False), Path(config['output'])/'api_admission.json')
     return result
+
+
+def verify_delivery_dependency(entry):
+    """Use the same case verifier as formal completion; never trust a flag."""
+    import importlib
+    kind=entry['execution'];spec=read(entry['spec'])
+    modules={'look':'project_case','look_search':'search_case','look_suffix':'suffix_case',
+        'look_terminal':'terminal_case','look_linear':'linear_case','look_spatial':'spatial_case',
+        'look_mechanism':'mechanism_case','look_affine_terminal':'affine_case','look_affine_progressive':'affine_case'}
+    if kind=='native':
+        from runtime.training_state import verify_completion
+        verify_completion(entry['run_dir'],spec)
+    else:
+        if kind not in modules:raise ValueError('Unknown dependency verifier')
+        importlib.import_module('look.studies.'+modules[kind]).verify_case(entry['run_dir'],spec)
 
 
 def worker_environment(environ):
@@ -356,7 +375,8 @@ def gpu_owner(config_path):
         prior=read(root/'last_execution.json').get('kind')
         primary=[t for t in candidates if t['execution']=='look']
         supplement=[t for t in candidates if t['execution'] in ('look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_affine_terminal','look_affine_progressive')]
-        if supplement and (not primary or prior=='look' or any(t['execution'] in ('look_terminal','look_suffix','look_search','look_affine_terminal') for t in supplement)):
+        if config.get('delivery_policy'):task=candidates[0]
+        elif supplement and (not primary or prior=='look' or any(t['execution'] in ('look_terminal','look_suffix','look_search','look_affine_terminal') for t in supplement)):
             # Neural continuations first, then controls, then sample curves.
             priority={'host_training':0,'student_training':1,'correction':2,'sample_curve':3}
             search_counts=active_search_modes(config,claims)
@@ -372,7 +392,7 @@ def gpu_owner(config_path):
                 with (Path(config['claims'])/'look_search_admission.lock').open('a') as admission:
                     fcntl.flock(admission,fcntl.LOCK_EX)
                     counts=active_search_modes(config,claims)
-                    if task.get('search_mode')=='greedy' and counts['greedy']>=config.get('search_control_maximum',2):continue
+                    if not config.get('delivery_policy') and task.get('search_mode')=='greedy' and counts['greedy']>=config.get('search_control_maximum',2):continue
                     token=claims.acquire(run,task['spec_sha256'],owner,job)
             else:token=claims.acquire(run,task['spec_sha256'],owner,job)
         except RuntimeError:continue
@@ -438,6 +458,13 @@ def gpu_owner(config_path):
                     from look.studies.project_case import verify_case
                 verify_case(run,spec)
             claims.release(run,owner,'completed',step_dead=True)
+            if task['execution']=='look_search' and config.get('delivery_sequence'):
+                try:
+                    from look.studies.search_delivery_queue import refresh
+                    refresh(config['delivery_sequence'],Path(config['output'])/'delivery')
+                except Exception as error:
+                    atomic_write_json(dict(state='needs_review',stage='delivery_publication',run=str(run),
+                        error=repr(error),test_access=False),Path(config['output'])/'delivery_error.json')
         elif state=='paused':claims.release(run,owner,'paused',step_dead=True)
         else:claims.release(run,owner,'failed',step_dead=True)
     atomic_write_json(dict(state='owner_finished',updated_at=time.time()),root/'status.json')
