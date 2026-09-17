@@ -47,3 +47,14 @@
 - 远端有限supervisor检查预检→迁移→再次资源准入→原formal manager→报告；只读累计发布观察器独立运行。规范失败写needs_review，保留现场；不通过静默改变科学参数处理。
 
 授权环境证据位于 `operations/2026_09_10_11_11_31/look_positive_tree_20260917/`：`source_commit_accepted.json`、`continuation_ready_v1.json`、`formal_progress_acceptance_v1.json`、`handoff_status.json`、`manager_v1/status.json`；受限预测/产物留在数据目录。
+
+
+### 恢复与当前主入口接通
+
+`priority_owner_v5`已绑定10份仍待批且无领取意图的LOOK申请及未来申请，使用同一owner step按“树主线恢复→旧best-forward恢复→原project/native候选”接续。R&B和native既有绑定保持，所有健康科学worker未停止。统一20份历史待批watcher仍沿用原state/锁。
+
+首次管理周期遇到Slurm JSON查询20秒超时，保留错误状态与自动重试；随后实际CPU周期恢复`error=null, workflow_allocations_active`，20份历史申请均为`waiting_grant`。只读查询恢复不曾触发GPU重启或重复申请。首次真实跨租期恢复仍待发生，不将绑定/单测称为实际到期恢复验收。
+
+正式非空前缀进一步推进至1184批，完整参考缓存命中1184次、缺失侧前向1184次、完整侧新增前向0次；对应文件最后写入距核查7秒。运行期间特征统计不逐批打印stdout，核验以实际统计文件、进程/step及manager状态交叉进行，不能仅按formal.log时间判定卡住。
+
+恢复证据：`look_efficiency_20260917/priority_owner_v5/{activation.json,cycle_validation.json}`及`lease_recovery_after_reboot_20260917/plan_radon_look_priority_v5.json`。已同步现有三小时监控的新主策略与来源，不新增调度器或定时任务。
