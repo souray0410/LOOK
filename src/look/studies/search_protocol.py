@@ -33,6 +33,8 @@ def validate(spec):
     if spec['candidate_sites']!=ordered or spec['eligible_sites']!=ordered[start-1:]:
         raise ValueError('Search candidate sites or suffix changed')
     if h['seed']!=3416 and not spec.get('pilot'):raise ValueError('Matched 3416 acceptance required')
+    if type(spec.get('worker_threads', 2)) is not int or spec.get('worker_threads', 2) not in (1, 2):
+        raise ValueError('Worker threads must be explicitly registered as one or two')
     if 'latent_dims' in spec and (not isinstance(spec['latent_dims'], list) or len(spec['latent_dims']) != 1
             or type(spec['latent_dims'][0]) is not int or spec['latent_dims'][0] <= 0):
         raise ValueError('One explicit positive latent dimension per serial configuration')

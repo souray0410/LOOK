@@ -6,7 +6,9 @@ from scheduling.policy import Claims
 from scheduling.slurm_liveness import step_presence
 from look.runtime.state import stable_hash,file_sha256,atomic_write_json as write
 from look.studies.search_case import dependencies,check_files,verify_case
-R=pathlib.Path(C['task']['run_dir']);S=json.load(open(C['task']['spec']));profile=R/'resource_profile';job=C['job'];owner='look-fixed16-'+job
+R=pathlib.Path(C['task']['run_dir']);S=json.load(open(C['task']['spec']));profile=R/'resource_profile';job=C['job'];owner='look-serial-'+job
+threads=S.get('worker_threads',2);memory_gib=C.get('memory_gib',24)
+assert int(env['LOOK_WORKER_MEMORY_BYTES'])==memory_gib*1024**3
 with (B/'manager.lock').open('a') as lock:
  fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
  if (B/'launch.json').exists():raise RuntimeError('Reconcile prior launch before restart')
@@ -24,10 +26,22 @@ with (B/'manager.lock').open('a') as lock:
    if phase=='formal':
     receipt=json.load(open(profile/'profile_accepted.json'));assert receipt['identity']==stable_hash(S) and receipt['state']=='accepted'
     check_files(profile,receipt['files']);cost=json.load(open(profile/'costs.json'))
-    assert cost['gpu_peak_reserved_bytes']*1.2+2*1024**3<8*1024**3 and cost['rss_bytes']<20*1024**3
+    assert cost['gpu_peak_reserved_bytes']*1.2+2*1024**3<8*1024**3 and cost['rss_bytes']<.85*memory_gib*1024**3
     env['LOOK_SEARCH_PROFILE_RECEIPT']=str(profile/'profile_accepted.json')
+   # Count requested co-resident step budgets; overlap is not extra capacity.
+   current=subprocess.check_output(['scontrol','show','step',job,'-o'],text=True)
+   cpu=0;ram=0
+   for line in current.splitlines():
+    a=dict(t.split('=',1) for t in line.split() if '=' in t)
+    if a.get('State')!='RUNNING':continue
+    cpu+=int(a.get('CPUs',0))
+    for part in a.get('TRES','').split(','):
+     if part.startswith('mem='):
+      v=part[4:];ram+=float(v[:-1])*({'G':1,'M':1/1024,'T':1024}[v[-1]])
+   assert cpu+threads<=int(attrs['NumCPUs']), 'Co-resident CPU budgets exceed allocation'
+   assert ram+memory_gib<=128*.85, 'Co-resident host RAM reserve unavailable'
    remaining=int((end-time.time()-120)//60);assert remaining>15
-   cmd=['srun','--jobid='+job,'--overlap','--exact','-N1','-n1','-c2','--gpus=1','--mem=24G','--time='+str(remaining),'--job-name=look_fixed16',C['python'],str(worker)]
+   cmd=['srun','--jobid='+job,'--overlap','--exact','-N1','-n1','-c'+str(threads),'--gpus=1','--mem='+str(memory_gib)+'G','--time='+str(remaining),'--job-name=look_fixed16',C['python'],str(worker)]
    with (B/(phase+'.log')).open('x') as log:child=subprocess.Popen(cmd,env=env,stdout=log,stderr=subprocess.STDOUT)
    step=None;released_old=False
    while child.poll() is None:

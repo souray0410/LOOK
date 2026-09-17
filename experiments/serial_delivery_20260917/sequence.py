@@ -25,5 +25,8 @@ def main():
     write(root/'status.json',dict(state='paused' if result.returncode==75 else 'needs_review',returncode=result.returncode,run=str(run),time=time.time()));return
    report(run)
    write(root/'status.json',dict(state='configuration_delivered',run=str(run),time=time.time()))
+  from look.analysis.search_report import report as group_report
+  first=json.load(open(c['tasks'][0]['config']));s=json.load(open(first['task']['spec']))
+  group_report(dict(host=s['host'],runs=[json.load(open(i['config']))['task']['run_dir'] for i in c['tasks']],output=str(root/'matched_report'),test_access=False))
   write(root/'status.json',dict(state='all_configurations_delivered',time=time.time()))
 if __name__=='__main__':main()

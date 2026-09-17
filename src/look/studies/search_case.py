@@ -119,7 +119,7 @@ def run(spec,out,device,pause,profile=False):
     rng=capture_rng();started=time.time();graph=None;frozen=None
     session=out/'sessions'/f'{time.time_ns()}.json'
     atomic_write_json(dict(started_at=started,state='running',profile=profile),session)
-    torch.set_num_threads(2);torch.use_deterministic_algorithms(True);torch.backends.cudnn.benchmark=False
+    torch.set_num_threads(spec.get('worker_threads',2));torch.use_deterministic_algorithms(True);torch.backends.cudnn.benchmark=False
     torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
     try:
         _,parents,graph,data=load_original(base,source,device);del parents

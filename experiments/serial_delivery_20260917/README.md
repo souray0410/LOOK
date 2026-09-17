@@ -20,3 +20,11 @@ automatic cross-allocation recovery on their own.
 
 A single-configuration dev report is exploratory after dev selection, not proof of
 superiority, independent test performance or a complete matched search-policy study.
+
+Execution order is a delivery priority, not a global ban on parallel independent
+work. This bounded queue uses one admitted lane. Existing full-train PCA is reused;
+current fitting still recomputes node sufficient statistics across distinct tasks.
+A future cache may reuse these only when the full upstream correction identity is
+identical; selected upstream changes invalidate downstream missing-input statistics.
+The new lane registers one CPU thread and6GiB RAM, measured against its actual
+co-resident Slurm step budgets; it does not inherit oversubscribed historical limits.
