@@ -29,6 +29,9 @@ def test_complete_matched_report_and_corrupt_replay(tmp_path,monkeypatch):
                 records.append(dict(method=method,scenario=pattern,path=str(path),sha256=file_sha256(path),metrics={'macro_f1':1.0}))
         write(root/'development/suite.json',dict(records=records));write(root/'costs.json',dict(known_total_seconds=1))
     manifest=dict(host=h,runs=runs,output=str(tmp_path/'report'),test_access=False)
+    from look.analysis.search_delivery import report as deliver
+    delivery=deliver(runs[0]);assert delivery['state']=='accepted'
+    assert deliver(runs[0])==delivery
     r=report(manifest)
     assert r['complete_routes'] and (tmp_path/'report/comparison.svg').exists()
     stats=json.loads((tmp_path/'report/paired_statistics.json').read_text())

@@ -68,3 +68,15 @@ def test_four_preregistered_representative_starts():
                 validate(s)
                 if start>1:
                     with pytest.raises(ValueError):validate(dict(s,mode='best_forward'))
+
+
+def test_one_configuration_latent_override_preserves_parent():
+    from look.studies.search_protocol import execution_latent_dims
+    from look.runtime.state import stable_hash
+    parent={'latent_dims':[8,16,32,64,128]};old=spec();new=dict(old,latent_dims=[32])
+    assert execution_latent_dims(old,parent)==parent['latent_dims']
+    assert execution_latent_dims(new,parent)==[32]
+    assert parent['latent_dims']==[8,16,32,64,128]
+    assert stable_hash(old)!=stable_hash(new)
+    for bad in ([0],[True],[],[32,64],[33]):
+        with pytest.raises(ValueError):execution_latent_dims(dict(old,latent_dims=bad),parent)

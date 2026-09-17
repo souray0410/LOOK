@@ -59,6 +59,9 @@ def tick(config):
                     if config.get('spatial_factors'):
                         spec['spatial_factors']=config['spatial_factors']
                         identity['spatial_factors']=config['spatial_factors']
+                    if config.get('latent_dims'):
+                        spec['latent_dims']=config['latent_dims']
+                        identity['latent_dims']=config['latent_dims']
                     if start != 1:identity['start_ordinal']=start
                     taskid=stable_hash(identity);sp=out/'specs'/(taskid+'.json')
                     if sp.exists() and read(sp)!=spec:raise ValueError('Registered scientific identity changed')

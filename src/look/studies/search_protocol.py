@@ -33,6 +33,9 @@ def validate(spec):
     if spec['candidate_sites']!=ordered or spec['eligible_sites']!=ordered[start-1:]:
         raise ValueError('Search candidate sites or suffix changed')
     if h['seed']!=3416 and not spec.get('pilot'):raise ValueError('Matched 3416 acceptance required')
+    if 'latent_dims' in spec and (not isinstance(spec['latent_dims'], list) or len(spec['latent_dims']) != 1
+            or type(spec['latent_dims'][0]) is not int or spec['latent_dims'][0] <= 0):
+        raise ValueError('One explicit positive latent dimension per serial configuration')
     if 'spatial_factors' in spec and spec['spatial_factors'] != [16]:
         raise ValueError('Only the explicitly authorized fixed16 weekly variant is registered')
 
@@ -43,4 +46,13 @@ def execution_factors(spec, parent_config):
     selected = spec.get('spatial_factors', parent_config['factors'])
     if not set(selected).issubset(parent_config['factors']):
         raise ValueError('Requested factors lack the same-host fitted bases')
+    return list(selected)
+
+
+def execution_latent_dims(spec, parent_config):
+    """Finite single-configuration delivery; never change the archived parent grid."""
+    validate(spec)
+    selected = spec.get('latent_dims', parent_config['latent_dims'])
+    if not set(selected).issubset(parent_config['latent_dims']):
+        raise ValueError('Requested latent dimension is outside the registered parent grid')
     return list(selected)

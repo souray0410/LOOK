@@ -34,7 +34,7 @@ def report(manifest):
     for root in map(Path,manifest['runs']):
         s=read(root/'spec.json');verify_case(root,s);key=route_key(s)
         if s['host']!=h or key in seen:raise ValueError('Mismatched or duplicate route')
-        signature=stable_hash(dict(source=s['source'],pca=s['pca']))
+        signature=stable_hash(dict(source=s['source'],pca=s['pca'],spatial_factors=s.get('spatial_factors'),latent_dims=s.get('latent_dims')))
         if source is not None and source!=signature:raise ValueError('Unmatched host or basis')
         source=signature;seen.add(key);inputs[str(root/'accepted.json')]=file_sha256(root/'accepted.json')
         selections={p:read(root/'corrections'/p/'factor_selection.json') for p in PATTERNS}
