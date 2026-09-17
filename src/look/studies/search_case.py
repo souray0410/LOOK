@@ -12,7 +12,7 @@ from look.runtime.state import stable_hash, file_sha256, atomic_write_json
 from look.runtime.host_checkpoint import capture_rng, restore_rng, cpu_tree, atomic_save
 from look.studies.project_case import read, evidence_files, validate_spec, CheckedLoader, Paused
 from look.studies.mechanism_case import load_original
-from look.studies.search_protocol import VERSION, PATTERNS, validate
+from look.studies.search_protocol import VERSION, PATTERNS, validate, execution_factors
 from look.methods.operator import FullFeaturePCA, load_selected_bank, forward_with_look
 from look.methods.joint import correction_sites, read_site
 from look.methods.search_policy import fit_search
@@ -85,6 +85,7 @@ def load_basis(spec,manifest):
     allowed=set(spec['eligible_sites']);root=Path(spec['pca']['path']).parent.resolve();bank={}
     for e in manifest['entries']:
         if e['node'] not in allowed:continue
+        if 'spatial_factors' in spec and e['factor'] not in [1]+spec['spatial_factors']:continue
         p=Path(e['path']).resolve();key=(e['node'],e['factor'])
         if key in bank or not p.is_relative_to(root) or file_sha256(p)!=e['sha256']:raise ValueError('Changed PCA entry')
         b=FullFeaturePCA.load(p)
@@ -126,7 +127,7 @@ def run(spec,out,device,pause,profile=False):
         for p in graph.parameters():p.requires_grad_(False)
         frozen=cpu_tree(graph.state_dict());nodes=[(n.id,n.name) for n in sorted(graph.nodes,key=lambda n:n.id)]
         if correction_sites(graph)!=spec['candidate_sites']:raise ValueError('Actual MHD sites differ')
-        bank=load_basis(spec,manifest);cfg=base['look']
+        bank=load_basis(spec,manifest);cfg=dict(base['look'],factors=execution_factors(spec,base['look']))
         def check():
             if psutil.Process().memory_info().rss>.85*limit:raise MemoryError('Host RAM reserve breached')
             if torch.cuda.mem_get_info(device)[0]<10*1024**3:raise MemoryError('Whole-device GPU reserve breached')

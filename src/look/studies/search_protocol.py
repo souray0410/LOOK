@@ -33,3 +33,14 @@ def validate(spec):
     if spec['candidate_sites']!=ordered or spec['eligible_sites']!=ordered[start-1:]:
         raise ValueError('Search candidate sites or suffix changed')
     if h['seed']!=3416 and not spec.get('pilot'):raise ValueError('Matched 3416 acceptance required')
+    if 'spatial_factors' in spec and spec['spatial_factors'] != [16]:
+        raise ValueError('Only the explicitly authorized fixed16 weekly variant is registered')
+
+
+def execution_factors(spec, parent_config):
+    """Explicit new identity; absent override retains the original scientific grid."""
+    validate(spec)
+    selected = spec.get('spatial_factors', parent_config['factors'])
+    if not set(selected).issubset(parent_config['factors']):
+        raise ValueError('Requested factors lack the same-host fitted bases')
+    return list(selected)

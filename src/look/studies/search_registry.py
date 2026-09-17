@@ -56,6 +56,9 @@ def tick(config):
                                     source_pins=config['representative_source_pins'])
                     if pilot:spec['pilot']=pilot
                     identity=dict(host=h,mode=mode)
+                    if config.get('spatial_factors'):
+                        spec['spatial_factors']=config['spatial_factors']
+                        identity['spatial_factors']=config['spatial_factors']
                     if start != 1:identity['start_ordinal']=start
                     taskid=stable_hash(identity);sp=out/'specs'/(taskid+'.json')
                     if sp.exists() and read(sp)!=spec:raise ValueError('Registered scientific identity changed')

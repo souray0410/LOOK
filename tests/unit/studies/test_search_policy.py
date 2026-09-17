@@ -20,6 +20,16 @@ def test_lock_modes_sites_and_test_seal():
     with pytest.raises(ValueError,match='3416'):validate(s)
 
 
+def test_fixed16_has_explicit_identity_and_does_not_mutate_parent():
+    from look.studies.search_protocol import execution_factors
+    from look.runtime.state import stable_hash
+    parent={'factors':[4,8,16]};old=spec();new=dict(old,spatial_factors=[16])
+    assert execution_factors(old,parent)==[4,8,16]
+    assert execution_factors(new,parent)==[16]
+    assert parent['factors']==[4,8,16] and stable_hash(old)!=stable_hash(new)
+    with pytest.raises(ValueError):execution_factors(dict(old,spatial_factors=[8]),parent)
+
+
 def test_dispatch_search_identity_and_dedup(tmp_path):
     p=tmp_path/'spec.json';p.write_text(json.dumps(spec()))
     row=dict(id='search',spec=str(p),spec_sha256=file_sha256(p),run_dir=str(tmp_path/'run'),search_mode='best_forward')
