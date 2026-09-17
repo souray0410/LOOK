@@ -9,8 +9,8 @@
     "当前算法与匹配对照的实际执行证据"
   ],
   "source_commit": "08bf6ccf503e0073afa96ed3fd1f933219d88682",
-  "evidence_cutoff": "2026-09-17T17:05:54.886369+00:00",
-  "verified_at": "2026-09-17T17:05:54.886369+00:00",
+  "evidence_cutoff": "2026-09-17T19:56:32.668192+00:00",
+  "verified_at": "2026-09-17T19:56:32.668192+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -49,6 +49,11 @@
       "summary": "缺OCT正收益树已完成17候选/8前缀，18份唯一预测重算及SHA通过；12510名dev，3416/x16/q32。最终仍为单参与者融合特征：71.3331%→75.4662%，+4.1330pp；未发现比best-forward该状态更高的选中dev分数。完整双状态重放及周包尚未接受。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
+    },
+    {
+      "summary": "best-forward白内障/ResNet50深层融合/3416/x16/q32完整双缺失配置已重放和报告验收：12510名dev，缺OCT macro-F1 71.3331→75.4662%，缺CFP 53.1402→56.9855%；缺CFP选joint_stem→joint_stage3，AUROC69.0933→67.9745%且校准恶化。主树/周包未完成，非test结论。",
+      "scope": "preliminary_single_seed",
+      "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/best_forward/README.md"
     }
   ],
   "limitations": [
@@ -80,7 +85,8 @@
     "18:03 Saudi核验：Stage1前缀共享train统计3651批完成，完整参考缓存命中3651且新增完整前向0；10个候选评价已提交。新候选dev继续执行，日志新鲜，dispatcher error=null。扫描加载1672秒、缺失前向361秒，主要成本仍在数据供应；主任务未停止。",
     "18:21 Saudi：Stage1后追加Stage3/Stage4的dev macro-F1分别70.5513%/61.5176%，均低于前缀72.0771%，不保留；共12次候选评价，当前最佳75.4662%仍来自首轮，不是新组合收益。",
     "18:55 Saudi：Stage1六下游齐全，decision保留两正子分支，后续前缀统计缓存持续更新。共15次候选，6个发现前缀；LOOK/R&B管理无新错误，3运行21待批。",
-    "2026-09-17 v6 CPU周期与watcher真实接续核验，原GPU扫描持续更新；middle/features仍等待科学依赖，未提前释放重复种子。管理层细节见next_fusion_activation_20260917.md。"
+    "2026-09-17 v6 CPU周期与watcher真实接续核验，原GPU扫描持续更新；middle/features仍等待科学依赖，未提前释放重复种子。管理层细节见next_fusion_activation_20260917.md。",
+    "19:56UTC独立复核best-forward247科研文件+5交付文件SHA及4预测的参与者顺序/指标；原manager accepted，CPU累计publication自动更新。主树缺CFP仍运行，未释放重复种子。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。"
@@ -141,6 +147,10 @@
     {
       "label": "后继融合管理接续边界",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/next_fusion_activation_20260917.md"
+    },
+    {
+      "label": "已完成best-forward双缺失配置、路径及多指标反例",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/best_forward/README.md"
     }
   ]
 }

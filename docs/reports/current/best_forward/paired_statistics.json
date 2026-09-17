@@ -1,0 +1,40 @@
+{
+  "contrasts": [
+    {
+      "bootstrap_sd": 0.0065910284130257886,
+      "difference": 0.041330389140194934,
+      "ordinary_95": [
+        0.028357344213311826,
+        0.054366051003464026
+      ],
+      "simultaneous_95": [
+        0.02666943706056905,
+        0.055991341219820814
+      ],
+      "zero_variance": false
+    },
+    {
+      "bootstrap_sd": 0.006937246059972222,
+      "difference": 0.03845279938263846,
+      "ordinary_95": [
+        0.025062881428812907,
+        0.05222084475568936
+      ],
+      "simultaneous_95": [
+        0.023021727677830704,
+        0.05388387108744622
+      ],
+      "zero_variance": false
+    }
+  ],
+  "critical": 2.2243800452523583,
+  "direction": "search_minus_host",
+  "iterations": 10000,
+  "participants": 12510,
+  "patterns": [
+    "oct_missing",
+    "cfp_missing"
+  ],
+  "scope": "one_selected_dev_configuration_not_independent_confirmation",
+  "seed": 7341618
+}

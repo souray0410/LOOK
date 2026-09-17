@@ -1,0 +1,230 @@
+[
+  {
+    "method": "search",
+    "metrics": {
+      "accuracy": 0.9529976019184653,
+      "auprc_per_class": [
+        0.9829460144304462,
+        0.5180661764420331
+      ],
+      "auroc_per_class": [
+        0.829892058942088,
+        0.8298920589420881
+      ],
+      "balanced_accuracy": 0.7037565749829977,
+      "cohen_kappa": 0.5113427332967964,
+      "confusion_matrix": [
+        [
+          11585,
+          118
+        ],
+        [
+          470,
+          337
+        ]
+      ],
+      "ece_15": 0.019626997147396238,
+      "f1_per_class": [
+        0.9752504419563937,
+        0.5340729001584786
+      ],
+      "macro_auprc_ovr": 0.7505060954362397,
+      "macro_auroc_ovr": 0.8298920589420881,
+      "macro_f1": 0.7546616710574361,
+      "multiclass_brier": 0.08602637857224711,
+      "negative_log_likelihood": 0.18101209828710743,
+      "precision_per_class": [
+        0.9610120282040647,
+        0.7406593406593407
+      ],
+      "probability_saturation": {
+        "max_abs_logit_difference": 17.321663856506348,
+        "rows_float32": 0,
+        "rows_float64": 0,
+        "total_rows": 12510
+      },
+      "ranking_score": "logit_1_minus_logit_0",
+      "sensitivity_per_class": [
+        0.989917115269589,
+        0.41759603469640644
+      ],
+      "specificity_per_class": [
+        0.41759603469640644,
+        0.989917115269589
+      ],
+      "weighted_f1": 0.9467907875814202
+    },
+    "pattern": "oct_missing"
+  },
+  {
+    "method": "host",
+    "metrics": {
+      "accuracy": 0.9525979216626699,
+      "auprc_per_class": [
+        0.981240243932356,
+        0.5044604522598326
+      ],
+      "auroc_per_class": [
+        0.8178072303980349,
+        0.8178072303980349
+      ],
+      "balanced_accuracy": 0.6498954768691153,
+      "cohen_kappa": 0.43288830871226636,
+      "confusion_matrix": [
+        [
+          11673,
+          30
+        ],
+        [
+          563,
+          244
+        ]
+      ],
+      "ece_15": 0.036381502103073,
+      "f1_per_class": [
+        0.9752287062951669,
+        0.4514338575393155
+      ],
+      "macro_auprc_ovr": 0.7428503480960943,
+      "macro_auroc_ovr": 0.8178072303980349,
+      "macro_f1": 0.7133312819172412,
+      "multiclass_brier": 0.08796788984741173,
+      "negative_log_likelihood": 0.2143476173208154,
+      "precision_per_class": [
+        0.9539882314481857,
+        0.8905109489051095
+      ],
+      "probability_saturation": {
+        "max_abs_logit_difference": 13.744110107421875,
+        "rows_float32": 0,
+        "rows_float64": 0,
+        "total_rows": 12510
+      },
+      "ranking_score": "logit_1_minus_logit_0",
+      "sensitivity_per_class": [
+        0.9974365547295565,
+        0.3023543990086741
+      ],
+      "specificity_per_class": [
+        0.3023543990086741,
+        0.9974365547295565
+      ],
+      "weighted_f1": 0.9414395421907727
+    },
+    "pattern": "oct_missing"
+  },
+  {
+    "method": "search",
+    "metrics": {
+      "accuracy": 0.9012789768185452,
+      "auprc_per_class": [
+        0.9639071621431331,
+        0.1499829174247746
+      ],
+      "auroc_per_class": [
+        0.6797451081978259,
+        0.679745108197826
+      ],
+      "balanced_accuracy": 0.5665117164060814,
+      "cohen_kappa": 0.13988222785692983,
+      "confusion_matrix": [
+        [
+          11128,
+          575
+        ],
+        [
+          660,
+          147
+        ]
+      ],
+      "ece_15": 0.11677359458112482,
+      "f1_per_class": [
+        0.9474266740453791,
+        0.19228253760627861
+      ],
+      "macro_auprc_ovr": 0.5569450397839538,
+      "macro_auroc_ovr": 0.679745108197826,
+      "macro_f1": 0.5698546058258288,
+      "multiclass_brier": 0.19215487226619601,
+      "negative_log_likelihood": 0.3369609941365131,
+      "precision_per_class": [
+        0.9440108585001696,
+        0.203601108033241
+      ],
+      "probability_saturation": {
+        "max_abs_logit_difference": 6.271911144256592,
+        "rows_float32": 0,
+        "rows_float64": 0,
+        "total_rows": 12510
+      },
+      "ranking_score": "logit_1_minus_logit_0",
+      "sensitivity_per_class": [
+        0.9508672989831667,
+        0.1821561338289963
+      ],
+      "specificity_per_class": [
+        0.1821561338289963,
+        0.9508672989831667
+      ],
+      "weighted_f1": 0.8987135391048232
+    },
+    "pattern": "cfp_missing"
+  },
+  {
+    "method": "host",
+    "metrics": {
+      "accuracy": 0.9322941646682654,
+      "auprc_per_class": [
+        0.9654346962789411,
+        0.15558851131373452
+      ],
+      "auroc_per_class": [
+        0.6909327838390923,
+        0.6909327838390923
+      ],
+      "balanced_accuracy": 0.5248263480243842,
+      "cohen_kappa": 0.08131479519140272,
+      "confusion_matrix": [
+        [
+          11617,
+          86
+        ],
+        [
+          761,
+          46
+        ]
+      ],
+      "ece_15": 0.05781713631141374,
+      "f1_per_class": [
+        0.9648270420663594,
+        0.0979765708200213
+      ],
+      "macro_auprc_ovr": 0.5605116037963378,
+      "macro_auroc_ovr": 0.6909327838390923,
+      "macro_f1": 0.5314018064431903,
+      "multiclass_brier": 0.13106902617691804,
+      "negative_log_likelihood": 0.24997090320906176,
+      "precision_per_class": [
+        0.9385199547584424,
+        0.3484848484848485
+      ],
+      "probability_saturation": {
+        "max_abs_logit_difference": 7.1068339347839355,
+        "rows_float32": 0,
+        "rows_float64": 0,
+        "total_rows": 12510
+      },
+      "ranking_score": "logit_1_minus_logit_0",
+      "sensitivity_per_class": [
+        0.9926514568913953,
+        0.057001239157372985
+      ],
+      "specificity_per_class": [
+        0.057001239157372985,
+        0.9926514568913953
+      ],
+      "weighted_f1": 0.9089079109475908
+    },
+    "pattern": "cfp_missing"
+  }
+]
