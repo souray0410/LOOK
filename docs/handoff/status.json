@@ -9,8 +9,8 @@
     "当前算法与匹配对照的实际执行证据"
   ],
   "source_commit": "ea76569e827678829cca3ddb45a4af9f87d44bc1",
-  "evidence_cutoff": "2026-09-16T22:02:52.107919+00:00",
-  "verified_at": "2026-09-16T22:02:52.107919+00:00",
+  "evidence_cutoff": "2026-09-17T01:06:57.998249+00:00",
+  "verified_at": "2026-09-17T01:06:57.998249+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -26,24 +26,28 @@
     "预检和任务登记不等于正式研究完成。"
   ],
   "blockers": [
-    "独立仿射家族完整best-forward链路仍未部署，整周门槛保持关闭。",
-    "正式搜索等待独立预检及安全交接。"
+    "独立仿射家族完整best-forward链路仍未部署，整周门槛保持关闭。"
   ],
   "actions": [
     "主线best-forward；顺序起点固定1/2/ceil(L/2)/L；15项3416搜索登记，整周验收后放其他种子。",
-    "预检持久化、暂停返回码75及到期通知已修复；Ibex23项测试通过，新管理入口现场无错误。",
-    "新dispatcher及activate_v4、独立到期守护已运行，旧GPU科学源码、任务和salloc子进程保留。",
-    "预检实际跨allocation恢复和正式完整搜索尚待后续验收；独立仿射完整搜索仍须完成实施。",
-    "同宿主五路线接受后自动生成CPU统计/图表/报告；三小时维护已更新新绑定。"
+    "预检跨allocation续接完成；58份原候选SHA保持，最终69份缓存通过独立profile验收。",
+    "同身份正式任务2026_09_16_14_28_13_776837已在51919716.7执行完整dev评价；原51919716.3健康任务保持。",
+    "有限接续复用共享Claims及原2538786科学源码；到期/主任务切换仅暂停自身并回原队列，不申请新卡。",
+    "尚无该正式搜索的验收结果；独立仿射完整搜索仍需实施，不把预检替代完整方法证据。",
+    "同宿主五路线接受后自动生成CPU统计/图表/报告；现有三小时维护已更新新绑定。"
   ],
   "decisions": [],
   "evidence": [
     {
-      "label": "Reviewed lease repair and live handoff",
-      "url": "https://github.com/souray0410/LOOK/blob/f4e9fae/docs/handoff/README.md"
+      "label": "Cross-lease qualification and formal execution receipt",
+      "url": "https://github.com/souray0410/LOOK/blob/5da3a3d/docs/handoff/search_continuation_20260917.json"
     },
     {
-      "label": "Current implementation CI (check live conclusion)",
+      "label": "Current implementation and remaining gates",
+      "url": "https://github.com/souray0410/LOOK/blob/5da3a3d/docs/handoff/README.md"
+    },
+    {
+      "label": "Accepted management source checks",
       "url": "https://github.com/souray0410/LOOK/actions/runs/35155207691"
     }
   ]

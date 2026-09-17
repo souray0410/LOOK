@@ -4,6 +4,11 @@
 
 # LOOK — 维护与交接
 
+## 2026-09-17：正式最佳位置向后搜索启动
+
+预检跨租期续接通过，58份旧候选SHA不变；原spec锁定的正式任务已在51919716.7执行完整dev评价，健康原worker保持。仍未产生该正式任务的验收结果；独立仿射完整搜索未部署，整周门槛继续关闭。详见[当前实施交接](https://github.com/souray0410/LOOK/blob/5da3a3d/docs/handoff/README.md)及[验收记录](https://github.com/souray0410/LOOK/blob/5da3a3d/docs/handoff/search_continuation_20260917.json)。
+
+
 ## 2026-09-17：搜索预检接续修复已上线
 
 新管理源`ea76569`经Ibex23项测试后部署，预检持久化、exit75暂停和到期保护已接通。当前独立GPU预检仍在运行，正式新搜索尚未验收。activate_v4与新dispatcher已现场核查，旧GPU任务保持。实际跨allocation续接和独立仿射搜索仍待完成；不能称整周研究已全自动验收。详见[当前实施交接](https://github.com/souray0410/LOOK/blob/f4e9fae/docs/handoff/README.md)。
