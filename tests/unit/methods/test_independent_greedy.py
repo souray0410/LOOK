@@ -107,3 +107,26 @@ def test_forward_resumes_completed_site_without_leaking_candidates(tmp_path):
     assert bank==[4,3] and calls==[('b',()),('c',()),('c',(4,))]
     artifact=next((tmp_path/'rounds/000/artifacts').glob('*.pt'));artifact.write_text('99')
     with pytest.raises(ValueError,match='evidence'):forward(tmp_path,values)
+
+
+@pytest.mark.parametrize('mode', ['greedy','best_forward'])
+def test_resume_checks_baseline_and_rejected_prediction_files(tmp_path, mode):
+    from look.runtime.state import file_sha256
+    for damaged in ('off','rejected'):
+        root=tmp_path/damaged
+        root.mkdir()
+        evidence={key:root/f'{key}.npz' for key in ('off','rejected')}
+        for p in evidence.values():p.write_bytes(b'original')
+        hashes={key:file_sha256(p) for key,p in evidence.items()}
+        def evaluate(bank):
+            key='rejected' if bank else 'off'
+            return dict(role='development',score=.4 if bank else .5,
+                        prediction=str(evidence[key]),sha256=hashes[key])
+        kw=dict(identity='fixed',sites=['a'],mode=mode,output=root,
+            fit_candidates=lambda *args:[('only',1)],evaluate=evaluate,
+            save_artifact=lambda a,p:p.write_text('1'),load_artifact=lambda p:1)
+        bank,_=fit_trajectory(**kw)
+        assert not bank
+        evidence[damaged].write_bytes(b'corrupt')
+        with pytest.raises(ValueError,match='Prediction evidence'):
+            fit_trajectory(**kw)

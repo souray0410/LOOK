@@ -19,6 +19,13 @@ class SelectionPaused(Exception):
     pass
 
 
+def _check_prediction_evidence(evidence):
+    if evidence.get('role') != 'development' or not math.isfinite(evidence['score']):
+        raise ValueError('Finite development score required; test is sealed')
+    if evidence.get('prediction') and file_sha256(evidence['prediction']) != evidence['sha256']:
+        raise ValueError('Prediction evidence changed')
+
+
 def fit_trajectory(*, identity, sites, mode, output, fit_candidates, evaluate,
                    save_artifact, load_artifact, should_pause=lambda: False):
     """Each candidate is (stable key, artifact); evaluate returns score + evidence.
@@ -56,11 +63,13 @@ def fit_trajectory(*, identity, sites, mode, output, fit_candidates, evaluate,
                 decision = json.loads(dp.read_text())
                 if decision['identity'] != node_identity:
                     raise ValueError('Upstream decision identity changed')
+                _check_prediction_evidence(decision['baseline'])
                 # Verify even rejected candidates: their evidence justified off.
                 for row in decision['candidates']:
                     path = (root/row['artifact']).resolve()
                     if not path.is_relative_to(root.resolve()) or file_sha256(path) != row['sha256']:
                         raise ValueError('Candidate evidence changed')
+                    _check_prediction_evidence(row['evidence'])
                 if decision['enabled']:
                     chosen = next(r for r in decision['candidates'] if r['key'] == decision['selected_key'])
                     bank.append(load_artifact(root/chosen['artifact']))
@@ -137,9 +146,7 @@ def fit_best_forward(*, identity, sites, output, fit_candidates, evaluate,
         path=(root/row['artifact']).resolve()
         if not path.is_relative_to(root.resolve()) or file_sha256(path)!=row['sha256']:
             raise ValueError('Candidate evidence changed')
-        e=row['evidence']
-        if e.get('prediction') and file_sha256(e['prediction'])!=e['sha256']:
-            raise ValueError('Prediction evidence changed')
+        _check_prediction_evidence(row['evidence'])
         return load_artifact(path)
     with (root/'trajectory.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -155,6 +162,7 @@ def fit_best_forward(*, identity, sites, output, fit_candidates, evaluate,
             if dp.exists():
                 d=json.loads(dp.read_text())
                 if d['identity']!=rid:raise ValueError('Upstream decision identity changed')
+                _check_prediction_evidence(d['baseline'])
                 for row in d['candidates']:checked(row)
             else:
                 baseline=assess(bank);rows=[]
