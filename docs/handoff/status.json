@@ -132,5 +132,12 @@
       "label": "Priority continuation production activation",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/priority_owner_activation_20260917.md"
     }
-  ]
+  ],
+  "operational_update": {
+    "checked_at": "2026-09-17T16:42:45Z",
+    "state": "v6_cpu_cycle_verified_dependents_held",
+    "scientific_evidence_cutoff_unchanged": true,
+    "evidence": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/next_fusion_activation_20260917.md",
+    "remaining": "watcher full cycle and scientific progress verification; successor GPU acceptance"
+  }
 }
