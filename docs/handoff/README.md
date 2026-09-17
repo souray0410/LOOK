@@ -288,3 +288,7 @@ workspace/stage_registry.py与Radon_Bridge保持逐字相同：阶段引用精�
 Machine-readable current evidence is [status.json](status.json). Source review and live runtime verification are distinct; this publication does not change scientific jobs or certify unfinished experiments. Update this record after material evidence review.
 
 Private research overview and weekly archive: [PHD](https://github.com/souray0410/PHD). Adopted hub standards: research-standards-v1, 2026-09-16. Existing pinned study/runtime rules remain authoritative for current executions.
+
+## 连贯性规范采用（2026-09-17）
+
+采用PHD `62fd7e08770f3628a048fd59b82da2b9e545afab`，进入[固定累计结果入口](../reports/current/README.md)和[尝试档案](../archive/README.md)。完整规则见[共同契约](../../workspace/RESULT_CONTINUITY_STANDARD.md)。此次仅更新结果管理入口；未刷新运行事实、未迁移全量旧产物、未删除服务器文件，自动累计发布仍须独立验收。

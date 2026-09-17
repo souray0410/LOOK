@@ -50,3 +50,7 @@ The installed MHD release selects the API. Import `mhd_framework` / `mhd_framewo
 ## UKB mechanism supplement
 
 The frozen-host LOOK supplement, its 378 additional neural training tasks, mechanism and sample-efficiency controls, sealed-test preparation, and external-method audit are defined in [the protocol](docs/look_mechanisms.zh-CN.md) and [the adaptation audit](docs/look_external_audit.zh-CN.md). The original 81-host study remains a separate ledger.
+
+## Cumulative results and attempt history
+
+Use the [current results entry](docs/reports/current/README.md) and [attempt archive](docs/archive/README.md). Coverage and verification dates are explicit; these entries do not establish live execution or complete historical migration.
