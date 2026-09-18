@@ -28,7 +28,7 @@ def constrain_mean(artifact):
     m.output_mean=(m.output_mean@q.T)@q
     m.method=artifact.mapping.method+'_fixed_slope_projected_mean'
     m.diagnostics=dict(control='only_mean_projected_onto_same_complete_PCA_basis',
-        refitting=False,rank=m.rank,ridge_lambda=m.ridge_lambda)
+        refitting=False,rank=len(q),ridge_lambda=m.ridge_lambda)
     for field in ('input_mean','left','right'):
         if not torch.equal(getattr(m,field),getattr(artifact.mapping,field)):raise ValueError('Slope changed')
     return result
