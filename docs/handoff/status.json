@@ -3,14 +3,14 @@
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
   "phase": "ukb_eye_research",
-  "next_acceptance": "优先PCA自由均值与自由低秩残差的同宿主3416完整匹配包；先验收缓存/实际GPU，再扩展宿主与规模",
+  "next_acceptance": "复用R50/R18两种拟合完整小队列结果；先审查固定前缀机制与MMTM A/A+LOOK接口，同时保持Ibex大队列拟合包恢复",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "b64ea908edb2a5ae70d7c57af3a41e5599876838",
+  "source_commit": "63663e01959290a6cf15632a4b85023b0f9cbc0f",
   "evidence_cutoff": "2026-09-18T03:45:00+00:00",
-  "verified_at": "2026-09-18T07:44:09.661646+00:00",
+  "verified_at": "2026-09-18T08:36:09.171581+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -59,6 +59,11 @@
       "summary": "主线正收益树白内障/ResNet50深层融合/3416/x16/q32双缺失配置已验收：缺OCT71.3331→75.4662%，缺CFP53.1402→57.6058%。缺CFP选stem→stage1→stage3，比best-forward多0.6203pp，但AUROC低于宿主、NLL/Brier变差；仅dev单种子。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/search_policies/README.md"
+    },
+    {
+      "summary": "ws02青光眼小队列1264train/296dev，ResNet18/deep/3416/x16/q32两方法两缺失完整正收益树已验收，8预测记录SHA、顺序、F1/AUROC独立重算通过。缺OCT不修正62.3449%、PCA69.2396%、自由低秩残差66.7690%；缺CFP56.7191%、60.0183%、61.3736%。残差−PCA普通95%区间均跨零，不能判定统一赢家。",
+      "scope": "preliminary_single_seed",
+      "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/small_cohort/README.md"
     }
   ],
   "limitations": [
@@ -68,7 +73,8 @@
     "本次刷新核验管理实现、节点及计算进程；既有数值结果保留原evidence_cutoff，不作为本次新增结果。",
     "正收益树首配置双状态已接受；完整有限周包、其他线性家族和重复种子仍未接受，test封存。",
     "跨租期自动恢复已绑定并测试，尚无实际跨租期恢复验收；完成当前配置不等于此门槛关闭。",
-    "本轮新增运行核验限ws02小队列fresh-host，Ibex数值与运行事实保留原证据截止；两平台是不同数据及初始化配方，不混合排名。"
+    "本轮新增运行核验限ws02小队列fresh-host，Ibex数值与运行事实保留原证据截止；两平台是不同数据及初始化配方，不混合排名。",
+    "不同骨干完整匹配包仍是同一小队列单种子探索；共同dev的选择偏差和训练随机性未被bootstrap消除。"
   ],
   "blockers": [
     "独立仿射家族完整主搜索与代表起点并行对照仍有验收缺口，整周重复种子门槛保持关闭。",
@@ -97,7 +103,8 @@
     "2026-09-18 05:34UTC：自由均值低秩残差134份GPU预检产物SHA通过，原run在51919716.23全量入口实际统计224批。owner_v7唯一CPU/watcher接替通过，原claims拒绝重复领取RRR、PCA自由均值可候选；10LOOK绑定更新、其余11项不变。两臂匹配及跨租期恢复仍待验收，旧结果cutoff不刷新。",
     "2026-09-18 ws02小队列fresh-host匹配包已实际启动：1264train/296dev，3416/ResNet50deep/x16/q32，两自由均值拟合臂。43CPU及真实GPU预检通过；目录绑定故障修复后正式22→71更新、epoch3→8，best/last及验证history推进。完整拟合结果尚无，Ibex原结果保留原cutoff；详见ws02_cohort_delivery_20260918.md。",
     "2026-09-18 06:51UTC：ws02共同宿主按原平台规则27轮停止、best12、270更新，重放接受；独立重算296人完整输入Macro-F1=69.2142%、AUROC=74.4522%。9/9 PCA基完成，两自由均值方法已分别在双GPU完成首前缀79train批并评候选。仅宿主接受，尚无完整缺失方法比较。权重SHA已入小队列current.json，受限资产不上传。",
-    "2026-09-18 07:42UTC核验，仅ws02小队列：同run两方法/两缺失均完成；自动CPU报告修复成功，独立8预测SHA、296人同序、F1/AUROC重算及同宿主通过，去重后6行。重复发布字节/mtime不变；身份冲突/预测篡改/重复矛盾/报告不一致保护5测试通过。RRR/PCA缺OCT69.9046/69.5821%，缺CFP61.6980/61.7695%，两方法差值区间均跨零。不是Ibex恢复、整个周包或独立test验收；发布链的定时GitHub端仍由原维护负责，不冒充实时。"
+    "2026-09-18 07:42UTC核验，仅ws02小队列：同run两方法/两缺失均完成；自动CPU报告修复成功，独立8预测SHA、296人同序、F1/AUROC重算及同宿主通过，去重后6行。重复发布字节/mtime不变；身份冲突/预测篡改/重复矛盾/报告不一致保护5测试通过。RRR/PCA缺OCT69.9046/69.5821%，缺CFP61.6980/61.7695%，两方法差值区间均跨零。不是Ibex恢复、整个周包或独立test验收；发布链的定时GitHub端仍由原维护负责，不冒充实时。",
+    "2026-09-18：单GPU有限序列已实际完成R18宿主→PCA→残差树→PCA树→重放统计，R50精确引用；不自动扩大近似骨干/种子。下一包按当前研究决策登记，未验收MMTM接口不称已训练。Ibex23待批/1allocation及RPC间歇超时，既有保护与claims保留。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",

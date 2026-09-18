@@ -1,0 +1,29 @@
+{
+  "schema": "research_decisions_v1",
+  "project": "LOOK",
+  "reviewed_at": "2026-09-18T08:32:54.681591+00:00",
+  "test_access": false,
+  "decisions": [
+    {
+      "question": "自由残差是否优于自由均值PCA",
+      "evidence": "small_cohort ResNet50/deep/3416 train1264 dev296",
+      "observation": "残差减PCA:缺OCT+0.3225pp,普通95%[-2.1078,3.0023];缺CFP-0.0715pp,[-4.5063,4.3958]。区间不含训练种子波动且有dev选择偏差。",
+      "decision": "不宣布胜者；保留两臂，先完成一个ResNet18完整匹配包，暂不增加ResNet34或重复种子。",
+      "reason": "一个更小骨干有助于发现现象是否依赖宿主；堆同类配置新增信息有限。",
+      "next_trigger": "ResNet18两方法两缺失接受后复核效应/指标损伤/成本，记录下一有限包。",
+      "followthrough": "ResNet18完整匹配包已接受：缺OCT残差66.7690、PCA69.2396；缺CFP残差61.3736、PCA60.0183；方法排序随缺失场景反转。两方法差异普通95%仍跨零。下一步优先固定前缀机制诊断及A/A+LOOK接口，而非宣布统一胜者或扩展近似骨干。"
+    },
+    {
+      "question": "老师提出的已有方法A能否加LOOK进一步获益",
+      "decision": "优先于继续增加近似骨干；先审计MMTM适配及A和A+LOOK完全匹配接口，再登记有限包。",
+      "state": "adapter_acceptance_required",
+      "reason": "换骨干不能回答方法可附加性；不是只挑最高分的方法。"
+    },
+    {
+      "question": "ws02结果如何反馈Ibex",
+      "decision": "现有大队列两拟合方法匹配任务保持；小队列用于诊断与尚未锁定扩展排序，不因单种子负结果删除正式臂。",
+      "state": "existing_Ibex_queue_preserved",
+      "reason": "数据、任务及输入不同；内部探索不是独立确认。"
+    }
+  ]
+}
