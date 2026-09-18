@@ -341,3 +341,7 @@ remain pending; this does not certify the weekly matched package.
 ## 2026-09-18：正收益树首个双缺失配置完成
 
 [累计策略比较](../reports/current/search_policies/README.md)：同12510名dev、3416/x16/q32，缺OCT75.4662%，缺CFP57.6058%；后者比best-forward高0.6203pp，但AUROC与校准仍差于宿主。392+5文件SHA、最终预测与权重独立核验通过。仅本配置接受，周包与重复种子保持未放行；前文未完成记录是历史状态。
+
+## 2026-09-18：ws02并行完整交付
+
+用户授权旧小队列重新执行当前拟合设计，LOOK优先；[执行协议与事件记录](ws02_cohort_delivery_20260918.md)。b64ea90源码已部署，43 CPU测试及真实GPU预检通过；目录绑定故障已保存、修复并核验22→71次正式更新。新宿主及两臂结果与Ibex分面，不复用历史医学宿主，不处理Uncertainty。后继优先回应导师具体方法增强问题，中文报告保留完整变化时间线。新宿主/两臂的最终验收尚待进行。
