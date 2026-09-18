@@ -69,6 +69,7 @@ def refresh(plan, statuses):
         '下一科学问题是已有方法A在加LOOK前后是否受益；MMTM适配审计尚未通过，不将它标为已运行。']
     if has_external:
         lines=[line.replace('当前这些是跨骨干验证，不能替代外部方法A与A+LOOK。','前两配置是已接受跨骨干参考；MMTM配置单独回答同一宿主A与A+LOOK。').replace('下一科学问题是已有方法A在加LOOK前后是否受益；MMTM适配审计尚未通过，不将它标为已运行。','MMTM配置包含Stage3作者门控适配；其实际阶段见上表，未验收结果不排名。每个配置内部严格使用同一宿主比较A和A+LOOK；不是原论文完整系统复现。') for line in lines]
+    lines+=['','阅读入口：[研究问题、批准范围与术语说明](../reading_guide.zh-CN.md)。']
     text='\n'.join(lines)+'\n';p=out/'README.md'
     if not p.exists() or p.read_text()!=text:
         temp=out/'.README.tmp';temp.write_text(text);temp.replace(p)
