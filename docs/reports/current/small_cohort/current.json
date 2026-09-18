@@ -20,6 +20,38 @@
       "github_payload": false,
       "role": "full_resume",
       "sha256": "4543f7a126162bd8c6ad42f42e7e2dd0dd9130c9945e53cbae56d890e99447c0"
+    },
+    {
+      "access": "restricted",
+      "artifact_ref": "LOOK/2026_09_18_09_35_40/residual_rrr/oct_missing/bank.pt",
+      "availability": "available",
+      "github_payload": false,
+      "role": "correction_bank",
+      "sha256": "91c52195de3c70c8ed5c388930f7dd6272d0f3875545632c0352adba2a1ec3ed"
+    },
+    {
+      "access": "restricted",
+      "artifact_ref": "LOOK/2026_09_18_09_35_40/residual_rrr/cfp_missing/bank.pt",
+      "availability": "available",
+      "github_payload": false,
+      "role": "correction_bank",
+      "sha256": "d21291543731b9e643a4bd42a70bad652ae770096a489b71e7b21fbfb78eb47b"
+    },
+    {
+      "access": "restricted",
+      "artifact_ref": "LOOK/2026_09_18_09_35_40/pca_free_mean/oct_missing/bank.pt",
+      "availability": "available",
+      "github_payload": false,
+      "role": "correction_bank",
+      "sha256": "d71f1e0a17e52501f956c0f1eb84d12f9831e91dea599b8d7100c76ba727c10c"
+    },
+    {
+      "access": "restricted",
+      "artifact_ref": "LOOK/2026_09_18_09_35_40/pca_free_mean/cfp_missing/bank.pt",
+      "availability": "available",
+      "github_payload": false,
+      "role": "correction_bank",
+      "sha256": "db0d1a76c61107e43ecc2d611684d7472f55d228810769f272945d8615637b82"
     }
   ],
   "configuration_id": "aec06fceafde5ac3706e37d71572f15a20a76b9158de635ffb448f2621fe5c4c",
@@ -30,6 +62,7 @@
     "test_used": false,
     "train": 1264
   },
+  "evidence_cutoff_utc": "2026-09-18T07:23:15.846977+00:00",
   "factor": 16,
   "framework_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0",
   "host_metrics": {
@@ -101,15 +134,828 @@
     "public_initialization_fresh_host_not_Ibex_medical_parent_composition",
     "small_balanced_cohort_not_large_cohort_replacement"
   ],
-  "matched_package": "incomplete",
+  "matched_package": "accepted",
+  "matched_results": {
+    "comparisons": [
+      {
+        "method": "residual_rrr",
+        "pattern": "oct_missing",
+        "reference": "pca_free_mean"
+      },
+      {
+        "method": "residual_rrr",
+        "pattern": "oct_missing",
+        "reference": "host"
+      },
+      {
+        "method": "pca_free_mean",
+        "pattern": "oct_missing",
+        "reference": "host"
+      },
+      {
+        "method": "residual_rrr",
+        "pattern": "cfp_missing",
+        "reference": "pca_free_mean"
+      },
+      {
+        "method": "residual_rrr",
+        "pattern": "cfp_missing",
+        "reference": "host"
+      },
+      {
+        "method": "pca_free_mean",
+        "pattern": "cfp_missing",
+        "reference": "host"
+      }
+    ],
+    "conclusion_scope": "small_cohort_single_seed_dev_selection_not_independent_test",
+    "results": [
+      {
+        "method": "residual_rrr",
+        "metrics": {
+          "accuracy": 0.6993243243243243,
+          "auprc_per_class": [
+            0.6763860776478586,
+            0.7561921116963518
+          ],
+          "auroc_per_class": [
+            0.7258491599707816,
+            0.7258491599707817
+          ],
+          "balanced_accuracy": 0.6993243243243243,
+          "cohen_kappa": 0.3986486486486487,
+          "confusion_matrix": [
+            [
+              108,
+              40
+            ],
+            [
+              49,
+              99
+            ]
+          ],
+          "ece_15": 0.22222282325156836,
+          "f1_per_class": [
+            0.7081967213114754,
+            0.6898954703832753
+          ],
+          "macro_auprc_ovr": 0.7162890946721052,
+          "macro_auroc_ovr": 0.7258491599707817,
+          "macro_f1": 0.6990460958473753,
+          "multiclass_brier": 0.5166829017363281,
+          "negative_log_likelihood": 1.0964039879141783,
+          "precision_per_class": [
+            0.6878980891719745,
+            0.7122302158273381
+          ],
+          "probability_saturation": {
+            "max_abs_logit_difference": 13.465512752532959,
+            "rows_float32": 0,
+            "rows_float64": 0,
+            "total_rows": 296
+          },
+          "ranking_score": "logit_1_minus_logit_0",
+          "sensitivity_per_class": [
+            0.7297297297297297,
+            0.668918918918919
+          ],
+          "specificity_per_class": [
+            0.668918918918919,
+            0.7297297297297297
+          ],
+          "weighted_f1": 0.6990460958473753
+        },
+        "scenario": "oct_missing"
+      },
+      {
+        "method": "host",
+        "metrics": {
+          "accuracy": 0.5168918918918919,
+          "auprc_per_class": [
+            0.6852718644896303,
+            0.7584002813996853
+          ],
+          "auroc_per_class": [
+            0.7251643535427318,
+            0.7251643535427318
+          ],
+          "balanced_accuracy": 0.5168918918918919,
+          "cohen_kappa": 0.03378378378378377,
+          "confusion_matrix": [
+            [
+              6,
+              142
+            ],
+            [
+              1,
+              147
+            ]
+          ],
+          "ece_15": 0.4540865858594177,
+          "f1_per_class": [
+            0.07741935483870968,
+            0.6727688787185355
+          ],
+          "macro_auprc_ovr": 0.7218360729446578,
+          "macro_auroc_ovr": 0.7251643535427318,
+          "macro_f1": 0.3750941167786226,
+          "multiclass_brier": 0.8968175156217123,
+          "negative_log_likelihood": 2.446412890765867,
+          "precision_per_class": [
+            0.8571428571428571,
+            0.5086505190311419
+          ],
+          "probability_saturation": {
+            "max_abs_logit_difference": 15.943283557891846,
+            "rows_float32": 0,
+            "rows_float64": 0,
+            "total_rows": 296
+          },
+          "ranking_score": "logit_1_minus_logit_0",
+          "sensitivity_per_class": [
+            0.04054054054054054,
+            0.9932432432432432
+          ],
+          "specificity_per_class": [
+            0.9932432432432432,
+            0.04054054054054054
+          ],
+          "weighted_f1": 0.3750941167786226
+        },
+        "scenario": "oct_missing"
+      },
+      {
+        "method": "residual_rrr",
+        "metrics": {
+          "accuracy": 0.6182432432432432,
+          "auprc_per_class": [
+            0.5812965927190205,
+            0.625771792453215
+          ],
+          "auroc_per_class": [
+            0.6160518626734842,
+            0.6160518626734842
+          ],
+          "balanced_accuracy": 0.6182432432432432,
+          "cohen_kappa": 0.2364864864864865,
+          "confusion_matrix": [
+            [
+              100,
+              48
+            ],
+            [
+              65,
+              83
+            ]
+          ],
+          "ece_15": 0.24276970518509877,
+          "f1_per_class": [
+            0.6389776357827476,
+            0.5949820788530465
+          ],
+          "macro_auprc_ovr": 0.6035341925861177,
+          "macro_auroc_ovr": 0.6160518626734842,
+          "macro_f1": 0.6169798573178971,
+          "multiclass_brier": 0.6310048527892784,
+          "negative_log_likelihood": 1.330730563528507,
+          "precision_per_class": [
+            0.6060606060606061,
+            0.6335877862595419
+          ],
+          "probability_saturation": {
+            "max_abs_logit_difference": 36.84052658081055,
+            "rows_float32": 2,
+            "rows_float64": 1,
+            "total_rows": 296
+          },
+          "ranking_score": "logit_1_minus_logit_0",
+          "sensitivity_per_class": [
+            0.6756756756756757,
+            0.5608108108108109
+          ],
+          "specificity_per_class": [
+            0.5608108108108109,
+            0.6756756756756757
+          ],
+          "weighted_f1": 0.6169798573178971
+        },
+        "scenario": "cfp_missing"
+      },
+      {
+        "method": "host",
+        "metrics": {
+          "accuracy": 0.5844594594594594,
+          "auprc_per_class": [
+            0.5737484903517738,
+            0.6208183244768355
+          ],
+          "auroc_per_class": [
+            0.6059167275383491,
+            0.6059167275383492
+          ],
+          "balanced_accuracy": 0.5844594594594594,
+          "cohen_kappa": 0.16891891891891897,
+          "confusion_matrix": [
+            [
+              125,
+              23
+            ],
+            [
+              100,
+              48
+            ]
+          ],
+          "ece_15": 0.28786820152089315,
+          "f1_per_class": [
+            0.6702412868632708,
+            0.4383561643835616
+          ],
+          "macro_auprc_ovr": 0.5972834074143046,
+          "macro_auroc_ovr": 0.6059167275383492,
+          "macro_f1": 0.5542987256234162,
+          "multiclass_brier": 0.662529202853214,
+          "negative_log_likelihood": 1.1964853369525887,
+          "precision_per_class": [
+            0.5555555555555556,
+            0.676056338028169
+          ],
+          "probability_saturation": {
+            "max_abs_logit_difference": 7.544884920120239,
+            "rows_float32": 0,
+            "rows_float64": 0,
+            "total_rows": 296
+          },
+          "ranking_score": "logit_1_minus_logit_0",
+          "sensitivity_per_class": [
+            0.8445945945945946,
+            0.32432432432432434
+          ],
+          "specificity_per_class": [
+            0.32432432432432434,
+            0.8445945945945946
+          ],
+          "weighted_f1": 0.5542987256234162
+        },
+        "scenario": "cfp_missing"
+      },
+      {
+        "method": "pca_free_mean",
+        "metrics": {
+          "accuracy": 0.6959459459459459,
+          "auprc_per_class": [
+            0.6798805119648984,
+            0.7566573195386105
+          ],
+          "auroc_per_class": [
+            0.7282231555880205,
+            0.7282231555880204
+          ],
+          "balanced_accuracy": 0.6959459459459459,
+          "cohen_kappa": 0.3918918918918919,
+          "confusion_matrix": [
+            [
+              106,
+              42
+            ],
+            [
+              48,
+              100
+            ]
+          ],
+          "ece_15": 0.205087248431169,
+          "f1_per_class": [
+            0.7019867549668874,
+            0.6896551724137931
+          ],
+          "macro_auprc_ovr": 0.7182689157517544,
+          "macro_auroc_ovr": 0.7282231555880204,
+          "macro_f1": 0.6958209636903403,
+          "multiclass_brier": 0.5106952180943788,
+          "negative_log_likelihood": 1.100212622932917,
+          "precision_per_class": [
+            0.6883116883116883,
+            0.704225352112676
+          ],
+          "probability_saturation": {
+            "max_abs_logit_difference": 12.698935985565186,
+            "rows_float32": 0,
+            "rows_float64": 0,
+            "total_rows": 296
+          },
+          "ranking_score": "logit_1_minus_logit_0",
+          "sensitivity_per_class": [
+            0.7162162162162162,
+            0.6756756756756757
+          ],
+          "specificity_per_class": [
+            0.6756756756756757,
+            0.7162162162162162
+          ],
+          "weighted_f1": 0.6958209636903403
+        },
+        "scenario": "oct_missing"
+      },
+      {
+        "method": "pca_free_mean",
+        "metrics": {
+          "accuracy": 0.6216216216216216,
+          "auprc_per_class": [
+            0.5877864982898974,
+            0.6257728436248482
+          ],
+          "auroc_per_class": [
+            0.620936815193572,
+            0.6209368151935719
+          ],
+          "balanced_accuracy": 0.6216216216216217,
+          "cohen_kappa": 0.2432432432432432,
+          "confusion_matrix": [
+            [
+              107,
+              41
+            ],
+            [
+              71,
+              77
+            ]
+          ],
+          "ece_15": 0.2797213908575782,
+          "f1_per_class": [
+            0.656441717791411,
+            0.5789473684210527
+          ],
+          "macro_auprc_ovr": 0.6067796709573727,
+          "macro_auroc_ovr": 0.6209368151935719,
+          "macro_f1": 0.6176945431062318,
+          "multiclass_brier": 0.6457069901819619,
+          "negative_log_likelihood": 1.3313411732874036,
+          "precision_per_class": [
+            0.601123595505618,
+            0.652542372881356
+          ],
+          "probability_saturation": {
+            "max_abs_logit_difference": 15.00369119644165,
+            "rows_float32": 0,
+            "rows_float64": 0,
+            "total_rows": 296
+          },
+          "ranking_score": "logit_1_minus_logit_0",
+          "sensitivity_per_class": [
+            0.722972972972973,
+            0.5202702702702703
+          ],
+          "specificity_per_class": [
+            0.5202702702702703,
+            0.722972972972973
+          ],
+          "weighted_f1": 0.6176945431062318
+        },
+        "scenario": "cfp_missing"
+      }
+    ],
+    "statistics": {
+      "contrasts": [
+        {
+          "bootstrap_sd": 0.013032026001418957,
+          "difference": 0.0032251321570350155,
+          "ordinary_95": [
+            -0.02107760112967691,
+            0.03002325663724686
+          ],
+          "simultaneous_95": [
+            -0.030532658519275287,
+            0.03698292283334532
+          ],
+          "zero_variance": false
+        },
+        {
+          "bootstrap_sd": 0.03332014466977252,
+          "difference": 0.3239519790687527,
+          "ordinary_95": [
+            0.25759626979412986,
+            0.38857747440774765
+          ],
+          "simultaneous_95": [
+            0.23764042099297197,
+            0.41026353714453345
+          ],
+          "zero_variance": false
+        },
+        {
+          "bootstrap_sd": 0.03315517534962011,
+          "difference": 0.3207268469117177,
+          "ordinary_95": [
+            0.25374998368416296,
+            0.3837442255098708
+          ],
+          "simultaneous_95": [
+            0.23484262068572853,
+            0.4066110731377069
+          ],
+          "zero_variance": false
+        },
+        {
+          "bootstrap_sd": 0.022268213767984518,
+          "difference": -0.000714685788334779,
+          "ordinary_95": [
+            -0.0450629811746831,
+            0.04395795677919805
+          ],
+          "simultaneous_95": [
+            -0.058397635395180475,
+            0.05696826381851092
+          ],
+          "zero_variance": false
+        },
+        {
+          "bootstrap_sd": 0.027362250433944687,
+          "difference": 0.06268113169448086,
+          "ordinary_95": [
+            0.009659896699341138,
+            0.11637781629231284
+          ],
+          "simultaneous_95": [
+            -0.008197266068178,
+            0.13355952945713973
+          ],
+          "zero_variance": false
+        },
+        {
+          "bootstrap_sd": 0.02368383103468156,
+          "difference": 0.06339581748281564,
+          "ordinary_95": [
+            0.017547695907758516,
+            0.11002820550372382
+          ],
+          "simultaneous_95": [
+            0.0020458930432213016,
+            0.12474574192240998
+          ],
+          "zero_variance": false
+        }
+      ],
+      "critical": 2.5903716484785004,
+      "iterations": 10000,
+      "participants": 296,
+      "scope": "conditional_on_selected_models_and_development_selection",
+      "seed": 7341618
+    },
+    "test_access": false
+  },
   "position": "deep",
+  "publication_mode": "scheduled_verified_sync_not_realtime",
+  "publication_verified_at_utc": "2026-09-18T07:42:16.360588+00:00",
   "rank": 32,
-  "results": [],
+  "results": [
+    {
+      "method": "residual_rrr",
+      "metrics": {
+        "accuracy": 0.6993243243243243,
+        "auprc_per_class": [
+          0.6763860776478586,
+          0.7561921116963518
+        ],
+        "auroc_per_class": [
+          0.7258491599707816,
+          0.7258491599707817
+        ],
+        "balanced_accuracy": 0.6993243243243243,
+        "cohen_kappa": 0.3986486486486487,
+        "confusion_matrix": [
+          [
+            108,
+            40
+          ],
+          [
+            49,
+            99
+          ]
+        ],
+        "ece_15": 0.22222282325156836,
+        "f1_per_class": [
+          0.7081967213114754,
+          0.6898954703832753
+        ],
+        "macro_auprc_ovr": 0.7162890946721052,
+        "macro_auroc_ovr": 0.7258491599707817,
+        "macro_f1": 0.6990460958473753,
+        "multiclass_brier": 0.5166829017363281,
+        "negative_log_likelihood": 1.0964039879141783,
+        "precision_per_class": [
+          0.6878980891719745,
+          0.7122302158273381
+        ],
+        "probability_saturation": {
+          "max_abs_logit_difference": 13.465512752532959,
+          "rows_float32": 0,
+          "rows_float64": 0,
+          "total_rows": 296
+        },
+        "ranking_score": "logit_1_minus_logit_0",
+        "sensitivity_per_class": [
+          0.7297297297297297,
+          0.668918918918919
+        ],
+        "specificity_per_class": [
+          0.668918918918919,
+          0.7297297297297297
+        ],
+        "weighted_f1": 0.6990460958473753
+      },
+      "scenario": "oct_missing"
+    },
+    {
+      "method": "host",
+      "metrics": {
+        "accuracy": 0.5168918918918919,
+        "auprc_per_class": [
+          0.6852718644896303,
+          0.7584002813996853
+        ],
+        "auroc_per_class": [
+          0.7251643535427318,
+          0.7251643535427318
+        ],
+        "balanced_accuracy": 0.5168918918918919,
+        "cohen_kappa": 0.03378378378378377,
+        "confusion_matrix": [
+          [
+            6,
+            142
+          ],
+          [
+            1,
+            147
+          ]
+        ],
+        "ece_15": 0.4540865858594177,
+        "f1_per_class": [
+          0.07741935483870968,
+          0.6727688787185355
+        ],
+        "macro_auprc_ovr": 0.7218360729446578,
+        "macro_auroc_ovr": 0.7251643535427318,
+        "macro_f1": 0.3750941167786226,
+        "multiclass_brier": 0.8968175156217123,
+        "negative_log_likelihood": 2.446412890765867,
+        "precision_per_class": [
+          0.8571428571428571,
+          0.5086505190311419
+        ],
+        "probability_saturation": {
+          "max_abs_logit_difference": 15.943283557891846,
+          "rows_float32": 0,
+          "rows_float64": 0,
+          "total_rows": 296
+        },
+        "ranking_score": "logit_1_minus_logit_0",
+        "sensitivity_per_class": [
+          0.04054054054054054,
+          0.9932432432432432
+        ],
+        "specificity_per_class": [
+          0.9932432432432432,
+          0.04054054054054054
+        ],
+        "weighted_f1": 0.3750941167786226
+      },
+      "scenario": "oct_missing"
+    },
+    {
+      "method": "residual_rrr",
+      "metrics": {
+        "accuracy": 0.6182432432432432,
+        "auprc_per_class": [
+          0.5812965927190205,
+          0.625771792453215
+        ],
+        "auroc_per_class": [
+          0.6160518626734842,
+          0.6160518626734842
+        ],
+        "balanced_accuracy": 0.6182432432432432,
+        "cohen_kappa": 0.2364864864864865,
+        "confusion_matrix": [
+          [
+            100,
+            48
+          ],
+          [
+            65,
+            83
+          ]
+        ],
+        "ece_15": 0.24276970518509877,
+        "f1_per_class": [
+          0.6389776357827476,
+          0.5949820788530465
+        ],
+        "macro_auprc_ovr": 0.6035341925861177,
+        "macro_auroc_ovr": 0.6160518626734842,
+        "macro_f1": 0.6169798573178971,
+        "multiclass_brier": 0.6310048527892784,
+        "negative_log_likelihood": 1.330730563528507,
+        "precision_per_class": [
+          0.6060606060606061,
+          0.6335877862595419
+        ],
+        "probability_saturation": {
+          "max_abs_logit_difference": 36.84052658081055,
+          "rows_float32": 2,
+          "rows_float64": 1,
+          "total_rows": 296
+        },
+        "ranking_score": "logit_1_minus_logit_0",
+        "sensitivity_per_class": [
+          0.6756756756756757,
+          0.5608108108108109
+        ],
+        "specificity_per_class": [
+          0.5608108108108109,
+          0.6756756756756757
+        ],
+        "weighted_f1": 0.6169798573178971
+      },
+      "scenario": "cfp_missing"
+    },
+    {
+      "method": "host",
+      "metrics": {
+        "accuracy": 0.5844594594594594,
+        "auprc_per_class": [
+          0.5737484903517738,
+          0.6208183244768355
+        ],
+        "auroc_per_class": [
+          0.6059167275383491,
+          0.6059167275383492
+        ],
+        "balanced_accuracy": 0.5844594594594594,
+        "cohen_kappa": 0.16891891891891897,
+        "confusion_matrix": [
+          [
+            125,
+            23
+          ],
+          [
+            100,
+            48
+          ]
+        ],
+        "ece_15": 0.28786820152089315,
+        "f1_per_class": [
+          0.6702412868632708,
+          0.4383561643835616
+        ],
+        "macro_auprc_ovr": 0.5972834074143046,
+        "macro_auroc_ovr": 0.6059167275383492,
+        "macro_f1": 0.5542987256234162,
+        "multiclass_brier": 0.662529202853214,
+        "negative_log_likelihood": 1.1964853369525887,
+        "precision_per_class": [
+          0.5555555555555556,
+          0.676056338028169
+        ],
+        "probability_saturation": {
+          "max_abs_logit_difference": 7.544884920120239,
+          "rows_float32": 0,
+          "rows_float64": 0,
+          "total_rows": 296
+        },
+        "ranking_score": "logit_1_minus_logit_0",
+        "sensitivity_per_class": [
+          0.8445945945945946,
+          0.32432432432432434
+        ],
+        "specificity_per_class": [
+          0.32432432432432434,
+          0.8445945945945946
+        ],
+        "weighted_f1": 0.5542987256234162
+      },
+      "scenario": "cfp_missing"
+    },
+    {
+      "method": "pca_free_mean",
+      "metrics": {
+        "accuracy": 0.6959459459459459,
+        "auprc_per_class": [
+          0.6798805119648984,
+          0.7566573195386105
+        ],
+        "auroc_per_class": [
+          0.7282231555880205,
+          0.7282231555880204
+        ],
+        "balanced_accuracy": 0.6959459459459459,
+        "cohen_kappa": 0.3918918918918919,
+        "confusion_matrix": [
+          [
+            106,
+            42
+          ],
+          [
+            48,
+            100
+          ]
+        ],
+        "ece_15": 0.205087248431169,
+        "f1_per_class": [
+          0.7019867549668874,
+          0.6896551724137931
+        ],
+        "macro_auprc_ovr": 0.7182689157517544,
+        "macro_auroc_ovr": 0.7282231555880204,
+        "macro_f1": 0.6958209636903403,
+        "multiclass_brier": 0.5106952180943788,
+        "negative_log_likelihood": 1.100212622932917,
+        "precision_per_class": [
+          0.6883116883116883,
+          0.704225352112676
+        ],
+        "probability_saturation": {
+          "max_abs_logit_difference": 12.698935985565186,
+          "rows_float32": 0,
+          "rows_float64": 0,
+          "total_rows": 296
+        },
+        "ranking_score": "logit_1_minus_logit_0",
+        "sensitivity_per_class": [
+          0.7162162162162162,
+          0.6756756756756757
+        ],
+        "specificity_per_class": [
+          0.6756756756756757,
+          0.7162162162162162
+        ],
+        "weighted_f1": 0.6958209636903403
+      },
+      "scenario": "oct_missing"
+    },
+    {
+      "method": "pca_free_mean",
+      "metrics": {
+        "accuracy": 0.6216216216216216,
+        "auprc_per_class": [
+          0.5877864982898974,
+          0.6257728436248482
+        ],
+        "auroc_per_class": [
+          0.620936815193572,
+          0.6209368151935719
+        ],
+        "balanced_accuracy": 0.6216216216216217,
+        "cohen_kappa": 0.2432432432432432,
+        "confusion_matrix": [
+          [
+            107,
+            41
+          ],
+          [
+            71,
+            77
+          ]
+        ],
+        "ece_15": 0.2797213908575782,
+        "f1_per_class": [
+          0.656441717791411,
+          0.5789473684210527
+        ],
+        "macro_auprc_ovr": 0.6067796709573727,
+        "macro_auroc_ovr": 0.6209368151935719,
+        "macro_f1": 0.6176945431062318,
+        "multiclass_brier": 0.6457069901819619,
+        "negative_log_likelihood": 1.3313411732874036,
+        "precision_per_class": [
+          0.601123595505618,
+          0.652542372881356
+        ],
+        "probability_saturation": {
+          "max_abs_logit_difference": 15.00369119644165,
+          "rows_float32": 0,
+          "rows_float64": 0,
+          "total_rows": 296
+        },
+        "ranking_score": "logit_1_minus_logit_0",
+        "sensitivity_per_class": [
+          0.722972972972973,
+          0.5202702702702703
+        ],
+        "specificity_per_class": [
+          0.5202702702702703,
+          0.722972972972973
+        ],
+        "weighted_f1": 0.6176945431062318
+      },
+      "scenario": "cfp_missing"
+    }
+  ],
   "run_id": "2026_09_18_09_35_40",
   "schema": "look_cohort_publication_v1",
   "search": "positive_forward_tree",
   "seed": 3416,
   "source_commit": "b64ea90",
+  "source_evidence_sha256": "8a9cdf048379d02ee8f5af2cd84cae5db99ca5b928cd6d787ef75822d0767488",
   "states": {
     "host": {
       "gpu_peak_reserved_bytes": 7082082304,
@@ -122,8 +968,9 @@
       "time": 1789714012.0731416
     },
     "pca_free_mean": {
-      "state": "running",
-      "time": 1789714014.7196767
+      "gpu_peak_reserved_bytes": 3491758080,
+      "state": "completed",
+      "time": 1789715768.3610063
     },
     "profile": {
       "gpu_peak_reserved_bytes": 6928990208,
@@ -131,8 +978,9 @@
       "time": 1789713369.6745832
     },
     "residual_rrr": {
-      "state": "running",
-      "time": 1789714014.6987524
+      "gpu_peak_reserved_bytes": 3491758080,
+      "state": "completed",
+      "time": 1789716186.8922226
     }
   },
   "training": {
