@@ -131,3 +131,36 @@ def test_projected_target_scatter_matches_direct_centered_residual(setup,tmp_pat
             torch.testing.assert_close(f.projected[name][q].syy,expected,rtol=1e-13,atol=1e-13)
     restored=fitter(setup,tmp_path,projected_ranks=(1,2));same(restored.statistics('oct_missing',[],['a','b']),full)
     torch.testing.assert_close(restored.projected['a'][1].syy,f.projected['a'][1].syy,rtol=0,atol=0)
+
+
+def test_checkpoint_save_preserves_payload_without_deepcopy(setup,tmp_path,monkeypatch):
+    original=fs.atomic_save
+    observed=[]
+    def save(path,record):
+        payload=record['payload']
+        assert record['sha256']==fingerprint(payload)
+        original(path,record)
+        observed.append(torch.load(path,weights_only=False))
+    monkeypatch.setattr(fs,'atomic_save',save)
+    # Identity construction still uses dataclass snapshots; collection must not.
+    f=fitter(setup,tmp_path,projected_ranks=(1,))
+    def no_copy(*args,**kwargs):raise AssertionError('Dense checkpoint deep copy')
+    monkeypatch.setattr(torch.Tensor,'__deepcopy__',no_copy)
+    result=f.statistics('oct_missing',[],['a','b'])
+    assert observed and observed[-1]['payload']['complete']
+    for name,s in result.items():
+        saved=observed[-1]['payload']['statistics'][name]
+        for key,value in vars(s).items():
+            if isinstance(value,torch.Tensor):assert torch.equal(value,saved[key])
+            else:assert value==saved[key]
+
+
+@pytest.mark.parametrize('x',[torch.tensor(2.),torch.empty(0),torch.arange(12).reshape(3,4).T,
+                            torch.tensor([True,False]),torch.tensor([1+2j])])
+def test_buffer_fingerprint_matches_previous_bytes(x):
+    import hashlib
+    from look.runtime.state import stable_hash
+    y=x.detach().cpu().contiguous()
+    expected=stable_hash(dict(shape=list(y.shape),dtype=str(y.dtype),
+        sha256=hashlib.sha256(y.numpy().tobytes()).hexdigest()))
+    assert fingerprint(x)==expected

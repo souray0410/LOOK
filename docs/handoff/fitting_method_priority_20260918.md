@@ -58,3 +58,11 @@
 后续现场核验发现上述6GiB共享worker在正式全量统计期间触发`Host RAM reserve breached`，Slurm51919716.23为FAILED/1:0，MaxRSS6292028K；短探针不足以证明全量资源准入。不能继续宣称该臂健康推进或故障已闭环。
 
 已核验原step退出、manager锁空闲以及原owner/generation/step身份，保存失败status、claim、Slurm证据和管理源码SHA到`OPS/look_fitting_priority_20260918/host_ram_incident_20260918/before.json`。同一run转为paused并经原Claims安全释放，进入已部署owner_v7原队列，后续走100GiB worker的完整allocation入口并重新资源预检；不重新启动6GiB共享manager，不修改科学spec/源码/秩/样本，不删除缓存，不重置为新运行。`requeue.json`记录`requeued_waiting_full_allocation`，实际再次领取、恢复与下游推进尚未验收。该记录覆盖前述“正式运行”即时状态，已接受旧PCA科研结果不变。
+
+### 保存与恢复内存优化候选：不是生产恢复完成
+
+检查发现充分统计保存使用`dataclasses.asdict`深拷贝全部稠密张量，指纹计算又用`tobytes`复制张量缓冲区；恢复时还先分配一套随后被替换的零统计。候选改为同步锁内引用序列化、直接缓冲区哈希，以及命中缓存时延迟分配。拟合矩阵、浮点运算顺序、数据与缓存内容协议不变；不采用PCA代替完整协方差，不改变精度或秩。
+
+Ibex独立`memory_candidate_v1`通过45项相关测试，覆盖原统计等价、部分恢复、哈希旧算法一致、禁止深拷贝及损坏拒绝。CPU合成9位置、每位置D=1024、连续保存3次的隔离进程测试：旧峰值1341852KiB、新峰值892864KiB（下降33.46%），耗时2.81/2.38秒；完整payload指纹相同。证据为`OPS/look_fitting_priority_20260918/memory_candidate_cpu_tests.txt`及`memory_candidate_serialization_benchmark.json`。这是序列化合成测量，不能外推为完整拟合加速比例，也不能据此重新准入6GiB共享worker。
+
+仍需验收真实缓存重放、保存/恢复峰值和新旧源身份的显式迁移，再安全绑定新快照。既有100GiB队列恢复路径继续有效，候选尚未生产绑定，故事件仍开放。后续资源预检必须覆盖最大实际维度、周期性保存与恢复共存峰值；短小样本前向通过不足以替代此项。这落实已有性能准则，而非新增科研范围。

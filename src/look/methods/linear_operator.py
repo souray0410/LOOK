@@ -22,7 +22,9 @@ def fingerprint(value):
     def encode(x):
         if isinstance(x, torch.Tensor):
             y=x.detach().cpu().contiguous()
-            return dict(shape=list(y.shape),dtype=str(y.dtype),sha256=hashlib.sha256(y.numpy().tobytes()).hexdigest())
+            # Hash the contiguous CPU buffer directly; tobytes duplicates large
+            # covariance matrices even though hashing is synchronous/read-only.
+            return dict(shape=list(y.shape),dtype=str(y.dtype),sha256=hashlib.sha256(memoryview(y.numpy())).hexdigest())
         if isinstance(x, dict):return {k:encode(v) for k,v in x.items()}
         if isinstance(x,(tuple,list)):return [encode(v) for v in x]
         return x

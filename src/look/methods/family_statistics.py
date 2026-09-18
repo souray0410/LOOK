@@ -92,7 +92,7 @@ class FamilyStatistics:
             return self._collect(path, sid, pattern, upstream, sites)
 
     def _collect(self, path, sid, pattern, upstream, sites):
-        stats = {n:ResidualMoments.empty(self.bases[n].std.numel()) for n in sites}
+        stats = None
         projected = {n:{q:ResidualMoments.empty(q) for q in self.projected_ranks} for n in sites}
         for n in sites:
             if any(q > len(self.bases[n].components) for q in self.projected_ranks):
@@ -111,11 +111,17 @@ class FamilyStatistics:
             if saved['complete']:
                 self.metrics['completed_hits'] += 1
                 return stats
+            del record, saved
+        else:
+            stats = {n:ResidualMoments.empty(self.bases[n].std.numel()) for n in sites}
         cursor = len(stamps)
         def save(complete=False):
             payload = dict(identity=sid, sites=list(sites), batch_stamps=stamps,
-                           complete=complete, statistics={n:asdict(s) for n,s in stats.items()},
-                           projected={n:{q:asdict(v) for q,v in qs.items()} for n,qs in projected.items()})
+                           # Synchronous save under the collection lock: tensor
+                           # references cannot mutate until atomic_save returns.
+                           # asdict would deep-copy every dense statistic.
+                           complete=complete, statistics={n:vars(s).copy() for n,s in stats.items()},
+                           projected={n:{q:vars(v).copy() for q,v in qs.items()} for n,qs in projected.items()})
             atomic_save(path, dict(payload=payload, sha256=fingerprint(payload)))
         count = 0
         for index, batch in enumerate(self.loader):
