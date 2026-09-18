@@ -67,3 +67,22 @@ def test_reject_incomplete_delivery_and_then_publish_increment(tmp_path):
     receipt(v['results']);new=publish(tmp_path,out)
     assert new['matched_package']=='accepted' and len(new['results'])==6
     assert new['source_evidence_sha256']!=v['source_evidence_sha256']
+
+
+def test_tree_detail_provenance_and_readable_matching_table(tmp_path):
+    s=fixture(tmp_path);folder=tmp_path/'residual_rrr/corrections/oct_missing'
+    contract=dict(identity=dict(identity=stable_hash(s),candidates=[dict(rank=32,ridge_lambda=None)],penalty_policy='prefix_train_pca_gcv'),sites=['fusion_features'])
+    (folder/'contract.json').write_text(json.dumps(contract));artifact=folder/'selected.pt';artifact.write_bytes(b'map')
+    node=dict(node='fusion_features',index=7,artifact='selected.pt',sha256=file_sha256(artifact),score=.6)
+    tree=dict(contract_sha256=file_sha256(folder/'contract.json'),mode='positive_forward_tree',
+        decisions=[dict(path=[],baseline={'score':.5},candidates=[node])],selected_path=[node],
+        final={'metrics':{'macro_f1':.6,'macro_auroc_ovr':.7}},candidate_evaluations=1,prefix_count=2,site_attempts=1)
+    (folder/'selection.json').write_text(json.dumps(tree));(folder/'feature_costs.json').write_text(json.dumps(dict(full_forwards=1,missing_forwards=1,completed_hits=0,skipped_batches=0)))
+    out=tmp_path/'public';v=publish(tmp_path,out)
+    assert v['search_details'][0]['selected_path'][0]['node']=='fusion_features'
+    content=(out/'README.md').read_text()
+    assert '|输入情况|不修正|PCA方向约束＋树|自由低秩残差＋树|' in content
+    assert '⑧每眼特征向量' in content and '正收益树' in content
+    before=(out/'current.json').read_bytes();artifact.write_bytes(b'corrupt')
+    with pytest.raises(ValueError,match='Selected search artifact changed'):publish(tmp_path,out)
+    assert (out/'current.json').read_bytes()==before

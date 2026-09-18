@@ -1,12 +1,12 @@
 {
   "state": "passed",
-  "verified_at": 1789717452.2254674,
+  "verified_at": 1789718030.475858,
   "run_id": "2026_09_18_09_35_40",
   "records_checked": 8,
   "unique_result_rows": 6,
   "participants": 296,
   "identity": "aec06fceafde5ac3706e37d71572f15a20a76b9158de635ffb448f2621fe5c4c",
-  "publication_source_sha256": "2893b840d0273ccbfa1be13e8f89351099b0e04ce13e6feb1b222ebcfe62c30d",
+  "publication_source_sha256": "684e64e6eafdf68638b2cd0c5fa2fac832d60dbf340e17484171d83a1d728b4b",
   "prediction_sha_and_independent_f1_auroc": true,
   "paired_order_and_shared_host": true,
   "repeat_publish_unchanged": true,
@@ -17,8 +17,8 @@
     "scientific_outputs_changed": false
   },
   "files": {
-    "current.json": "d18f7bd4355c3aef6776603776209e2b6bcc24411b3e1b96651c16111db5e336",
-    "README.md": "0623019f7ebba3e3146070823c66b11e554fa1258ac28c6936d632317c6df042"
+    "current.json": "3d08161ac012f26a02c8196941e599408ddab9caa554490b39fdcb9adc7934f3",
+    "README.md": "9e76751d0978cdafedd7537e407a13ea457833c0954d525a831f4b3a6fb12a18"
   },
   "test_access": false
 }
