@@ -32,6 +32,7 @@ def publish(root,output):
         r=read(p)
         if r['state']!='accepted' or r['identity']!=identity:raise ValueError('Unaccepted or mismatched source')
         if role=='host':
+            public['host_metrics']=r['metrics']
             for name,sha in r['files'].items():
                 if file_sha256(path/name)!=sha:raise ValueError('Host archive changed')
             for name in ('best.pt','last.pt'):
@@ -65,6 +66,8 @@ def publish(root,output):
     states={'running':'执行中','completed':'该步骤已完成','not_started':'尚未开始','needs_review':'失败待修复'}
     for stage,v in public['states'].items():lines.append(f'|{stage_names[stage]}|{states.get(v["state"],v["state"])}|')
     if 'host_progress' in public:lines.append('\n宿主进度（不是方法结果）：'+json.dumps(public['host_progress'],ensure_ascii=False))
+    if 'host_metrics' in public:
+        m=public['host_metrics'];lines.append(f'\n完整输入共同宿主：Macro-F1 {100*m["macro_f1"]:.3f}%，AUROC {100*m["macro_auroc_ovr"]:.3f}%；已通过重放。这不是缺失矫正增益。')
     lines+=['','## 已验收结果','']
     if not public['results']:lines.append('尚无已验收的修正方法结果，不把宿主训练中的分数作为方法增益。')
     else:

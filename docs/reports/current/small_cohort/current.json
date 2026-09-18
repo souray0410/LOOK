@@ -4,7 +4,24 @@
     "residual_rrr",
     "pca_free_mean"
   ],
-  "artifacts": [],
+  "artifacts": [
+    {
+      "access": "restricted",
+      "artifact_ref": "LOOK/2026_09_18_09_35_40/host/best.pt",
+      "availability": "available",
+      "github_payload": false,
+      "role": "selected_host",
+      "sha256": "48a211ce9eff6679d1adbcc489ce9c843b5665921363ae750f7d0e7a98060fac"
+    },
+    {
+      "access": "restricted",
+      "artifact_ref": "LOOK/2026_09_18_09_35_40/host/last.pt",
+      "availability": "available",
+      "github_payload": false,
+      "role": "full_resume",
+      "sha256": "4543f7a126162bd8c6ad42f42e7e2dd0dd9130c9945e53cbae56d890e99447c0"
+    }
+  ],
   "configuration_id": "aec06fceafde5ac3706e37d71572f15a20a76b9158de635ffb448f2621fe5c4c",
   "data": {
     "development": 296,
@@ -15,12 +32,65 @@
   },
   "factor": 16,
   "framework_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0",
+  "host_metrics": {
+    "accuracy": 0.6925675675675675,
+    "auprc_per_class": [
+      0.68314194647828,
+      0.773573921361974
+    ],
+    "auroc_per_class": [
+      0.7445215485756027,
+      0.7445215485756026
+    ],
+    "balanced_accuracy": 0.6925675675675675,
+    "cohen_kappa": 0.3851351351351351,
+    "confusion_matrix": [
+      [
+        108,
+        40
+      ],
+      [
+        51,
+        97
+      ]
+    ],
+    "ece_15": 0.19403121443290347,
+    "f1_per_class": [
+      0.7035830618892508,
+      0.6807017543859649
+    ],
+    "macro_auprc_ovr": 0.7283579339201269,
+    "macro_auroc_ovr": 0.7445215485756026,
+    "macro_f1": 0.6921424081376079,
+    "multiclass_brier": 0.47523034833857186,
+    "negative_log_likelihood": 0.980589222674633,
+    "precision_per_class": [
+      0.6792452830188679,
+      0.708029197080292
+    ],
+    "probability_saturation": {
+      "max_abs_logit_difference": 15.833804607391357,
+      "rows_float32": 0,
+      "rows_float64": 0,
+      "total_rows": 296
+    },
+    "ranking_score": "logit_1_minus_logit_0",
+    "sensitivity_per_class": [
+      0.7297297297297297,
+      0.6554054054054054
+    ],
+    "specificity_per_class": [
+      0.6554054054054054,
+      0.7297297297297297
+    ],
+    "weighted_f1": 0.6921424081376079
+  },
   "host_progress": {
-    "epoch": 19,
-    "offset": 896,
-    "state": "training",
-    "updated_at": 1789713777.4542124,
-    "updates": 187
+    "epoch": 28,
+    "offset": 0,
+    "state": "completed",
+    "updated_at": 1789713932.3980505,
+    "updates": 270
   },
   "initialization": {
     "kind": "public_imagenet_fresh_host",
@@ -42,14 +112,18 @@
   "source_commit": "b64ea90",
   "states": {
     "host": {
-      "state": "running",
-      "time": 1789713428.3120935
+      "gpu_peak_reserved_bytes": 7082082304,
+      "state": "completed",
+      "time": 1789713932.4001162
     },
     "pca": {
-      "state": "not_started"
+      "gpu_peak_reserved_bytes": 1952448512,
+      "state": "completed",
+      "time": 1789714012.0731416
     },
     "pca_free_mean": {
-      "state": "not_started"
+      "state": "running",
+      "time": 1789714014.7196767
     },
     "profile": {
       "gpu_peak_reserved_bytes": 6928990208,
@@ -57,7 +131,8 @@
       "time": 1789713369.6745832
     },
     "residual_rrr": {
-      "state": "not_started"
+      "state": "running",
+      "time": 1789714014.6987524
     }
   },
   "training": {

@@ -10,7 +10,7 @@
   ],
   "source_commit": "b64ea908edb2a5ae70d7c57af3a41e5599876838",
   "evidence_cutoff": "2026-09-18T03:45:00+00:00",
-  "verified_at": "2026-09-18T06:42:56.915703+00:00",
+  "verified_at": "2026-09-18T06:51:38.217944+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -95,7 +95,8 @@
     "2026-09-18 03:45UTC：正收益树自动双状态重放/报告/累计发布，root独立验392+5文件SHA、四份预测指标与跨策略同序宿主输出、选中权重。完整配置接受；完整周包与其他种子未放行。",
     "2026-09-18实现完整维度多位置充分统计缓存、同前缀GCV参考规则、独立family runner与原dispatcher任务类型；当前为代码验收，正式部署/领取待单列回执，不能复用低维PCA缓存冒充自由拟合。",
     "2026-09-18 05:34UTC：自由均值低秩残差134份GPU预检产物SHA通过，原run在51919716.23全量入口实际统计224批。owner_v7唯一CPU/watcher接替通过，原claims拒绝重复领取RRR、PCA自由均值可候选；10LOOK绑定更新、其余11项不变。两臂匹配及跨租期恢复仍待验收，旧结果cutoff不刷新。",
-    "2026-09-18 ws02小队列fresh-host匹配包已实际启动：1264train/296dev，3416/ResNet50deep/x16/q32，两自由均值拟合臂。43CPU及真实GPU预检通过；目录绑定故障修复后正式22→71更新、epoch3→8，best/last及验证history推进。完整拟合结果尚无，Ibex原结果保留原cutoff；详见ws02_cohort_delivery_20260918.md。"
+    "2026-09-18 ws02小队列fresh-host匹配包已实际启动：1264train/296dev，3416/ResNet50deep/x16/q32，两自由均值拟合臂。43CPU及真实GPU预检通过；目录绑定故障修复后正式22→71更新、epoch3→8，best/last及验证history推进。完整拟合结果尚无，Ibex原结果保留原cutoff；详见ws02_cohort_delivery_20260918.md。",
+    "2026-09-18 06:51UTC：ws02共同宿主按原平台规则27轮停止、best12、270更新，重放接受；独立重算296人完整输入Macro-F1=69.2142%、AUROC=74.4522%。9/9 PCA基完成，两自由均值方法已分别在双GPU完成首前缀79train批并评候选。仅宿主接受，尚无完整缺失方法比较。权重SHA已入小队列current.json，受限资产不上传。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
