@@ -72,3 +72,25 @@ Review has both machine-checkable invariants and scientific judgment. Documentin
 this rule does not install a new automatic checker or repair a missing algorithm.
 For any promised automatic check, name its executable, deployment and acceptance
 receipt; otherwise explicitly mark it as a review obligation or implementation gap.
+
+## Necessity and information gained before dispatch (2026-09-18)
+
+The responsible researcher must review each proposed comparison before execution:
+state the unresolved question and a result that could change the interpretation;
+check whether definitions, algebraic equivalence or nested feasible sets already
+imply the claimed conclusion; identify the smallest informative matched control;
+audit exact evidence/cache reuse; and justify cost against the finite delivery.
+Record the disposition: proof plus implementation invariant, accepted reuse,
+necessary empirical experiment, retained later phase, or explicitly authorized
+cancellation. Do not turn all possible combinations into mandatory experiments.
+
+A theoretical search-set dominance result can remove a redundant selected-dev
+performance experiment under its stated equal-operator/candidate/score/budget
+conditions. It does not establish held-out generalization, finite-budget dominance,
+wall time, calibration or clinical utility. Verify theoretical invariants with
+synthetic tests and reserve real data for genuinely unresolved empirical claims.
+Separate full independently selected pipelines from fixed-prefix/parameter
+mechanism ablations; a small mechanism question need not spawn a full search tree.
+Keep completed evidence and healthy workers. Scope/primary-comparison changes
+follow current user authorization. Documenting this review is not a universal
+automated scientific-judgment engine or proof of production deployment.

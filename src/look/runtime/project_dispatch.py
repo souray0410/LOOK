@@ -73,6 +73,12 @@ def work(config):
         if stage.get('schema')!='look_search_work_feed_v1' or stage.get('test_access') is not False:
             raise ValueError('Unsealed search-policy feed')
         result.extend(dict(t,execution='look_search') for t in stage['tasks'])
+    for path in config.get('family_search_feeds',[]):
+        stage=read(path)
+        if not stage:continue
+        if stage.get('schema')!='look_family_search_feed_v1' or stage.get('test_access') is not False:
+            raise ValueError('Unsealed family search feed')
+        result.extend(dict(t,execution='look_family_search') for t in stage['tasks'])
     for path in config.get('suffix_feeds',[]):
         stage=read(path)
         if not stage:continue
@@ -121,6 +127,8 @@ def eligible(task,claims):
         else:
             if task['execution'] in ('look_affine_terminal','look_affine_progressive'):
                 from look.studies.affine_case import verify_case
+            elif task['execution']=='look_family_search':
+                from look.studies.family_search_case import verify_case
             elif task['execution']=='look_search':
                 from look.studies.search_case import verify_case
             elif task['execution']=='look_suffix':
@@ -183,6 +191,9 @@ def admissible_work(config, claims):
         candidates, held = filter_tasks(candidates, config['weekly_delivery_policy'])
         rejected.extend(held)
     for task in candidates:
+        if task.get('execution')=='look_search' and task.get('search_mode') in config.get('deferred_search_modes',[]):
+            rejected.append(dict(run=task['run_dir'],reason='explicit_scientific_priority_amendment',search_mode=task['search_mode']))
+            continue
         if (not config.get('delivery_policy') and task.get('execution')=='look_search' and task.get('search_mode')=='greedy'
             and counts['greedy']>=config.get('search_control_maximum',2)):continue
         if not eligible(task, claims): continue
@@ -201,7 +212,7 @@ def verify_delivery_dependency(entry):
     """Use the same case verifier as formal completion; never trust a flag."""
     import importlib
     kind=entry['execution'];spec=read(entry['spec'])
-    modules={'look':'project_case','look_search':'search_case','look_suffix':'suffix_case',
+    modules={'look':'project_case','look_family_search':'family_search_case','look_search':'search_case','look_suffix':'suffix_case',
         'look_terminal':'terminal_case','look_linear':'linear_case','look_spatial':'spatial_case',
         'look_mechanism':'mechanism_case','look_affine_terminal':'affine_case','look_affine_progressive':'affine_case'}
     if kind=='native':
@@ -262,7 +273,7 @@ def reconcile_expired(config):
         if state not in ('TIMEOUT','PREEMPTED','NODE_FAIL'):continue
         checkpoint=run/('last.pt' if task['execution']=='native' else 'training/last.pt' if task['execution']=='look_mechanism' else 'host/last.pt')
         if not checkpoint.is_file():
-            if task['execution'] not in ('look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_affine_terminal','look_affine_progressive'):continue
+            if task['execution'] not in ('look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_family_search','look_affine_terminal','look_affine_progressive'):continue
             # Fitting can restart at its last accepted site; prior process death
             # has been established above, never inferred from heartbeat age.
             checkpoint=Path(task['spec'])
@@ -374,13 +385,13 @@ def gpu_owner(config_path):
         if not candidates:break
         prior=read(root/'last_execution.json').get('kind')
         primary=[t for t in candidates if t['execution']=='look']
-        supplement=[t for t in candidates if t['execution'] in ('look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_affine_terminal','look_affine_progressive')]
+        supplement=[t for t in candidates if t['execution'] in ('look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_family_search','look_affine_terminal','look_affine_progressive')]
         if config.get('delivery_policy'):task=candidates[0]
-        elif supplement and (not primary or prior=='look' or any(t['execution'] in ('look_terminal','look_suffix','look_search','look_affine_terminal') for t in supplement)):
+        elif supplement and (not primary or prior=='look' or any(t['execution'] in ('look_terminal','look_suffix','look_search','look_family_search','look_affine_terminal') for t in supplement)):
             # Neural continuations first, then controls, then sample curves.
             priority={'host_training':0,'student_training':1,'correction':2,'sample_curve':3}
             search_counts=active_search_modes(config,claims)
-            supplement.sort(key=lambda t: -5 if t['execution']=='look_search' and t.get('search_mode')=='greedy' and search_counts['best_forward']>0 else -4 if t['execution']=='look_search' and t.get('search_mode')=='best_forward' else -3 if t['execution']=='look_search' else -2 if t['execution'] in ('look_terminal','look_suffix','look_search','look_affine_terminal') else -1 if t['execution'] in ('look_spatial','look_linear','look_affine_progressive') else priority[read(t['spec'])['task']['kind']])
+            supplement.sort(key=lambda t: -6 if t['execution']=='look_family_search' else -5 if t['execution']=='look_search' and t.get('search_mode')=='greedy' and search_counts['best_forward']>0 else -4 if t['execution']=='look_search' and t.get('search_mode')=='best_forward' else -3 if t['execution']=='look_search' else -2 if t['execution'] in ('look_terminal','look_suffix','look_search','look_family_search','look_affine_terminal') else -1 if t['execution'] in ('look_spatial','look_linear','look_affine_progressive') else priority[read(t['spec'])['task']['kind']])
             task=supplement[0]
         else:task=primary[0] if primary else candidates[0]
         atomic_write_json(dict(kind=task['execution']),root/'last_execution.json')
@@ -415,7 +426,7 @@ def gpu_owner(config_path):
             if r.get('step') and step is None:
                 step=r['step'];claims.update(run,owner,state='running',step=step)
             if priority is not None:
-                try:priority.poll([t for t in work(config) if t['execution'] not in ('native','look_spatial','look_linear','look_suffix','look_search','look_affine_terminal','look_affine_progressive') and eligible(t,claims)])
+                try:priority.poll([t for t in work(config) if t['execution'] not in ('native','look_spatial','look_linear','look_suffix','look_search','look_family_search','look_affine_terminal','look_affine_progressive') and eligible(t,claims)])
                 except Exception as exc:
                     atomic_write_json(dict(state='priority_deferred',error=repr(exc)),attempt/'priority_error.json')
             if time.time()>end-900:
@@ -442,6 +453,8 @@ def gpu_owner(config_path):
             else:
                 if task['execution'] in ('look_affine_terminal','look_affine_progressive'):
                     from look.studies.affine_case import verify_case
+                elif task['execution']=='look_family_search':
+                    from look.studies.family_search_case import verify_case
                 elif task['execution']=='look_search':
                     from look.studies.search_case import verify_case
                 elif task['execution']=='look_suffix':
@@ -458,6 +471,13 @@ def gpu_owner(config_path):
                     from look.studies.project_case import verify_case
                 verify_case(run,spec)
             claims.release(run,owner,'completed',step_dead=True)
+            if task['execution']=='look_family_search':
+                from look.analysis.family_search_report import report as family_report
+                family_report(run)
+                if config.get('family_search_package_feed'):
+                    from look.analysis.family_search_report import refresh_package
+                    refresh_package(config['family_search_package_feed'],config['family_search_package_output'],
+                        arms=tuple(config['family_search_package_arms']))
             if task['execution']=='look_search' and config.get('delivery_sequence'):
                 try:
                     from look.studies.search_delivery_queue import refresh
@@ -473,7 +493,7 @@ def gpu_owner(config_path):
 def execute_work(config_path,spec_path,run,kind,record):
     import torch
     config=read(config_path);spec=read(spec_path);run=Path(run)
-    if kind in ('look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_affine_terminal','look_affine_progressive'):
+    if kind in ('look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_family_search','look_affine_terminal','look_affine_progressive'):
         # Each scientific task executes its own immutable pin, including when a
         # newer management overlay dispatches an older accepted study.
         import look
@@ -481,7 +501,7 @@ def execute_work(config_path,spec_path,run,kind,record):
                for row in spec.get('source_pins',[]) if '/src/look/' in row['path']}
         if len(roots)!=1:raise ValueError('Ambiguous pinned scientific package')
         source=next(iter(roots))
-        if kind != 'look_search' and Path(look.__file__).resolve().parent!=Path(source)/'look':
+        if kind not in ('look_search','look_family_search') and Path(look.__file__).resolve().parent!=Path(source)/'look':
             env=os.environ.copy();env['PYTHONPATH']=source+':'+env.get('PYTHONPATH','')
             os.execvpe(config['python'],[config['python'],'-m','look.runtime.project_dispatch',
                 '--config',str(config_path),'--execute',str(spec_path),'--run',str(run),
@@ -520,8 +540,10 @@ def execute_work(config_path,spec_path,run,kind,record):
         environment['LOOK_AFFINE_PROFILE_RECEIPT']=str(receipt_path)
         os.execvpe(config['python'],[config['python'],'-m','look.studies.affine_case',
             '--spec',str(spec_path),'--output',str(run)],environment)
-    elif kind=='look_search':
+    elif kind in ('look_search','look_family_search'):
         from look.runtime.profile_lifecycle import run_profile, profile_pause_state
+        case_module='look.studies.family_search_case' if kind=='look_family_search' else 'look.studies.search_case'
+        receipt_key='LOOK_FAMILY_SEARCH_PROFILE_RECEIPT' if kind=='look_family_search' else 'LOOK_SEARCH_PROFILE_RECEIPT'
         # Management may evolve, while the original scientific module always
         # executes from its exact pinned source in a fresh interpreter.
         environment['PYTHONPATH']=source+':'+environment.get('PYTHONPATH','')
@@ -532,7 +554,7 @@ def execute_work(config_path,spec_path,run,kind,record):
         if existing and existing != spec:raise ValueError('Persistent resource profile identity changed')
         (profile_root/'pause.json').unlink(missing_ok=True)
         try:
-            run_profile([config['python'],'-m','look.studies.search_case','--spec',str(spec_path),
+            run_profile([config['python'],'-m',case_module,'--spec',str(spec_path),
                 '--output',str(profile_root),'--profile'],environment)
         except SystemExit as error:
             if error.code==75:profile_pause_state(run,profile_root)
@@ -540,8 +562,8 @@ def execute_work(config_path,spec_path,run,kind,record):
         receipt_path=profile_root/'profile_accepted.json';receipt=read(receipt_path)
         if receipt.get('state')!='accepted' or receipt.get('identity')!=stable_hash(spec):
             raise ValueError('Search resource preflight failed')
-        environment['LOOK_SEARCH_PROFILE_RECEIPT']=str(receipt_path)
-        os.execvpe(config['python'],[config['python'],'-m','look.studies.search_case',
+        environment[receipt_key]=str(receipt_path)
+        os.execvpe(config['python'],[config['python'],'-m',case_module,
             '--spec',str(spec_path),'--output',str(run)],environment)
     elif kind=='look_suffix':
         environment['LOOK_WORKER_MEMORY_BYTES']=str(100*1024**3)
@@ -633,7 +655,7 @@ def configure_control_imports(config):
 def main():
     p=argparse.ArgumentParser();p.add_argument('--config',required=True)
     p.add_argument('--standby',action='store_true');p.add_argument('--allocation-owner',action='store_true');p.add_argument('--gpu-owner',action='store_true')
-    p.add_argument('--execute');p.add_argument('--kind',choices=['native','look','look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_affine_terminal','look_affine_progressive']);p.add_argument('--record');p.add_argument('--run');p.add_argument('--profile-project');p.add_argument('--profile-mechanism')
+    p.add_argument('--execute');p.add_argument('--kind',choices=['native','look','look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_family_search','look_affine_terminal','look_affine_progressive']);p.add_argument('--record');p.add_argument('--run');p.add_argument('--profile-project');p.add_argument('--profile-mechanism')
     a=p.parse_args()
     configure_control_imports(read(a.config))
     if a.standby:standby(a.config)

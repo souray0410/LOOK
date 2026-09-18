@@ -109,3 +109,64 @@ def test_invalid_scores_and_test_access_rejected(tmp_path, score, role):
         fit_trajectory(identity='x', sites=['a'], mode='positive_forward_tree', output=tmp_path,
             fit_candidates=lambda *a: [('q', 0)], evaluate=lambda b: dict(role=role, score=score),
             save_artifact=lambda a,p: p.write_text('0'), load_artifact=lambda p: 0)
+
+
+@pytest.mark.parametrize('scores', [
+    # Best-forward takes the late root; the tree retains it and a better deep path.
+    {(): .5, ('a',): .6, ('b',): .4, ('c',): .8,
+     ('a','b'): .7, ('a','c'): .59, ('a','b','c'): .9},
+    # b is harmful at root but useful after a; final equal gains are disabled.
+    {(): .5, ('a',): .7, ('b',): .4, ('c',): .6,
+     ('a','b'): .8, ('a','c'): .7, ('a','b','c'): .8},
+    # Equal root winners choose the earlier site; candidate ties use key order.
+    {(): .5, ('a',): .7, ('b',): .7, ('c',): .6,
+     ('a','b'): .8, ('a','c'): .75, ('b','c'): .85,
+     ('a','b','c'): .8},
+    # Both searches retain the empty path when all root gains are nonpositive.
+    {(): .5, ('a',): .5, ('b',): .4, ('c',): .45},
+])
+def test_tree_contains_best_forward_under_identical_prefix_fits_and_dev_rule(tmp_path, scores):
+    """Finite deterministic algorithm invariant, not an empirical efficacy claim.
+
+    Assumptions: same sites/candidate keys, deterministic fitting conditional on
+    the entire prefix, identical dev scores, strict-positive gating and shared
+    per-site candidate tie rule. This says nothing about unseen/test performance
+    or compute cost; more retained dev alternatives do not establish either.
+    """
+    fits = {}
+    def run(mode):
+        seen = {}
+        def fit(site, bank, where):
+            prefix = [(a['site'], a['key']) for a in bank]
+            # Deliberately emit reverse tie order to exercise key tie-breaking.
+            for key in ('z', 'a', 'bad'):
+                artifact = dict(site=site, key=key, fitted_prefix=[list(x) for x in prefix])
+                seen[(tuple(prefix), site, key)] = artifact
+                yield key, artifact
+        def evaluate(bank):
+            for i, artifact in enumerate(bank):
+                assert artifact['fitted_prefix'] == [[a['site'],a['key']] for a in bank[:i]]
+            path = tuple(a['site'] for a in bank)
+            value = scores.get(path, .1)
+            if bank and bank[-1]['key'] == 'bad':
+                value -= .2
+            return dict(role='development', score=value)
+        result = fit_trajectory(identity='matched-prefix-fixture', sites=list('abc'), mode=mode,
+            output=tmp_path/mode, fit_candidates=fit, evaluate=evaluate,
+            save_artifact=lambda a,p:p.write_text(json.dumps(a)),
+            load_artifact=lambda p:json.loads(p.read_text()))
+        fits[mode] = seen
+        return result
+
+    best_bank,best = run('best_forward')
+    _,tree = run('positive_forward_tree')
+    best_path = tuple((a['site'],a['key']) for a in best_bank)
+    retained = {tuple((r['node'],r['key']) for r in d['path']) for d in tree['decisions']}
+    assert best_path in retained
+    assert all(best_path[:length] in retained for length in range(len(best_path)+1))
+    assert tree['final']['score'] >= best['final']['score']
+    assert all(a['key'] == 'a' for a in best_bank)
+    # Every fit consulted by best-forward exists identically in the tree, including
+    # rejected candidates; no stale parent artifacts can manufacture containment.
+    for identity, artifact in fits['best_forward'].items():
+        assert fits['positive_forward_tree'][identity] == artifact

@@ -9,16 +9,14 @@ import json
 import hashlib
 import math
 from pathlib import Path
-import time
 import torch
 
 from look.methods.affine_family import ARMS, FamilyArtifact, fit_map
 from look.methods.independent_greedy import fit_trajectory, SelectionPaused
 from look.methods.linear_operator import fingerprint
-from look.methods.linear_vector import ResidualMoments, estimated_workspace_bytes
-from look.methods.operator import LOOKArtifact, iter_feature_pairs
+from look.methods.operator import LOOKArtifact, _gcv_lambda
 from look.runtime.host_checkpoint import atomic_save
-from look.runtime.state import stable_hash, atomic_write_json
+from look.runtime.state import atomic_write_json
 from look.evaluation.evaluator import evaluate_missing, save_prediction_bundle
 
 
@@ -27,7 +25,13 @@ RANKED = ('shared_pca_ridge', 'rrr_shared_intercept', 'residual_rrr',
 BASIS_CONSTRAINED = ('shared_pca_ridge', 'rrr_shared_intercept', 'pca_free_mean')
 
 
-def validate_candidates(arm, candidates):
+def validate_candidates(arm, candidates, penalty_policy='fixed'):
+    if penalty_policy not in ('fixed', 'prefix_train_pca_gcv'):
+        raise ValueError('Unknown penalty policy')
+    if penalty_policy == 'prefix_train_pca_gcv':
+        if arm not in RANKED or any(c.get('ridge_lambda') is not None for c in candidates):
+            raise ValueError('Train PCA GCV requires ranked candidates with null ridge_lambda')
+        candidates = [dict(c, ridge_lambda=1.) for c in candidates]
     if arm not in ARMS or not candidates:
         raise ValueError('Registered arm and explicit nonempty candidate table required')
     keys = []
@@ -52,8 +56,9 @@ def validate_candidates(arm, candidates):
 
 def fit_family_trajectory(graph, train_loader, dev_loader, *, arm, pattern, sites,
                           factor, candidates, pca_bank, identity, output, device,
-                          workspace_bytes, mode='best_forward', should_pause=lambda:False):
-    validate_candidates(arm, candidates)
+                          workspace_bytes, mode='best_forward', should_pause=lambda:False,
+                          penalty_policy='fixed'):
+    validate_candidates(arm, candidates, penalty_policy)
     if (getattr(train_loader.dataset, 'split', None) != 'train'
         or getattr(train_loader.dataset, 'augment', None) is not False
         or train_loader.drop_last):
@@ -75,38 +80,29 @@ def fit_family_trajectory(graph, train_loader, dev_loader, *, arm, pattern, site
             raise ValueError('Every eligible node requires a unique frozen basis')
         bases[site]=matches[0]
     scientific_identity=dict(identity=identity, arm=arm, pattern=pattern,
-        factor=factor, candidates=candidates, data_role=dev_loader.dataset.split,
+        factor=factor, candidates=candidates, penalty_policy=penalty_policy, data_role=dev_loader.dataset.split,
         bases={k:fingerprint(asdict(v)) for k,v in bases.items()})
+
+    from look.methods.family_statistics import FamilyStatistics
+    collector = FamilyStatistics(graph, train_loader, bases, device, root/'family_moments',
+        scientific_identity, workspace_bytes, max(c['rank'] or 1 for c in candidates), should_pause,
+        projected_ranks=sorted({c['rank'] for c in candidates}) if penalty_policy == 'prefix_train_pca_gcv' else ())
+    ready = {}
 
     def fit(site, upstream, folder):
         b=bases[site]; d=b.std.numel(); folder.mkdir(parents=True,exist_ok=True)
-        if not torch.isfinite(b.mean).all() or not torch.isfinite(b.std).all() or not (b.std>0).all():
-            raise ValueError('Finite train normalization and positive scales required')
-        rank=max(c['rank'] or 1 for c in candidates)
-        if estimated_workspace_bytes(d,rank)>workspace_bytes:
-            raise MemoryError('Dense fitting exceeds admitted workspace; no silent compression')
         sid=fingerprint(dict(identity=scientific_identity,site=site,
                              upstream=[a.record() for a in upstream]))
-        path=folder/'moments.pt'; stats=ResidualMoments.empty(d); cursor=0
-        if path.exists():
-            saved=torch.load(path,map_location='cpu',weights_only=False)
-            if saved['identity']!=sid or fingerprint(saved['statistics'])!=saved['sha256']:
-                raise ValueError('Fitting statistics or upstream identity changed')
-            stats=ResidualMoments(**saved['statistics']);cursor=saved['batches']
-            if type(cursor) is not int or cursor<0:
-                raise ValueError('Invalid fitting cursor')
-        def save(n):
-            state=asdict(stats)
-            atomic_save(path,dict(identity=sid,statistics=state,sha256=fingerprint(state),batches=n))
-        n=0;last=time.monotonic()
-        for n,(full,missing,_,_) in enumerate(iter_feature_pairs(graph,train_loader,site,pattern,
-                b.factor,device,upstream,spatial_method=b.spatial_method),1):
-            if n<=cursor:continue
-            if should_pause():save(n-1);raise SelectionPaused()
-            stats.update((missing-b.mean)/b.std,(full-missing)/b.std)
-            if time.monotonic()-last>=120:save(n);last=time.monotonic()
-        if n<cursor:raise ValueError('Fitting stream shortened')
-        save(n)
+        prefix = fingerprint([a.record() for a in upstream])
+        multi = mode in ('best_forward', 'positive_forward_tree')
+        key = (prefix, None if multi else site)
+        if key not in ready:
+            start = max((sites.index(a.node_name) for a in upstream), default=-1)+1
+            targets = list(sites[start:]) if multi else [site]
+            ready.clear()
+            ready[key] = collector.statistics(pattern, upstream, targets)
+            atomic_write_json(collector.metrics, root/'feature_costs.json')
+        stats = ready[key][site]
         if should_pause():raise SelectionPaused()
         for c in candidates:
             # None stays visible in candidate provenance; dummy values below only
@@ -115,13 +111,18 @@ def fit_family_trajectory(graph, train_loader, dev_loader, *, arm, pattern, site
             if q>min(d,stats.count-1) or (arm in BASIS_CONSTRAINED and q>len(b.components)):
                 raise ValueError('Locked rank infeasible; no clipping or silent skipping')
             basis=b.components[:q]
+            if penalty_policy == 'prefix_train_pca_gcv':
+                projected = collector.projected[site][q]
+                q_basis = basis.to(dtype=torch.float64, device='cpu')
+                lam = _gcv_lambda(q_basis @ stats.cxx @ q_basis.T,
+                    q_basis @ stats.cxy @ q_basis.T, float(projected.syy), stats.count, q)
             a=LOOKArtifact(site,pattern,'normalized_mean',b.factor,q,b.feature_shape,
                 b.downsample_shape,b.mean,b.std,b.pca_mean,basis,
                 torch.zeros(q,q),torch.zeros(q),lam,0.,0.,
                 float(b.explained_variance_ratio[:q].sum()),b.fit_seconds,b.peak_rss_bytes,
                 b.source_id,b.member_names,b.member_shapes,b.protocol,b.split_rule,b.spatial_method)
             mapping=fit_map(stats,q,lam,arm=arm,basis=basis)
-            mapping.diagnostics.update(selection='independent_per_node',declared_candidate=c,
+            mapping.diagnostics.update(selection='independent_per_node',declared_candidate=c,penalty_policy=penalty_policy,
                 upstream_identity=sid, reference_configuration_inherited=False,
                 note='Independently selected within the declared candidate table; not a conditional PCA-selected control.')
             yield json.dumps(c,sort_keys=True),FamilyArtifact(a,mapping)
