@@ -52,3 +52,13 @@ Read workspace/EFFICIENCY_STANDARD.md: proactively measure repeated computation,
 For research reports, figures, cumulative pages and weekly delivery, apply workspace/SCIENTIFIC_COMMUNICATION_STANDARD.md. Independently review whether an unfamiliar reader can identify the question, comparison, evidence, limitations and next action. Mechanical checks do not certify scientific interpretation; update generators with presentation changes.
 
 Read workspace/NAMING_STANDARD.md and run python workspace/check_terminology.py --root . before publication. Check generators and generated pages together; preserve machine identities and archived evidence.
+
+
+## Agent分工与等待（2026-09-18）
+
+- 子agent默认及最低 `gpt-5.6-sol`；更强模型须在当前主agent能力上限内核实选择。不使用更低档，不启用Fast/priority等加速服务；接口仅支持加速时由主agent执行。
+- 主agent负责计划方案、任务拆分、资源决策、集成与最终验收；子agent只执行明确的有限任务，发现矛盾/缺口回报，不自行重设计、扩大范围或再委派。
+- 依赖子任务时目标事件等待10分钟（600000ms），收到消息/完成/用户输入可提前返回；避免反复list/read/status轮询。遵守当前工具上限及更高优先级响应约束，不用短轮询循环或sleep绕过限制；不把此时间套到实验自适应巡检。
+- 健康在途任务不为换模型中断；下一次派发执行新策略，不能称修改文件已热切换既有agent。
+
+详细共同准则：[协作执行标准](workspace/PARALLEL_WORK_STANDARD.md)。
