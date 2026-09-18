@@ -84,6 +84,8 @@ def validate_member(spec):
         raise ValueError('Unregistered fusion-stage member scope')
     if spec.get('arms')!=list(METHODS) or spec.get('search')!='positive_forward_tree' or spec.get('test_access') is not False or 'mmtm' in spec:
         raise ValueError('Fusion-stage member changed')
+    if spec.get('disk_reserve_bytes')!=50*1024**3:
+        raise ValueError('Fusion-stage disk reserve changed')
     reference=spec.get('fusion_stage_reference',{})
     if reference!={'run_id':DEEP_RUN_ID,'spec_sha256':DEEP_SPEC_SHA256,'delivery_sha256':DEEP_DELIVERY_SHA256}:
         raise ValueError('Fusion-stage reference changed')
@@ -162,7 +164,7 @@ def prepare(reference_root,output,run_root,publication,sequence_id,source_root,s
         spec=copy.deepcopy(deep)
         spec.update(run_id=run_id,output=str(run_root/run_id),position=position,source_commit=source_commit,
             source_pins=pins,study_kind=STUDY_KIND,fusion_stage_task=TASK_ID,fusion_stage_reference=reference,
-            fusion_stage_structure=structures[position])
+            fusion_stage_structure=structures[position],disk_reserve_bytes=50*1024**3)
         root=Path(spec['output'])
         root.mkdir(parents=True,exist_ok=False)
         atomic_write_json(spec,root/'spec.json')

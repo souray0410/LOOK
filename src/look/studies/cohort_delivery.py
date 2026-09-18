@@ -83,7 +83,7 @@ def load_selected(s,root):
 
 def work(s,root,stage):
     import psutil
-    validate(s);root=Path(root);identity=stable_hash(s); stop=False
+    validate(s);root=Path(root);identity=stable_hash(s); stop=False;resource_peak={'rss':0}
     def request(*_):
         nonlocal stop
         stop=True
@@ -97,7 +97,8 @@ def work(s,root,stage):
     def check():
         if s.get('disk_reserve_bytes',0) and shutil.disk_usage(root).free<s['disk_reserve_bytes']:
             raise OSError('Artifact volume reserve breached; preserve existing outputs')
-        if psutil.Process().memory_info().rss>.85*s['ram_budget_bytes']:raise MemoryError('Host reserve breached')
+        rss=psutil.Process().memory_info().rss;resource_peak['rss']=max(resource_peak['rss'],rss)
+        if rss>.85*s['ram_budget_bytes']:raise MemoryError('Host reserve breached')
         if torch.cuda.mem_get_info()[0]<s['gpu_reserve_bytes']:raise MemoryError('Device reserve breached')
         return stop
     train=ArrayPair(s['data_root'],'train',augment=True,seed=s['seed'])
@@ -143,7 +144,35 @@ def work(s,root,stage):
         g,h=load_selected(s,root);frozen=cpu_tree(g.state_dict())
         bank=prepare_complete_pca_bank(g,loader(fit),correction_sites(g),[16],32,torch.device('cuda:0'),root/'pca',
             dict(case=identity,host_best_sha256=h['files']['best.pt']),root/'quarantine',load_only=stage!='pca',strict_rank=True)
-        if stage in ARMS:
+        if stage=='fit_profile':
+            if len(dev)!=296:raise ValueError('Fusion fitting profile requires full 296-person development set')
+            out=root/'profile/fitting';out.mkdir(parents=True,exist_ok=True)
+            torch.cuda.reset_peak_memory_stats();disk_before=shutil.disk_usage(root).free;records=[]
+            for arm in ARMS:
+                for pattern in PATTERNS:
+                    target=out/arm/pattern
+                    first=fit_family_trajectory(g,loader(fit),loader(dev),arm=arm,pattern=pattern,sites=correction_sites(g),
+                        factor=16,candidates=[dict(rank=32,ridge_lambda=None)],pca_bank=bank,identity=identity,
+                        output=target,device=torch.device('cuda:0'),workspace_bytes=s['workspace_bytes'],
+                        mode='positive_forward_tree',should_pause=check,penalty_policy='prefix_train_pca_gcv')
+                    names=('selection.json','bank.pt','replay.json','feature_costs.json')
+                    hashes={name:file_sha256(target/name) for name in names}
+                    second=fit_family_trajectory(g,loader(fit),loader(dev),arm=arm,pattern=pattern,sites=correction_sites(g),
+                        factor=16,candidates=[dict(rank=32,ridge_lambda=None)],pca_bank=bank,identity=identity,
+                        output=target,device=torch.device('cuda:0'),workspace_bytes=s['workspace_bytes'],
+                        mode='positive_forward_tree',should_pause=check,penalty_policy='prefix_train_pca_gcv')
+                    if hashes!={name:file_sha256(target/name) for name in names} or first[1]['final']!=second[1]['final']:
+                        raise ValueError('Fusion fitting profile recovery changed accepted evidence')
+                    records.append(dict(arm=arm,pattern=pattern,files=hashes,final=first[1]['final']))
+            state_equal(g,frozen);check();peak=torch.cuda.max_memory_reserved();disk_after=shutil.disk_usage(root).free
+            if peak>s['gpu_budget_bytes']:raise MemoryError('Fusion fitting profile GPU budget breached')
+            profile_bytes=sum(x.stat().st_size for x in out.rglob('*') if x.is_file())
+            atomic_write_json(dict(schema='look_fusion_fitting_profile_v1',state='accepted',identity=identity,test_access=False,
+                methods=list(ARMS),patterns=list(PATTERNS),development=len(dev),recovery_exact=True,records=records,
+                gpu_peak_reserved_bytes=peak,rss_peak_bytes=resource_peak['rss'],profile_bytes=profile_bytes,
+                disk_free_before=disk_before,disk_free_after=disk_after,disk_reserve_bytes=s.get('disk_reserve_bytes',0)),
+                out/'accepted.json')
+        elif stage in ARMS:
             out=root/stage;records=[]
             for pattern in PATTERNS:
                 atomic_write_json(dict(state='running',pattern=pattern,time=time.time()),out/'status.json')
@@ -204,7 +233,7 @@ def report(s,root):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--spec',required=True);p.add_argument('--stage',required=True,
-        choices=['pipeline','profile','host','pca',*ARMS,'report']);a=p.parse_args();s=read(a.spec);root=Path(s['output']);root.mkdir(parents=True,exist_ok=True)
+        choices=['pipeline','profile','host','pca','fit_profile',*ARMS,'report']);a=p.parse_args();s=read(a.spec);root=Path(s['output']);root.mkdir(parents=True,exist_ok=True)
     if a.stage=='report':report(s,root);return
     if a.stage=='pipeline':
         validate(s)
@@ -223,7 +252,7 @@ def main():
                 if previous.exists() and read(previous).get('state')=='needs_review':
                     atomic_write_json(read(previous),root/'incidents'/f'pipeline_before_resume_{time.time_ns()}.json')
                 atomic_write_json(dict(state='running',identity=stable_hash(s),time=time.time(),pid=os.getpid()),previous)
-                for stage in ('profile','host','pca'):
+                for stage in ('profile','host','pca','fit_profile'):
                     # Host checks its accepted receipt; all other stages verify/resume their own outputs.
                     if stage=='profile' and (root/'profile/accepted.json').exists():
                         if read(root/'profile/accepted.json')['identity']!=stable_hash(s):raise ValueError('Profile identity changed')
@@ -233,6 +262,10 @@ def main():
                         if receipt['identity']!=stable_hash(s):raise ValueError('Host identity changed')
                         for name,sha in receipt['files'].items():
                             if file_sha256(root/'host'/name)!=sha:raise ValueError('Host evidence changed')
+                        continue
+                    if stage=='fit_profile' and (root/'profile/fitting/accepted.json').exists():
+                        receipt=read(root/'profile/fitting/accepted.json')
+                        if receipt['identity']!=stable_hash(s) or receipt.get('state')!='accepted':raise ValueError('Fitting profile identity changed')
                         continue
                     wait(stage,launch(stage,s['devices'][0]))
                 # Two finite independent arms; share only the immutable accepted host/PCA.

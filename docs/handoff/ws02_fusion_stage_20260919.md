@@ -79,7 +79,10 @@ CPU-only图结构合同由当前MHD pin构造，不读训练数据、不加载�
 - deep accepted reference只publish，不launch。
 - 顺序固定：middle → features。
 - GPU0共享既有LOOK设备锁；GPU1留给R&B。
-- 每个新宿主完整profile、host、PCA、两方法完整树、预测replay、统计、delivery。
+- 两个新spec固定50 GiB artifact-volume reserve；GPU/RAM/workspace预算沿用accepted deep。
+- 每个新宿主先做host full296dev/两更新恢复profile，再正式host与PCA；随后进入隔离的 `fit_profile`，完整跑两方法×两缺失的正收益树与296dev replay，并在同目录第二次调用验证selection/bank/replay/feature-cost SHA稳定。
+- `fit_profile`只用于准入，正式两方法从自己的独立目录重新运行，不复用profile结果。
+- profile全部通过后才运行两方法正式完整树、预测replay、统计、delivery。
 - 一个新宿主失败记needs_review后仍允许另一个继续收证据；不盲重试、不加种子。
 - 三宿主未齐时累计fusion-stage publication保持incomplete，不产生8项收益差。
 

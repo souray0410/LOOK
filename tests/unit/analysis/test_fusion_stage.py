@@ -25,6 +25,7 @@ def base_spec(tmp_path, position='middle'):
         initialization=dict(kind='public_imagenet_fresh_host',path=str(init),sha256=file_sha256(init)),
         training=dict(DEFAULTS),source_pins=[dict(path=str(source),sha256=file_sha256(source))],
         gpu_budget_bytes=100,gpu_reserve_bytes=100,ram_budget_bytes=1000,workspace_bytes=100,
+        disk_reserve_bytes=50*1024**3,
     )
 
 
@@ -49,6 +50,9 @@ def test_registered_member_only_opens_middle_and_features(tmp_path):
         cohort_delivery.validate(bad)
     bad=register(ordinary);bad['mmtm']={'stage':'stage3','ratio':4,'gate_scale':1.0}
     with pytest.raises(ValueError,match='member changed'):
+        cohort_delivery.validate(bad)
+    bad=register(ordinary);bad['disk_reserve_bytes']=0
+    with pytest.raises(ValueError,match='disk reserve'):
         cohort_delivery.validate(bad)
 
 
