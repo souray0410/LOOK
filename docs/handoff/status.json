@@ -10,7 +10,7 @@
   ],
   "source_commit": "08bf6ccf503e0073afa96ed3fd1f933219d88682",
   "evidence_cutoff": "2026-09-18T03:45:00+00:00",
-  "verified_at": "2026-09-18T03:45:00+00:00",
+  "verified_at": "2026-09-18T05:34:31+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -92,7 +92,8 @@
     "2026-09-17 v6 CPU周期与watcher真实接续核验，原GPU扫描持续更新；middle/features仍等待科学依赖，未提前释放重复种子。管理层细节见next_fusion_activation_20260917.md。",
     "19:56UTC独立复核best-forward247科研文件+5交付文件SHA及4预测的参与者顺序/指标；原manager accepted，CPU累计publication自动更新。主树缺CFP仍运行，未释放重复种子。",
     "2026-09-18 03:45UTC：正收益树自动双状态重放/报告/累计发布，root独立验392+5文件SHA、四份预测指标与跨策略同序宿主输出、选中权重。完整配置接受；完整周包与其他种子未放行。",
-    "2026-09-18实现完整维度多位置充分统计缓存、同前缀GCV参考规则、独立family runner与原dispatcher任务类型；当前为代码验收，正式部署/领取待单列回执，不能复用低维PCA缓存冒充自由拟合。"
+    "2026-09-18实现完整维度多位置充分统计缓存、同前缀GCV参考规则、独立family runner与原dispatcher任务类型；当前为代码验收，正式部署/领取待单列回执，不能复用低维PCA缓存冒充自由拟合。",
+    "2026-09-18 05:34UTC：自由均值低秩残差134份GPU预检产物SHA通过，原run在51919716.23全量入口实际统计224批。owner_v7唯一CPU/watcher接替通过，原claims拒绝重复领取RRR、PCA自由均值可候选；10LOOK绑定更新、其余11项不变。两臂匹配及跨租期恢复仍待验收，旧结果cutoff不刷新。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",

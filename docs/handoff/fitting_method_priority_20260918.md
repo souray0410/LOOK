@@ -40,3 +40,15 @@
 ## 工程接入证据（2026-09-18）
 
 科学源码 `c2c2ddf` 的86项针对测试已在本地与Ibex独立快照通过。四臂依赖与不可变spec已核验登记，首包只引用上述两臂。Ibex `look_fitting_priority_20260918` 保存登记、测试及启动回执；自由低秩残差有限manager已启动，GPU预检、正式拟合及两臂接续仍须分别核验。本记录不将manager启动等同正式计算，也不宣称未来队列已完成切换。
+
+## 2026-09-18 05:34 UTC：首臂正式拟合与共同队列接入
+
+自由均值低秩残差通过真实GPU预检：512名train拟合、32名train探针评价，约1014秒，GPU保留峰值3.29GiB、进程RSS峰值4.85GiB；134份预检产物SHA与身份独立核验。该预检不代表全队列峰值或跨租期恢复验收。原两次bootstrap失败发生于claim之前，配置环境与启动脚本修复后已越过原故障并进入正式流程。
+
+原run `2026_09_18_07_46_10_688082` 已在51919716.23正式执行，缺OCT根前缀的9个位置共享完整维度统计已观察到224批，缓存持续更新。此处“正式”指全量train/dev入口，尚无新方法完整性能结果；旧PCA结果保持原科研截止。
+
+既有LOOK CPU dispatcher及唯一待批watcher已安全接到`owner_v7`；10个LOOK待批项采用新绑定，9个R&B和1个native项逐项保持不变，共用原锁、claims及申请账本。实际新CPU周期无错误，watcher更新waiting_grant；领取核验确认运行中的residual_rrr不可重复领取、pca_free_mean可候选，约束均值两臂不在首包。新best-forward/顺序起点研究按批准优先级暂不新增派发，健康旧worker未停止。未向GPU进程发信号、未取消allocation。首次安全交接因旧CPU为session leader被拒绝；核验该session只有其自身后，版本化加入无同session同伴保护，4项隔离条件测试通过再交接，没有放宽salloc子进程或GPU保护。
+
+当前完成的是首臂真实启动与CPU后继准入；PCA自由均值实际GPU执行、两臂匹配报告、全队列资源峰值及跨租期恢复仍未验收。不可将“候选可领取”写成“两臂已跑通”。
+
+远端证据：`OPS/look_fitting_priority_20260918/followthrough_20260918_0530.json`、`owner_v7/{activation_receipt,admission_verified}.json`。最早到期的另一LOOK旧任务已由原owner自动写入expiry pause并返回paused/owner_finished，未作为科研完成登记。
