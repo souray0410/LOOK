@@ -44,7 +44,7 @@ def validate(s):
     if s['schema']!='look_fresh_cohort_delivery_v1' or s['test_access'] is not False:
         raise ValueError('Undeclared study')
     if s['seed']!=3416 or s['arms']!=list(ARMS) or s['search']!='positive_forward_tree':raise ValueError('Unregistered package')
-    if (s['factor'],s['rank'],s['position'],s['architecture'])!=(16,32,'deep','resnet50'):raise ValueError('Unregistered scope')
+    if (s['factor'],s['rank'],s['position'])!=(16,32,'deep') or s['architecture'] not in ('resnet18','resnet34','resnet50','densenet121'):raise ValueError('Unregistered scope')
     if s['initialization']['kind']!='public_imagenet_fresh_host':raise ValueError('Fresh host required')
     validate_config(s['training'])
     if file_sha256(Path(s['data_root'])/'accepted.json')!=s['data_audit_sha256']:raise ValueError('Data identity changed')
@@ -169,7 +169,7 @@ def report(s,root):
     out=root/'delivery';out.mkdir(exist_ok=True)
     atomic_write_json(dict(results=rows,statistics=stats,comparisons=definitions,
         conclusion_scope='small_cohort_single_seed_dev_selection_not_independent_test',test_access=False),out/'results.json')
-    lines=['# LOOK 小队列拟合方法匹配结果','','1264 train / 296 dev；首种子3416；同一个重新训练的ResNet50深层融合宿主。',
+    lines=['# LOOK 小队列拟合方法匹配结果','',f'1264 train / 296 dev；首种子3416；同一个重新训练的{s.get("architecture","synthetic")}深层融合宿主。',
         '两方法均自由均值、秩32、二维空间x16、正收益树；公开ImageNet初始化，不复用历史医学宿主。',
         '开发集选择有偏，配对区间不能消除选择偏差；不与Ibex不同队列混合排名。','',
         '|方法|缺失状态|Macro-F1 (%)|AUROC (%)|','|---|---|---:|---:|']
@@ -209,11 +209,17 @@ def main():
                         continue
                     wait(stage,launch(stage,s['devices'][0]))
                 # Two finite independent arms; share only the immutable accepted host/PCA.
-                jobs=[(arm,launch(arm,s['devices'][i%len(s['devices'])])) for i,arm in enumerate(ARMS)]
                 errors=[]
-                for arm,child in jobs:
-                    code=child.wait()
-                    if code:errors.append((arm,code))
+                if len(s['devices']) == 1:
+                    # One project lane: finish each arm before launching the next.
+                    for arm in ARMS:
+                        code=launch(arm,s['devices'][0]).wait()
+                        if code:errors.append((arm,code))
+                else:
+                    jobs=[(arm,launch(arm,s['devices'][i])) for i,arm in enumerate(ARMS)]
+                    for arm,child in jobs:
+                        code=child.wait()
+                        if code:errors.append((arm,code))
                 if errors:raise RuntimeError('Family failure: '+str(errors))
                 report(s,root)
                 atomic_write_json(dict(state='accepted',identity=stable_hash(s),time=time.time()),root/'pipeline_status.json')

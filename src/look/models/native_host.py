@@ -11,6 +11,8 @@ from mhd_framework.core import MHD_Node, MHD_Edge, MHD_Topo, MHD_Graph
 from look.models.graph import ConcatProjection, ConcatFeatureProjection, ClassificationLoss
 
 STAGE_MAP = {
+    "resnet18": ("stem", "stage1", "stage2", "stage3", "stage4", "features"),
+    "resnet34": ("stem", "stage1", "stage2", "stage3", "stage4", "features"),
     "resnet50": ("stem", "stage1", "stage2", "stage3", "stage4", "features"),
     "densenet121": ("stem", "denseblock1", "denseblock2", "denseblock3", "denseblock4", "features"),
     "swin_b": ("patch_embed", "stage1", "stage2", "stage3", "stage4", "features"),

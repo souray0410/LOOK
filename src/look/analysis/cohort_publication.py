@@ -129,6 +129,9 @@ SITES={'joint_input':'①双分支输入','joint_stem':'②初始卷积后','joi
 
 
 def render(p):
+    site_names=dict(SITES)
+    if p['architecture']=='densenet121':
+        site_names={k.replace('stage','denseblock'):v.replace('Stage ','Dense block ') for k,v in SITES.items()}
     rows={(r['method'],r['scenario']):r['metrics'] for r in p['results']}
     complete=p['matched_package']=='accepted'
     lines=['# LOOK 小队列：两种拟合方法，在同一正收益树规则下比较','',
@@ -145,13 +148,13 @@ def render(p):
         lines.append('|'+label+'|'+'|'.join(values)+'|')
     if 'host_metrics' in p:
         m=p['host_metrics'];lines+=['',f'完整输入（两种影像都在）的同一原模型：Macro-F1 **{100*m["macro_f1"]:.2f}%**，AUROC **{100*m["macro_auroc_ovr"]:.2f}%**。它只是参考，表中增益均相对对应缺失基线计算。']
-    lines+=['','**如何理解：**这一个小队列配置中，两种修正的F1都比不修正高；但两种拟合之间差距很小，目前不能宣布哪一种更好。' if complete else '完整匹配组尚未齐全，暂不判断哪种拟合更好。',
+    lines+=['','**如何理解：**先在同一缺失状态、同一原模型内比较修正增益，再看两种拟合之差及区间。单种子结果不支持稳定优越性。' if complete else '完整匹配组尚未齐全，暂不判断哪种拟合更好。',
         '同一开发集参与了模型和路径选择；缺OCT的低基线并不代表模型完全没有区分能力，须同时看AUROC，不能只根据F1涨幅解释机制。','',
         '## 2．这次到底用了什么配置','',
         '|项目|本次配置|','|---|---|',
         '|任务与数据|青光眼二分类；旧小队列1,264名训练参与者、296名开发集参与者；test未使用|',
         '|输入|每眼224×224；CFP眼底照片与旧数据导出的OCT二维图像（三通道）；不是R&B的32层三维输入|',
-        '|原网络|两分支ResNet50，公开ImageNet初始化后重新训练同一共同模型；没有复用历史医学宿主|',
+        f'|原网络|两分支{p["architecture"]}，公开ImageNet初始化后重新训练同一共同模型；没有复用历史医学宿主|',
         '|两个分支在哪里融合|各自走完Stage 4后，按通道拼接，经1×1卷积与BN投影，再生成每眼特征、汇总双眼特征、分类|',
         '|拟合时哪些会变|原网络参数及BN固定；只拟合LOOK变换，不反向训练原网络|',
         '|缺失如何模拟|整种模态用标准化空间的零值替代（normalized_mean）；不是删除某个病人|',
@@ -187,7 +190,7 @@ def render(p):
         for arm in ('pca_free_mean','residual_rrr'):
             d=next((d for d in p.get('search_details',[]) if d['method']==arm and d['scenario']==pattern),None)
             if not d:lines.append(f'|{label}|{NAMES[arm]}|尚无核验路径|—|—|');continue
-            path=' → '.join(SITES[n['node']] for n in d['selected_path']) or '不启用修正'
+            path=' → '.join(site_names.get(n['node'],n['node']) for n in d['selected_path']) or '不启用修正'
             lines.append(f'|{label}|{NAMES[arm]}|{path}|{d["candidate_evaluations"]}|{d["prefix_count"]}|')
     lines+=['','“前缀”就是一条已接受的部分修正路径，计数包含空路径和终端路径；候选评价数不是训练轮数。最终只留一个位置，不代表只测了一个位置。两方法搜索规则相同，但正收益分支不同，因此工作量不同。','',
         '<details>','<summary>展开：第一轮独立修正9个位置，各自提升多少</summary>','',
@@ -198,7 +201,7 @@ def render(p):
     for d in p.get('search_details',[]):
         root=next((b for b in d['branches'] if not b['prefix']),None)
         if root:roots[(d['scenario'],d['method'])]={c['node']:c['delta_pp'] for c in root['candidates']}
-    for node,label in SITES.items():
+    for node,label in site_names.items():
         vals=[]
         for pattern in PATTERNS:
             for arm in ('pca_free_mean','residual_rrr'):
@@ -209,7 +212,7 @@ def render(p):
     for d in p.get('search_details',[]):
         baseline=rows.get(('host',d['scenario']),{}).get('macro_f1',0)
         curve=f'不修正 {100*baseline:.2f}%'
-        for n in d['selected_path']:curve+=f' → {SITES[n["node"]]} {100*n["macro_f1"]:.2f}%'
+        for n in d['selected_path']:curve+=f' → {site_names.get(n["node"],n["node"])} {100*n["macro_f1"]:.2f}%'
         lines +=[f'- **{PATTERNS[d["scenario"]]}／{NAMES[d["method"]]}：** {curve}。']
     lines+=['','所有分支和首轮9位置的分数、保留/拒绝依据见[current.json](current.json)的`search_details[].branches`，不只保留最终胜出路径。','',
         '|方法／缺失状态|完整输入特征前向批次|缺失输入特征前向批次|完整统计缓存命中|恢复跳过批次|',
@@ -233,7 +236,7 @@ def render(p):
             if c['reference']!='pca_free_mean':continue
             interval=lambda k:'['+', '.join(f'{100*x:.3f}' for x in v[k])+']'
             lines.append(f'|{PATTERNS[c["pattern"]]}|{100*v["difference"]:+.3f}|{interval("ordinary_95")}|{interval("simultaneous_95")}|')
-        lines+=['','本次两个方法的差值区间均跨零，尚无充分证据确定胜者，也不能据此认定二者等效。缺眼底照片时两种修正的NLL都比不修正更差：F1提高不等于所有指标变好。']
+        lines+=['','区间跨零时不能确定胜者，也不能据此认定等效。请同时检查上表AUROC、NLL及Brier；F1提高不等于所有指标变好。']
     lines+=['','统计使用296人的10,000次参与者级配对bootstrap；仅一个种子。开发集同时用于原模型和路径选择，区间不消除选择偏差；不与Ibex不同疾病/队列混合排名。','',
         '## 6．完成范围、下一步与来源','',
         '本配置的共同模型、两种拟合、两种缺失、重放与匹配报告已完成；不是整个周研究包或独立test验证完成。' if complete else '当前配置仍有未验收步骤；已有局部结果不冒充完整比较。',
@@ -242,7 +245,9 @@ def render(p):
         '服务器累计生成，再由定时维护核验并同步GitHub；不是实时仪表盘。相同证据重复发布不刷新时间。',
         f'运行：`{p["run_id"]}`；科学源：`{p["source_commit"]}`；框架：`{p["framework_commit"]}`。',
         f'配置指纹：`{p["configuration_id"]}`。',
-        '完整安全汇总和路径在[current.json](current.json)，发布核验在[publication_audit.json](publication_audit.json)，历史故障在[执行记录](../../../handoff/ws02_cohort_delivery_20260918.md)。权重、参与者预测及特征保留在授权服务器，不上传GitHub。']
+        '完整安全汇总和路径在[current.json](current.json)。权重、参与者预测及特征保留在授权服务器，不上传GitHub。']
+    if p['architecture']=='densenet121':
+        lines=[line.replace('Stage 4','Dense block 4').replace('Stage 1','Dense block 1').replace('Stage 2','Dense block 2').replace('Stage 3','Dense block 3') for line in lines]
     return lines
 
 if __name__=='__main__':

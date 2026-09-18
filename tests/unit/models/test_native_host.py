@@ -13,7 +13,7 @@ def parents(name):
     return [ObservedParticipantModel(create_model(config)) for _ in range(2)]
 
 
-@pytest.mark.parametrize('name', ['resnet50','densenet121','swin_b'])
+@pytest.mark.parametrize('name', ['resnet18','resnet34','resnet50','densenet121','swin_b'])
 def test_complete_native_cut_equivalence(name):
     torch.set_num_threads(2)
     first, _ = parents(name)
@@ -31,7 +31,7 @@ def test_complete_native_cut_equivalence(name):
         torch.testing.assert_close(current, expected, rtol=0, atol=0)
 
 
-@pytest.mark.parametrize('name', ['resnet50','densenet121','swin_b'])
+@pytest.mark.parametrize('name', ['resnet18','resnet34','resnet50','densenet121','swin_b'])
 @pytest.mark.parametrize('position', ['middle','deep','features'])
 def test_host_packed_eyes_mhd_backward_and_reload(position,name):
     torch.set_num_threads(2)
