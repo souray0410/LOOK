@@ -333,3 +333,7 @@ remain pending; this does not certify the weekly matched package.
 ## 2026-09-17 19:56 UTC：首个best-forward双缺失配置完整交付
 
 已验收[当前结果、完整路径及反例](../reports/current/best_forward/README.md)：白内障/ResNet50/deep/3416/x16/q32，缺OCT与缺CFP macro-F1分别+4.1330/+3.8453pp，缺CFP排序及校准指标下降。远端自动重放、统计、图和publication后，本轮独立核验247+5文件SHA及四份预测指标与顺序；这是保留的best-forward对照，不是当前主树或整周包完成。主树缺CFP仍继续，所有test及重复种子门槛不变。
+
+## 2026-09-18：正收益树首个双缺失配置完成
+
+[累计策略比较](../reports/current/search_policies/README.md)：同12510名dev、3416/x16/q32，缺OCT75.4662%，缺CFP57.6058%；后者比best-forward高0.6203pp，但AUROC与校准仍差于宿主。392+5文件SHA、最终预测与权重独立核验通过。仅本配置接受，周包与重复种子保持未放行；前文未完成记录是历史状态。

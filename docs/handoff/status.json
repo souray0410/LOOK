@@ -3,14 +3,14 @@
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
   "phase": "ukb_eye_research",
-  "next_acceptance": "新正收益分支树3416/x16/q32两缺失状态完整拟合、重放与报告；随后完成保留的有限周包，不用旧pilot放行新策略重复",
+  "next_acceptance": "四代表起点、后续融合宿主及线性家族的实际匹配交付；完整有限周包验收后再放行重复种子",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
   "source_commit": "08bf6ccf503e0073afa96ed3fd1f933219d88682",
-  "evidence_cutoff": "2026-09-17T19:56:32.668192+00:00",
-  "verified_at": "2026-09-17T19:56:32.668192+00:00",
+  "evidence_cutoff": "2026-09-18T03:45:00+00:00",
+  "verified_at": "2026-09-18T03:45:00+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -54,6 +54,11 @@
       "summary": "best-forward白内障/ResNet50深层融合/3416/x16/q32完整双缺失配置已重放和报告验收：12510名dev，缺OCT macro-F1 71.3331→75.4662%，缺CFP 53.1402→56.9855%；缺CFP选joint_stem→joint_stage3，AUROC69.0933→67.9745%且校准恶化。主树/周包未完成，非test结论。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/best_forward/README.md"
+    },
+    {
+      "summary": "主线正收益树白内障/ResNet50深层融合/3416/x16/q32双缺失配置已验收：缺OCT71.3331→75.4662%，缺CFP53.1402→57.6058%。缺CFP选stem→stage1→stage3，比best-forward多0.6203pp，但AUROC低于宿主、NLL/Brier变差；仅dev单种子。",
+      "scope": "preliminary_single_seed",
+      "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/search_policies/README.md"
     }
   ],
   "limitations": [
@@ -61,11 +66,10 @@
     "首种子五路线统计为dev探索结果，不代表多种子重复或独立test。",
     "预检和任务登记不等于正式研究完成。",
     "本次刷新核验管理实现、节点及计算进程；既有数值结果保留原evidence_cutoff，不作为本次新增结果。",
-    "Automatic next-lease continuation is bound, but a real expiry/resume has not yet occurred; current configuration and whole weekly package remain unaccepted.",
-    "新树搜索已正式运行但两缺失状态/整周研究包未完成；最坏树规模指数增长，不能预先声称比单路径更快。既有数值结果不是本次新增树结果。"
+    "正收益树首配置双状态已接受；完整有限周包、其他线性家族和重复种子仍未接受，test封存。",
+    "跨租期自动恢复已绑定并测试，尚无实际跨租期恢复验收；完成当前配置不等于此门槛关闭。"
   ],
   "blockers": [
-    "正收益树首个q32两缺失状态的完整拟合、重放和报告尚未验收；当前运行只是首配置进度。",
     "独立仿射家族完整主搜索与代表起点并行对照仍有验收缺口，整周重复种子门槛保持关闭。",
     "真实跨租期到期恢复尚未发生；已绑定自动接续并通过锁、状态、资源和两层owner测试，但不等于实际到期恢复完成。"
   ],
@@ -86,7 +90,8 @@
     "18:21 Saudi：Stage1后追加Stage3/Stage4的dev macro-F1分别70.5513%/61.5176%，均低于前缀72.0771%，不保留；共12次候选评价，当前最佳75.4662%仍来自首轮，不是新组合收益。",
     "18:55 Saudi：Stage1六下游齐全，decision保留两正子分支，后续前缀统计缓存持续更新。共15次候选，6个发现前缀；LOOK/R&B管理无新错误，3运行21待批。",
     "2026-09-17 v6 CPU周期与watcher真实接续核验，原GPU扫描持续更新；middle/features仍等待科学依赖，未提前释放重复种子。管理层细节见next_fusion_activation_20260917.md。",
-    "19:56UTC独立复核best-forward247科研文件+5交付文件SHA及4预测的参与者顺序/指标；原manager accepted，CPU累计publication自动更新。主树缺CFP仍运行，未释放重复种子。"
+    "19:56UTC独立复核best-forward247科研文件+5交付文件SHA及4预测的参与者顺序/指标；原manager accepted，CPU累计publication自动更新。主树缺CFP仍运行，未释放重复种子。",
+    "2026-09-18 03:45UTC：正收益树自动双状态重放/报告/累计发布，root独立验392+5文件SHA、四份预测指标与跨策略同序宿主输出、选中权重。完整配置接受；完整周包与其他种子未放行。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。"
@@ -151,6 +156,10 @@
     {
       "label": "已完成best-forward双缺失配置、路径及多指标反例",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/best_forward/README.md"
+    },
+    {
+      "label": "两种搜索策略的累计匹配结果、路径、成本与反例",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/search_policies/README.md"
     }
   ]
 }

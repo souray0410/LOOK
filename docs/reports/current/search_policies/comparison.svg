@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="660" viewBox="0 0 1040 660">
+<rect width="1040" height="660" fill="white"/>
+<g font-family="Arial,sans-serif" fill="#172b4d">
+<text x="30" y="30" font-size="21">LOOK: matched search policies (UKB cataract, ResNet50/deep, seed3416)</text>
+<text x="30" y="54" font-size="14">12,510 dev participants; x16 spatial features / q32; selected dev scores, not independent test</text>
+<text x="65" y="90" font-size="17">oct missing — Macro-F1 (%)</text>
+<line x1="65" y1="285.0" x2="465" y2="285.0" stroke="#e2e8f0"/><text x="37" y="289.0" font-size="12">0</text>
+<line x1="65" y1="240.0" x2="465" y2="240.0" stroke="#e2e8f0"/><text x="37" y="244.0" font-size="12">25</text>
+<line x1="65" y1="195.0" x2="465" y2="195.0" stroke="#e2e8f0"/><text x="37" y="199.0" font-size="12">50</text>
+<line x1="65" y1="150.0" x2="465" y2="150.0" stroke="#e2e8f0"/><text x="37" y="154.0" font-size="12">75</text>
+<line x1="65" y1="105.0" x2="465" y2="105.0" stroke="#e2e8f0"/><text x="37" y="109.0" font-size="12">100</text>
+<rect x="90" y="156.6003692548966" width="85" height="128.3996307451034" fill="#718096"/><text x="132.5" y="150.6003692548966" text-anchor="middle" font-size="14">71.33</text><text x="132.5" y="305" text-anchor="middle" font-size="12">Frozen host</text>
+<rect x="220" y="149.16089920966152" width="85" height="135.83910079033848" fill="#3182ce"/><text x="262.5" y="143.16089920966152" text-anchor="middle" font-size="14">75.47</text><text x="262.5" y="305" text-anchor="middle" font-size="12">Best-forward</text>
+<rect x="350" y="149.16089920966152" width="85" height="135.83910079033848" fill="#dd6b20"/><text x="392.5" y="143.16089920966152" text-anchor="middle" font-size="14">75.47</text><text x="392.5" y="305" text-anchor="middle" font-size="12">Positive tree</text>
+<text x="65" y="350" font-size="17">oct missing — AUROC (%)</text>
+<line x1="65" y1="545.0" x2="465" y2="545.0" stroke="#e2e8f0"/><text x="37" y="549.0" font-size="12">0</text>
+<line x1="65" y1="500.0" x2="465" y2="500.0" stroke="#e2e8f0"/><text x="37" y="504.0" font-size="12">25</text>
+<line x1="65" y1="455.0" x2="465" y2="455.0" stroke="#e2e8f0"/><text x="37" y="459.0" font-size="12">50</text>
+<line x1="65" y1="410.0" x2="465" y2="410.0" stroke="#e2e8f0"/><text x="37" y="414.0" font-size="12">75</text>
+<line x1="65" y1="365.0" x2="465" y2="365.0" stroke="#e2e8f0"/><text x="37" y="369.0" font-size="12">100</text>
+<rect x="90" y="397.7946985283537" width="85" height="147.2053014716463" fill="#718096"/><text x="132.5" y="391.7946985283537" text-anchor="middle" font-size="14">81.78</text><text x="132.5" y="565" text-anchor="middle" font-size="12">Frozen host</text>
+<rect x="220" y="395.6194293904241" width="85" height="149.38057060957587" fill="#3182ce"/><text x="262.5" y="389.6194293904241" text-anchor="middle" font-size="14">82.99</text><text x="262.5" y="565" text-anchor="middle" font-size="12">Best-forward</text>
+<rect x="350" y="395.6194293904241" width="85" height="149.38057060957587" fill="#dd6b20"/><text x="392.5" y="389.6194293904241" text-anchor="middle" font-size="14">82.99</text><text x="392.5" y="565" text-anchor="middle" font-size="12">Positive tree</text>
+<text x="575" y="90" font-size="17">cfp missing — Macro-F1 (%)</text>
+<line x1="575" y1="285.0" x2="975" y2="285.0" stroke="#e2e8f0"/><text x="547" y="289.0" font-size="12">0</text>
+<line x1="575" y1="240.0" x2="975" y2="240.0" stroke="#e2e8f0"/><text x="547" y="244.0" font-size="12">25</text>
+<line x1="575" y1="195.0" x2="975" y2="195.0" stroke="#e2e8f0"/><text x="547" y="199.0" font-size="12">50</text>
+<line x1="575" y1="150.0" x2="975" y2="150.0" stroke="#e2e8f0"/><text x="547" y="154.0" font-size="12">75</text>
+<line x1="575" y1="105.0" x2="975" y2="105.0" stroke="#e2e8f0"/><text x="547" y="109.0" font-size="12">100</text>
+<rect x="600" y="189.34767484022575" width="85" height="95.65232515977426" fill="#718096"/><text x="642.5" y="183.34767484022575" text-anchor="middle" font-size="14">53.14</text><text x="642.5" y="305" text-anchor="middle" font-size="12">Frozen host</text>
+<rect x="730" y="182.4261709513508" width="85" height="102.57382904864919" fill="#3182ce"/><text x="772.5" y="176.4261709513508" text-anchor="middle" font-size="14">56.99</text><text x="772.5" y="305" text-anchor="middle" font-size="12">Best-forward</text>
+<rect x="860" y="181.30954318144836" width="85" height="103.69045681855165" fill="#dd6b20"/><text x="902.5" y="175.30954318144836" text-anchor="middle" font-size="14">57.61</text><text x="902.5" y="305" text-anchor="middle" font-size="12">Positive tree</text>
+<text x="575" y="350" font-size="17">cfp missing — AUROC (%)</text>
+<line x1="575" y1="545.0" x2="975" y2="545.0" stroke="#e2e8f0"/><text x="547" y="549.0" font-size="12">0</text>
+<line x1="575" y1="500.0" x2="975" y2="500.0" stroke="#e2e8f0"/><text x="547" y="504.0" font-size="12">25</text>
+<line x1="575" y1="455.0" x2="975" y2="455.0" stroke="#e2e8f0"/><text x="547" y="459.0" font-size="12">50</text>
+<line x1="575" y1="410.0" x2="975" y2="410.0" stroke="#e2e8f0"/><text x="547" y="414.0" font-size="12">75</text>
+<line x1="575" y1="365.0" x2="975" y2="365.0" stroke="#e2e8f0"/><text x="547" y="369.0" font-size="12">100</text>
+<rect x="600" y="420.63209890896337" width="85" height="124.3679010910366" fill="#718096"/><text x="642.5" y="414.63209890896337" text-anchor="middle" font-size="14">69.09</text><text x="642.5" y="565" text-anchor="middle" font-size="12">Frozen host</text>
+<rect x="730" y="422.6458805243913" width="85" height="122.35411947560868" fill="#3182ce"/><text x="772.5" y="416.6458805243913" text-anchor="middle" font-size="14">67.97</text><text x="772.5" y="565" text-anchor="middle" font-size="12">Best-forward</text>
+<rect x="860" y="422.3098690737005" width="85" height="122.69013092629953" fill="#dd6b20"/><text x="902.5" y="416.3098690737005" text-anchor="middle" font-size="14">68.16</text><text x="902.5" y="565" text-anchor="middle" font-size="12">Positive tree</text>
+<text x="30" y="633" font-size="14">Higher is better for both axes. Missing CFP: F1 improves, but AUROC is below the frozen host.</text>
+</g></svg>
