@@ -52,3 +52,9 @@
 当前完成的是首臂真实启动与CPU后继准入；PCA自由均值实际GPU执行、两臂匹配报告、全队列资源峰值及跨租期恢复仍未验收。不可将“候选可领取”写成“两臂已跑通”。
 
 远端证据：`OPS/look_fitting_priority_20260918/followthrough_20260918_0530.json`、`owner_v7/{activation_receipt,admission_verified}.json`。最早到期的另一LOOK旧任务已由原owner自动写入expiry pause并返回paused/owner_finished，未作为科研完成登记。
+
+## 2026-09-18：全量内存保护失败与原任务重排
+
+后续现场核验发现上述6GiB共享worker在正式全量统计期间触发`Host RAM reserve breached`，Slurm51919716.23为FAILED/1:0，MaxRSS6292028K；短探针不足以证明全量资源准入。不能继续宣称该臂健康推进或故障已闭环。
+
+已核验原step退出、manager锁空闲以及原owner/generation/step身份，保存失败status、claim、Slurm证据和管理源码SHA到`OPS/look_fitting_priority_20260918/host_ram_incident_20260918/before.json`。同一run转为paused并经原Claims安全释放，进入已部署owner_v7原队列，后续走100GiB worker的完整allocation入口并重新资源预检；不重新启动6GiB共享manager，不修改科学spec/源码/秩/样本，不删除缓存，不重置为新运行。`requeue.json`记录`requeued_waiting_full_allocation`，实际再次领取、恢复与下游推进尚未验收。该记录覆盖前述“正式运行”即时状态，已接受旧PCA科研结果不变。
