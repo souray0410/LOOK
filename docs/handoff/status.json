@@ -104,7 +104,8 @@
     "2026-09-18 ws02小队列fresh-host匹配包已实际启动：1264train/296dev，3416/ResNet50deep/x16/q32，两自由均值拟合臂。43CPU及真实GPU预检通过；目录绑定故障修复后正式22→71更新、epoch3→8，best/last及验证history推进。完整拟合结果尚无，Ibex原结果保留原cutoff；详见ws02_cohort_delivery_20260918.md。",
     "2026-09-18 06:51UTC：ws02共同宿主按原平台规则27轮停止、best12、270更新，重放接受；独立重算296人完整输入Macro-F1=69.2142%、AUROC=74.4522%。9/9 PCA基完成，两自由均值方法已分别在双GPU完成首前缀79train批并评候选。仅宿主接受，尚无完整缺失方法比较。权重SHA已入小队列current.json，受限资产不上传。",
     "2026-09-18 07:42UTC核验，仅ws02小队列：同run两方法/两缺失均完成；自动CPU报告修复成功，独立8预测SHA、296人同序、F1/AUROC重算及同宿主通过，去重后6行。重复发布字节/mtime不变；身份冲突/预测篡改/重复矛盾/报告不一致保护5测试通过。RRR/PCA缺OCT69.9046/69.5821%，缺CFP61.6980/61.7695%，两方法差值区间均跨零。不是Ibex恢复、整个周包或独立test验收；发布链的定时GitHub端仍由原维护负责，不冒充实时。",
-    "2026-09-18：单GPU有限序列已实际完成R18宿主→PCA→残差树→PCA树→重放统计，R50精确引用；不自动扩大近似骨干/种子。下一包按当前研究决策登记，未验收MMTM接口不称已训练。Ibex23待批/1allocation及RPC间歇超时，既有保护与claims保留。"
+    "2026-09-18：单GPU有限序列已实际完成R18宿主→PCA→残差树→PCA树→重放统计，R50精确引用；不自动扩大近似骨干/种子。下一包按当前研究决策登记，未验收MMTM接口不称已训练。Ibex23待批/1allocation及RPC间歇超时，既有保护与claims保留。",
+    "2026-09-18 09:12UTC维护：精确复用R50/R18接受的首轮候选完成36项固定空前缀/同位置拟合诊断，未新增GPU拟合或训练；两臂宿主、位置集合、基线及penalty policy一致，非固定lambda或斜率机制。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
@@ -183,6 +184,10 @@
     {
       "label": "小队列两自由均值方法匹配结果与发布核验",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/small_cohort/README.md"
+    },
+    {
+      "label": "同空前缀同位置诊断",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/fixed_prefix/README.md"
     }
   ]
 }
