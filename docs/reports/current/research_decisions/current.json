@@ -1,7 +1,7 @@
 {
   "schema": "research_decisions_v1",
   "project": "LOOK",
-  "reviewed_at": "2026-09-18T08:32:54.681591+00:00",
+  "reviewed_at": "2026-09-18T13:45:47.590023+00:00",
   "test_access": false,
   "decisions": [
     {
@@ -16,8 +16,9 @@
     {
       "question": "老师提出的已有方法A能否加LOOK进一步获益",
       "decision": "优先于继续增加近似骨干；先审计MMTM适配及A和A+LOOK完全匹配接口，再登记有限包。",
-      "state": "adapter_acceptance_required",
-      "reason": "换骨干不能回答方法可附加性；不是只挑最高分的方法。"
+      "state": "single_seed_adapted_MMTM_matched_package_accepted",
+      "reason": "换骨干不能回答方法可附加性；不是只挑最高分的方法。",
+      "followthrough": "296dev，缺OCT 58.06→62.78/63.51，缺CFP41.82→58.45/58.99（PCA/残差）；8预测独立复核。不是原论文完整复现。两方法区间跨零、缺OCT NLL变差。下一步优先机制/校准解释与周报，不追加近似骨干；下一GPU包未启动。"
     },
     {
       "question": "ws02结果如何反馈Ibex",
