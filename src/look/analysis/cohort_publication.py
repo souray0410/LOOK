@@ -256,6 +256,8 @@ def render(p):
     if 'mmtm' in p:
         v=p['mmtm']
         lines[2:2]=['',f'**本配置的A是MMTM适配宿主**：两路Stage 3后加入作者门控（ratio={v["ratio"]}，scale={v["gate_scale"]}、随机Linear初始化），再进入Stage 4和原深融合分类头。上图需在Stage 3后加入双向门控；它不是原论文视频/骨骼完整系统。', '不修正列就是A；两拟合列是冻结同一A后加LOOK，比较不另训一套A。','']
+    if 'mmtm' in p and complete:
+        lines=[line.replace('下一步优先准备具体外部方法与加LOOK后的匹配验证；本页不声称这个后继已经开跑。','本配置已回答MMTM适配宿主A与A+LOOK；下一步解释校准反例和拟合机制，后继尚未启动。') for line in lines]
     if p['architecture']=='densenet121':
         lines=[line.replace('Stage 4','Dense block 4').replace('Stage 1','Dense block 1').replace('Stage 2','Dense block 2').replace('Stage 3','Dense block 3') for line in lines]
     return lines

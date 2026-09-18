@@ -359,3 +359,9 @@ remain pending; this does not certify the weekly matched package.
 ## 2026-09-18 MMTM匹配包实际启动
 
 见[有限协议与GPU接续](mmtm_cohort_20260918.md)：新3416/R18 Stage3 MMTM宿主已通过真实224预检并推进正式训练。前两小队列结果复用，统一[累计入口](../reports/current/small_cohort/README.md)保留旧行并新增清楚标记的MMTM配置。完整A/A+LOOK结果仍待树拟合、重放和统计验收。
+
+## 2026-09-18 13:40UTC完整匹配核验
+
+MMTM适配宿主同一A与A+LOOK已完成：296dev/3416，缺OCT不修正58.0638%、PCA62.7767%、残差63.5068%；缺CFP41.8162%、58.4455%、58.9863%。两方法差值普通95%均跨零；缺OCT NLL仍恶化。8份预测SHA/有序参与者/F1/AUROC及同宿主独立核验通过，仅开发集单种子探索。
+
+ws02本批有限流程已正常结束，GPU空闲；下一个研究包尚未运行。Ibex当前1运行allocation/23待批，两个派发器活跃且周期无错误；LOOK原内存保护故障等待资源，Dense3D暂停，新32无正式更新。不能把管理器健康当GPU科研任务正在运行。

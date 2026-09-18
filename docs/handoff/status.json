@@ -3,14 +3,14 @@
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
   "phase": "ukb_eye_research",
-  "next_acceptance": "MMTM适配宿主已通过ws02真实GPU预检并正式训练；沿原有限流水线完成同宿主A/A+LOOK两拟合两缺失；Ibex仍等待有效资源接续",
+  "next_acceptance": "已完成MMTM A/A+LOOK；优先解释宿主与校准反例及已批准固定前缀机制，下一GPU包未启动；Ibex残差待资源恢复",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "63663e01959290a6cf15632a4b85023b0f9cbc0f",
+  "source_commit": "a9833e6b0635469407917ef72727caf3c4dfebd2",
   "evidence_cutoff": "2026-09-18T08:31:54.640698+00:00",
-  "verified_at": "2026-09-18T08:36:09.171581+00:00",
+  "verified_at": "2026-09-18T13:43:22.724794+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -64,6 +64,11 @@
       "summary": "ws02青光眼小队列1264train/296dev，ResNet18/deep/3416/x16/q32两方法两缺失完整正收益树已验收，8预测记录SHA、顺序、F1/AUROC独立重算通过。缺OCT不修正62.3449%、PCA69.2396%、自由低秩残差66.7690%；缺CFP56.7191%、60.0183%、61.3736%。残差−PCA普通95%区间均跨零，不能判定统一赢家。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/small_cohort/README.md"
+    },
+    {
+      "summary": "MMTM适配宿主同一A与A+LOOK已完成：296dev/3416，缺OCT不修正58.0638%、PCA62.7767%、残差63.5068%；缺CFP41.8162%、58.4455%、58.9863%。两方法差值普通95%均跨零；缺OCT NLL仍恶化。8份预测SHA/有序参与者/F1/AUROC及同宿主独立核验通过，仅开发集单种子探索。",
+      "scope": "preliminary_single_seed",
+      "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/small_cohort/README.md"
     }
   ],
   "limitations": [
@@ -107,7 +112,8 @@
     "2026-09-18：单GPU有限序列已实际完成R18宿主→PCA→残差树→PCA树→重放统计，R50精确引用；不自动扩大近似骨干/种子。下一包按当前研究决策登记，未验收MMTM接口不称已训练。Ibex23待批/1allocation及RPC间歇超时，既有保护与claims保留。",
     "2026-09-18 09:12UTC维护：精确复用R50/R18接受的首轮候选完成36项固定空前缀/同位置拟合诊断，未新增GPU拟合或训练；两臂宿主、位置集合、基线及penalty policy一致，非固定lambda或斜率机制。",
     "2026-09-18维护主动修正结果列表中的历史截点措辞：不改原数值与scientific cutoff，明确旧“主树/双状态未完成”已被后续完整配置验收取代。MMTM有限小队列协议与节点适配实现单独登记，CPU验收不等于正式训练。",
-    "2026-09-18 12:31UTC：a9833e6，MMTM Stage3/R18/作者scale1随机门控单配置实际GPU预检通过（完整296dev、恢复2更新），同run正式3→62更新/epoch7，断点SHA与/proc通过。首次启动缺CuBLAS环境已归档修复，原确定性/训练标准未变；当前不是完整A/A+LOOK验收。累计页面已新增配置，旧两配置复用。"
+    "2026-09-18 12:31UTC：a9833e6，MMTM Stage3/R18/作者scale1随机门控单配置实际GPU预检通过（完整296dev、恢复2更新），同run正式3→62更新/epoch7，断点SHA与/proc通过。首次启动缺CuBLAS环境已归档修复，原确定性/训练标准未变；当前不是完整A/A+LOOK验收。累计页面已新增配置，旧两配置复用。",
+    "2026-09-18 13:40UTC现场：ws02有限任务已正常结束且GPU空闲，独立最终核验并用新显示生成器发布；不是新任务在训练。Ibex两CPU进程及新周期error=null，1allocation运行/23待批；LOOK原残差内存保护失败仍待充足资源，Dense3D暂停epoch5/15319updates，新32仍4登记文件无正式更新。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
