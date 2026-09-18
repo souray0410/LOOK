@@ -45,7 +45,11 @@ def validate(s):
     if s['schema']!='look_fresh_cohort_delivery_v1' or s['test_access'] is not False:
         raise ValueError('Undeclared study')
     if s['seed']!=3416 or s['arms']!=list(ARMS) or s['search']!='positive_forward_tree':raise ValueError('Unregistered package')
-    if (s['factor'],s['rank'],s['position'])!=(16,32,'deep') or s['architecture'] not in ('resnet18','resnet34','resnet50','densenet121'):raise ValueError('Unregistered scope')
+    if s.get('study_kind')=='fusion_stage_v1':
+        from look.studies.cohort_fusion_stage import validate_member
+        validate_member(s)
+    elif (s['factor'],s['rank'],s['position'])!=(16,32,'deep') or s['architecture'] not in ('resnet18','resnet34','resnet50','densenet121'):
+        raise ValueError('Unregistered scope')
     if s['initialization']['kind']!='public_imagenet_fresh_host':raise ValueError('Fresh host required')
     if 'mmtm' in s and (s['architecture']!='resnet18' or s['mmtm']!={'stage':'stage3','ratio':4,'gate_scale':1.0}):
         raise ValueError('Unregistered MMTM host variant')
@@ -121,6 +125,20 @@ def work(s,root,stage):
             atomic_write_json(dict(identity=identity,state='accepted',gpu=props.name,peak_reserved=peak,
                 train=len(train),dev=len(dev),resume_updates=2,coverage='full_dev_max_observed_eye_batch_two_training_updates_resume_not_convergence'),root/'profile/accepted.json')
         elif r.get('state')!='accepted':raise RuntimeError('Host not yet accepted: '+str(r.get('state')))
+        elif s.get('study_kind')=='fusion_stage_v1':
+            receipt=read(target/'accepted.json')
+            structure=dict(fusion_position=g.fusion_position,correction_sites=correction_sites(g),
+                parameters=sum(p.numel() for p in g.parameters()),
+                trainable_parameters=sum(p.numel() for p in g.parameters() if p.requires_grad),
+                architecture_id=g.architecture_id,
+                fusion_endpoint=g.native_host_provenance['fusion_endpoint'])
+            if structure!=s['fusion_stage_structure']:
+                raise ValueError('Fusion-stage runtime structure differs from prespecified contract')
+            if receipt.get('fusion_stage_structure') not in (None,structure):
+                raise ValueError('Fusion-stage host structure changed')
+            if receipt.get('fusion_stage_structure') is None:
+                receipt['fusion_stage_structure']=structure
+                atomic_write_json(receipt,target/'accepted.json')
     else:
         g,h=load_selected(s,root);frozen=cpu_tree(g.state_dict())
         bank=prepare_complete_pca_bank(g,loader(fit),correction_sites(g),[16],32,torch.device('cuda:0'),root/'pca',

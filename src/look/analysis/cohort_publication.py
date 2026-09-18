@@ -38,6 +38,8 @@ def publish(root,output):
         if role=='host':
             public['host_metrics']=r['metrics']
             public['host_training_result']={k:r[k] for k in ('stop_epoch','best_epoch','seconds','plateau') if k in r}
+            if 'fusion_stage_structure' in r:
+                public['host_structure']=r['fusion_stage_structure']
             for name,sha in r['files'].items():
                 if file_sha256(path/name)!=sha:raise ValueError('Host archive changed')
             for name in ('best.pt','last.pt'):
@@ -135,8 +137,56 @@ SITES={'joint_input':'①双分支输入','joint_stem':'②初始卷积后','joi
        'fusion_stage4':'⑦融合后特征图','fusion_features':'⑧每眼特征向量','fusion_participant_feature':'⑨双眼汇总后的参与者特征'}
 
 
+POSITION_DESCRIPTIONS={
+    'middle':'两分支各自走完Stage 2后，按通道拼接，经1×1卷积与BN投影；之后共享Stage 3、Stage 4和每眼特征。',
+    'deep':'两分支各自走完Stage 4后，按通道拼接，经1×1卷积与BN投影，再生成每眼特征。',
+    'features':'两分支各自产生每眼特征向量后，使用向量拼接投影融合；不再经过空间1×1卷积融合。',
+}
+
+
+def position_site_names(position, sites):
+    if position=='deep':
+        return {site:SITES.get(site,site) for site in sites}
+    descriptions={
+        'joint_input':'双分支输入','joint_stem':'初始卷积后','joint_stage1':'Stage 1后',
+        'joint_stage2':'Stage 2后','joint_stage3':'Stage 3后','joint_stage4':'Stage 4后',
+        'joint_features':'两分支每眼特征向量、融合前',
+        'fusion_stage2':'Stage 2融合后特征图','fusion_stage3':'共享Stage 3后特征图',
+        'fusion_stage4':'共享/融合后Stage 4特征图','fusion_features':'融合后每眼特征向量',
+        'fusion_participant_feature':'双眼汇总后的参与者特征',
+    }
+    return {site:f'{i+1}．{descriptions.get(site,site)}' for i,site in enumerate(sites)}
+
+
+def fusion_diagram(position):
+    if position=='middle':
+        return [
+            'CFP：输入 → stem → Stage1 → Stage2 ┐',
+            'OCT：输入 → stem → Stage1 → Stage2 ┘',
+            '                    ↓ 拼接＋1×1卷积＋BN（middle融合）',
+            '               共享Stage3 → Stage4 → 每眼特征 → 双眼汇总 → 分类',
+        ]
+    if position=='features':
+        return [
+            'CFP：输入 → stem → Stage1 → Stage2 → Stage3 → Stage4 → 每眼特征 ┐',
+            'OCT：输入 → stem → Stage1 → Stage2 → Stage3 → Stage4 → 每眼特征 ┘',
+            '                              ↓ 向量拼接投影（features融合）',
+            '                         融合每眼特征 → 双眼汇总 → 分类',
+        ]
+    return [
+        'CFP：输入 → stem → Stage1 → Stage2 → Stage3 → Stage4 ┐',
+        'OCT：输入 → stem → Stage1 → Stage2 → Stage3 → Stage4 ┘',
+        '                              ↓ 拼接＋1×1卷积＋BN（deep融合）',
+        '                         每眼特征 → 双眼汇总 → 分类',
+    ]
+
+
 def render(p):
-    site_names=dict(SITES)
+    observed_sites=[]
+    for row in p.get('search_details',[]):
+        for site in row.get('sites',[]):
+            if site not in observed_sites:observed_sites.append(site)
+    site_names=position_site_names(p['position'],observed_sites) if observed_sites else dict(SITES)
     if p['architecture']=='densenet121':
         site_names={k.replace('stage','denseblock'):v.replace('Stage ','Dense block ') for k,v in SITES.items()}
     rows={(r['method'],r['scenario']):r['metrics'] for r in p['results']}
@@ -162,7 +212,7 @@ def render(p):
         '|任务与数据|青光眼二分类；旧小队列1,264名训练参与者、296名开发集参与者；test未使用|',
         '|输入|每眼224×224；CFP眼底照片与旧数据导出的OCT二维图像（三通道）；不是R&B的32层三维输入|',
         f'|原网络|两分支{backbone_label(p["architecture"])}，公开ImageNet初始化后重新训练同一共同模型；没有复用历史医学宿主|',
-        '|两个分支在哪里融合|各自走完Stage 4后，按通道拼接，经1×1卷积与BN投影，再生成每眼特征、汇总双眼特征、分类|',
+        f'|两个分支在哪里融合|{POSITION_DESCRIPTIONS[p["position"]]}|',
         '|拟合时哪些会变|原网络参数及BN固定；只拟合LOOK变换，不反向训练原网络|',
         '|缺失如何模拟|整种模态用标准化空间的零值替代（normalized_mean）；不是删除某个病人|',
         f'|随机种子|{p["seed"]}，目前只有一个种子|',
@@ -182,14 +232,8 @@ def render(p):
         '## 3．树搜索具体在做什么','',
         '从不修正出发，在9个合法位置分别尝试修正；保留所有让当前路径F1严格提高的扩展。每条保留分支再尝试其后方的位置。候选使用该分支此前修正后的特征；同分关闭、负收益不继续向后扩展。最后在已探索路径中选F1最高的路径；同分优先更少位置。',
         '这里每个位置只有一个固定秩候选，λ由训练规则确定。**保留全部正扩展，不是每轮只保留一个最好位置；也不会探索先降分、后面再补回来的组合。**','',
-        '```text',
-        'CFP：输入 → 初始卷积 → Stage 1 → Stage 2 → Stage 3 → Stage 4 ┐',
-        'OCT：输入 → 初始卷积 → Stage 1 → Stage 2 → Stage 3 → Stage 4 ┘',
-        '        ①       ②         ③         ④         ⑤         ⑥',
-        '                   ↓ 两分支拼接＋投影（原网络的融合位置）',
-        '              ⑦融合后特征图 → ⑧每眼特征 → ⑨双眼汇总 → 分类',
-        '```','',
-        '①—⑥是LOOK同时读取两分支对应特征、拼接后拟合修正、再拆回两分支的位置；它们不是原网络已经完成融合。因而“原网络深层融合”不等于“LOOK只能从深层开始”。','',
+        '```text',*fusion_diagram(p['position']),'```','',
+        'LOOK候选位置直接来自这个宿主实际MHD图的correction_sites；融合前是双分支联合读写，融合后是共享表示读写。宿主融合位置与LOOK从哪个候选位置开始修正是两个不同问题。','',
         '## 4．最终选中了哪些位置，实际搜索了多少','',
         '|缺失状态|拟合方法|最终启用路径（按前向顺序）|候选评价数|已探索前缀数|',
         '|---|---|---|---:|---:|']

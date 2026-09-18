@@ -15,6 +15,9 @@ from look.analysis.cohort_publication import publish, read, PATTERNS, backbone_l
 
 
 def validate_sequence(plan):
+    if plan.get('study_kind')=='fusion_stage_v1':
+        from look.studies.cohort_fusion_stage import validate_sequence as validate_fusion_sequence
+        return validate_fusion_sequence(plan)
     if plan['schema']!='look_cohort_sequence_v1' or plan['test_access'] is not False:
         raise ValueError('Unregistered sequence')
     specs=[read(r['spec']) for r in plan['tasks']]
@@ -30,6 +33,9 @@ def validate_sequence(plan):
 
 
 def refresh(plan, statuses):
+    if plan.get('study_kind')=='fusion_stage_v1':
+        from look.analysis.fusion_stage_publication import refresh as refresh_fusion_stage
+        return refresh_fusion_stage(plan,statuses)
     out=Path(plan['publication']);out.mkdir(parents=True,exist_ok=True)
     publications=[]
     for row in plan['tasks']:
