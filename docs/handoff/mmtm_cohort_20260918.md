@@ -24,3 +24,13 @@ A是加入作者MMTM门控的眼科双路分类宿主。对同一个已训练并
 CPU检查不代替真实224输入GPU预检。先在LOOK GPU0核验完整dev、实际训练更新、完整状态恢复及资源余量，才接原cohort_delivery有限pipeline。此配置仍使用原单GPU锁和sequence锁，不增加资源调度器。故障隔离保留日志/检查点；阶段完成后自动接PCA→两拟合树→重放/统计/累计报告，阶段未验收不称成功。大权重和参与者资产留授权存储，GitHub只公开汇总与SHA。
 
 执行身份、准确源码和当前验收层级由部署后续记录更新；单配置完成不释放正式重复种子，也不结束Ibex或整个周包。
+
+## 2026-09-18 12:31 UTC 实际接续
+
+科学源 `a9833e6b0635469407917ef72727caf3c4dfebd2`，ws02新run `2026_09_18_15_29_03_789799`，原LOOK GPU0。节点/门控/发布测试15项通过，另原native-host及sequence回归24项通过；本地结构/固定框架检查通过。精确SHA的GitHub CI当时仍运行，不能用旧CI替代。
+
+真实224输入GPU预检接受：1264 train、完整296 dev、保存后恢复到第2次更新，PyTorch保留显存峰值2.195GiB（不是整卡峰值）。原全卡10GiB余量和20GiB进程预算保持。正式宿主从3更新推进到62更新、epoch7，last/best断点与实际GPU进程已核验；独立回执`mmtm_sequence_v1/activation_acceptance.json`。这证明正式训练接通，不代表A/A+LOOK完整比较已完成。
+
+首次新启动脚本漏继承CuBLAS确定性环境变量，在预检第一个反传前后失败且正式训练为0更新。保留原日志/epoch1 offset0检查点，恢复原`CUBLAS_WORKSPACE_CONFIG=:4096:8`和cuDNN路径；同run恢复预检、验收后进入正式训练。故障原件与闭环回执在`incidents/bootstrap_missing_cublas_v1`和`bootstrap_repair_v1.json`，未放松确定性或停止规则。
+
+新结果物理存储在授权backup卷，原/data逻辑路径用明确符号链接；登记时空闲244GiB，100GiB启动准入、50GiB过程余量，旧模型/结果未删除。`sequence_active.json`现在指向新有限序列；前两配置只读接受复用。原sequence执行器继续完成宿主→PCA→残差树→PCA树→重放/统计/统一累计报告，GitHub仍由既有定时维护核验后同步。

@@ -355,3 +355,7 @@ remain pending; this does not certify the weekly matched package.
 同一新宿主的两种自由均值拟合、两种缺失已自动完成；报告字段错误的有限CPU修复实际成功，GPU科学源与产物未改。root独立核验8份预测SHA、296人顺序及F1/AUROC重算、共同宿主和报告文件SHA。累计6行去重结果及六项配对区间见[当前小队列报告](../reports/current/small_cohort/README.md)。两方法差值区间均跨零，不能宣布胜者；本配置完成不等于整个周包完成。
 
 累计发布器增加证据截止、发布核验时间、去重与冲突拒绝。5项测试覆盖重复发布不改字节/mtime、身份不匹配、预测被篡改、重复行矛盾、报告与方法记录不一致；失败保留上版。真实两次发布一致，独立回执为当前报告目录publication_audit.json。远端自动汇总与报告修复已验证；GitHub更新由原ukb定时核验后发布，本轮实际同步验证不冒充首次无人值守定时发布验收。其他项目/平台现场状态未被本次ws02核验更新。
+
+## 2026-09-18 MMTM匹配包实际启动
+
+见[有限协议与GPU接续](mmtm_cohort_20260918.md)：新3416/R18 Stage3 MMTM宿主已通过真实224预检并推进正式训练。前两小队列结果复用，统一[累计入口](../reports/current/small_cohort/README.md)保留旧行并新增清楚标记的MMTM配置。完整A/A+LOOK结果仍待树拟合、重放和统计验收。
