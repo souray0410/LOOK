@@ -173,10 +173,10 @@ def report(s,root):
         '两方法均自由均值、秩32、二维空间x16、正收益树；公开ImageNet初始化，不复用历史医学宿主。',
         '开发集选择有偏，配对区间不能消除选择偏差；不与Ibex不同队列混合排名。','',
         '|方法|缺失状态|Macro-F1 (%)|AUROC (%)|','|---|---|---:|---:|']
-    for r in rows:lines.append(f"|{r['method']}|{r['scenario']}|{100*r['metrics']['macro_f1']:.3f}|{100*r['metrics']['auroc']:.3f}|")
+    for r in rows:lines.append(f"|{r['method']}|{r['scenario']}|{100*r['metrics']['macro_f1']:.3f}|{100*r['metrics']['macro_auroc_ovr']:.3f}|")
     (out/'README.zh-CN.md').write_text('\n'.join(lines)+'\n')
     atomic_write_json(dict(state='accepted',identity=stable_hash(s),test_access=False,
-        files={n:file_sha256(out/n) for n in ('results.json','README.zh-CN.md')}),out/'accepted.json')
+        report_source_sha256=file_sha256(__file__),files={n:file_sha256(out/n) for n in ('results.json','README.zh-CN.md')}),out/'accepted.json')
 
 
 def main():

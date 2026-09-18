@@ -74,7 +74,7 @@ def publish(root,output):
             key=(row['method'],row['scenario'])
             if key in seen:continue
             seen.add(key);m=row['metrics']
-            lines.append(f'|{key[0]}|{key[1]}|{100*m["macro_f1"]:.3f}|{100*m["auroc"]:.3f}|')
+            lines.append(f'|{key[0]}|{key[1]}|{100*m["macro_f1"]:.3f}|{100*m["macro_auroc_ovr"]:.3f}|')
     lines+=['','权重、恢复断点、参与者预测不上传；current.json中保存验收后模型与修正模块的逻辑索引及SHA。',
         '两个完整方法均接受后才形成匹配结论；dev选择及小样本限制保留，失败历程见交接文档。']
     (out/'README.md').write_text('\n'.join(lines)+'\n')
