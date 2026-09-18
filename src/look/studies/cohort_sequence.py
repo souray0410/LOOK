@@ -42,6 +42,8 @@ def refresh(plan, statuses):
         next_question='external_method_A_vs_A_plus_LOOK_requires_adapter_acceptance')
     target=out/'current.json'
     if not target.exists() or read(target)!=current:atomic_write_json(current,target)
+    has_external=any('mmtm' in p for p in publications)
+    def host_label(p):return p['architecture']+('＋MMTM适配宿主' if 'mmtm' in p else '')
     lines=['# LOOK 小队列累计进展：先逐配置跑通，再补重复种子','',
         '青光眼同一小队列：1,264 train / 296 dev，seed 3416，test封存。每个配置均包含共同新宿主、PCA与自由低秩残差两方法、两种缺失和完整正收益树。',
         '按配置顺序推进；LOOK固定一张卡，配置内两种拟合也顺序执行；另一张卡留给Radon_Bridge。已完成的ResNet50复用，不重训。当前这些是跨骨干验证，不能替代外部方法A与A+LOOK。','',
@@ -51,7 +53,7 @@ def refresh(plan, statuses):
         label={'accepted':'已验收','running':'执行中','not_started':'未启动','needs_review':'故障待修复','accepted_reference':'已验收复用'}.get(state,state)
         progress=p.get('host_progress',{})
         if state=='running' and progress:label+=f'；宿主epoch {progress.get("epoch","—")} / 更新{progress.get("updates","—")}'
-        lines.append(f'|{i+1}|{p["architecture"]}|{label}|[配置、指标、树路径](configs/{p["run_id"]}/README.md)|')
+        lines.append(f'|{i+1}|{host_label(p)}|{label}|[配置、指标、树路径](configs/{p["run_id"]}/README.md)|')
     lines+=['','## 累计结果（Macro-F1，百分比）','',
         '只展示已完整匹配验收的配置；每一行应横向比较，跨骨干不把某个最高数值直接叫稳定最佳。','',
         '|骨干|缺失状态|不修正|PCA＋树|自由低秩残差＋树|残差−PCA（百分点）|','|---|---|---:|---:|---:|---:|']
@@ -60,11 +62,13 @@ def refresh(plan, statuses):
         results={(r['method'],r['scenario']):r['metrics']['macro_f1'] for r in p['results']}
         for pattern,label in PATTERNS.items():
             a,b,c=(100*results[(m,pattern)] for m in ('host','pca_free_mean','residual_rrr'))
-            lines.append(f'|{p["architecture"]}|{label}|{a:.2f}|{b:.2f}|{c:.2f}|{c-b:+.2f}|')
+            lines.append(f'|{host_label(p)}|{label}|{a:.2f}|{b:.2f}|{c:.2f}|{c-b:+.2f}|')
     lines+=['','各配置详情含区间、AUROC/NLL/Brier反例、原模型停止轮次、初始化、秩/λ/缩放规则、实际路径及缓存计数。',
         '单种子与开发集选择结果只能支持探索性结论；没有稳定优越性或独立test结论。',
         '服务器自动汇总；GitHub由既有定时维护核验后同步。配置详情分别保留结果证据截止与发布核验时间。',
         '下一科学问题是已有方法A在加LOOK前后是否受益；MMTM适配审计尚未通过，不将它标为已运行。']
+    if has_external:
+        lines=[line.replace('当前这些是跨骨干验证，不能替代外部方法A与A+LOOK。','前两配置是已接受跨骨干参考；MMTM配置单独回答同一宿主A与A+LOOK。').replace('下一科学问题是已有方法A在加LOOK前后是否受益；MMTM适配审计尚未通过，不将它标为已运行。','MMTM配置包含Stage3作者门控适配；其实际阶段见上表，未验收结果不排名。每个配置内部严格使用同一宿主比较A和A+LOOK；不是原论文完整系统复现。') for line in lines]
     text='\n'.join(lines)+'\n';p=out/'README.md'
     if not p.exists() or p.read_text()!=text:
         temp=out/'.README.tmp';temp.write_text(text);temp.replace(p)

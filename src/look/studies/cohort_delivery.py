@@ -10,6 +10,7 @@ import os
 import random
 from pathlib import Path
 import signal
+import shutil
 import subprocess
 import sys
 import time
@@ -46,6 +47,8 @@ def validate(s):
     if s['seed']!=3416 or s['arms']!=list(ARMS) or s['search']!='positive_forward_tree':raise ValueError('Unregistered package')
     if (s['factor'],s['rank'],s['position'])!=(16,32,'deep') or s['architecture'] not in ('resnet18','resnet34','resnet50','densenet121'):raise ValueError('Unregistered scope')
     if s['initialization']['kind']!='public_imagenet_fresh_host':raise ValueError('Fresh host required')
+    if 'mmtm' in s and (s['architecture']!='resnet18' or s['mmtm']!={'stage':'stage3','ratio':4,'gate_scale':1.0}):
+        raise ValueError('Unregistered MMTM host variant')
     validate_config(s['training'])
     if file_sha256(Path(s['data_root'])/'accepted.json')!=s['data_audit_sha256']:raise ValueError('Data identity changed')
     for row in s['source_pins']:
@@ -59,7 +62,7 @@ def make_graph(s):
     torch.hub.set_dir(str(Path(s['initialization']['path']).parent.parent))
     cfg=dict(name=s['architecture'],spatial_dims=2,in_channels=3,num_classes=2,views=1,granularity='block')
     first=create_model(cfg,weights='IMAGENET1K_V1'); second=create_model(cfg,weights='IMAGENET1K_V1')
-    return build_native_host(SimpleNamespace(graph=first),SimpleNamespace(graph=second),s['position'],'cuda:0')
+    return build_native_host(SimpleNamespace(graph=first),SimpleNamespace(graph=second),s['position'],'cuda:0',mmtm=s.get('mmtm'))
 
 
 def load_selected(s,root):
@@ -88,6 +91,8 @@ def work(s,root,stage):
     torch.use_deterministic_algorithms(True);torch.backends.cudnn.benchmark=False
     torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
     def check():
+        if s.get('disk_reserve_bytes',0) and shutil.disk_usage(root).free<s['disk_reserve_bytes']:
+            raise OSError('Artifact volume reserve breached; preserve existing outputs')
         if psutil.Process().memory_info().rss>.85*s['ram_budget_bytes']:raise MemoryError('Host reserve breached')
         if torch.cuda.mem_get_info()[0]<s['gpu_reserve_bytes']:raise MemoryError('Device reserve breached')
         return stop

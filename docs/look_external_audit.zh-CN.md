@@ -1,10 +1,10 @@
 # 外部候选适配审计
 
-本页是代码级适配审计，不是三方法实验完成。三个候选不依本次性能替换，正式任务清单暂时为空。精确作者commit和文件SHA见experiments/2026_09_10_11_11_31/look_mechanisms/external_sources.json。
+本页是代码级适配审计，不是三方法实验完成。三个候选不依本次性能替换。MMTM新增有限小队列适配协议见[记录](handoff/mmtm_cohort_20260918.md)，实际运行须以其部署回执为准。精确作者commit和文件SHA见experiments/2026_09_10_11_11_31/look_mechanisms/external_sources.json。
 
 | 方法 | 核心 / 输入 | 当前处理 | 尚需锁定 |
 |---|---|---|---|
-| MMTM，CVPR2020 | 两路空间均值→联合MLP/ReLU→各路sigmoid门控；不要求空间尺寸相同 | 已提供维度无关的门控模块并做公式/梯度验收；不是原视频/骨骼系统 | 接入层、单输出宿主结构、初始化、缺失训练制度、优化预算、MHD节点数值验收 |
+| MMTM，CVPR2020 | 两路空间均值→联合MLP/ReLU→各路sigmoid门控；不要求空间尺寸相同 | 已提供维度无关的门控模块并做公式/梯度验收；不是原视频/骨骼系统 | Stage3/R18深融合、作者scale1随机初始化、沿用complete训练预算已登记；仍须真实GPU及最终科学验收 |
 | EyeMoSt+ | 各路预测分布、Student-t融合与置信度约束；作者列出CFP2D及OCT3D编码器 | 审阅MedIA’24的EyeMost_Plus路径；禁止删掉分布/置信度损失以凑普通分类器 | OCT改2D后的编码器及证据头、保持原损失、无标签推理、完整缺失处理、MHD转换与数值对照 |
 | EDRL，MICCAI2025 | Essence-point筛选、共同/独有表示解耦与自蒸馏；原图含3DOCT | 审阅code目录fusion_net及Harvard入口；当前2D队列不是原论文完整输入 | 单切片是否仍有实质token选择、原损失权重和训练/推理分支、随机推理、MHD转换与一致性 |
 

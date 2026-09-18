@@ -21,6 +21,9 @@ def publish(root,output):
         states={},results=[],limitations=['single_seed_development_selection',
           'public_initialization_fresh_host_not_Ibex_medical_parent_composition',
           'small_balanced_cohort_not_large_cohort_replacement'])
+    if 'mmtm' in s:
+        public['mmtm']=s['mmtm']
+        public['limitations'].append('author_gate_module_adaptation_not_original_paper_system')
     for stage in ('profile','host','pca',*s['arms']):
         p=root/(stage+'_status.json');v=read(p) if p.exists() else {'state':'not_started'}
         public['states'][stage]={k:v[k] for k in ('state','time','gpu_peak_reserved_bytes') if k in v}
@@ -246,6 +249,9 @@ def render(p):
         f'运行：`{p["run_id"]}`；科学源：`{p["source_commit"]}`；框架：`{p["framework_commit"]}`。',
         f'配置指纹：`{p["configuration_id"]}`。',
         '完整安全汇总和路径在[current.json](current.json)。权重、参与者预测及特征保留在授权服务器，不上传GitHub。']
+    if 'mmtm' in p:
+        v=p['mmtm']
+        lines[2:2]=['',f'**本配置的A是MMTM适配宿主**：两路Stage 3后加入作者门控（ratio={v["ratio"]}，scale={v["gate_scale"]}、随机Linear初始化），再进入Stage 4和原深融合分类头。上图需在Stage 3后加入双向门控；它不是原论文视频/骨骼完整系统。', '不修正列就是A；两拟合列是冻结同一A后加LOOK，比较不另训一套A。','']
     if p['architecture']=='densenet121':
         lines=[line.replace('Stage 4','Dense block 4').replace('Stage 1','Dense block 1').replace('Stage 2','Dense block 2').replace('Stage 3','Dense block 3') for line in lines]
     return lines

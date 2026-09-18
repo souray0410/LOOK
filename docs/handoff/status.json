@@ -31,7 +31,7 @@
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
     },
     {
-      "summary": "新best-forward首轮9/9候选齐全，白内障深层融合3416缺OCT：不修正71.33%，选参与者级融合特征75.47%（+4.13pp）；12510名dev，q32、空间16倍。预测重算与SHA通过；双缺失配置尚未接受。",
+      "summary": "新best-forward首轮9/9候选齐全，白内障深层融合3416缺OCT：不修正71.33%，选参与者级融合特征75.47%（+4.13pp）；12510名dev，q32、空间16倍。预测重算与SHA通过；此句为首轮历史截点；现已完成双缺失验收，见下方完整配置记录。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
     },
@@ -46,12 +46,12 @@
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/positive_forward_tree_20260917.md"
     },
     {
-      "summary": "缺OCT正收益树已完成17候选/8前缀，18份唯一预测重算及SHA通过；12510名dev，3416/x16/q32。最终仍为单参与者融合特征：71.3331%→75.4662%，+4.1330pp；未发现比best-forward该状态更高的选中dev分数。完整双状态重放及周包尚未接受。",
+      "summary": "缺OCT正收益树已完成17候选/8前缀，18份唯一预测重算及SHA通过；12510名dev，3416/x16/q32。最终仍为单参与者融合特征：71.3331%→75.4662%，+4.1330pp；未发现比best-forward该状态更高的选中dev分数。此句为单状态历史截点；双状态现已验收，整周包仍未验收。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
     },
     {
-      "summary": "best-forward白内障/ResNet50深层融合/3416/x16/q32完整双缺失配置已重放和报告验收：12510名dev，缺OCT macro-F1 71.3331→75.4662%，缺CFP 53.1402→56.9855%；缺CFP选joint_stem→joint_stage3，AUROC69.0933→67.9745%且校准恶化。主树/周包未完成，非test结论。",
+      "summary": "best-forward白内障/ResNet50深层融合/3416/x16/q32完整双缺失配置已重放和报告验收：12510名dev，缺OCT macro-F1 71.3331→75.4662%，缺CFP 53.1402→56.9855%；缺CFP选joint_stem→joint_stage3，AUROC69.0933→67.9745%且校准恶化。该对照完成时主树尚未完成；主树现已验收，整周包和test未完成。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/best_forward/README.md"
     },
@@ -105,7 +105,8 @@
     "2026-09-18 06:51UTC：ws02共同宿主按原平台规则27轮停止、best12、270更新，重放接受；独立重算296人完整输入Macro-F1=69.2142%、AUROC=74.4522%。9/9 PCA基完成，两自由均值方法已分别在双GPU完成首前缀79train批并评候选。仅宿主接受，尚无完整缺失方法比较。权重SHA已入小队列current.json，受限资产不上传。",
     "2026-09-18 07:42UTC核验，仅ws02小队列：同run两方法/两缺失均完成；自动CPU报告修复成功，独立8预测SHA、296人同序、F1/AUROC重算及同宿主通过，去重后6行。重复发布字节/mtime不变；身份冲突/预测篡改/重复矛盾/报告不一致保护5测试通过。RRR/PCA缺OCT69.9046/69.5821%，缺CFP61.6980/61.7695%，两方法差值区间均跨零。不是Ibex恢复、整个周包或独立test验收；发布链的定时GitHub端仍由原维护负责，不冒充实时。",
     "2026-09-18：单GPU有限序列已实际完成R18宿主→PCA→残差树→PCA树→重放统计，R50精确引用；不自动扩大近似骨干/种子。下一包按当前研究决策登记，未验收MMTM接口不称已训练。Ibex23待批/1allocation及RPC间歇超时，既有保护与claims保留。",
-    "2026-09-18 09:12UTC维护：精确复用R50/R18接受的首轮候选完成36项固定空前缀/同位置拟合诊断，未新增GPU拟合或训练；两臂宿主、位置集合、基线及penalty policy一致，非固定lambda或斜率机制。"
+    "2026-09-18 09:12UTC维护：精确复用R50/R18接受的首轮候选完成36项固定空前缀/同位置拟合诊断，未新增GPU拟合或训练；两臂宿主、位置集合、基线及penalty policy一致，非固定lambda或斜率机制。",
+    "2026-09-18维护主动修正结果列表中的历史截点措辞：不改原数值与scientific cutoff，明确旧“主树/双状态未完成”已被后续完整配置验收取代。MMTM有限小队列协议与节点适配实现单独登记，CPU验收不等于正式训练。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
@@ -188,6 +189,10 @@
     {
       "label": "同空前缀同位置诊断",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/fixed_prefix/README.md"
+    },
+    {
+      "label": "MMTM A/A+LOOK有限配方及工程验收边界",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/mmtm_cohort_20260918.md"
     }
   ]
 }

@@ -72,7 +72,7 @@ class ObservedMean(nn.Module):
         return torch.stack([x.mean(0) for x in features.split(values)])
 
 
-def build_native_host(first, second, position, device="cpu"):
+def build_native_host(first, second, position, device="cpu", *, mmtm=None):
     """first=CFP, second=OCT; neither input parent is mutated or registered twice."""
     a, b = first.graph, second.graph
     if a.configuration() != b.configuration():
@@ -82,6 +82,11 @@ def build_native_host(first, second, position, device="cpu"):
         raise ValueError("Expanded LOOK host expects observed-eye 2D parents")
     stages = STAGE_MAP[config["name"]]
     split = STARTS[position]
+    if mmtm is not None:
+        if set(mmtm) != {'stage','ratio','gate_scale'} or mmtm['stage'] not in stages[:split+1]:
+            raise ValueError('MMTM must be explicit and before fusion')
+        if mmtm['stage']=='features':
+            raise ValueError('This adapter requires spatial MMTM endpoints')
     nodes, edges, definitions, groups, levels = [], [], [], [], {}
     def node(name):
         n = MHD_Node(len(nodes), name, MHD_Node.Message(torch.zeros(1)), aggregation="replace")
@@ -102,6 +107,9 @@ def build_native_host(first, second, position, device="cpu"):
                             [previous[modality]], f"{modality}_{stage}")
             group.append(eid); previous[modality] = out
         groups.append(group); sites.append(f"joint_{stage}")
+        if mmtm is not None and stage==mmtm['stage']:
+            from look.methods.mmtm_nodes import add_mmtm_nodes
+            add_mmtm_nodes(edge,groups,previous,a.feature_channels[stage],**mmtm)
     cut = stages[split]
     # The feature width is declared by the native classifier, not guessed from shape.
     if cut == "features":
@@ -147,6 +155,12 @@ def build_native_host(first, second, position, device="cpu"):
         fusion_endpoint=cut, suffix_initialization="cfp_selected_parent", pooling="valid_eye_feature_mean_v1",
         boundary_layout="channels_first", source_config=config,
         cuts={e.name: e.edge_operations[0].function.definitions for e in edges if isinstance(e.edge_operations[0].function, NativeCut)})
+    if mmtm is not None:
+        graph.architecture_id += '_mmtm_' + mmtm['stage']
+        graph.native_host_provenance['external_mmtm'] = dict(mmtm,
+            source_commit='1c81cfefad5532cfb39193b8af3840ac3346e897',
+            initialization='author_random_linear',modality_order=['oct','cfp'],
+            scope='MMTM_module_adaptation_not_original_video_system')
     return graph
 
 

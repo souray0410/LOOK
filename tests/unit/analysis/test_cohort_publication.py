@@ -86,3 +86,13 @@ def test_tree_detail_provenance_and_readable_matching_table(tmp_path):
     before=(out/'current.json').read_bytes();artifact.write_bytes(b'corrupt')
     with pytest.raises(ValueError,match='Selected search artifact changed'):publish(tmp_path,out)
     assert (out/'current.json').read_bytes()==before
+
+
+def test_mmtm_identity_is_visible_without_changing_plain_host(tmp_path):
+    s=fixture(tmp_path);s['mmtm']=dict(stage='stage3',ratio=4,gate_scale=1.0)
+    (tmp_path/'spec.json').write_text(json.dumps(s))
+    for arm in s['arms']:
+        path=tmp_path/arm/'accepted.json';v=json.loads(path.read_text());v['identity']=stable_hash(s);path.write_text(json.dumps(v))
+    out=tmp_path/'public';v=publish(tmp_path,out)
+    assert v['mmtm']==s['mmtm']
+    assert 'MMTM适配宿主' in (out/'README.md').read_text()
