@@ -201,6 +201,10 @@ def main():
                 code=child.wait()
                 if code:raise RuntimeError(f'Stage {stage} failed ({code}); preserve outputs for repair')
             try:
+                previous=root/'pipeline_status.json'
+                if previous.exists() and read(previous).get('state')=='needs_review':
+                    atomic_write_json(read(previous),root/'incidents'/f'pipeline_before_resume_{time.time_ns()}.json')
+                atomic_write_json(dict(state='running',identity=stable_hash(s),time=time.time(),pid=os.getpid()),previous)
                 for stage in ('profile','host','pca'):
                     # Host checks its accepted receipt; all other stages verify/resume their own outputs.
                     if stage=='profile' and (root/'profile/accepted.json').exists():

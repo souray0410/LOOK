@@ -34,3 +34,5 @@ CPU检查不代替真实224输入GPU预检。先在LOOK GPU0核验完整dev、�
 首次新启动脚本漏继承CuBLAS确定性环境变量，在预检第一个反传前后失败且正式训练为0更新。保留原日志/epoch1 offset0检查点，恢复原`CUBLAS_WORKSPACE_CONFIG=:4096:8`和cuDNN路径；同run恢复预检、验收后进入正式训练。故障原件与闭环回执在`incidents/bootstrap_missing_cublas_v1`和`bootstrap_repair_v1.json`，未放松确定性或停止规则。
 
 新结果物理存储在授权backup卷，原/data逻辑路径用明确符号链接；登记时空闲244GiB，100GiB启动准入、50GiB过程余量，旧模型/结果未删除。`sequence_active.json`现在指向新有限序列；前两配置只读接受复用。原sequence执行器继续完成宿主→PCA→残差树→PCA树→重放/统计/统一累计报告，GitHub仍由既有定时维护核验后同步。
+
+12:35UTC追加：宿主已按原规则24轮停止、best9、240次更新并接受，原pipeline自动进入PCA计算，未人工跳过训练门槛。准确科学SHA的两条GitHub CI均成功。现场另发现修复后pipeline总状态仍显示已解决的首轮错误（阶段状态与实际进程正常）；原错误归档后按实际工作进程对账为running。新管理代码在合法恢复入口保存旧错误再写running；此次健康科学快照不热改，新代码仅对后继部署生效。
