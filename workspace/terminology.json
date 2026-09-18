@@ -1,0 +1,23 @@
+{
+  "schema": "research_terminology_v1",
+  "replacements": {
+    "缺OCT（仅眼底照片）": "缺OCT（仅CFP）",
+    "缺眼底照片": "缺CFP",
+    "眼底分支": "CFP分支",
+    "LOOK（inear one-one korrektur）": "LOOK（linear one-one korrektur）"
+  },
+  "forbidden": [
+    "缺眼底",
+    "仅眼底",
+    "眼底分支",
+    "LOOK（inear",
+    "LOOK(inear",
+    "|resnet18",
+    "|resnet50"
+  ],
+  "canonical": {
+    "oct_missing": "缺OCT（仅CFP）",
+    "cfp_missing": "缺CFP（仅OCT）",
+    "LOOK": "linear one-one korrektur"
+  }
+}

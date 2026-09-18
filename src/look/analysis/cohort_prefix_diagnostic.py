@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 from look.runtime.state import atomic_write_json, stable_hash
+from look.analysis.cohort_publication import PATTERNS, SITES, backbone_label
 
 
 def diagnose(source, output):
@@ -33,7 +34,7 @@ def diagnose(source, output):
         '这排除了此前修正路径不同的影响，但λ仍按各方法自身的既定规则选取，不能叫“固定λ/斜率”的机制消融。负候选也完整展示；这里是强制启用候选，不是最终关闭开关后的性能。','',
         '|骨干|缺失|位置|不修正|PCA|残差|残差−PCA(pp)|','|---|---|---|---:|---:|---:|---:|']
     for r in rows:
-        lines.append(f'|{r["backbone"]}|{r["scenario"]}|{r["node"]}|{100*r["baseline"]:.2f}|{100*r["pca"]:.2f}|{100*r["residual"]:.2f}|{r["residual_minus_pca_pp"]:+.2f}|')
+        lines.append(f'|{backbone_label(r["backbone"])}|{PATTERNS[r["scenario"]]}|{SITES[r["node"]]}|{100*r["baseline"]:.2f}|{100*r["pca"]:.2f}|{100*r["residual"]:.2f}|{r["residual_minus_pca_pp"]:+.2f}|')
     lines+=['','各单元只描述同一个已看过的dev，不新增确认性显著性结论。原树最终结果仍见[累计入口](../small_cohort/README.md)。']
     (out/'README.md').write_text('\n'.join(lines)+'\n');return result
 

@@ -2,7 +2,7 @@
 
 [维护与交接 / Handoff](docs/handoff/README.md) — 当前版本、部署状态、验收证据与跨项目调用；读取后请刷新实时状态。
 
-LOOK（inear one-one korrektur）：基于固定 MHD V4 的研究项目。`main` 是与 Radon_Bridge 统一的当前开发结构；`2026_09_09_10_30_34` 是本次研究批次标识。修改前的完整代码、配置和报告见[历史复现](docs/history.md)。
+LOOK（linear one-one korrektur）：基于固定 MHD V4 的研究项目。`main` 是与 Radon_Bridge 统一的当前开发结构；`2026_09_09_10_30_34` 是初始统一结构批次标识；当前实验以交接记录和锁定配置为准。修改前的完整代码、配置和报告见[历史复现](docs/history.md)。
 
 ```text
 src/look/
@@ -39,7 +39,7 @@ python -m look verify-env
 
 上述命令也可统一写为 `python scripts/manage.py <command>`。检查不启动训练、不申请 GPU、不读取研究数据。可复用代码使用项目根目录相对路径；外部影像、CSV、缓存和结果由[路径配置](docs/paths.md)指定。
 
-MHD V4 包版本 `4`，固定提交 `3559caa8d596d4438533a69d39d8a2c32eb21e46`，API 为 V4。它独立安装，不随 MHD_Framework 的后续修改自动升级。本仓库 wheel 只包含 `look`。
+MHD V4 包版本 `4`，固定提交 `c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0`，API 为 V4。它独立安装，不随 MHD_Framework 的后续修改自动升级。本仓库 wheel 只包含 `look`。
 
 新训练需要独立验收数据和协议，不自动继承历史队列或 test 使用权限。受限影像、CSV、参与者预测和检查点保留在授权存储，GitHub 只保存代码与可公开汇总。
 
@@ -54,3 +54,5 @@ The frozen-host LOOK supplement, its 378 additional neural training tasks, mecha
 ## Cumulative results and attempt history
 
 Use the [current results entry](docs/reports/current/README.md) and [attempt archive](docs/archive/README.md). Coverage and verification dates are explicit; these entries do not establish live execution or complete historical migration.
+
+显示名称、缩写、指标单位及符号遵循[统一命名规范](workspace/NAMING_STANDARD.md)。

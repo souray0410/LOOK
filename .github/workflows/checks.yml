@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Current terminology and entrypoint consistency
+        run: python workspace/check_terminology.py --root .
       - run: python -m venv .venv
       - name: Install CPU test dependencies and locked project
         run: |

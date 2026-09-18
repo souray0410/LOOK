@@ -5,42 +5,42 @@
 
 |骨干|缺失|位置|不修正|PCA|残差|残差−PCA(pp)|
 |---|---|---|---:|---:|---:|---:|
-|resnet50|oct_missing|joint_input|37.51|66.19|66.28|+0.08|
-|resnet50|oct_missing|joint_stem|37.51|59.66|62.83|+3.18|
-|resnet50|oct_missing|joint_stage1|37.51|66.49|65.53|-0.96|
-|resnet50|oct_missing|joint_stage2|37.51|44.66|54.44|+9.78|
-|resnet50|oct_missing|joint_stage3|37.51|38.89|46.41|+7.52|
-|resnet50|oct_missing|joint_stage4|37.51|44.24|55.48|+11.24|
-|resnet50|oct_missing|fusion_stage4|37.51|47.95|46.46|-1.50|
-|resnet50|oct_missing|fusion_features|37.51|67.57|69.90|+2.34|
-|resnet50|oct_missing|fusion_participant_feature|37.51|66.89|68.58|+1.69|
-|resnet50|cfp_missing|joint_input|55.43|57.17|56.98|-0.20|
-|resnet50|cfp_missing|joint_stem|55.43|43.02|43.02|+0.00|
-|resnet50|cfp_missing|joint_stage1|55.43|55.04|51.67|-3.36|
-|resnet50|cfp_missing|joint_stage2|55.43|53.80|56.20|+2.40|
-|resnet50|cfp_missing|joint_stage3|55.43|51.77|51.07|-0.70|
-|resnet50|cfp_missing|joint_stage4|55.43|54.73|48.65|-6.08|
-|resnet50|cfp_missing|fusion_stage4|55.43|58.41|57.42|-0.98|
-|resnet50|cfp_missing|fusion_features|55.43|59.29|58.04|-1.25|
-|resnet50|cfp_missing|fusion_participant_feature|55.43|57.99|60.91|+2.93|
-|resnet18|oct_missing|joint_input|62.34|39.47|42.24|+2.77|
-|resnet18|oct_missing|joint_stem|62.34|59.86|57.20|-2.66|
-|resnet18|oct_missing|joint_stage1|62.34|63.14|62.63|-0.51|
-|resnet18|oct_missing|joint_stage2|62.34|64.82|64.27|-0.54|
-|resnet18|oct_missing|joint_stage3|62.34|62.40|64.02|+1.63|
-|resnet18|oct_missing|joint_stage4|62.34|61.83|64.02|+2.19|
-|resnet18|oct_missing|fusion_stage4|62.34|66.38|64.00|-2.39|
-|resnet18|oct_missing|fusion_features|62.34|64.84|66.21|+1.38|
-|resnet18|oct_missing|fusion_participant_feature|62.34|67.91|64.86|-3.04|
-|resnet18|cfp_missing|joint_input|56.72|43.22|44.11|+0.89|
-|resnet18|cfp_missing|joint_stem|56.72|56.76|55.91|-0.85|
-|resnet18|cfp_missing|joint_stage1|56.72|56.24|57.83|+1.59|
-|resnet18|cfp_missing|joint_stage2|56.72|48.90|50.64|+1.74|
-|resnet18|cfp_missing|joint_stage3|56.72|57.78|58.36|+0.57|
-|resnet18|cfp_missing|joint_stage4|56.72|59.41|59.46|+0.05|
-|resnet18|cfp_missing|fusion_stage4|56.72|57.99|59.46|+1.47|
-|resnet18|cfp_missing|fusion_features|56.72|58.91|57.31|-1.61|
-|resnet18|cfp_missing|fusion_participant_feature|56.72|58.27|58.63|+0.36|
+|ResNet50|缺OCT（仅CFP）|①双分支输入|37.51|66.19|66.28|+0.08|
+|ResNet50|缺OCT（仅CFP）|②初始卷积后|37.51|59.66|62.83|+3.18|
+|ResNet50|缺OCT（仅CFP）|③Stage 1后|37.51|66.49|65.53|-0.96|
+|ResNet50|缺OCT（仅CFP）|④Stage 2后|37.51|44.66|54.44|+9.78|
+|ResNet50|缺OCT（仅CFP）|⑤Stage 3后|37.51|38.89|46.41|+7.52|
+|ResNet50|缺OCT（仅CFP）|⑥Stage 4后、融合前|37.51|44.24|55.48|+11.24|
+|ResNet50|缺OCT（仅CFP）|⑦融合后特征图|37.51|47.95|46.46|-1.50|
+|ResNet50|缺OCT（仅CFP）|⑧每眼特征向量|37.51|67.57|69.90|+2.34|
+|ResNet50|缺OCT（仅CFP）|⑨双眼汇总后的参与者特征|37.51|66.89|68.58|+1.69|
+|ResNet50|缺CFP（仅OCT）|①双分支输入|55.43|57.17|56.98|-0.20|
+|ResNet50|缺CFP（仅OCT）|②初始卷积后|55.43|43.02|43.02|+0.00|
+|ResNet50|缺CFP（仅OCT）|③Stage 1后|55.43|55.04|51.67|-3.36|
+|ResNet50|缺CFP（仅OCT）|④Stage 2后|55.43|53.80|56.20|+2.40|
+|ResNet50|缺CFP（仅OCT）|⑤Stage 3后|55.43|51.77|51.07|-0.70|
+|ResNet50|缺CFP（仅OCT）|⑥Stage 4后、融合前|55.43|54.73|48.65|-6.08|
+|ResNet50|缺CFP（仅OCT）|⑦融合后特征图|55.43|58.41|57.42|-0.98|
+|ResNet50|缺CFP（仅OCT）|⑧每眼特征向量|55.43|59.29|58.04|-1.25|
+|ResNet50|缺CFP（仅OCT）|⑨双眼汇总后的参与者特征|55.43|57.99|60.91|+2.93|
+|ResNet18|缺OCT（仅CFP）|①双分支输入|62.34|39.47|42.24|+2.77|
+|ResNet18|缺OCT（仅CFP）|②初始卷积后|62.34|59.86|57.20|-2.66|
+|ResNet18|缺OCT（仅CFP）|③Stage 1后|62.34|63.14|62.63|-0.51|
+|ResNet18|缺OCT（仅CFP）|④Stage 2后|62.34|64.82|64.27|-0.54|
+|ResNet18|缺OCT（仅CFP）|⑤Stage 3后|62.34|62.40|64.02|+1.63|
+|ResNet18|缺OCT（仅CFP）|⑥Stage 4后、融合前|62.34|61.83|64.02|+2.19|
+|ResNet18|缺OCT（仅CFP）|⑦融合后特征图|62.34|66.38|64.00|-2.39|
+|ResNet18|缺OCT（仅CFP）|⑧每眼特征向量|62.34|64.84|66.21|+1.38|
+|ResNet18|缺OCT（仅CFP）|⑨双眼汇总后的参与者特征|62.34|67.91|64.86|-3.04|
+|ResNet18|缺CFP（仅OCT）|①双分支输入|56.72|43.22|44.11|+0.89|
+|ResNet18|缺CFP（仅OCT）|②初始卷积后|56.72|56.76|55.91|-0.85|
+|ResNet18|缺CFP（仅OCT）|③Stage 1后|56.72|56.24|57.83|+1.59|
+|ResNet18|缺CFP（仅OCT）|④Stage 2后|56.72|48.90|50.64|+1.74|
+|ResNet18|缺CFP（仅OCT）|⑤Stage 3后|56.72|57.78|58.36|+0.57|
+|ResNet18|缺CFP（仅OCT）|⑥Stage 4后、融合前|56.72|59.41|59.46|+0.05|
+|ResNet18|缺CFP（仅OCT）|⑦融合后特征图|56.72|57.99|59.46|+1.47|
+|ResNet18|缺CFP（仅OCT）|⑧每眼特征向量|56.72|58.91|57.31|-1.61|
+|ResNet18|缺CFP（仅OCT）|⑨双眼汇总后的参与者特征|56.72|58.27|58.63|+0.36|
 
 各单元只描述同一个已看过的dev，不新增确认性显著性结论。原树最终结果仍见[累计入口](../small_cohort/README.md)。
 

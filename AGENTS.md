@@ -50,3 +50,5 @@ Read workspace/RESULT_CONTINUITY_STANDARD.md for incremental dependencies, cumul
 Read workspace/EFFICIENCY_STANDARD.md: proactively measure repeated computation, dependency stalls and resource bottlenecks before users report delays. Verify numerical/selection equivalence, measured cost improvement and actual downstream progress after safe deployment. Documentation alone is not an installed performance monitor.
 
 For research reports, figures, cumulative pages and weekly delivery, apply workspace/SCIENTIFIC_COMMUNICATION_STANDARD.md. Independently review whether an unfamiliar reader can identify the question, comparison, evidence, limitations and next action. Mechanical checks do not certify scientific interpretation; update generators with presentation changes.
+
+Read workspace/NAMING_STANDARD.md and run python workspace/check_terminology.py --root . before publication. Check generators and generated pages together; preserve machine identities and archived evidence.

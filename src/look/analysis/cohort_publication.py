@@ -124,8 +124,12 @@ def publish(root,output):
     return public
 
 
+def backbone_label(name):
+    return {'resnet18':'ResNet18','resnet34':'ResNet34','resnet50':'ResNet50','densenet121':'DenseNet121'}.get(name,name)
+
+
 NAMES={'host':'不修正','pca_free_mean':'PCA方向约束','residual_rrr':'自由低秩残差'}
-PATTERNS={'oct_missing':'缺OCT（仅眼底照片）','cfp_missing':'缺眼底照片（仅OCT）'}
+PATTERNS={'oct_missing':'缺OCT（仅CFP）','cfp_missing':'缺CFP（仅OCT）'}
 SITES={'joint_input':'①双分支输入','joint_stem':'②初始卷积后','joint_stage1':'③Stage 1后',
        'joint_stage2':'④Stage 2后','joint_stage3':'⑤Stage 3后','joint_stage4':'⑥Stage 4后、融合前',
        'fusion_stage4':'⑦融合后特征图','fusion_features':'⑧每眼特征向量','fusion_participant_feature':'⑨双眼汇总后的参与者特征'}
@@ -157,7 +161,7 @@ def render(p):
         '|项目|本次配置|','|---|---|',
         '|任务与数据|青光眼二分类；旧小队列1,264名训练参与者、296名开发集参与者；test未使用|',
         '|输入|每眼224×224；CFP眼底照片与旧数据导出的OCT二维图像（三通道）；不是R&B的32层三维输入|',
-        f'|原网络|两分支{p["architecture"]}，公开ImageNet初始化后重新训练同一共同模型；没有复用历史医学宿主|',
+        f'|原网络|两分支{backbone_label(p["architecture"])}，公开ImageNet初始化后重新训练同一共同模型；没有复用历史医学宿主|',
         '|两个分支在哪里融合|各自走完Stage 4后，按通道拼接，经1×1卷积与BN投影，再生成每眼特征、汇总双眼特征、分类|',
         '|拟合时哪些会变|原网络参数及BN固定；只拟合LOOK变换，不反向训练原网络|',
         '|缺失如何模拟|整种模态用标准化空间的零值替代（normalized_mean）；不是删除某个病人|',
@@ -198,7 +202,7 @@ def render(p):
     lines+=['','“前缀”就是一条已接受的部分修正路径，计数包含空路径和终端路径；候选评价数不是训练轮数。最终只留一个位置，不代表只测了一个位置。两方法搜索规则相同，但正收益分支不同，因此工作量不同。','',
         '<details>','<summary>展开：第一轮独立修正9个位置，各自提升多少</summary>','',
         '以下是从“不修正”出发、每次只开启这一个位置的F1变化（百分点），不是最终多位置组合结果。正值进入下一层树，零或负值不扩展。','',
-        '|位置|缺OCT／PCA|缺OCT／低秩残差|缺眼底照片／PCA|缺眼底照片／低秩残差|',
+        '|位置|缺OCT／PCA|缺OCT／低秩残差|缺CFP／PCA|缺CFP／低秩残差|',
         '|---|---:|---:|---:|---:|']
     roots={}
     for d in p.get('search_details',[]):

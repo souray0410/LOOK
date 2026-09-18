@@ -11,7 +11,7 @@ import subprocess
 import sys
 import time
 from look.runtime.state import atomic_write_json, file_sha256, stable_hash
-from look.analysis.cohort_publication import publish, read, PATTERNS
+from look.analysis.cohort_publication import publish, read, PATTERNS, backbone_label
 
 
 def validate_sequence(plan):
@@ -43,7 +43,7 @@ def refresh(plan, statuses):
     target=out/'current.json'
     if not target.exists() or read(target)!=current:atomic_write_json(current,target)
     has_external=any('mmtm' in p for p in publications)
-    def host_label(p):return p['architecture']+('＋MMTM适配宿主' if 'mmtm' in p else '')
+    def host_label(p):return backbone_label(p['architecture'])+('＋MMTM适配宿主' if 'mmtm' in p else '')
     lines=['# LOOK 小队列累计进展：先逐配置跑通，再补重复种子','',
         '青光眼同一小队列：1,264 train / 296 dev，seed 3416，test封存。每个配置均包含共同新宿主、PCA与自由低秩残差两方法、两种缺失和完整正收益树。',
         '按配置顺序推进；LOOK固定一张卡，配置内两种拟合也顺序执行；另一张卡留给Radon_Bridge。已完成的ResNet50复用，不重训。当前这些是跨骨干验证，不能替代外部方法A与A+LOOK。','',
