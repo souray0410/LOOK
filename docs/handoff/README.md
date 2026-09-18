@@ -1,3 +1,7 @@
+## 2026-09-18：按结果安排下一研究包
+
+[当前决策及理由](../reports/current/research_decisions/README.md)；[两骨干累计结果](../reports/current/small_cohort/README.md)；[单种子序列实际验收](ws02_single_seed_sequence_20260918.md)。R50/R18均为小队列完整包，Ibex独立匹配与恢复继续。
+
 ## 2026-09-18：拟合方法优先的有限交付修订
 
 已完成的PCA结果保留并可复现；下一优先为同一参考宿主的自由均值低秩残差及匹配均值/子空间对照，再开展宿主和规模扩展。新缓存、正式runner和原dispatcher集成正在独立验收；不将代码通过冒充GPU上线。详见[执行修订与验收边界](fitting_method_priority_20260918.md)。
