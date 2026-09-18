@@ -1,5 +1,13 @@
 # LOOK
 
+> **开发中研究项目 / Research software under active development**
+>
+> 本仓库用于方法研究和可追溯实验记录，尚非稳定发布的软件，也未获临床验证，不可用于临床诊断、治疗决策或生产部署。接口、配置和结论可能随研究更新；历史报告保留当时的证据范围，不代表当前全部实验已完成。请以具体报告的样本、数据划分、随机种子、验收状态和限制为准，不将探索性结果视为已确立的普遍结论。
+>
+> This repository is under active research and development. It is not a stable or clinically validated release. Do not use it for clinical decisions or production deployment. APIs, configurations, and conclusions may change. Interpret each result within its documented evidence and limitations.
+>
+> 原始受限数据、参与者级预测、访问凭据及受限模型资产不属于公开交付范围；复现实验须自行取得相应数据与依赖的合法访问权限。仓库可见性不改变第三方许可证或数据使用条款。
+
 [维护与交接 / Handoff](docs/handoff/README.md) — 当前版本、部署状态、验收证据与跨项目调用；读取后请刷新实时状态。
 
 LOOK（linear one-one korrektur）：基于固定 MHD V4 的研究项目。`main` 是与 Radon_Bridge 统一的当前开发结构；`2026_09_09_10_30_34` 是初始统一结构批次标识；当前实验以交接记录和锁定配置为准。修改前的完整代码、配置和报告见[历史复现](docs/history.md)。
