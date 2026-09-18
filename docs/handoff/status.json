@@ -3,14 +3,14 @@
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
   "phase": "ukb_eye_research",
-  "next_acceptance": "已完成MMTM A/A+LOOK；优先解释宿主与校准反例及已批准固定前缀机制，下一GPU包未启动；Ibex残差待资源恢复",
+  "next_acceptance": "固定均值机制已完成；下一优先对照融合位置/写回对象等老师问题，按现有批准范围登记后执行；Ibex仍独立恢复。",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
   "source_commit": "a9833e6b0635469407917ef72727caf3c4dfebd2",
-  "evidence_cutoff": "2026-09-18T08:31:54.640698+00:00",
-  "verified_at": "2026-09-18T13:43:22.724794+00:00",
+  "evidence_cutoff": "2026-09-18T14:08:08.156203+00:00",
+  "verified_at": "2026-09-18T14:08:08.156203+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -113,7 +113,8 @@
     "2026-09-18 09:12UTC维护：精确复用R50/R18接受的首轮候选完成36项固定空前缀/同位置拟合诊断，未新增GPU拟合或训练；两臂宿主、位置集合、基线及penalty policy一致，非固定lambda或斜率机制。",
     "2026-09-18维护主动修正结果列表中的历史截点措辞：不改原数值与scientific cutoff，明确旧“主树/双状态未完成”已被后续完整配置验收取代。MMTM有限小队列协议与节点适配实现单独登记，CPU验收不等于正式训练。",
     "2026-09-18 12:31UTC：a9833e6，MMTM Stage3/R18/作者scale1随机门控单配置实际GPU预检通过（完整296dev、恢复2更新），同run正式3→62更新/epoch7，断点SHA与/proc通过。首次启动缺CuBLAS环境已归档修复，原确定性/训练标准未变；当前不是完整A/A+LOOK验收。累计页面已新增配置，旧两配置复用。",
-    "2026-09-18 13:40UTC现场：ws02有限任务已正常结束且GPU空闲，独立最终核验并用新显示生成器发布；不是新任务在训练。Ibex两CPU进程及新周期error=null，1allocation运行/23待批；LOOK原残差内存保护失败仍待充足资源，Dense3D暂停epoch5/15319updates，新32仍4登记文件无正式更新。"
+    "2026-09-18 13:40UTC现场：ws02有限任务已正常结束且GPU空闲，独立最终核验并用新显示生成器发布；不是新任务在训练。Ibex两CPU进程及新周期error=null，1allocation运行/23待批；LOOK原残差内存保护失败仍待充足资源，Dense3D暂停epoch5/15319updates，新32仍4登记文件无正式更新。",
+    "LOOK固定空前缀/斜率/λ/秩，仅约束残差均值：两个已验收ResNet18宿主×2拟合×2缺失×9位置，72/72完成；旧自由预测逐元素现场重放，新增预测SHA及sklearn F1/AUROC独立重算通过。58项自由均值F1较高、10项较低、4项相同（相关条件，不是72个独立重复）。无新增训练或拟合；不能宣称自由均值必胜。首启rank字段错误保留，6a813d8加真实FamilyMap回归12项通过后恢复并完成下游。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
@@ -200,6 +201,10 @@
     {
       "label": "MMTM A/A+LOOK有限配方及工程验收边界",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/mmtm_cohort_20260918.md"
+    },
+    {
+      "label": "2026-09-18：72项固定均值对照已完成",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/fixed_mean/README.md"
     }
   ]
 }

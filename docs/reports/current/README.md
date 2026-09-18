@@ -1,3 +1,5 @@
+[新增：固定斜率和λ的均值机制72项](fixed_mean/README.md)，已验收；不是新树或模型训练。
+
 # LOOK：当前累计结果入口
 
 这是固定入口，不是新的科研实验或实时核验声明。按[统一准则](../../../workspace/RESULT_CONTINUITY_STANDARD.md)累计更新所有同范围可比结果。

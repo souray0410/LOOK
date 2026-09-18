@@ -94,3 +94,7 @@ mechanism ablations; a small mechanism question need not spawn a full search tre
 Keep completed evidence and healthy workers. Scope/primary-comparison changes
 follow current user authorization. Documenting this review is not a universal
 automated scientific-judgment engine or proof of production deployment.
+
+## Single-seed core coverage before cross-platform expansion (2026-09-18)
+
+Use the rapid platform to complete the smallest informative matched package for each core claim and advisor question, with one representative seed first. Reuse accepted artifacts instead of repeating unchanged configurations. Maintain a question-to-control-to-evidence-to-gap-to-formal-package map. The formal platform expands cohorts, necessary parameter conditions and locked seed repetitions without changing method definitions silently. Different diseases, input dimensions or parents remain separate study identities; exploratory negative results cannot remove required controls or locked repetitions. Existing formal-platform tasks continue.

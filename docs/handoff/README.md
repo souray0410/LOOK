@@ -1,3 +1,9 @@
+## 2026-09-18：72项固定均值对照已完成
+
+LOOK固定空前缀/斜率/λ/秩，仅约束残差均值：两个已验收ResNet18宿主×2拟合×2缺失×9位置，72/72完成；旧自由预测逐元素现场重放，新增预测SHA及sklearn F1/AUROC独立重算通过。58项自由均值F1较高、10项较低、4项相同（相关条件，不是72个独立重复）。无新增训练或拟合；不能宣称自由均值必胜。首启rank字段错误保留，6a813d8加真实FamilyMap回归12项通过后恢复并完成下游。
+
+[配置和边界](ws02_mean_control_20260918.md)；[累计结果](../reports/current/fixed_mean/README.md)。
+
 ## 2026-09-18：按结果安排下一研究包
 
 [当前决策及理由](../reports/current/research_decisions/README.md)；[两骨干累计结果](../reports/current/small_cohort/README.md)；[单种子序列实际验收](ws02_single_seed_sequence_20260918.md)。R50/R18均为小队列完整包，Ibex独立匹配与恢复继续。
