@@ -1,4 +1,4 @@
-# 当前比较角色纠正（2026-09-19）
+# 2026-09-20：IMD target-task组件 A + LOOK 已右侧独立审计\n\n当前A准确身份是 simultaneous modality dropout + learnable token 的target-task组件适配；未执行论文contrastive pretraining，encoder参数未变但60个BN buffer更新。冻结best13/stop28 A后，两安全逻辑站点完成PCA/RRR×双缺失四树和10k统计。Macro-F1四项同时区间均未给出稳定正结论；PCA/缺OCT虽F1点估计+1.182pp，但NLL favorable simultaneous95%为[-0.09076,-0.00087]、Holm p=0.0496。右侧audit SHA `9bc62aba2e2829126edf9b8e6e4e692225c768819200c5eace907a822caa3b1c`；左侧科学接受仍待。详见 [IMD组件结果](improved_modality_dropout_component_20260920.md) 与 [完整作者分阶段后继合同](improved_modality_dropout_full_staged_contract_20260920.md)。\n\n# 当前比较角色纠正（2026-09-19）
 
 LOOK 的外部 A 现在指真正处理整模态缺失的既有方法/策略；主比较是同一个合理训练 A 与同一个 A + LOOK。MMTM、融合阶段与固定前缀/均值保留原数值，但不计缺失方法A/B/C完成。Stage A概率诊断已独立接受，只解释既有概率损失反例。新的外部方法仍待单独有限协议选择。
 

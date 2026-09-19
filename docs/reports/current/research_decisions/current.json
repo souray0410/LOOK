@@ -1,7 +1,7 @@
 {
   "schema": "research_decisions_v1",
   "project": "LOOK",
-  "reviewed_at": "2026-09-19T12:34:00+00:00",
+  "reviewed_at": "2026-09-19T22:46:10.848079+00:00",
   "test_access": false,
   "decisions": [
     {
@@ -89,6 +89,13 @@
       "decision": "下一最小A合同选ShaSpec机制家族，但训练前必须关闭实现来源/许可、2D分类adaptation身份、核心loss/生成机制、对称缺失协议、合法LOOK节点和远端离线准入六个门槛。PCA free-mean与residual RRR继续并列，不预设赢家。本集成包不启动第二A训练。",
       "state": "contract_ready_provenance_and_adapter_gate_pending",
       "next_trigger": "六个硬门槛形成可核exact-sha证据后，另发一个seed3416 finite remote packet：一个A→四棵LOOK树→四指标10k配对统计→报告；test仍封存。"
+    },
+    {
+      "id": "imd_component_20260920",
+      "state": "right_independent_audit_passed_left_acceptance_pending",
+      "summary": "IMD target-task component A + LOOK completed; full contrastive pretraining absent; encoder BN buffers adapted; PCA/oct shows F1 point gain but NLL simultaneous worsening.",
+      "audit_sha256": "9bc62aba2e2829126edf9b8e6e4e692225c768819200c5eace907a822caa3b1c",
+      "next": "Treat complete author-staged IMD as a separate A identity; do not retrofit current A."
     }
   ]
-}
+}\n

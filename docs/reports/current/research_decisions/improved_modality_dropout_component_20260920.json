@@ -1,0 +1,71 @@
+{
+  "schema": "look_imd_component_A_plus_LOOK_decision_v1",
+  "state": "right_independent_audit_passed_left_acceptance_pending",
+  "scientific_acceptance": false,
+  "test_access": false,
+  "author": {
+    "repo": "omron-sinicx/medical-modality-dropout",
+    "commit": "8040d96b2dec48cf8fc7d13b45e15af0d07952ed",
+    "license": "MIT"
+  },
+  "A": {
+    "source_commit": "77f94be3ecc3a7632bf34aad5fc288d542036ad6",
+    "best_epoch": 13,
+    "stop_epoch": 28,
+    "updates": 280,
+    "receipt_sha256": "47dcc6a8276332e06003228e894aff61a17d392f6187ff06f1c1d555f409d1da",
+    "best_sha256": "edc6f5f26befdda3c742a2683b77aa9f629e7cfcdde60c198b83e7c70c534530",
+    "predictions_sha256": "212e1e4e32a25bf5873b64c66504b84166d0be9a1262f127ba49f4b9f3a6e0ca",
+    "freeze_manifest_sha256": "1f2fd7b0e81f6ed4ab0140da316832926eb0ad373bae1b179adfbaa9c050a268"
+  },
+  "method_identity": {
+    "label": "IMD target-task component adaptation",
+    "contrastive_pretraining": false,
+    "simultaneous_modality_dropout": true,
+    "learnable_tokens": true,
+    "encoder_parameter_changes": 0,
+    "encoder_bn_buffer_changes": 60
+  },
+  "look": {
+    "continuation_commit": "4a00071909db84b92b989babadf321d9686f5aa1",
+    "sites": [
+      "imd_fusion_input",
+      "fusion_feature"
+    ],
+    "rank": 32,
+    "trees": {
+      "pca_free_mean/oct_missing": [
+        "imd_fusion_input"
+      ],
+      "pca_free_mean/cfp_missing": [
+        "fusion_feature"
+      ],
+      "residual_rrr/oct_missing": [],
+      "residual_rrr/cfp_missing": [
+        "fusion_feature"
+      ]
+    }
+  },
+  "audit_sha256": "9bc62aba2e2829126edf9b8e6e4e692225c768819200c5eace907a822caa3b1c",
+  "delivery": {
+    "accepted_sha256": "edbd3506d3f4381d1ee04068ecc1416b590e29af9ba30c661751d4905c8c9dff",
+    "results_sha256": "6614a480d4f288f9b926708ce26b7aa94c1c8eb68e08e2164d79d9e0a1960474",
+    "readme_sha256": "7b50edbbdc615645fb0cc7bbd23a106238c85364560c7e2dac79283674a5c207"
+  },
+  "counterexample": {
+    "contrast": "pca_free_mean/oct_missing",
+    "macro_f1_improvement": 0.011822795653476215,
+    "nll_favorable_improvement": -0.04581627684638567,
+    "nll_simultaneous95": [
+      -0.09076035919574951,
+      -0.0008721944970218332
+    ],
+    "holm_p": 0.0496
+  },
+  "limitations": [
+    "single_seed",
+    "same_development_selects_and_estimates",
+    "not_complete_contrastive_method",
+    "encoder_bn_state_adapted"
+  ]
+}\n

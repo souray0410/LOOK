@@ -1,0 +1,23 @@
+{
+  "schema": "look_full_imd_staged_contract_v1",
+  "state": "contract_ready_not_launched_in_current_batch",
+  "test_access": false,
+  "seed": 3416,
+  "reason_separate_identity": "current A omitted contrastive pretraining and adapted encoder BN state; post-hoc retrofit would mix scientific identities",
+  "stages": [
+    "frozen encoder feature extraction",
+    "three-pair supervised sigmoid contrastive pretraining",
+    "simultaneous-modality-dropout target training",
+    "freeze A",
+    "two missing states x two LOOK families"
+  ],
+  "required_gates": [
+    "encoder parameter+buffer byte identity",
+    "contrastive stage next-update resume",
+    "target stage next-update resume",
+    "participant aggregation contract",
+    "post-token LOOK site leakage tests",
+    "GPU/profile/storage gate"
+  ],
+  "scientific_acceptance": false
+}\n

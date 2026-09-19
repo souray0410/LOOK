@@ -1,4 +1,4 @@
-## 2026-09-19：后继A与远端离线接续准备
+## 2026-09-20：IMD target-task组件 A + LOOK 完成并右侧独立审计\n\nWS02 seed3416 A为best13/stop28，冻结A资产12/12在四树后byte-identical。A未做作者contrastive pretraining；encoder参数没变，但60个BN running-state buffer适配，因此只称target-task组件适配。PCA/RRR×双缺失四树已完成；RRR/缺OCT为空树。F1点估计均无稳定同时区间正证据；PCA/缺OCT出现F1 +1.182pp但NLL显著恶化的反例。右侧独立audit SHA `9bc62aba2e2829126edf9b8e6e4e692225c768819200c5eace907a822caa3b1c`；左侧接受待定。详见 research_decisions/improved_modality_dropout_component_20260920.md。完整contrastive+target分阶段版本登记为新的科学身份，不后验改写当前A。\n\n## 2026-09-19：后继A与远端离线接续准备
 
 下一最小A合同选择ShaSpec shared/specific + missing-feature generation家族作为与EmbraceNet机制不同的任务匹配候选；当前只锁合同，分类配方/许可/2D适配身份未闭环前不训练。后继远端有限包要求protocol/source/config/recovery/result全自包含，已启动包可在网页离线时按receipt接续；当前不声称存在Mac关机后能自行发明新科研包的常驻planner。详见 research_decisions/next_missing_method_A_contract_20260919.md 与 offline_execution_readiness_20260919.md。
 
