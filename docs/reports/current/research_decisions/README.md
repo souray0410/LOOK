@@ -4,6 +4,8 @@ LOOK 的外部 A 现在严格定义为“处理整模态缺失的既有方法/�
 
 有限一手候选与公平匹配合同见 missing_method_evidence_20260919.md。Stage A 概率诊断只解释既有预测反例，不替代外部缺失方法实验。
 
+缺失方法的**适配合同就绪度**见 [missing_method_contract_readiness_20260919.md](missing_method_contract_readiness_20260919.md)：已核清 ShaSpec 分类/缺失训练出处，并补 ModDrop、EmbraceNet 两个低成本类别代表；该文档仅 ready_for_left_review，不构成训练授权或科学接受。
+
 ## 固定均值对照：2026-09-18新证据
 
 72个已看dev的相关条件中，自由均值58项F1较高、10项较低、4项相同；不能当作独立重复投票或显著性检验。该结果说明均值容量确实会改变预测，但不保证分类/校准单调改善。先看同位置具体负例，再决定写回对象与融合位置机制；不因此堆更多种子/近似骨干。[全部72行及方法](../fixed_mean/README.md)。

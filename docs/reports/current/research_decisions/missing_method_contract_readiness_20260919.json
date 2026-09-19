@@ -1,0 +1,127 @@
+{
+  "schema": "look_missing_method_contract_readiness_v1",
+  "project": "LOOK",
+  "date": "2026-09-19",
+  "status": "ready_for_left_review",
+  "scientific_acceptance": false,
+  "training_authorized": false,
+  "gpu_used": false,
+  "test_used": false,
+  "question": "missing-modality strategy A versus the exact same frozen A plus LOOK",
+  "shaspec": {
+    "primary_paper": "https://openaccess.thecvf.com/content/CVPR2023/html/Wang_Multi-Modal_Learning_With_Missing_Modality_via_Shared-Specific_Feature_Modelling_CVPR_2023_paper.html",
+    "primary_pdf": "https://openaccess.thecvf.com/content/CVPR2023/papers/Wang_Multi-Modal_Learning_With_Missing_Modality_via_Shared-Specific_Feature_Modelling_CVPR_2023_paper.pdf",
+    "official_repo": "https://github.com/billhhh/ShaSpec",
+    "pinned_repo_commit": "57a04fa88331ea3b2671795a15a1ae9a24fd310d",
+    "exact_locations": {
+      "architecture": "Section 3.1",
+      "missing_feature_generation": "Section 3.2 Eq. (4)",
+      "objectives": "Section 3.3",
+      "datasets": "Section 4.1",
+      "training_and_missingness": "Section 4.2"
+    },
+    "classification_evidence": true,
+    "official_repo_ready_cfp_oct_classifier": false,
+    "unresolved": [
+      "CFP/OCT 2D architecture",
+      "missing-CFP/missing-OCT schedule",
+      "DCO/DAO classification implementation",
+      "optimizer/stopping/selection budget",
+      "legal LOOK node/reference semantics",
+      "provenance/license"
+    ]
+  },
+  "candidate_readiness": [
+    {
+      "id": "shaspec",
+      "cost": "medium_high",
+      "state": "evidence_ready_not_training_ready"
+    },
+    {
+      "id": "uhved",
+      "cost": "high",
+      "state": "representative_not_low_cost_first_package"
+    },
+    {
+      "id": "rfnet",
+      "cost": "high",
+      "state": "large_semantic_adapter_gap"
+    },
+    {
+      "id": "mmformer",
+      "cost": "high",
+      "state": "large_capacity_confound"
+    },
+    {
+      "id": "missing_aware_prompts",
+      "cost": "scientifically_high",
+      "state": "parameter_efficient_not_adapter_simple"
+    }
+  ],
+  "added_gap_sources": [
+    {
+      "id": "moddrop",
+      "primary_source": "https://arxiv.org/abs/1501.00102",
+      "category": "low-cost missing-modality training strategy",
+      "training_authorized": false
+    },
+    {
+      "id": "embracenet",
+      "primary_source": "https://arxiv.org/abs/1904.09078",
+      "official_repo": "https://github.com/idearibosome/embracenet",
+      "category": "classification-native missing-availability fusion",
+      "training_authorized": false
+    }
+  ],
+  "minimal_contract": {
+    "data": {
+      "train_n": 1264,
+      "dev_n": 296,
+      "seed": 3416,
+      "test": "sealed"
+    },
+    "same_A": "train once, freeze exact checkpoint/config, reuse for A and every A+LOOK arm",
+    "missing_states": [
+      "missing_OCT",
+      "missing_CFP"
+    ],
+    "arms": [
+      "A",
+      "A+LOOK-PCA",
+      "A+LOOK-RRR/residual"
+    ],
+    "metrics": [
+      "Macro-F1",
+      "AUROC",
+      "NLL",
+      "Brier"
+    ],
+    "paired_evaluation": true,
+    "look_rule": "no A retraining, no change to A missingness/core losses/BN state; only predeclared legal node",
+    "cost_accounting": [
+      "A training",
+      "LOOK fit/replay"
+    ]
+  },
+  "scientific_decisions_required_before_gpu": [
+    "select A",
+    "missingness schedule/proportions",
+    "2D backbone/capacity/init",
+    "losses/weights",
+    "optimizer/lr/stopping/selection budget",
+    "legal LOOK node/reference semantics",
+    "implementation provenance/license"
+  ],
+  "engineering_after_lock": [
+    "tensor/batch plumbing",
+    "availability mask",
+    "2D adapter",
+    "binary logits",
+    "approved LOOK node exposure",
+    "SHA logging",
+    "participant-order/prediction schema",
+    "CPU structure/import/doc gates",
+    "recoverable logs"
+  ],
+  "next_gate": "left selects one A and locks scientific decisions; no training starts from this packet"
+}
