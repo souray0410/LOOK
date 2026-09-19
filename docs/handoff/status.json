@@ -2,7 +2,7 @@
   "schema": "research_project_status_v1",
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
-  "phase": "fusion_stage_scientifically_accepted_published",
+  "phase": "embracenet_adapter_contract_implemented_current_sha_cpu_retest_blocked",
   "next_acceptance": "Stage A概率诊断已独立接受；当前完成缺失方法一手证据/公平匹配盘点。MMTM只作宿主兼容/组装证据，不计LOOK缺失方法A/B/C。下一训练方法与配方由左侧从有限候选裁决；本包不启动GPU/test。",
   "dependencies": [
     "宿主验收",
@@ -91,7 +91,8 @@
   ],
   "blockers": [
     "独立仿射家族完整主搜索与代表起点并行对照仍有验收缺口，整周重复种子门槛保持关闭。",
-    "真实跨租期到期恢复尚未发生；已绑定自动接续并通过锁、状态、资源和两层owner测试，但不等于实际到期恢复完成。"
+    "真实跨租期到期恢复尚未发生；已绑定自动接续并通过锁、状态、资源和两层owner测试，但不等于实际到期恢复完成。",
+    "EmbraceNet当前study/test SHA的恢复后动态CPU重验被上层传输安全检查阻塞；禁止用传输前5项测试替代，且不绕过安全拒绝。"
   ],
   "actions": [
     "新q32正式步骤因全量dev RSS增长失败，已确认旧step死亡；原run/spec恢复至51909172.10。allocator环境调整后通过782批完整dev，自动进入train joint_input×16拟合。不是科学完成，拟合验收仍待完成。",
@@ -125,7 +126,8 @@
     "LOOK固定空前缀/斜率/λ/秩，仅约束残差均值：两个已验收ResNet18宿主×2拟合×2缺失×9位置，72/72完成；旧自由预测逐元素现场重放，新增预测SHA及sklearn F1/AUROC独立重算通过。58项自由均值F1较高、10项较低、4项相同（相关条件，不是72个独立重复）。无新增训练或拟合；不能宣称自由均值必胜。首启rank字段错误保留，6a813d8加真实FamilyMap回归12项通过后恢复并完成下游。",
     "2026-09-19 fusion-stage有限包：deep run2026_09_18_11_18_28_650020严格引用；middle/features host分别best/stop=9/24、30/45，240/450更新，未重训恢复。8/8拟合树通过正式CuBLAS确定性环境、graph state/BN、source manifest、完整prefix/candidate evidence及两阶段路径迁移验收；两个新run formal/delivery与三宿主累计publication完成。右侧最终audit SHA291051a82c4b13f918c0c60afd5f71da3d94710233bcc6cdeab0a3a41192f57d。",
     "repair链保留：初始host structure receipt漏position；fit-profile raw恢复比较误把运行计数/路径变化当科学变化；后续诊断未完整匹配正式worker环境；publication先后补逻辑迁移bank路径与feature-cost provenance。各次失败均保留证据，未重训host或重拟合已完成完整tree。",
-    "2026-09-19 左侧fusion-stage独立审计通过：5010独立文件内容、10362 hash绑定、706预测文件检查、296人四指标、8项10k区间、8树394前缀/674候选均通过；audit SHA db5b1ea423f70b1bf727fd92216ca8b2d96cd75da52a6aa9b14b0e9b00afe050。科学current SHA7354806d保持不变，发布包仅修生成器/可读累计。"
+    "2026-09-19 左侧fusion-stage独立审计通过：5010独立文件内容、10362 hash绑定、706预测文件检查、296人四指标、8项10k区间、8树394前缀/674候选均通过；audit SHA db5b1ea423f70b1bf727fd92216ca8b2d96cd75da52a6aa9b14b0e9b00afe050。科学current SHA7354806d保持不变，发布包仅修生成器/可读累计。",
+    "2026-09-19 EmbraceNet首个真正缺失方法A：作者固定实现四合法输入输出/梯度/RNG零差与下一AdamW更新精确恢复已落盘；R18/MHD九节点原型及唯一trial合同已实现。恢复后新增pre-R18 NaN-safe入口/common-random helper，向既有WS02隔离CPU副本同步被上层安全检查拒绝且未绕过，故当前SHA尚缺一次针对性动态CPU重验；无真实训练/GPU/test。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
@@ -133,7 +135,8 @@
     "用户授权ws02优先LOOK并沿用旧数据开展当前方法设计；平台统一标准、不同数据/初始化独立身份。后继优先老师9月13日问题，中文为主的周报呈现变化及真实缺项。",
     "fusion-stage解释决策：middle对deep的部分LOOK收益差同时区间不跨0，但middle宿主本身更弱且参数量更少；features与deep等参数但4项同时区间全跨0。当前不按点估计宣布最佳融合阶段，也不扩种子/骨干；等待左侧独立验收后再回到老师A/B/C缺口。",
     "fusion-stage科学包已接受后停止其GPU生命周期：不因middle大增益继续堆融合位置/骨干/种子；middle更弱宿主基线是主要替代解释，features相对deep四项同时区间跨零。下一研究回到外部A/B/C匹配与现有logits概率损失定位，由左侧另行锁定。",
-    "2026-09-19比较角色纠正：LOOK缺失方法A必须实际处理整模态缺失；MMTM/fusion-stage/fixed-mean/fixed-prefix不计A/B/C覆盖。Stage A概率诊断只作描述性解释。GAN/微调是类别例子而非必跑表。"
+    "2026-09-19比较角色纠正：LOOK缺失方法A必须实际处理整模态缺失；MMTM/fusion-stage/fixed-mean/fixed-prefix不计A/B/C覆盖。Stage A概率诊断只作描述性解释。GAN/微调是类别例子而非必跑表。",
+    "EmbraceNet trial唯一推荐：1264train/296dev/seed3416沿用accepted R18训练与BN/停止；c=256，complete选择概率0.5/0.5，train complete/missingOCT/missingCFP各1/3；K=32 common-random评估，checkpoint仍按complete dev Macro-F1，A与A+LOOK同state逐draw复用精确indices。左审及当前SHA CPU重验前不训练。"
   ],
   "evidence": [
     {
@@ -231,6 +234,10 @@
     {
       "label": "LOOK缺失方法一手证据与公平合同",
       "url": "https://github.com/souray0410/LOOK/blob/webcodex/probability-readiness-20260919/docs/reports/current/research_decisions/missing_method_evidence_20260919.md"
+    },
+    {
+      "label": "EmbraceNet首个真正缺失方法CPU适配、随机参考与唯一试运行合同",
+      "url": "docs/reports/current/research_decisions/embracenet_adapter_readiness_20260919.md"
     }
   ]
 }

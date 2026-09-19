@@ -1,0 +1,109 @@
+{
+  "schema": "look_embracenet_adapter_readiness_v1",
+  "date": "2026-09-19",
+  "task_id": "look-embracenet-adapter-20260919-v1",
+  "status": "needs_planner_decision",
+  "scientific_acceptance": false,
+  "training_authorized": false,
+  "test_access": false,
+  "gpu_used": false,
+  "author": {
+    "repository": "https://github.com/idearibosome/embracenet",
+    "commit": "c61b63dadc6fc8d719bb77475f4734f62697144e",
+    "license": "MIT",
+    "source_sha256": "8b3414181bd77cf37bb2f5b39d43bb2ce6cbd73bcf5afa8dbccb6b4e1d11df05"
+  },
+  "inherited_protocol": {
+    "accepted_run": "2026_09_18_11_18_28_650020",
+    "accepted_spec_sha256": "f09a452f8584861ff5291cb262894e16f4ba4c7c962f43f6ba4cfbccb18929e8",
+    "train": 1264,
+    "development": 296,
+    "test": "sealed",
+    "seed": 3416,
+    "architecture": "two 2D ResNet18 encoders",
+    "initialization": {
+      "kind": "public ImageNet V1 fresh",
+      "sha256": "f37072fd47e89c5e827621c5baffa7500819f7896bbacec160b1a16c560e07ec"
+    },
+    "precision": "fp32",
+    "microbatch": 16,
+    "effective_batch": 128,
+    "optimizer": "AdamW",
+    "pretrained_lr": 0.0001,
+    "new_layer_lr": 0.001,
+    "weight_decay": 0.0001,
+    "clip": 5,
+    "warmup_epochs": 5,
+    "minimum_epochs": 8,
+    "patience": 15,
+    "epochs_cap": 100,
+    "loss": "unweighted_cross_entropy",
+    "selection": "development complete-input Macro-F1",
+    "batchnorm": "unchanged inherited R18 behavior"
+  },
+  "new_scientific_choices_requiring_left_confirmation": {
+    "embracement_size": 256,
+    "modality_order": [
+      "oct",
+      "cfp"
+    ],
+    "complete_selection_probabilities": [
+      0.5,
+      0.5
+    ],
+    "training_missing_state_probabilities": {
+      "complete": 0.3333333333333333,
+      "missing_oct": 0.3333333333333333,
+      "missing_cfp": 0.3333333333333333
+    },
+    "missing_scope": "both eyes together at participant level",
+    "input_safety": "explicit torch.where zero fill before any R18 encoder",
+    "evaluation_draws": 32,
+    "evaluation_seed": "sha256(config_id|participant_id|draw_index) 63-bit, state omitted",
+    "evaluation_aggregation": "average 32 logits then compute metrics",
+    "model_selection": "complete dev Macro-F1 only; missing-state metrics report-only"
+  },
+  "stochastic_pairing": {
+    "complete_vs_missing": "same seed/common random numbers, but state-specific legal modality indices",
+    "same_state_A_vs_A_plus_LOOK": "exact recorded modality indices reused draw-by-draw",
+    "forbidden": "replaying a complete-state index that selects an unavailable modality into a missing state",
+    "stochastic_look_site": "embraced_feature",
+    "pre_embrace_sites": "deterministic and cacheable"
+  },
+  "look_nodes": [
+    "joint_input",
+    "joint_stem",
+    "joint_stage1",
+    "joint_stage2",
+    "joint_stage3",
+    "joint_stage4",
+    "joint_features",
+    "joint_participant_feature",
+    "embraced_feature"
+  ],
+  "look_methods": [
+    "pca_free_mean",
+    "residual_rrr_free_mean"
+  ],
+  "missing_states": [
+    "missing_oct",
+    "missing_cfp"
+  ],
+  "cpu_evidence": {
+    "author_receipt": "experiments/2026_09_10_11_11_31/look_mechanisms/embracenet_cpu_acceptance_20260919.json",
+    "author_receipt_sha256": "30bd876d9d0d07d784c5314486b6210c60d82c92a8696c5260312f1cbf6977ef",
+    "author_core_sha256": "39fd8cfb38e7f8c5f6b1241fa61a63d28bb807a13677bde565b59fedbf615a1f",
+    "legal_domain_cases": 4,
+    "output_and_gradient_max_abs": 0,
+    "next_adamw_update_exact": true,
+    "pre_transport_mhd_tests": "5 passed",
+    "current_resume_dynamic_retest": false
+  },
+  "blocker": {
+    "kind": "validation_environment_access",
+    "detail": "After resume, study/test gained pre-R18 NaN-safe masking and common-random helpers. WebCodex scp to the existing isolated WS02 CPU copy was rejected by an upstream safety check before execution; no bypass was attempted.",
+    "implication": "pre-transport 5 MHD tests do not certify the changed study/test SHA",
+    "required_resolution": "one legal targeted CPU dynamic test of current study/test SHA; do not repeat unchanged author parity"
+  },
+  "next_gate": "Left reviews this finite contract and blocker. Future GPU trial requires explicit scientific confirmation plus current-SHA CPU retest; no training/test access is authorized by this document."
+}

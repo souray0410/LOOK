@@ -1,3 +1,7 @@
+## EmbraceNet首个真正缺失方法适配（2026-09-19）
+
+已选 EmbraceNet 作为首个真正缺失方法 A；作者固定实现的四类合法输入输出/梯度/RNG及下一 AdamW 更新精确恢复已通过CPU对照。当前已实现R18/MHD九节点原型与明确 trial contract；未训练、test封存。传输恢复后新增 pre-R18 NaN-safe 入口和共同随机 trace helper，但上层安全检查拒绝了向既有WS02隔离CPU副本的同步，故当前SHA尚缺一次针对性动态重验；不得把传输前5项测试冒称覆盖新SHA。详见 [embracenet_adapter_readiness_20260919.md](embracenet_adapter_readiness_20260919.md)。
+
 # 当前比较角色纠正（2026-09-19）
 
 LOOK 的外部 A 现在严格定义为“处理整模态缺失的既有方法/策略”；主比较是同一个合理训练 A 与同一个 A + LOOK。MMTM、融合阶段、固定均值/固定前缀继续保留各自数值，但属于宿主兼容/组装或 LOOK 机制证据，**不计缺失方法 A/B/C 完成**。GAN、缺失鲁棒微调只是类别例子，不是必跑清单。

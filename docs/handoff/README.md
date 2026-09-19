@@ -1,3 +1,7 @@
+## 2026-09-19：EmbraceNet首个真正缺失方法CPU适配
+
+作者c61b63d/MIT固定源已完成四类合法输入输出/梯度/RNG零差及完整RNG恢复后下一AdamW更新精确一致。当前R18/MHD原型暴露实际9个LOOK节点，试运行合同固定1264/296/3416、作者默认c=256、三状态各1/3、complete dev Macro-F1选模及K=32共同随机评估；没有真实训练/GPU/test。传输恢复后新增研究入口pre-R18 NaN-safe masking/common-random helper，向既有WS02隔离CPU副本的同步被上层安全检查拒绝且未绕过，因此当前SHA还缺一次针对性CPU动态重验。详见 research_decisions/embracenet_adapter_readiness_20260919.md。
+
 ## 2026-09-19：LOOK外部比较角色纠正
 
 当前LOOK主问题是“真正缺失模态处理策略 A vs 同一 A + LOOK”。MMTM既有结果保留为宿主兼容/组装证据，不计缺失方法A/B/C；fusion-stage等为LOOK机制证据。GAN/微调只是例子，不是必跑表。候选一手证据和公平合同见 docs/reports/current/research_decisions/missing_method_evidence_20260919.md。历史MMTM数值与cutoff不改。

@@ -1,7 +1,7 @@
 {
   "schema": "research_decisions_v1",
   "project": "LOOK",
-  "reviewed_at": "2026-09-19T05:55:00+00:00",
+  "reviewed_at": "2026-09-19T08:20:00+00:00",
   "test_access": false,
   "decisions": [
     {
@@ -54,6 +54,14 @@
       "state": "missing_method_comparison_not_started_candidate_inventory_ready",
       "reason": "LOOK asks whether it adds value after an existing missing-modality handling strategy; examples such as GAN or robust fine-tuning are categories, not a mandated list.",
       "next_trigger": "Left issues a finite selected-A protocol after reviewing missing_method_evidence_20260919."
+    },
+    {
+      "question": "EmbraceNet作为首个真正缺失方法A的CPU适配与试运行合同是否就绪",
+      "accepted_evidence": "作者c61b63d固定PyTorch实现；四合法输入域输出/输入梯度/docking梯度零差；作者与项目multinomial RNG终态一致；完整RNG恢复后下一AdamW更新精确一致；MHD原型传输前5项CPU测试通过。",
+      "decision": "EmbraceNet为首个A；唯一推荐trial沿用1264/296/3416与accepted R18训练制度，c=256，train三状态各1/3，K=32共同随机评估，checkpoint仍按complete dev Macro-F1选。当前只完成实现/合同，不授权训练。",
+      "state": "implemented_author_cpu_validated_current_sha_dynamic_retest_blocked",
+      "blocker": "恢复后新增pre-R18 NaN-safe入口与common-random helper；向既有WS02隔离CPU副本同步被上层安全检查拒绝，未绕过。因此传输前5项MHD测试不覆盖当前study/test SHA。",
+      "next_trigger": "合法CPU环境对当前SHA完成针对性动态重验，随后左侧确认三状态1/3与K=32合同，才可另发GPU试运行包。"
     }
   ]
 }
