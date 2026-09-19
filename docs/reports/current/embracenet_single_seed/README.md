@@ -58,7 +58,7 @@ RRR 在缺 CFP 时没有任何节点达到严格 development Macro-F1 正收益�
 | PCA / 缺 OCT | +1.364 pp | [+0.312, +2.811] pp | [-0.284, +3.013] pp | 0.1464 |
 | RRR / 缺 OCT | +1.085 pp | [-3.676, +5.978] pp | [-4.834, +7.005] pp | 1.0000 |
 | PCA / 缺 CFP | +1.131 pp | [-0.289, +2.767] pp | [-0.753, +3.015] pp | 0.4632 |
-| RRR / 缺 CFP | 0.000 pp | [0, 0] | NA | 1.0000 |
+| RRR / 缺 CFP | 0.000 pp | [0, 0] | 未定义（零方差恒等对比） | 1.0000 |
 
 PCA 缺 OCT 的 ordinary 95% 不跨 0，但**同族 simultaneous 95% 跨 0，Holm 后也不显著**。因此当前不能把这一个开发集单种子结果写成“已经稳定证明 LOOK 必然提升 EmbraceNet”。
 
@@ -73,7 +73,7 @@ PCA 缺 OCT 的 ordinary 95% 不跨 0，但**同族 simultaneous 95% 跨 0，Hol
 
 **支持：**在同一冻结 EmbraceNet A 上，LOOK 可以找到 development 上有正 Macro-F1 点估计的修正，且两种 LOOK 家族在缺 OCT 时都出现正点估计；PCA free-mean 在两个缺失状态都选出了正收益树。这说明“已有缺失策略之后仍可能有剩余可线性校正结构”是值得继续验证的。
 
-**反例：**RRR 在缺 CFP 时没有任何严格正收益节点；AUROC 的变化接近 0，且所有四个 Macro-F1 主比较的同族 simultaneous 95% 都跨 0。LOOK 的作用明显依赖缺失方向和拟合家族，不能写成统一稳定优势。
+**反例：**RRR 在缺 CFP 时没有任何严格正收益节点；AUROC 的变化接近 0。三个非退化 Macro-F1 主比较的同族 simultaneous 95% 都包含 0；第四个 RRR/缺CFP 因空路径与 A 预测完全相同，bootstrap 差值和标准差恒为 0，因此标准化 simultaneous 区间未定义。这是恒等结果，不是等效性检验。LOOK 的作用明显依赖缺失方向和拟合家族，不能写成统一稳定优势。
 
 **替代解释：**同一个 296 人 development 同时承担 checkpoint/tree 选择和效果估计，存在选择偏差；当前只有一个训练 seed，participant bootstrap 也不包含训练随机性。因此点估计提升可能部分来自 development 选择，而不是跨 seed 稳定效应。
 
@@ -89,7 +89,7 @@ PCA 缺 OCT 的 ordinary 95% 不跨 0，但**同族 simultaneous 95% 跨 0，Hol
 - fit profile：中断/恢复 moments 与不间断 exact；max-dimension rank32 两 solver 均实际非零写回；`embraced_feature` 两 solver 均在 full dev 产生非零 logits 变化；GPU peak 约 0.84 GB。
 - PCA：9 个实际节点，`embraced_feature` complete reference 使用解析作者随机完整二阶矩，保留条件方差。
 - 远端有限 pipeline 依据 receipt 自动跳过已完成阶段并连续完成 residual RRR → 统计/中文报告 → `verify_case`，未新建竞争调度器。
-- 当前结果状态：**self_checked_pending_independent_review**；独立左审尚待完成。
+- 当前单种子科学结果已由左侧独立验收接受；本页本次仅做发布表述修复和后验机制解释集成。test 仍封存。
 
 ## 可独立复核的 aggregate 证据 SHA
 
@@ -108,3 +108,17 @@ PCA 缺 OCT 的 ordinary 95% 不跨 0，但**同族 simultaneous 95% 跨 0，Hol
 | final pipeline status | `9eb33c28c2e8f7dae335854cb58f0b2a175dcf745f701b74ce477b99086501eb` |
 
 下一门槛是左侧对 WS02 原 aggregate/prediction/tree 产物做独立重算和验收。在此之前，本页不标记 scientifically accepted。
+
+## 2026-09-19 独立验收后的写回机制解释诊断
+
+该诊断在左侧接受原单种子科学结果之后单独登记；不重新训练、不重新拟合、不重新搜索，只复用冻结 A、已选 PCA artifact 和原 296 人 development。joint_input 的人类可读含义是“两个模态各自进入 ResNet18 编码器之前的联合输入节点”；embraced_feature 是“EmbraceNet 完成逐坐标模态选择后的融合特征”。
+
+PCA 在缺 OCT 与缺 CFP 时都选择 joint_input。有限反事实写回得到完全一致的结构：
+
+- 完整 LOOK = 仅写可用分支：两种缺失下 logits 与指标逐项相同；
+- 仅写缺失分支 = 原 A：两种缺失下 logits 差均严格为 0；
+- 因此观测到的 PCA 收益来自校正当前仍可用模态的输入表征，不是补出一个伪造的缺失模态；缺失分支在作者 availability 语义下仍被门控屏蔽。
+- 缺 OCT 时完整/可用分支写回相对 A 的最大绝对 logit 变化为 0.13749；缺 CFP 为 0.13281。诊断 receipt SHA 为 7d903e298b4bdc36c630e470d7524634b70ff875feb2894f02741388a3235921。
+- RRR 缺 OCT 的已选节点 embraced_feature 位于 EmbraceNet 选择之后，因此语义是融合特征校正，不是模态生成；RRR 缺 CFP 保持空路径恒等。
+
+这是后验机制解释诊断，目前为右侧自检证据；不改变左侧已接受的四个主比较，也不把它升级为新的确认性效应检验。详见 integration_20260919.md。

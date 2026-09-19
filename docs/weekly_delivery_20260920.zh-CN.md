@@ -95,7 +95,8 @@ LOOK原核心修正/对照优先；新增插值+PCA、原尺寸PCA、平均池�
 - 缺 OCT：A **66.230%**；PCA+LOOK **67.594%（+1.364pp）**；RRR+LOOK **67.315%（+1.085pp）**。
 - 缺 CFP：A **56.341%**；PCA+LOOK **57.471%（+1.131pp）**；RRR 树为空，**56.341%（+0）**。
 - PCA 两缺失最终都选 `joint_input`；RRR 缺 OCT 选 `embraced_feature`，缺 CFP 没有严格正收益节点。
-- PCA 缺 OCT Macro-F1 ordinary 95% 为 **[+0.312,+2.811]pp**，但四对比同族 simultaneous 95% **[-0.284,+3.013]pp**，Holm p=0.1464；其他 Macro-F1 同族区间同样跨 0。当前只能写单种子 development 探索证据，不能升级为稳定优势。
+- PCA 缺 OCT Macro-F1 ordinary 95% 为 **[+0.312,+2.811]pp**，对应同族 simultaneous 95% **[-0.284,+3.013]pp**、Holm p=0.1464；另外两个非退化 Macro-F1 simultaneous 区间也包含0。RRR缺CFP为空路径恒等对比，bootstrap标准差为0，simultaneous区间未定义，不是等效性检验。左侧已独立接受该单种子development结果，但不能升级为稳定优势。
 - 概率指标给出必要反例：RRR 缺 OCT NLL/Brier 点估计改善较大，但同时区间仍跨 0；PCA 缺 CFP AUROC 略降；RRR 缺 CFP 完全无改动。
+- 冻结写回分支诊断（不训练/不拟合/不搜索）显示：PCA 的输入联合节点修正对两种缺失都 **完整写回=仅可用分支写回**，而 **仅缺失分支写回=A**；因此当前收益应解释为可用模态输入表征校正，而不是生成伪缺失模态。该诊断仅作后验机制解释，待左侧另审。
 - 目标 GPU/resource/resume、随机完整参考二阶矩 PCA、fit-profile solver/非零写回及保存恢复均通过；test 未读。远端有限 pipeline 自动跳过已接受阶段并连续完成剩余 RRR→统计→报告→verify，没有新建竞争调度器。
-- 当前状态为 **self_checked_pending_independent_review**；详细数字与 SHA 见 [EmbraceNet单种子当前页](reports/current/embracenet_single_seed/README.md)。三种子完整匹配目标仍是更高层次交付，本单种子包不冒充多 seed 结论。
+- 当前科学状态为 **左侧独立接受的单种子 development 结果**；发布纠错与后验写回机制诊断见 [EmbraceNet单种子当前页](reports/current/embracenet_single_seed/README.md)。三种子完整匹配目标仍是更高层次交付，本单种子包不冒充 multi-seed/test 结论。

@@ -1,8 +1,8 @@
 {
   "schema": "look_embracenet_single_seed_public_summary_v1",
-  "state": "self_checked_pending_independent_review",
+  "state": "scientifically_accepted_scoped_single_seed_development",
   "test_access": false,
-  "scientific_acceptance": false,
+  "scientific_acceptance": true,
   "identity": "5e44171a8457a849a630333ffafe781618846804ab37d2dc43f6ad8b744a861f",
   "source": {
     "scientific_commit": "918bac87d68604cb5da5fc1aea612cbdd818ab3e",
@@ -330,5 +330,22 @@
     "pipeline_status": "9eb33c28c2e8f7dae335854cb58f0b2a175dcf745f701b74ce477b99086501eb",
     "sequence_active": "16e8187bbdaa0c0b95c04241968352eab1ccd6e919716576701273d783fabb85"
   },
-  "independent_review": "pending"
+  "independent_review": "accepted",
+  "left_audit_sha256": "14d09c4d845ef8c5044e94893625e453eaf793945cd637be216b3638872acb59",
+  "publication_correction": {
+    "macro_f1_non_degenerate_simultaneous_rows": 3,
+    "all_three_include_zero": true,
+    "degenerate_row": {
+      "arm": "residual_rrr",
+      "pattern": "cfp_missing",
+      "simultaneous_95": null,
+      "all_bootstrap_differences_zero": true,
+      "interpretation": "exact no-correction identity; standardized simultaneous interval undefined; not equivalence evidence"
+    }
+  },
+  "posthoc_mechanism_diagnostic": {
+    "receipt_sha256": "7d903e298b4bdc36c630e470d7524634b70ff875feb2894f02741388a3235921",
+    "status": "self_checked",
+    "public_summary": "integration_20260919.md"
+  }
 }

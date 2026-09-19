@@ -42,4 +42,4 @@ MMTM门控宿主的无LOOK/+LOOK兼容包已完成（不计缺失方法A/B/C）�
 
 ## 2026-09-19：EmbraceNet首个真实缺失方法A单种子包完成
 
-[EmbraceNet + LOOK 当前页](embracenet_single_seed/README.md)：同一冻结EmbraceNet A完成两种LOOK×两种整模态缺失四个预注册主比较。PCA在缺OCT/缺CFP Macro-F1点估计分别+1.364/+1.131pp；RRR缺OCT+1.085pp、缺CFP严格正收益树为空。四个Macro-F1同族同时95%均不排除0，因此当前只标self_checked_pending_independent_review，不写稳定优势或test结论。
+[EmbraceNet + LOOK 当前页](embracenet_single_seed/README.md)：同一冻结EmbraceNet A完成两种LOOK×两种整模态缺失四个预注册主比较。PCA在缺OCT/缺CFP Macro-F1点估计分别+1.364/+1.131pp；RRR缺OCT+1.085pp、缺CFP严格正收益树为空。三个非退化Macro-F1同族同时95%均包含0；RRR缺CFP为空路径恒等对比、零方差且simultaneous区间未定义。左侧已独立接受该单种子development科学结果，但仍不写稳定/泛化优势或test结论。

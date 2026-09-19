@@ -1,6 +1,6 @@
 ## 2026-09-19：EmbraceNet单种子真实A+LOOK包已自检完成
 
-WS02 seed3416一个EmbraceNet A已按三态各1/3真实训练并在best epoch11/stop26冻结；9节点随机完整参考PCA、fit-profile、PCA/RRR两家族双缺失完整positive-forward tree、10k paired bootstrap与中文累计候选均完成。PCA缺OCT/缺CFP Macro-F1点估计+1.364/+1.131pp；RRR缺OCT+1.085pp、缺CFP空树。四个Macro-F1同族simultaneous95%均跨0。test封存；当前self_checked_pending_independent_review，等待左侧从WS02原产物独立重算。此前fusion sequence_active历史已归档，当前binding准确指向EmbraceNet完成态。详见 reports/current/embracenet_single_seed/README.md。
+WS02 seed3416一个EmbraceNet A已按三态各1/3真实训练并在best epoch11/stop26冻结；9节点随机完整参考PCA、fit-profile、PCA/RRR两家族双缺失完整positive-forward tree、10k paired bootstrap与中文累计候选均完成。PCA缺OCT/缺CFP Macro-F1点估计+1.364/+1.131pp；RRR缺OCT+1.085pp、缺CFP空树。三个非退化Macro-F1同族simultaneous95%均包含0；RRR缺CFP为空路径恒等、零方差且simultaneous区间未定义。test封存；左侧已从WS02原产物独立重算并接受该单种子development科学结果。此前fusion sequence_active历史已归档，当前binding准确指向EmbraceNet完成态。详见 reports/current/embracenet_single_seed/README.md。
 
 ## 2026-09-19：EmbraceNet v3 graph replay 闭环
 

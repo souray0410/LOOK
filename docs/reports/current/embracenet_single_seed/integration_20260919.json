@@ -1,0 +1,39 @@
+{
+  "schema": "look_embracenet_integration_explanation_v1",
+  "state": "main_science_independently_accepted_posthoc_diagnostic_self_checked",
+  "single_seed_result_sha256": "8265c80f2ebda76d191fac30dfc98a3d55d1f3d7e18de4bd7660c3d80c443d0c",
+  "left_audit_sha256": "14d09c4d845ef8c5044e94893625e453eaf793945cd637be216b3638872acb59",
+  "left_ack_sha256": "3ae628a00a1a2cc29204b4d7dfd86f0550e68e771edbaad37dbca811676246d4",
+  "branch_diagnostic_receipt_sha256": "7d903e298b4bdc36c630e470d7524634b70ff875feb2894f02741388a3235921",
+  "test_access": false,
+  "new_training": false,
+  "new_fit": false,
+  "new_search": false,
+  "publication_correction": {
+    "degenerate_contrast": "residual_rrr/cfp_missing",
+    "bootstrap_differences": "all_zero",
+    "bootstrap_sd": 0.0,
+    "simultaneous_95": null,
+    "wording": "three nondegenerate simultaneous intervals include zero; fourth is exact identity with undefined standardized simultaneous interval; not equivalence"
+  },
+  "node_labels": {
+    "joint_input": "双模态输入联合节点（各自进入ResNet18编码器之前）",
+    "embraced_feature": "EmbraceNet逐坐标选择之后的融合特征"
+  },
+  "mechanism": {
+    "oct_missing": {
+      "full_equals_available_branch_only": true,
+      "missing_branch_only_equals_host": true,
+      "max_abs_logit_delta": 0.1374918818473816
+    },
+    "cfp_missing": {
+      "full_equals_available_branch_only": true,
+      "missing_branch_only_equals_host": true,
+      "max_abs_logit_delta": 0.13281464576721191
+    },
+    "interpretation": "joint_input PCA acts through available branch, not unavailable-modality generation",
+    "rrr_oct": "post-embrace fused-feature correction",
+    "rrr_cfp": "empty-path identity"
+  },
+  "diagnostic_status": "self_checked_posthoc_not_new_confirmatory_effect"
+}

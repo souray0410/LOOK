@@ -2,7 +2,7 @@
   "schema": "research_project_status_v1",
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
-  "phase": "embracenet_single_seed_self_checked_pending_independent_review",
+  "phase": "embracenet_single_seed_scientifically_accepted_integration_publication_in_progress",
   "next_acceptance": "Stage A概率诊断已独立接受；当前完成缺失方法一手证据/公平匹配盘点。MMTM只作宿主兼容/组装证据，不计LOOK缺失方法A/B/C。下一训练方法与配方由左侧从有限候选裁决；本包不启动GPU/test。",
   "dependencies": [
     "宿主验收",
@@ -143,7 +143,8 @@
     "EmbraceNet trial唯一推荐：1264train/296dev/seed3416沿用accepted R18训练与BN/停止；c=256，complete选择概率0.5/0.5，train complete/missingOCT/missingCFP各1/3；K=32 common-random评估，checkpoint仍按complete dev Macro-F1，A与A+LOOK同state逐draw复用精确indices。左审及当前SHA CPU重验前不训练。",
     "EmbraceNet v2统一trial待左侧最终确认两项新科学选择：train三状态各1/3；complete checkpoint/诊断使用解析integrated mean logits，K32仅可选诊断。其余R18训练/BN/batch/停止/label/split/test规则继承不变。",
     "EmbraceNet v3统计合同：complete分类integrated-mean-logit用E[z]即可；但embraced_feature LOOK PCA若参考作者随机完整分布，必须使用Sigma_full，包含平均diag(v_i)条件抽样方差。只用mean feature的Sigma_mean属于新科学目标，需另行确认。",
-    "EmbraceNet真实A+LOOK单种子点估计：PCA缺OCT+1.364pp、缺CFP+1.131pp；RRR缺OCT+1.085pp、缺CFP空树+0。所有Macro-F1同族simultaneous95%跨0；不宣布稳定优势，不因阴性自动补seed/调参。"
+    "EmbraceNet真实A+LOOK单种子点估计：PCA缺OCT+1.364pp、缺CFP+1.131pp；RRR缺OCT+1.085pp、缺CFP空树+0。所有Macro-F1同族simultaneous95%跨0；不宣布稳定优势，不因阴性自动补seed/调参。",
+    "EmbraceNet left audit accepted the scoped single-seed development science. Publication correction: three nondegenerate simultaneous intervals include zero; residual_rrr/cfp_missing is an exact zero-variance identity with simultaneous_95=null, not equivalence evidence. Frozen branch diagnostic: joint_input PCA gain is entirely through the available modality branch; missing-branch-only writeback leaves logits identical to A."
   ],
   "evidence": [
     {
@@ -257,6 +258,10 @@
     {
       "label": "EmbraceNet首个真实missing-method A+LOOK单种子当前页",
       "url": "docs/reports/current/embracenet_single_seed/README.md"
+    },
+    {
+      "label": "EmbraceNet独立接受后的发布纠错与冻结写回机制诊断",
+      "url": "docs/reports/current/embracenet_single_seed/integration_20260919.md"
     }
   ]
 }

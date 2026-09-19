@@ -849,7 +849,7 @@ def stage_report(spec, root):
         lines += ["",f"### {metric}"]
         for row in stats[metric]["rows"]:
             lo,hi=row["ordinary_95"];sim=row["simultaneous_95"]
-            sim_text="NA" if sim is None else f"[{sim[0]:.5f}, {sim[1]:.5f}]"
+            sim_text="未定义（零方差恒等对比）" if sim is None else f"[{sim[0]:.5f}, {sim[1]:.5f}]"
             lines.append(f"- {row['arm']} / {row['pattern']}: 改善 {row['favorable_improvement']:.5f}; ordinary95 [{lo:.5f}, {hi:.5f}]; 同族同时95 {sim_text}; Holm p={row['holm_p_value']:.4g}.")
     lines += ["","开发集同时承担checkpoint/tree选择与效果估计，存在选择偏差；配对bootstrap不能消除该偏差。当前只有一个训练seed，不代表训练随机性稳定性。",
               "本包不读test，不因阴性结果补调参/补seed；是否做后续重复由独立审查后的同范围科研决策另行留档。"]

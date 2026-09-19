@@ -83,13 +83,13 @@
     },
     {
       "question": "EmbraceNet作为首个真实缺失方法A，单seed3416同一冻结A+LOOK实际结果怎样",
-      "accepted_evidence": "右侧自检候选：WS02 train1264/dev296/test sealed；EmbraceNet A best11/stop26；PCA/RRR×missingOCT/missingCFP四个预注册主对比、10k participant-paired普通及同族simultaneous95%。",
-      "observation": "Macro-F1: missingOCT host66.230/PCA67.594/RRR67.315；missingCFP host56.341/PCA57.471/RRR56.341。PCA两状态选joint_input；RRR缺OCT选embraced_feature，缺CFP严格正收益路径为空。四个Macro-F1 simultaneous95%均跨0。",
+      "accepted_evidence": "左侧独立审计通过：385文件、203源码pin、86预测/296有序参与者、四树16前缀73候选、四指标10k配对统计；host best11/stop26；test未用。",
+      "observation": "Macro-F1: missingOCT host66.230/PCA67.594/RRR67.315；missingCFP host56.341/PCA57.471/RRR56.341。PCA两状态选双模态输入联合节点(joint_input)；RRR缺OCT选EmbraceNet选择后的融合特征(embraced_feature)，缺CFP严格正收益路径为空。三个非退化Macro-F1 simultaneous95%均包含0；第四个RRR/missingCFP因恒等预测、bootstrap方差0而simultaneous95=null，不是等效性检验。",
       "counterexample": "RRR missingCFP没有任何严格正收益节点；PCA missingCFP AUROC略降；概率指标与F1不完全同向。",
       "alternative_explanation": "同一296人dev同时用于checkpoint/tree选择与效应估计；单训练seed；participant bootstrap不含训练随机性。",
-      "decision": "保留完整正负结果作为首个A vs A+LOOK真实候选，不宣称稳定/普遍优势，不因结果继续补调参或补seed；先等待左侧原产物独立验收。",
-      "state": "self_checked_pending_independent_review",
-      "next_trigger": "左侧从WS02原aggregate/prediction/tree资产独立重算通过后，再决定是否进入后续重复/第二A；test本包不解封。"
+      "decision": "该1264/296/seed3416 frozen-A单种子development科学包已独立接受；不宣称稳定/普遍/test优势。冻结分支诊断另行表明PCA joint_input收益完全由仍可用模态分支写回贡献，缺失分支单独写回不改变logits；这是后验机制解释，不改主比较。",
+      "state": "scientifically_accepted_scoped_single_seed_development",
+      "next_trigger": "发布纠错/共同交付完成后，按持续授权裁决一个机制不同且任务匹配的最小下一A合同；本包不启动第二A训练，test不解封。"
     }
   ]
 }

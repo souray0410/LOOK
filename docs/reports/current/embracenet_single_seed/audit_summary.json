@@ -1,7 +1,7 @@
 {
   "schema": "look_embracenet_single_seed_audit_summary_v1",
-  "state": "self_checked_pending_independent_review",
-  "scientific_acceptance": false,
+  "state": "scientifically_accepted_scoped_single_seed_development_publication_repaired",
+  "scientific_acceptance": true,
   "test_access": false,
   "packet_sha256": "fd3300c0cdbfa3d168eca5e9e4563b4c5e3d9fdf4dc7e0111bdea89ccd3339f1",
   "authorization_sha256": "bad1710372f092f662c87e4d41e60c591decb0ab8dccadb0a75934e91313bd01",
@@ -52,5 +52,22 @@
     "pipeline_status": "9eb33c28c2e8f7dae335854cb58f0b2a175dcf745f701b74ce477b99086501eb",
     "sequence_active": "16e8187bbdaa0c0b95c04241968352eab1ccd6e919716576701273d783fabb85"
   },
-  "next_gate": "left independently recalculates aggregate metrics/statistics/tree identities from original WS02 artifacts; no main publication before that review"
+  "next_gate": "left independently recalculates aggregate metrics/statistics/tree identities from original WS02 artifacts; no main publication before that review",
+  "left_independent_audit": {
+    "sha256": "14d09c4d845ef8c5044e94893625e453eaf793945cd637be216b3638872acb59",
+    "state": "independent_numeric_and_tree_audit_passed",
+    "hashed_files": 385,
+    "source_pins": 203,
+    "prediction_files": 86,
+    "participants": 296,
+    "tree_prefixes": 16,
+    "tree_candidates": 73,
+    "bootstrap_iterations": 10000
+  },
+  "publication_correction": "Three nondegenerate simultaneous intervals include zero; residual_rrr/cfp_missing is exact identity with zero bootstrap variance and simultaneous_95=null, not equivalence.",
+  "posthoc_branch_diagnostic": {
+    "receipt_sha256": "7d903e298b4bdc36c630e470d7524634b70ff875feb2894f02741388a3235921",
+    "scientific_acceptance": false,
+    "role": "mechanism explanation only"
+  }
 }
