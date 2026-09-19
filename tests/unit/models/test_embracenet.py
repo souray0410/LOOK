@@ -564,3 +564,138 @@ def test_analytical_moments_single_missing_zero_variance_and_linear_mean_logit_i
     mean_logits = head(complete["mean"])
     manual = complete["mean"] @ head.weight.T + head.bias
     torch.testing.assert_close(mean_logits, manual, rtol=0, atol=0)
+
+
+def _assert_next_plain_call_is_not_replayed(graph, oct_tensor, cfp_tensor, counts, availability):
+    result = forward_embracenet_with_look(
+        graph, oct_tensor, cfp_tensor, counts, availability
+    )
+    assert result["sampling_trace"] is not None
+    assert result["sampling_trace"]["replayed"] is False
+
+
+@pytest.mark.parametrize("entry", ["plain", "study"])
+def test_public_prearmed_replay_cleared_after_available_nan_graph_failure(entry):
+    torch.set_num_threads(2)
+    graph = build_embracenet_host(*_parents(), embracement_size=8, sampling_seed=131).eval()
+    counts = [1]
+    availability = torch.tensor([[1.0, 1.0]])
+    good_oct = torch.randn(1, 3, 224, 224)
+    good_cfp = torch.randn(1, 3, 224, 224)
+    bad_oct = torch.full_like(good_oct, float("nan"))
+    replay = torch.zeros(1, 8, dtype=torch.long)
+    set_embracenet_replay(graph, replay)
+    with pytest.raises(ValueError, match="Available modality input contains non-finite"):
+        if entry == "plain":
+            forward_embracenet_host(graph, bad_oct, good_cfp, counts, availability)
+        else:
+            forward_embracenet_with_look(graph, bad_oct, good_cfp, counts, availability)
+    _assert_next_plain_call_is_not_replayed(
+        graph, good_oct, good_cfp, counts, availability
+    )
+
+
+@pytest.mark.parametrize("failure_kind", ["invalid_artifact", "invalid_stop"])
+def test_public_prearmed_replay_cleared_after_study_prevalidation_failure(failure_kind):
+    torch.set_num_threads(2)
+    graph = build_embracenet_host(*_parents(), embracement_size=8, sampling_seed=137).eval()
+    counts = [1]
+    availability = torch.tensor([[1.0, 1.0]])
+    oct_tensor = torch.randn(1, 3, 224, 224)
+    cfp_tensor = torch.randn(1, 3, 224, 224)
+    set_embracenet_replay(graph, torch.zeros(1, 8, dtype=torch.long))
+    if failure_kind == "invalid_artifact":
+        base = forward_embracenet_with_look(
+            graph, oct_tensor, cfp_tensor, counts, availability, stop_node="joint_stage1"
+        )["output"]
+        invalid = _nonzero_artifact(graph, "joint_stage1", base, "complete")
+        invalid.node_name = "fusion_logits"
+        # Rearm because the feature-probe call above intentionally cleared it.
+        set_embracenet_replay(graph, torch.zeros(1, 8, dtype=torch.long))
+        with pytest.raises(ValueError, match="Invalid LOOK"):
+            forward_embracenet_with_look(
+                graph, oct_tensor, cfp_tensor, counts, availability, [invalid]
+            )
+    else:
+        with pytest.raises((KeyError, AttributeError, TypeError, ValueError)):
+            forward_embracenet_with_look(
+                graph, oct_tensor, cfp_tensor, counts, availability, stop_node="not_a_node"
+            )
+    _assert_next_plain_call_is_not_replayed(
+        graph, oct_tensor, cfp_tensor, counts, availability
+    )
+
+
+def test_public_prearmed_replay_cleared_after_successful_pre_embrace_stop():
+    torch.set_num_threads(2)
+    graph = build_embracenet_host(*_parents(), embracement_size=8, sampling_seed=139).eval()
+    counts = [1]
+    availability = torch.tensor([[1.0, 1.0]])
+    oct_tensor = torch.randn(1, 3, 224, 224)
+    cfp_tensor = torch.randn(1, 3, 224, 224)
+    set_embracenet_replay(graph, torch.zeros(1, 8, dtype=torch.long))
+    result = forward_embracenet_with_look(
+        graph, oct_tensor, cfp_tensor, counts, availability, stop_node="joint_stage1"
+    )
+    assert result["sampling_trace"] is None
+    _assert_next_plain_call_is_not_replayed(
+        graph, oct_tensor, cfp_tensor, counts, availability
+    )
+
+
+@pytest.mark.parametrize("entry", ["plain", "study"])
+def test_public_prearmed_valid_exact_replay_still_succeeds(entry):
+    torch.set_num_threads(2)
+    graph = build_embracenet_host(*_parents(), embracement_size=8, sampling_seed=149).eval()
+    counts = [1]
+    availability = torch.tensor([[1.0, 1.0]])
+    oct_tensor = torch.randn(1, 3, 224, 224)
+    cfp_tensor = torch.randn(1, 3, 224, 224)
+    replay = torch.zeros(1, 8, dtype=torch.long)
+    set_embracenet_replay(graph, replay)
+    if entry == "plain":
+        output = forward_embracenet_host(
+            graph, oct_tensor, cfp_tensor, counts, availability
+        )
+        trace = get_embracenet_trace(graph)
+    else:
+        result = forward_embracenet_with_look(
+            graph, oct_tensor, cfp_tensor, counts, availability
+        )
+        output = result["output"]
+        trace = result["sampling_trace"]
+    assert output.shape == (1, 2)
+    assert trace["replayed"] is True
+    torch.testing.assert_close(trace["modality_indices"], replay, rtol=0, atol=0)
+    _assert_next_plain_call_is_not_replayed(
+        graph, oct_tensor, cfp_tensor, counts, availability
+    )
+
+
+def test_complete_reference_second_moment_formula_matches_exact_enumeration():
+    module = EmbraceNetFusion([2, 2], embracement_size=2, bypass_docking=True, sampling_seed=17)
+    first = torch.tensor([[1.0, -2.0]])
+    second = torch.tensor([[4.0, 3.0]])
+    availability = torch.ones(1, 2)
+    probabilities = torch.tensor([[0.3, 0.7]])
+    moments = module.analytical_moments([first, second], availability, probabilities)
+    mu = moments["mean"][0]
+    var = moments["variance_diagonal"][0]
+    formula_second = torch.outer(mu, mu) + torch.diag(var)
+
+    exact_second = torch.zeros(2, 2)
+    exact_mean = torch.zeros(2)
+    for i0 in (0, 1):
+        for i1 in (0, 1):
+            probability = probabilities[0, i0] * probabilities[0, i1]
+            z = torch.tensor([
+                first[0, 0] if i0 == 0 else second[0, 0],
+                first[0, 1] if i1 == 0 else second[0, 1],
+            ])
+            exact_mean += probability * z
+            exact_second += probability * torch.outer(z, z)
+    torch.testing.assert_close(mu, exact_mean, rtol=0, atol=0)
+    torch.testing.assert_close(formula_second, exact_second, rtol=1e-6, atol=1e-6)
+
+    mean_only_second = torch.outer(mu, mu)
+    assert not torch.equal(mean_only_second, exact_second)

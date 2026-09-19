@@ -1,0 +1,54 @@
+{
+  "schema": "look_embracenet_graph_replay_lifecycle_v3",
+  "records": {
+    "plain_available_nan_failure": {
+      "failure": "Available modality input contains non-finite values",
+      "sampling_state_unchanged": true,
+      "next_legal_replayed": false
+    },
+    "study_available_nan_failure": {
+      "failure": "Available modality input contains non-finite values",
+      "sampling_state_unchanged": true,
+      "next_legal_replayed": false
+    },
+    "study_invalid_artifact": {
+      "failure": "Invalid LOOK sites: ['fusion_logits']",
+      "sampling_state_unchanged": true,
+      "next_legal_replayed": false
+    },
+    "study_pre_embrace_normal_stop": {
+      "sampling_state_unchanged": true,
+      "next_legal_replayed": false
+    },
+    "plain_valid_exact_replay": {
+      "first_replayed": true,
+      "indices_exact": true,
+      "next_legal_replayed": false,
+      "output_shape": [
+        1,
+        2
+      ]
+    },
+    "study_valid_exact_replay": {
+      "first_replayed": true,
+      "indices_exact": true,
+      "next_legal_replayed": false,
+      "output_shape": [
+        1,
+        2
+      ]
+    }
+  },
+  "contract": {
+    "scope": "public graph entry owns one-shot replay lifecycle",
+    "success": "valid exact replay is consumed once and trace remains auditable",
+    "failure": "any graph-entry failure clears unconsumed replay",
+    "early_stop": "normal stop before embracement clears unconsumed replay",
+    "rng": "prevalidation failure and pre-embrace stop do not advance EmbraceNet sampling RNG",
+    "nontransactional_limit": "already-executed BN/graph side effects are not rolled back"
+  },
+  "participant_data_used": false,
+  "gpu_used": false,
+  "remote_used": false,
+  "test_access": false
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "look_embracenet_adapter_repair_v3_cpu_acceptance_v1",
+  "task_id": "look-embracenet-adapter-repair-20260919-v3",
+  "state": "cpu_engineering_ready_for_left_review",
+  "environment": {
+    "reused_from_v2": true,
+    "root": "/Users/mengh/Documents/WebCodexProjects/Radon_Bridge/.webcodex-local/local_envs/look_embracenet_repair_v2",
+    "python": "3.11.16",
+    "torch": "2.8.0",
+    "torchvision": "0.23.0",
+    "pytest": "8.4.1",
+    "mhd_framework_version": "4",
+    "mhd_source_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0"
+  },
+  "source_sha256": {
+    "model": "46e5c124c41c2b16a070d71e0f4c592ba4ee8caba66d89d9c65c1d25f1ea74f2",
+    "runtime": "2f633c4d012f05915be8d413f29f9fcc5b855ce73b3ebbe7f8d4bf64e40b74e2",
+    "study": "aacdcdd790422a701218f16ab3e886e1220d17046580e28bf288c9c6dcb92e54",
+    "tests": "461db3991a0f9c6a91b6ae89cb8ce6f76b35463e98a43482fe02e19e2ef85785"
+  },
+  "reused_author_evidence": {
+    "embracenet_fusion_class_sha256": "aac72c592d691cad976a9e6286dcf3bfe3f031f4f585335eb92eda64c86bd497",
+    "v2_class_sha256": "aac72c592d691cad976a9e6286dcf3bfe3f031f4f585335eb92eda64c86bd497",
+    "unchanged": true,
+    "v2_author_parity_receipt_sha256": "9bdea69dced0a7b3934e14bb1360012f679f15c95310661de7bd00161f75bf5e",
+    "reason": "v3 changes public graph-entry replay lifecycle only; EmbraceNetFusion author-math class body is byte-identical to v2"
+  },
+  "validation": {
+    "current_embracenet_tests": {
+      "result": "24/24 pass",
+      "log": ".webcodex-local/task_packets/look_embracenet_adapter_repair_v3.pytest_current.log",
+      "log_sha256": "2086fad9013435d45f07b5585db10f54a40e7992de9929a7b794fb3ed0693d15"
+    },
+    "native_mmtm_linear_regression": {
+      "result": "30/30 pass",
+      "log": ".webcodex-local/task_packets/look_embracenet_adapter_repair_v3.regression.log",
+      "log_sha256": "b21ecb4f5fcafd1c685ff869131ec4c33a226d4f08cbe2cc1fc78307775b6076"
+    },
+    "graph_replay_probe": {
+      "result": "pass",
+      "log": ".webcodex-local/task_packets/look_embracenet_adapter_repair_v3.replay_probe.log",
+      "log_sha256": "d2527c4dbaa4f1389e8d3cabe375070a907c1a93f53017b5f04d6bedf372356c",
+      "receipt_sha256": "3c2f127c9d9fe92e16b4d8b8b629cb8fadfed17ad8fdfb98be69cbb3cb0736d9"
+    }
+  },
+  "graph_probe_coverage": {
+    "plain_available_nan_failure_clears_external_prearm": true,
+    "study_available_nan_failure_clears_external_prearm": true,
+    "invalid_artifact_prevalidation_clears_external_prearm": true,
+    "pre_embrace_normal_stop_clears_external_prearm": true,
+    "prevalidation_and_early_stop_sampling_rng_unchanged": true,
+    "valid_plain_exact_replay_preserved": true,
+    "valid_study_exact_replay_preserved": true,
+    "valid_replay_one_shot_next_call_not_replayed": true
+  },
+  "formula_contract": {
+    "readable_v3_superseding_erratum": true,
+    "v2_frozen_markdown_modified": false,
+    "full_reference_PCA_requires_conditional_sampling_variance": true,
+    "mean_only_PCA_is_new_scientific_choice": true
+  },
+  "boundaries": {
+    "participant_data_used": false,
+    "train_dev_test_used": false,
+    "gpu_used": false,
+    "remote_operation": false,
+    "real_training": false,
+    "new_agent": false,
+    "fast_or_priority": false,
+    "main_push": false
+  },
+  "scientific_acceptance": false
+}

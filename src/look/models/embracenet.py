@@ -1,6 +1,7 @@
 """Author-faithful EmbraceNet fusion and a finite MHD prototype for observed CFP/OCT."""
 from __future__ import annotations
 
+from contextlib import contextmanager
 from typing import Mapping, Sequence
 
 import torch
@@ -404,6 +405,21 @@ def clear_embracenet_replay(graph: MHD_Graph) -> None:
     _get_embracenet_operation(graph).clear_pending_replay()
 
 
+@contextmanager
+def embracenet_graph_replay_scope(graph: MHD_Graph):
+    """Own the public graph-entry one-shot replay lifecycle.
+
+    External callers may prearm exact replay before entering either public graph
+    forward. Success consumes it inside EmbraceNet. Any exception or a normal
+    stop before embracement must clear it here so the next unrelated call is
+    stochastic. Clearing does not advance or roll back the sampling generator.
+    """
+    try:
+        yield
+    finally:
+        clear_embracenet_replay(graph)
+
+
 def build_embracenet_host(
     cfp_parent,
     oct_parent,
@@ -663,21 +679,25 @@ def forward_embracenet_host(
     labels: torch.Tensor | None = None,
     loss_scale: float = 1.0,
 ) -> torch.Tensor:
-    reset_embracenet_inputs(
-        graph,
-        oct_tensor,
-        cfp_tensor,
-        counts,
-        availabilities,
-        selection_probabilities,
-    )
-    if labels is not None:
-        if not 0 < loss_scale <= 1:
-            raise ValueError("Invalid accumulation loss scale")
-        graph.get_edge_by_name("classification_loss_edge").edge_operations[0].function.scale = loss_scale
-        graph.get_node_by_name("label_gt").feature_message.current_state = labels.long()
-    graph.forward(levels=graph.model_levels if labels is None else graph.forward_levels)
-    return graph.get_node_by_name("fusion_logits").feature_message.current_state
+    # The public entry owns any replay prearmed through set_embracenet_replay.
+    # Failures during raw-input validation, labels/loss validation, or the graph
+    # itself therefore cannot leak a one-shot replay into the next call.
+    with embracenet_graph_replay_scope(graph):
+        reset_embracenet_inputs(
+            graph,
+            oct_tensor,
+            cfp_tensor,
+            counts,
+            availabilities,
+            selection_probabilities,
+        )
+        if labels is not None:
+            if not 0 < loss_scale <= 1:
+                raise ValueError("Invalid accumulation loss scale")
+            graph.get_edge_by_name("classification_loss_edge").edge_operations[0].function.scale = loss_scale
+            graph.get_node_by_name("label_gt").feature_message.current_state = labels.long()
+        graph.forward(levels=graph.model_levels if labels is None else graph.forward_levels)
+        return graph.get_node_by_name("fusion_logits").feature_message.current_state
 
 
 def embracenet_parameter_groups(graph: MHD_Graph, pretrained_lr: float, new_layer_lr: float):

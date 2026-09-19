@@ -1,3 +1,7 @@
+## EmbraceNet v3 replay失败边界与二阶矩合同（2026-09-19）
+
+左侧v2图级探针发现的外部prearm replay泄漏已在公开plain/study入口统一修复；当前专项24/24、相关回归30/30及独立图级probe通过。v2冻结证据不覆写，其损坏公式由[v3可发布合同](embracenet_adapter_repair_v3_20260919.md)勘误。v3同时明确：complete分类的integrated mean logits只需一阶矩，但若embraced_feature的LOOK PCA仍针对作者随机完整参考分布，则必须用解析二阶矩保留条件抽样方差；mean-only PCA属于新的科学目标，不能静默切换。真实训练仍未授权。
+
 ## EmbraceNet v2 CPU闭环与统一统计合同（2026-09-19）
 
 v1 的工程 blocker 已由本机隔离 CPU 环境闭环：当前源码专项16/16、相关回归30/30、作者当前SHA等价/RNG恢复、九节点双缺失非零LOOK与统计目标审计均通过。v2 统一 train/A/A+LOOK 缺失入口，并把原 K32 正式提案修订为：单缺失每状态一次作者式forward；complete 若目标是平均logits，则使用解析 integrated mean logits，K32只作可选诊断。真实训练仍未授权。详见 [embracenet_adapter_repair_v2_20260919.md](embracenet_adapter_repair_v2_20260919.md)。

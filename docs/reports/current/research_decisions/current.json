@@ -1,7 +1,7 @@
 {
   "schema": "research_decisions_v1",
   "project": "LOOK",
-  "reviewed_at": "2026-09-19T08:55:00+00:00",
+  "reviewed_at": "2026-09-19T09:10:00+00:00",
   "test_access": false,
   "decisions": [
     {
@@ -73,6 +73,13 @@
         "complete使用解析 integrated-mean-logit estimand；K32仅诊断"
       ],
       "next_trigger": "左侧确认以上两项后，另发真实GPU试运行包；本包不训练、不读test。"
+    },
+    {
+      "question": "EmbraceNet v3是否关闭公开图入口replay泄漏并澄清完整参考二阶矩合同",
+      "accepted_evidence": "当前SHA本机CPU专项24/24、native/MMTM/linear回归30/30；真实图级probe覆盖plain/study外部prearm后available-NaN失败、invalid artifact、embrace前正常stop及有效exact replay，失败/提前stop后下一合法调用均replayed=false且前置sampling RNG不变。",
+      "decision": "v3右侧工程ready_for_left_review。v2冻结证据不覆写；公式在v3文档纠正。complete分类integrated-mean-logit继续用一阶矩；若embraced_feature LOOK PCA声称参考作者随机完整分布，则必须保留E[zz^T]=mu mu^T+diag(v)的条件方差项。mean-only PCA需另作新科学选择。",
+      "state": "graph_replay_cpu_closed_second_moment_contract_ready_left_review",
+      "next_trigger": "左侧确认train三状态1/3、complete integrated-mean-logit及stochastic-full-reference PCA二阶矩合同后，才可另发真实训练包。"
     }
   ]
 }

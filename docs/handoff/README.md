@@ -1,3 +1,7 @@
+## 2026-09-19：EmbraceNet v3 graph replay 闭环
+
+公开plain/study图入口现共同拥有一次性exact replay生命周期：外部prearm成功时精确消费；available-input NaN、artifact/stop预校验失败及embrace前正常停止都会清除未消费replay，前置失败/提前stop不推进EmbraceNet sampling RNG。当前专项24/24、相关回归30/30及独立图级probe通过。v2冻结文档不修改，v3后继合同修复公式显示并明确随机完整参考PCA必须保留条件二阶矩；mean-only PCA如需采用必须显式科学批准。无真实数据/GPU/远端/训练。
+
 ## 2026-09-19：EmbraceNet v2 本机CPU闭环
 
 v1 repair_required 后已在本机隔离venv完成当前SHA动态闭环：EmbraceNet16/16、相关回归30/30、作者当前SHA等价与完整RNG恢复、九节点双单缺失非零LOOK、单缺失多seed确定性及complete统计目标审计全部通过。train/A/A+LOOK现共用pre-R18 zero-mask入口。v2推荐不再把K32作为正式主估计：single-missing各一次正常author forward；complete integrated-mean-logit目标用解析期望，K32仅工程诊断。无远端写入/GPU/参与者数据/test/真实训练。详见 research_decisions/embracenet_adapter_repair_v2_20260919.md。

@@ -10,7 +10,7 @@ from look.methods.joint import correction_sites, members, member_shapes, read_si
 from look.methods.operator import LOOKArtifact, PROTOCOL, apply_artifact
 from look.models.embracenet import (
     capture_embracenet_sampling,
-    clear_embracenet_replay,
+    embracenet_graph_replay_scope,
     get_embracenet_trace,
     reset_embracenet_inputs,
     restore_embracenet_sampling,
@@ -127,34 +127,37 @@ def forward_embracenet_with_look(
     replay_indices: torch.Tensor | None = None,
     stop_node: str | None = None,
 ) -> dict[str, object]:
-    """Run the actual MHD DAG with optional LOOK writeback and auditable sampling."""
-    if sampling_state is not None and replay_indices is not None:
-        raise ValueError("Use either a sampling-state replay or exact modality-index replay, not both")
-    target = stop_node or "fusion_logits"
-    stop_level = site_level(graph, target)
-    available_sites = correction_sites(graph)
-    artifact_sites = [artifact.node_name for artifact in artifacts]
-    if len(set(artifact_sites)) != len(artifact_sites):
-        raise ValueError("Duplicate LOOK sites")
-    if any(site not in available_sites for site in artifact_sites):
-        raise ValueError(f"Invalid LOOK sites: {artifact_sites}")
-    if artifact_sites != [site for site in available_sites if site in artifact_sites]:
-        raise ValueError("LOOK sites must follow forward order")
-    if any(site_level(graph, site) > stop_level for site in artifact_sites):
-        raise ValueError("LOOK artifact exceeds the requested stop boundary")
-    embrace_level = site_level(graph, "embraced_feature")
-    if replay_indices is not None and stop_level < embrace_level:
-        raise ValueError("Exact EmbraceNet replay requires a stop node at or after embraced_feature")
-    for artifact in artifacts:
-        if artifact.protocol != PROTOCOL or artifact.split_rule != "channel_split_and_restore_member_shapes_v1":
-            raise ValueError("LOOK protocol or split rule mismatch")
-    if sampling_state is not None:
-        restore_embracenet_sampling(graph, sampling_state)
-    replay_armed = False
-    try:
+    """Run the actual MHD DAG with optional LOOK writeback and auditable sampling.
+
+    The entry owns both externally prearmed replay and replay_indices supplied to
+    this call. Every exit path clears any unconsumed one-shot replay. This
+    includes validation failures and successful stops before embraced_feature.
+    """
+    with embracenet_graph_replay_scope(graph):
+        if sampling_state is not None and replay_indices is not None:
+            raise ValueError("Use either a sampling-state replay or exact modality-index replay, not both")
+        target = stop_node or "fusion_logits"
+        stop_level = site_level(graph, target)
+        available_sites = correction_sites(graph)
+        artifact_sites = [artifact.node_name for artifact in artifacts]
+        if len(set(artifact_sites)) != len(artifact_sites):
+            raise ValueError("Duplicate LOOK sites")
+        if any(site not in available_sites for site in artifact_sites):
+            raise ValueError(f"Invalid LOOK sites: {artifact_sites}")
+        if artifact_sites != [site for site in available_sites if site in artifact_sites]:
+            raise ValueError("LOOK sites must follow forward order")
+        if any(site_level(graph, site) > stop_level for site in artifact_sites):
+            raise ValueError("LOOK artifact exceeds the requested stop boundary")
+        embrace_level = site_level(graph, "embraced_feature")
+        if replay_indices is not None and stop_level < embrace_level:
+            raise ValueError("Exact EmbraceNet replay requires a stop node at or after embraced_feature")
+        for artifact in artifacts:
+            if artifact.protocol != PROTOCOL or artifact.split_rule != "channel_split_and_restore_member_shapes_v1":
+                raise ValueError("LOOK protocol or split rule mismatch")
+        if sampling_state is not None:
+            restore_embracenet_sampling(graph, sampling_state)
         if replay_indices is not None:
             set_embracenet_replay(graph, replay_indices)
-            replay_armed = True
         reset_embracenet_inputs(
             graph,
             oct_tensor,
@@ -185,6 +188,3 @@ def forward_embracenet_with_look(
             "sampling_state_after": capture_embracenet_sampling(graph),
             "target": target,
         }
-    finally:
-        if replay_armed:
-            clear_embracenet_replay(graph)

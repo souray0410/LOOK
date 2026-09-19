@@ -1,0 +1,67 @@
+{
+  "schema": "look_embracenet_adapter_repair_v3_contract_v1",
+  "task_id": "look-embracenet-adapter-repair-20260919-v3",
+  "state": "ready_for_left_review",
+  "scientific_acceptance": false,
+  "real_training": false,
+  "participant_data_used": false,
+  "test_access": false,
+  "gpu_used": false,
+  "replay_lifecycle": {
+    "owner": "public graph-entry scope",
+    "public_entries": [
+      "forward_embracenet_host",
+      "forward_embracenet_with_look"
+    ],
+    "external_prearm_supported": true,
+    "valid_success": "exact replay consumed once; trace replayed=true retained",
+    "failure": "any graph-entry exception clears unconsumed replay",
+    "pre_embrace_normal_stop": "clears unconsumed replay",
+    "next_unrequested_call": "must be stochastic / replayed=false",
+    "prevalidation_rng": "not advanced",
+    "rollback_limit": "already executed BN/graph side effects are not rolled back"
+  },
+  "second_moment_contract": {
+    "per_participant": {
+      "mean": "mu_j = sum_m p_m d_mj",
+      "second_coordinate": "E[z_j^2] = sum_m p_m d_mj^2",
+      "variance": "v_j = E[z_j^2] - mu_j^2",
+      "full_second": "E[zz^T] = mu mu^T + diag(v)"
+    },
+    "across_participants": {
+      "mean": "mu_bar = (1/N) sum_i mu_i",
+      "full_second": "M2_full = (1/N) sum_i (mu_i mu_i^T + diag(v_i))",
+      "full_covariance": "Sigma_full = M2_full - mu_bar mu_bar^T",
+      "mean_only_covariance": "Sigma_mean = (1/N) sum_i mu_i mu_i^T - mu_bar mu_bar^T",
+      "difference": "Sigma_full - Sigma_mean = (1/N) sum_i diag(v_i)"
+    },
+    "recommendation": "For LOOK PCA at stochastic embraced_feature, preserve the author random complete-reference distribution using analytical full second moments. Mean-only PCA is a different scientific target and requires explicit approval.",
+    "rrr_boundary": "For squared-error regression after projection/standardization are fixed, the conditional-mean target has the same minimizer up to additive irreducible conditional variance; this does not justify mean-only PCA."
+  },
+  "complete_classification_estimand": {
+    "linear_head": "E[logits] = W E[z] + b",
+    "recommended": "analytical integrated mean logits",
+    "nonlinear_boundary": "softmax(E[logits]) != E[softmax(logits)] in general",
+    "k32": "optional MC engineering diagnostic only"
+  },
+  "single_missing": {
+    "missing_oct_probability": [
+      0,
+      1
+    ],
+    "missing_cfp_probability": [
+      1,
+      0
+    ],
+    "evaluation": "one ordinary author-style forward per state",
+    "deterministic_at_fixed_eval_checkpoint": true,
+    "dev_rng": "snapshot/restore private sampling state"
+  },
+  "trial_choices_requiring_left_confirmation": [
+    "train complete/missing_oct/missing_cfp each 1/3",
+    "complete classifier uses analytical integrated-mean-logit estimand",
+    "embraced_feature LOOK PCA complete reference preserves author stochastic full second moment rather than mean-only features"
+  ],
+  "inherited_training_unchanged": true,
+  "target_runtime_gate": "future authorized WS02 deployment only; not established here"
+}
