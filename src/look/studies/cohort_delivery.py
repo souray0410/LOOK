@@ -320,6 +320,8 @@ def main():
                         if receipt['identity']!=stable_hash(s):raise ValueError('Host identity changed')
                         for name,sha in receipt['files'].items():
                             if file_sha256(root/'host'/name)!=sha:raise ValueError('Host evidence changed')
+                        if s.get('study_kind')=='fusion_stage_v1' and receipt.get('fusion_stage_structure')!=s['fusion_stage_structure']:
+                            raise ValueError('Fusion-stage accepted host structure changed')
                         continue
                     if stage=='fit_profile' and (root/'profile/fitting/accepted.json').exists():
                         receipt=read(root/'profile/fitting/accepted.json')
