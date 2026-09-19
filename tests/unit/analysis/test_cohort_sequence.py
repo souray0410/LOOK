@@ -101,3 +101,25 @@ def test_fusion_extension_rejects_duplicate_deep_registration():
         configurations=[deep,_public_config('2026_09_19_02_40_42_281912_features',position='features')])
     with pytest.raises(ValueError,match='exactly middle/features'):
         m.validate_fusion_extension(ext,current)
+
+
+def test_preserve_old_accepted_config_when_only_renderer_metadata_changed():
+    old=_public_config('old')
+    old['publication_verified_at_utc']='old-time';old['source_evidence_sha256']='old-hash'
+    old['search_details']=[{'feature_costs':{'full_forwards':1}}]
+    new=json.loads(json.dumps(old))
+    new['publication_verified_at_utc']='new-time';new['source_evidence_sha256']='new-hash'
+    new['search_details'][0]['feature_costs_provenance']='formal_correction_tree'
+    kept=m._preserve_accepted_config_records({'configurations':[old]},[new])
+    assert kept[0] is old
+    assert kept[0]['publication_verified_at_utc']=='old-time'
+    assert 'feature_costs_provenance' not in kept[0]['search_details'][0]
+
+
+def test_do_not_preserve_old_config_when_scientific_value_changed():
+    old=_public_config('old')
+    new=json.loads(json.dumps(old))
+    new['results'][0]['metrics']['macro_f1']=.123
+    kept=m._preserve_accepted_config_records({'configurations':[old]},[new])
+    assert kept[0] is new
+    assert kept[0]['results'][0]['metrics']['macro_f1']==.123

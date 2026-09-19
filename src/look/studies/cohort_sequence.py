@@ -4,6 +4,7 @@ One existing pipeline at a time, matched fitting arms inside that pipeline.
 A failed configuration is isolated and recorded; no blind retry or seed expansion.
 """
 import argparse
+import copy
 import fcntl
 import os
 from pathlib import Path
@@ -83,6 +84,30 @@ def _display_execution(current):
         result.update(extension.get('execution',{}))
     return result
 
+
+def _publication_science_projection(publication):
+    value=copy.deepcopy(publication)
+    value.pop('publication_verified_at_utc',None)
+    value.pop('source_evidence_sha256',None)
+    for row in value.get('search_details',[]):
+        row.pop('feature_costs_provenance',None)
+    return value
+
+
+def _preserve_accepted_config_records(previous,publications):
+    old={p.get('run_id'):p for p in previous.get('configurations',[])}
+    result=[]
+    for publication in publications:
+        prior=old.get(publication.get('run_id'))
+        if (prior is not None and prior.get('matched_package')=='accepted'
+                and publication.get('matched_package')=='accepted'
+                and _publication_science_projection(prior)==_publication_science_projection(publication)):
+            result.append(prior)
+        else:
+            result.append(publication)
+    return result
+
+
 def validate_sequence(plan):
     if plan.get('study_kind')=='fusion_stage_v1':
         from look.studies.cohort_fusion_stage import validate_sequence as validate_fusion_sequence
@@ -106,17 +131,18 @@ def refresh(plan, statuses):
         from look.analysis.fusion_stage_publication import refresh as refresh_fusion_stage
         return refresh_fusion_stage(plan,statuses)
     out=Path(plan['publication']);out.mkdir(parents=True,exist_ok=True)
+    target=out/'current.json'
+    previous=read(target) if target.exists() else {}
     publications=[]
     for row in plan['tasks']:
         s=read(row['spec']);p=publish(s['output'],out/'configs'/s['run_id'])
         publications.append(p)
+    publications=_preserve_accepted_config_records(previous,publications)
     # Only allowlisted aggregate content is exportable. Paths and commands stay onsite.
     current=dict(schema='look_cohort_sequence_publication_v1',sequence_id=plan['sequence_id'],
         test_used=False,order=[p['run_id'] for p in publications],
         configurations=publications,execution=statuses,
         next_question='external_method_A_vs_A_plus_LOOK_requires_adapter_acceptance')
-    target=out/'current.json'
-    previous=read(target) if target.exists() else {}
     current=_carry_fusion_extension(previous,current)
     if not target.exists() or previous!=current:atomic_write_json(current,target)
     displayed=_display_publications(current);display_execution=_display_execution(current)
