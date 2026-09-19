@@ -3,7 +3,7 @@
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
   "phase": "fusion_stage_scientifically_accepted_published",
-  "next_acceptance": "fusion-stage科学包与可读累计发布已进入main；科学evidence cutoff保持正式delivery时间不变。下一科研动作仅由左侧从外部A/B/C匹配或现有logits概率诊断中选择新的有限包；本包不再启动GPU、种子、骨干或融合位置扩展。",
+  "next_acceptance": "Stage A概率诊断已独立接受；当前完成缺失方法一手证据/公平匹配盘点。MMTM只作宿主兼容/组装证据，不计LOOK缺失方法A/B/C。下一训练方法与配方由左侧从有限候选裁决；本包不启动GPU/test。",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
@@ -66,7 +66,7 @@
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/small_cohort/README.md"
     },
     {
-      "summary": "MMTM适配宿主同一A与A+LOOK已完成：296dev/3416，缺OCT不修正58.0638%、PCA62.7767%、残差63.5068%；缺CFP41.8162%、58.4455%、58.9863%。两方法差值普通95%均跨零；缺OCT NLL仍恶化。8份预测SHA/有序参与者/F1/AUROC及同宿主独立核验通过，仅开发集单种子探索。",
+      "summary": "MMTM门控宿主无LOOK/+LOOK兼容证据已完成（不计缺失方法A/B/C）：296dev/3416，缺OCT不修正58.0638%、PCA62.7767%、残差63.5068%；缺CFP41.8162%、58.4455%、58.9863%。两方法差值普通95%均跨零；缺OCT NLL仍恶化。8份预测SHA/有序参与者/F1/AUROC及同宿主独立核验通过，仅开发集单种子探索。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/small_cohort/README.md"
     },
@@ -132,7 +132,8 @@
     "2026-09-18用户授权优先公平拟合方法比较、再扩展。取消新增best-forward与正收益树的重复性能比较；已有结果保留。首包均值自由保持一致，约束均值优先固定前缀机制消融，广矩阵保留后续。",
     "用户授权ws02优先LOOK并沿用旧数据开展当前方法设计；平台统一标准、不同数据/初始化独立身份。后继优先老师9月13日问题，中文为主的周报呈现变化及真实缺项。",
     "fusion-stage解释决策：middle对deep的部分LOOK收益差同时区间不跨0，但middle宿主本身更弱且参数量更少；features与deep等参数但4项同时区间全跨0。当前不按点估计宣布最佳融合阶段，也不扩种子/骨干；等待左侧独立验收后再回到老师A/B/C缺口。",
-    "fusion-stage科学包已接受后停止其GPU生命周期：不因middle大增益继续堆融合位置/骨干/种子；middle更弱宿主基线是主要替代解释，features相对deep四项同时区间跨零。下一研究回到外部A/B/C匹配与现有logits概率损失定位，由左侧另行锁定。"
+    "fusion-stage科学包已接受后停止其GPU生命周期：不因middle大增益继续堆融合位置/骨干/种子；middle更弱宿主基线是主要替代解释，features相对deep四项同时区间跨零。下一研究回到外部A/B/C匹配与现有logits概率损失定位，由左侧另行锁定。",
+    "2026-09-19比较角色纠正：LOOK缺失方法A必须实际处理整模态缺失；MMTM/fusion-stage/fixed-mean/fixed-prefix不计A/B/C覆盖。Stage A概率诊断只作描述性解释。GAN/微调是类别例子而非必跑表。"
   ],
   "evidence": [
     {
@@ -226,6 +227,10 @@
     {
       "label": "fusion-stage预登记、结构合同、修复与验收边界",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/ws02_fusion_stage_20260919.md"
+    },
+    {
+      "label": "LOOK缺失方法一手证据与公平合同",
+      "url": "https://github.com/souray0410/LOOK/blob/webcodex/probability-readiness-20260919/docs/reports/current/research_decisions/missing_method_evidence_20260919.md"
     }
   ]
 }

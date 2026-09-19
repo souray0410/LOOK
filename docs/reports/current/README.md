@@ -30,9 +30,11 @@
 
 ## 2026-09-18新增已核验结果
 
-MMTM适配宿主同一A与A+LOOK已完成：296dev/3416，缺OCT不修正58.0638%、PCA62.7767%、残差63.5068%；缺CFP41.8162%、58.4455%、58.9863%。两方法差值普通95%均跨零；缺OCT NLL仍恶化。8份预测SHA/有序参与者/F1/AUROC及同宿主独立核验通过，仅开发集单种子探索。 见[small_cohort累计页](small_cohort/README.md)。
+MMTM门控宿主的无LOOK/+LOOK兼容包已完成（不计缺失方法A/B/C）：296dev/3416，缺OCT不修正58.0638%、PCA62.7767%、残差63.5068%；缺CFP41.8162%、58.4455%、58.9863%。两方法差值普通95%均跨零；缺OCT NLL仍恶化。8份预测SHA/有序参与者/F1/AUROC及同宿主独立核验通过，仅开发集单种子探索。 见[small_cohort累计页](small_cohort/README.md)。
 ## 2026-09-19：R18融合阶段机制包已独立科学验收
 
 [融合阶段机制入口](fusion_stage/README.md)新增middle/deep/features三宿主同范围比较；deep严格引用既有接受结果，middle/features为两个新完整宿主。右侧已完成host/PCA/拟合资源验收、两方法双缺失、重放、296人独立指标与8项10k配对bootstrap审计；**左侧已从WS02原始产物独立科研验收通过**。
 
 该包不是“LOOK起点”消融，也不替代老师外部A/B/C缺口。不同融合阶段同时改变拓扑/参数/训练权重/融合算子；单seed/dev结果不直接升级为一般性因果结论。
+
+**当前问题映射纠正：** LOOK缺失方法主比较仍未完成；MMTM/fusion-stage等只保留兼容性/机制证据。有限一手候选见 [missing-method evidence](research_decisions/missing_method_evidence_20260919.md)。

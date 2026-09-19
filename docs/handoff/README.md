@@ -1,3 +1,7 @@
+## 2026-09-19：LOOK外部比较角色纠正
+
+当前LOOK主问题是“真正缺失模态处理策略 A vs 同一 A + LOOK”。MMTM既有结果保留为宿主兼容/组装证据，不计缺失方法A/B/C；fusion-stage等为LOOK机制证据。GAN/微调只是例子，不是必跑表。候选一手证据和公平合同见 docs/reports/current/research_decisions/missing_method_evidence_20260919.md。历史MMTM数值与cutoff不改。
+
 ## 2026-09-19：R18 fusion-stage有限包已由左侧独立科学验收
 
 deep严格复用既有R18 accepted run；middle/features两个新宿主已完成host、PCA、两方法双缺失完整正收益树、296人重放、交付及三宿主8项跨宿主bootstrap。sequence completion为accepted，右侧独立audit SHA为291051a82c4b13f918c0c60afd5f71da3d94710233bcc6cdeab0a3a41192f57d。
