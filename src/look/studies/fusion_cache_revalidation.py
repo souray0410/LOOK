@@ -65,7 +65,7 @@ def evaluate_bank(graph,loader,device,pattern,bank,root):
                 raise ValueError('Fresh revalidation prediction evidence changed')
     else:
         path.parent.mkdir(parents=True,exist_ok=True);save_prediction_bundle(result,path)
-    return dict(role='development',data_role=loader().dataset.split,score=float(result['metrics']['macro_f1']),
+    return dict(role='development',data_role=dev_loader.dataset.split,score=float(result['metrics']['macro_f1']),
         prediction=str(path),sha256=file_sha256(path),values_sha256=values_sha,metrics=result['metrics'])
 
 

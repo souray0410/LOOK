@@ -275,3 +275,23 @@ def test_needs_review_requires_one_exact_repair_marker(tmp_path,monkeypatch):
     status=json.loads((root/'status.json').read_text())
     assert status['tasks']['middle']['state']=='accepted'
     assert list((root/'incidents').glob('middle_before_repair_*.json'))
+
+def test_fresh_evaluate_bank_uses_explicit_development_loader(tmp_path,monkeypatch):
+    from look.studies import fusion_cache_revalidation as fresh
+    calls=[]
+    class Loader:
+        class Dataset:
+            split='development'
+        dataset=Dataset()
+    def loader(role):
+        calls.append(role)
+        assert role=='development'
+        return Loader()
+    result=dict(participant_ids=np.array(['a','b']),labels=np.array([0,1]),
+        logits=np.array([[2.,0.],[0.,2.]]),metrics={'macro_f1':1.0})
+    monkeypatch.setattr(fresh,'evaluate_missing',lambda *a,**k:result)
+    monkeypatch.setattr(fresh,'save_prediction_bundle',
+        lambda value,path: np.savez(path,participant_ids=value['participant_ids'],labels=value['labels'],logits=value['logits']))
+    value=fresh.evaluate_bank(None,loader,'cpu','oct_missing',[],tmp_path)
+    assert calls==['development']
+    assert value['data_role']=='development' and value['score']==1.0
