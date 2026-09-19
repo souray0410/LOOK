@@ -1,7 +1,7 @@
 {
   "schema": "research_decisions_v1",
   "project": "LOOK",
-  "reviewed_at": "2026-09-19T04:10:43.854209+00:00",
+  "reviewed_at": "2026-09-19T05:14:47.111714+00:00",
   "test_access": false,
   "decisions": [
     {
@@ -15,10 +15,10 @@
     },
     {
       "question": "老师提出的已有方法A能否加LOOK进一步获益",
-      "decision": "优先于继续增加近似骨干；先审计MMTM适配及A和A+LOOK完全匹配接口，再登记有限包。",
-      "state": "single_seed_adapted_MMTM_matched_package_accepted",
-      "reason": "换骨干不能回答方法可附加性；不是只挑最高分的方法。",
-      "followthrough": "296dev，缺OCT 58.06→62.78/63.51，缺CFP41.82→58.45/58.99（PCA/残差）；8预测独立复核。不是原论文完整复现。两方法区间跨零、缺OCT NLL变差。下一步优先机制/校准解释与周报，不追加近似骨干；下一GPU包未启动。"
+      "decision": "MMTM matched package is retained as host compatibility/assembly evidence only; it is not a LOOK missing-modality method A. The corrected missing-method A vs A+LOOK question remains open.",
+      "state": "superseded_role_mapping_preserve_MMTM_numeric_evidence",
+      "reason": "Whole-modality missingness handling is the target research object; host gating/fusion compatibility does not establish missing-modality processing.",
+      "followthrough": "Original MMTM numeric evidence remains unchanged; it no longer counts toward missing-method A/B/C coverage."
     },
     {
       "question": "ws02结果如何反馈Ibex",
@@ -38,13 +38,13 @@
     },
     {
       "question": "外部A/B/C下一项怎样最直接回答“原A vs A+LOOK”，同时解释概率损失反例",
-      "accepted_evidence": "MMTM Stage3适配A/A+LOOK已完成并验收；external_sources已固定EyeMoSt+与EDRL作者commit/file SHA。fusion-stage显示F1与NLL可反向变化。",
-      "counterexample": "MMTM只是一个适配A，不是原论文完整视频/骨骼系统；EyeMoSt+/EDRL原方案均含3D OCT，而当前小队列OCT为2D切片，不能直接称原方法复现。",
+      "accepted_evidence": "Stage A probability decomposition is independently accepted as descriptive evidence only. MMTM is compatibility/assembly evidence, not a missing-method A.",
+      "counterexample": "Fusion/MMTM evidence cannot answer the corrected missing-method question; EyeMoSt+ prior source review is paused/reclassified.",
       "alternative_explanation": "外部方法收益可能来自其自身缺失模态/不确定性损失、3D结构或容量差异，而非LOOK可附加性；必须同一适配宿主内做A vs A+LOOK。",
-      "decision": "不在本包启动新实验。若左侧选择下一外部匹配，EyeMoSt+是剩余候选中最直接的一项；EDRL先保留为更高耦合候选。另可用现有预测做无训练概率损失定位。",
-      "next_action_cost": "EyeMoSt+需要新的匹配外部宿主训练与A/A+LOOK重放，但可复用现有数据审计、缺失模拟、评价/bootstrap；EDRL还需先证明2D切片下essence-point/解耦机制仍有实质意义。概率诊断只读现有logits，无GPU训练。",
+      "decision": "Do not auto-select or train a new external A from current main. A new finite evidence/protocol package must choose a true missing-modality strategy.",
+      "next_action_cost": "No GPU action in this publication. Candidate-specific cost remains pending protocol selection.",
       "recheck_trigger": "左侧需先锁定EyeMoSt+的2D-OCT编码器适配、原Student-t/置信度损失、推理不依赖标签、初始化/停止/预算；或锁定EDRL的2D机制保真准则后才派发GPU包。",
-      "state": "feasibility_only_left_decision_required"
+      "state": "scope_corrected_candidate_selection_pending"
     }
   ]
 }
