@@ -38,3 +38,8 @@ MMTM门控宿主的无LOOK/+LOOK兼容包已完成（不计缺失方法A/B/C）�
 该包不是“LOOK起点”消融，也不替代老师外部A/B/C缺口。不同融合阶段同时改变拓扑/参数/训练权重/融合算子；单seed/dev结果不直接升级为一般性因果结论。
 
 **当前问题映射纠正：** LOOK缺失方法主比较仍未完成；MMTM/fusion-stage等只保留兼容性/机制证据。有限一手候选见 [missing-method evidence](research_decisions/missing_method_evidence_20260919.md)。
+
+
+## 2026-09-19：EmbraceNet首个真实缺失方法A单种子包完成
+
+[EmbraceNet + LOOK 当前页](embracenet_single_seed/README.md)：同一冻结EmbraceNet A完成两种LOOK×两种整模态缺失四个预注册主比较。PCA在缺OCT/缺CFP Macro-F1点估计分别+1.364/+1.131pp；RRR缺OCT+1.085pp、缺CFP严格正收益树为空。四个Macro-F1同族同时95%均不排除0，因此当前只标self_checked_pending_independent_review，不写稳定优势或test结论。

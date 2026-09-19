@@ -1,0 +1,56 @@
+{
+  "schema": "look_embracenet_single_seed_audit_summary_v1",
+  "state": "self_checked_pending_independent_review",
+  "scientific_acceptance": false,
+  "test_access": false,
+  "packet_sha256": "fd3300c0cdbfa3d168eca5e9e4563b4c5e3d9fdf4dc7e0111bdea89ccd3339f1",
+  "authorization_sha256": "bad1710372f092f662c87e4d41e60c591decb0ab8dccadb0a75934e91313bd01",
+  "scientific_source_commit": "918bac87d68604cb5da5fc1aea612cbdd818ab3e",
+  "management_overlay_commit": "89be4dfeecf83c8632a83fa976bfed541b0aef92",
+  "local_validation": {
+    "preserved_60_tests_log_sha256": "bd89b5fcdd9a6b9f6eb001eafc8e39c8878422b653545e982032599a765c96d3",
+    "predeployment_incremental_9_tests_log_sha256": "c99d93396f52c6662e92f383f793c1b2609ad7213ba216c2295919597c05bd5d"
+  },
+  "deployment": {
+    "path_review_sha256": "99f7f6afa4bcec4490d6e183df33f662a4fb0d91d3313c9a8f24d80d39c5652c",
+    "original_denied_scp_retried": false,
+    "deployment": "normal immutable non-main GitHub branch -> fresh versioned WS02 checkout",
+    "target_cpu_tests": "33 passed",
+    "target_cpu_log_sha256": "7ba8371fc4d67466dab09b58be037a4c411c0797fab5996a6d05ed8845808b1b",
+    "storage": "accepted /backup physical artifacts with /data logical symlink",
+    "gpu0_only": true,
+    "gpu1_untouched": true
+  },
+  "predeployment_review": {
+    "review_sha256": "66036f33d1f8846d3d7d184a12754035e55ec8a76a24a771e13f412cdd35455e",
+    "R1": "signal/resource cancellation wired through host/PCA/fitting/evaluation safe boundaries; lock release tested locally",
+    "R2": "GPU profile proves uninterrupted vs interrupted/resumed next optimizer update, full optimizer/scheduler/global/private RNG/mask/data cursor and dev logits exact",
+    "R3": "fit-profile proves interruption/resume moments exact, both registered rank32 solvers at max dimension, nonzero writeback, save/load replay and effective full-dev propagation",
+    "secondary": "backup storage policy preserved; independent tiny enumeration verifies full second/crossmoments and projected residual statistics"
+  },
+  "final_pipeline": {
+    "mode": "existing finite pipeline; accepted receipts skipped",
+    "competing_scheduler_started": false,
+    "pca_free_mean_reused": true,
+    "residual_rrr_completed": true,
+    "report_completed": true,
+    "verify_case": "passed",
+    "final_status": "completed",
+    "sequence_history_preserved": true
+  },
+  "remote_evidence_sha256": {
+    "spec": "7d572fd5a770a29085fabd4fbe33c58533f79e6e35d518293315987c20d1e028",
+    "profile": "1dce2acec0c0c8cd55f3b9fe5dae4635a59b975b61db2ea7f5607f76ca4e9be1",
+    "host": "e881aab6179cb859b971f6380b3f9a91c5b49caa5183e3667b20c5157890ec1f",
+    "pca": "630f97dba059e00f61f5d13aeaad45d4f288af3c8fb75e0eed58479baeea5a5d",
+    "fit_profile": "d3783f262021b74c3dbddf13907b5b06e89d238698bafb3cc2000868223c48c8",
+    "pca_free_mean": "3a594de68c9aa9b3c3b8cbd0b4d1ab9121e406cc21f7adb2f07588079ae28aff",
+    "residual_rrr": "10c1efb7482c2821b607b8963e3816614cef05f8d54e44bd2107d2568717ad90",
+    "delivery": "9f91112ebf614a30c4637090045b13be6d4a07314003b5ee15f51f3944dea851",
+    "results": "301971921a95f4aadb4bf6b8bffc58717e5511ed8f34eadf4246bd1d6d068847",
+    "remote_report_zh": "524deeac6bfab1dfc51b69d377985e38ff13eb688060d8cfe4d50be2b7766f94",
+    "pipeline_status": "9eb33c28c2e8f7dae335854cb58f0b2a175dcf745f701b74ce477b99086501eb",
+    "sequence_active": "16e8187bbdaa0c0b95c04241968352eab1ccd6e919716576701273d783fabb85"
+  },
+  "next_gate": "left independently recalculates aggregate metrics/statistics/tree identities from original WS02 artifacts; no main publication before that review"
+}

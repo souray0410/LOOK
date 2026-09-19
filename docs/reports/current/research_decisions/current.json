@@ -1,7 +1,7 @@
 {
   "schema": "research_decisions_v1",
   "project": "LOOK",
-  "reviewed_at": "2026-09-19T09:10:00+00:00",
+  "reviewed_at": "2026-09-19T12:34:00+00:00",
   "test_access": false,
   "decisions": [
     {
@@ -80,6 +80,16 @@
       "decision": "v3右侧工程ready_for_left_review。v2冻结证据不覆写；公式在v3文档纠正。complete分类integrated-mean-logit继续用一阶矩；若embraced_feature LOOK PCA声称参考作者随机完整分布，则必须保留E[zz^T]=mu mu^T+diag(v)的条件方差项。mean-only PCA需另作新科学选择。",
       "state": "graph_replay_cpu_closed_second_moment_contract_ready_left_review",
       "next_trigger": "左侧确认train三状态1/3、complete integrated-mean-logit及stochastic-full-reference PCA二阶矩合同后，才可另发真实训练包。"
+    },
+    {
+      "question": "EmbraceNet作为首个真实缺失方法A，单seed3416同一冻结A+LOOK实际结果怎样",
+      "accepted_evidence": "右侧自检候选：WS02 train1264/dev296/test sealed；EmbraceNet A best11/stop26；PCA/RRR×missingOCT/missingCFP四个预注册主对比、10k participant-paired普通及同族simultaneous95%。",
+      "observation": "Macro-F1: missingOCT host66.230/PCA67.594/RRR67.315；missingCFP host56.341/PCA57.471/RRR56.341。PCA两状态选joint_input；RRR缺OCT选embraced_feature，缺CFP严格正收益路径为空。四个Macro-F1 simultaneous95%均跨0。",
+      "counterexample": "RRR missingCFP没有任何严格正收益节点；PCA missingCFP AUROC略降；概率指标与F1不完全同向。",
+      "alternative_explanation": "同一296人dev同时用于checkpoint/tree选择与效应估计；单训练seed；participant bootstrap不含训练随机性。",
+      "decision": "保留完整正负结果作为首个A vs A+LOOK真实候选，不宣称稳定/普遍优势，不因结果继续补调参或补seed；先等待左侧原产物独立验收。",
+      "state": "self_checked_pending_independent_review",
+      "next_trigger": "左侧从WS02原aggregate/prediction/tree资产独立重算通过后，再决定是否进入后续重复/第二A；test本包不解封。"
     }
   ]
 }

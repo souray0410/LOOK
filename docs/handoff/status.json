@@ -2,7 +2,7 @@
   "schema": "research_project_status_v1",
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
-  "phase": "embracenet_adapter_repair_v3_graph_replay_cpu_closed_ready_for_left_review",
+  "phase": "embracenet_single_seed_self_checked_pending_independent_review",
   "next_acceptance": "Stage A概率诊断已独立接受；当前完成缺失方法一手证据/公平匹配盘点。MMTM只作宿主兼容/组装证据，不计LOOK缺失方法A/B/C。下一训练方法与配方由左侧从有限候选裁决；本包不启动GPU/test。",
   "dependencies": [
     "宿主验收",
@@ -130,7 +130,8 @@
     "2026-09-19 EmbraceNet首个真正缺失方法A：作者固定实现四合法输入输出/梯度/RNG零差与下一AdamW更新精确恢复已落盘；R18/MHD九节点原型及唯一trial合同已实现。恢复后新增pre-R18 NaN-safe入口/common-random helper，向既有WS02隔离CPU副本同步被上层安全检查拒绝且未绕过，故当前SHA尚缺一次针对性动态CPU重验；无真实训练/GPU/test。",
     "2026-09-19 EmbraceNet repair v2：本机隔离CPU current-SHA专项16/16、相关回归30/30、作者当前SHA等价/RNG恢复、九节点双单缺失非零LOOK与统计目标审计通过；统一train/A/A+LOOK pre-R18 zero-mask入口。K32正式提案撤下，single-missing一次forward；complete平均logit目标用解析期望。无远端写入/GPU/参与者数据/test/训练。",
     "v1的EmbraceNet current-SHA CPU动态重验阻塞已由v2本机隔离CPU合法环境解决；历史被拒scp仍不重试/绕过，WS02部署gate另待未来合法流程。",
-    "2026-09-19 EmbraceNet v3：修复公开plain/study图入口的外部prearm replay泄漏。available-input NaN失败、artifact/stop预校验失败及embrace前正常停止均清除未消费replay；有效exact replay仍一次性成功。专项24/24、相关回归30/30、独立图级probe通过。v2冻结证据不覆写；v3公式可读并明确随机完整参考PCA二阶矩合同。"
+    "2026-09-19 EmbraceNet v3：修复公开plain/study图入口的外部prearm replay泄漏。available-input NaN失败、artifact/stop预校验失败及embrace前正常停止均清除未消费replay；有效exact replay仍一次性成功。专项24/24、相关回归30/30、独立图级probe通过。v2冻结证据不覆写；v3公式可读并明确随机完整参考PCA二阶矩合同。",
+    "2026-09-19 EmbraceNet single-seed真实包：WS02 GPU0完成1个seed3416 EmbraceNet A（best11/stop26）+ PCA/RRR×双缺失4个主对比、9节点PCA、fit-profile恢复/solver门槛、10k配对统计与中文累计候选；test封存。远端finite pipeline依receipt连续完成residual→report→verify。当前self_checked_pending_independent_review。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
@@ -141,7 +142,8 @@
     "2026-09-19比较角色纠正：LOOK缺失方法A必须实际处理整模态缺失；MMTM/fusion-stage/fixed-mean/fixed-prefix不计A/B/C覆盖。Stage A概率诊断只作描述性解释。GAN/微调是类别例子而非必跑表。",
     "EmbraceNet trial唯一推荐：1264train/296dev/seed3416沿用accepted R18训练与BN/停止；c=256，complete选择概率0.5/0.5，train complete/missingOCT/missingCFP各1/3；K=32 common-random评估，checkpoint仍按complete dev Macro-F1，A与A+LOOK同state逐draw复用精确indices。左审及当前SHA CPU重验前不训练。",
     "EmbraceNet v2统一trial待左侧最终确认两项新科学选择：train三状态各1/3；complete checkpoint/诊断使用解析integrated mean logits，K32仅可选诊断。其余R18训练/BN/batch/停止/label/split/test规则继承不变。",
-    "EmbraceNet v3统计合同：complete分类integrated-mean-logit用E[z]即可；但embraced_feature LOOK PCA若参考作者随机完整分布，必须使用Sigma_full，包含平均diag(v_i)条件抽样方差。只用mean feature的Sigma_mean属于新科学目标，需另行确认。"
+    "EmbraceNet v3统计合同：complete分类integrated-mean-logit用E[z]即可；但embraced_feature LOOK PCA若参考作者随机完整分布，必须使用Sigma_full，包含平均diag(v_i)条件抽样方差。只用mean feature的Sigma_mean属于新科学目标，需另行确认。",
+    "EmbraceNet真实A+LOOK单种子点估计：PCA缺OCT+1.364pp、缺CFP+1.131pp；RRR缺OCT+1.085pp、缺CFP空树+0。所有Macro-F1同族simultaneous95%跨0；不宣布稳定优势，不因阴性自动补seed/调参。"
   ],
   "evidence": [
     {
@@ -251,6 +253,10 @@
     {
       "label": "EmbraceNet v3 replay失败边界与完整参考二阶矩合同",
       "url": "docs/reports/current/research_decisions/embracenet_adapter_repair_v3_20260919.md"
+    },
+    {
+      "label": "EmbraceNet首个真实missing-method A+LOOK单种子当前页",
+      "url": "docs/reports/current/embracenet_single_seed/README.md"
     }
   ]
 }

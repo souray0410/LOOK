@@ -1,3 +1,7 @@
+## 2026-09-19：EmbraceNet单种子真实A+LOOK包已自检完成
+
+WS02 seed3416一个EmbraceNet A已按三态各1/3真实训练并在best epoch11/stop26冻结；9节点随机完整参考PCA、fit-profile、PCA/RRR两家族双缺失完整positive-forward tree、10k paired bootstrap与中文累计候选均完成。PCA缺OCT/缺CFP Macro-F1点估计+1.364/+1.131pp；RRR缺OCT+1.085pp、缺CFP空树。四个Macro-F1同族simultaneous95%均跨0。test封存；当前self_checked_pending_independent_review，等待左侧从WS02原产物独立重算。此前fusion sequence_active历史已归档，当前binding准确指向EmbraceNet完成态。详见 reports/current/embracenet_single_seed/README.md。
+
 ## 2026-09-19：EmbraceNet v3 graph replay 闭环
 
 公开plain/study图入口现共同拥有一次性exact replay生命周期：外部prearm成功时精确消费；available-input NaN、artifact/stop预校验失败及embrace前正常停止都会清除未消费replay，前置失败/提前stop不推进EmbraceNet sampling RNG。当前专项24/24、相关回归30/30及独立图级probe通过。v2冻结文档不修改，v3后继合同修复公式显示并明确随机完整参考PCA必须保留条件二阶矩；mean-only PCA如需采用必须显式科学批准。无真实数据/GPU/远端/训练。

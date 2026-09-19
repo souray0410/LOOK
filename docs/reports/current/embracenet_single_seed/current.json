@@ -1,0 +1,334 @@
+{
+  "schema": "look_embracenet_single_seed_public_summary_v1",
+  "state": "self_checked_pending_independent_review",
+  "test_access": false,
+  "scientific_acceptance": false,
+  "identity": "5e44171a8457a849a630333ffafe781618846804ab37d2dc43f6ad8b744a861f",
+  "source": {
+    "scientific_commit": "918bac87d68604cb5da5fc1aea612cbdd818ab3e",
+    "fit_profile_overlay_commit": "89be4dfeecf83c8632a83fa976bfed541b0aef92"
+  },
+  "data": {
+    "train": 1264,
+    "development": 296,
+    "test": "sealed",
+    "seed": 3416
+  },
+  "host": {
+    "best_epoch": 11,
+    "stop_epoch": 26,
+    "seconds": 194.25779037794564,
+    "complete_metrics": {
+      "macro_f1": 0.6777262048020171,
+      "macro_auroc_ovr": 0.7226990504017532,
+      "negative_log_likelihood": 0.6471579261673457,
+      "multiclass_brier": 0.4420112067740526
+    }
+  },
+  "development_results": [
+    {
+      "method": "host",
+      "scenario": "oct_missing",
+      "metrics": {
+        "macro_f1": 0.6622990492653414,
+        "macro_auroc_ovr": 0.7317841490138787,
+        "negative_log_likelihood": 0.6952711113660128,
+        "multiclass_brier": 0.4695273373575683
+      }
+    },
+    {
+      "method": "pca_free_mean",
+      "scenario": "oct_missing",
+      "metrics": {
+        "macro_f1": 0.6759435321233074,
+        "macro_auroc_ovr": 0.7323319941563186,
+        "negative_log_likelihood": 0.6946294249473005,
+        "multiclass_brier": 0.4693388631820087
+      }
+    },
+    {
+      "method": "residual_rrr",
+      "scenario": "oct_missing",
+      "metrics": {
+        "macro_f1": 0.6731538992408558,
+        "macro_auroc_ovr": 0.7326515704894083,
+        "negative_log_likelihood": 0.6390027172478636,
+        "multiclass_brier": 0.4379411490522744
+      }
+    },
+    {
+      "method": "host",
+      "scenario": "cfp_missing",
+      "metrics": {
+        "macro_f1": 0.5634061229629097,
+        "macro_auroc_ovr": 0.6080624543462381,
+        "negative_log_likelihood": 1.0062547680475682,
+        "multiclass_brier": 0.6307902453144042
+      }
+    },
+    {
+      "method": "pca_free_mean",
+      "scenario": "cfp_missing",
+      "metrics": {
+        "macro_f1": 0.5747126436781609,
+        "macro_auroc_ovr": 0.6078341855368883,
+        "negative_log_likelihood": 1.0027292911067627,
+        "multiclass_brier": 0.629382358417495
+      }
+    },
+    {
+      "method": "residual_rrr",
+      "scenario": "cfp_missing",
+      "metrics": {
+        "macro_f1": 0.5634061229629097,
+        "macro_auroc_ovr": 0.6080624543462381,
+        "negative_log_likelihood": 1.0062547680475682,
+        "multiclass_brier": 0.6307902453144042
+      }
+    }
+  ],
+  "tree_costs": {
+    "pca_free_mean": {
+      "oct_missing": {
+        "path": [
+          "joint_input"
+        ],
+        "site_attempts": 35,
+        "candidate_evaluations": 35,
+        "prefix_count": 10,
+        "selection_sha256": "ade4747c668aa447d7027372b12c987aecae8ef3a24c664d09a67c58c0b9d285",
+        "bank_sha256": "d6d06af21817291fd79d5a960fae831335143573ff9e93c4c0191a27f840b349"
+      },
+      "cfp_missing": {
+        "path": [
+          "joint_input"
+        ],
+        "site_attempts": 20,
+        "candidate_evaluations": 20,
+        "prefix_count": 3,
+        "selection_sha256": "daa699a2c6ff4fa5f26b6ec25014b7bc7817086fc41e87667e449a768f881327",
+        "bank_sha256": "174de562f669a879689145aa45e38dcad644779fd245490fc1906d922d5bf04b"
+      }
+    },
+    "residual_rrr": {
+      "oct_missing": {
+        "path": [
+          "embraced_feature"
+        ],
+        "site_attempts": 9,
+        "candidate_evaluations": 9,
+        "prefix_count": 2,
+        "selection_sha256": "97f0edc121672909176dca51cb64fde9d14f5c728f081b3e71306b380d89e160",
+        "bank_sha256": "73ee07753fb12d2963a54e56c1dc8fc9280c10615f4b30009a2c7762fa8b6f73"
+      },
+      "cfp_missing": {
+        "path": [],
+        "site_attempts": 9,
+        "candidate_evaluations": 9,
+        "prefix_count": 1,
+        "selection_sha256": "b27c99182d37bc80de33a977014daf0746affd2c949c3c7f35f419743de5f613",
+        "bank_sha256": "c906fe870cf0004e4253501572d110790493d8a6e9cdbbd677f76264d9dac81b"
+      }
+    }
+  },
+  "macro_f1_primary_contrasts": [
+    {
+      "arm": "pca_free_mean",
+      "pattern": "oct_missing",
+      "improvement": 0.013644482857966045,
+      "ordinary_95": [
+        0.0031243185750660014,
+        0.028108351597981498
+      ],
+      "simultaneous_95": [
+        -0.002843790538011197,
+        0.030132756253943287
+      ],
+      "holm_p": 0.1464
+    },
+    {
+      "arm": "residual_rrr",
+      "pattern": "oct_missing",
+      "improvement": 0.010854849975514447,
+      "ordinary_95": [
+        -0.036762404566715805,
+        0.05977895878465699
+      ],
+      "simultaneous_95": [
+        -0.048343434530912714,
+        0.07005313448194161
+      ],
+      "holm_p": 1
+    },
+    {
+      "arm": "pca_free_mean",
+      "pattern": "cfp_missing",
+      "improvement": 0.011306520715251178,
+      "ordinary_95": [
+        -0.002887969857489181,
+        0.027666488296426924
+      ],
+      "simultaneous_95": [
+        -0.007534602904020325,
+        0.03014764433452268
+      ],
+      "holm_p": 0.4632
+    },
+    {
+      "arm": "residual_rrr",
+      "pattern": "cfp_missing",
+      "improvement": 0,
+      "ordinary_95": [
+        0,
+        0
+      ],
+      "simultaneous_95": null,
+      "holm_p": 1
+    }
+  ],
+  "registered_probability_contrasts": {
+    "macro_auroc_ovr": [
+      {
+        "arm": "pca_free_mean",
+        "pattern": "oct_missing",
+        "improvement": 0.0005478451424397734,
+        "simultaneous_95": [
+          -0.002721339427946125,
+          0.0038170297128256717
+        ],
+        "holm_p": 1
+      },
+      {
+        "arm": "residual_rrr",
+        "pattern": "oct_missing",
+        "improvement": 0.0008674214755295395,
+        "simultaneous_95": [
+          -0.013549223964435704,
+          0.015284066915494783
+        ],
+        "holm_p": 1
+      },
+      {
+        "arm": "pca_free_mean",
+        "pattern": "cfp_missing",
+        "improvement": -0.00022826880934978533,
+        "simultaneous_95": [
+          -0.0031593293055781004,
+          0.0027027916868785297
+        ],
+        "holm_p": 1
+      },
+      {
+        "arm": "residual_rrr",
+        "pattern": "cfp_missing",
+        "improvement": 0,
+        "simultaneous_95": null,
+        "holm_p": 1
+      }
+    ],
+    "negative_log_likelihood": [
+      {
+        "arm": "pca_free_mean",
+        "pattern": "oct_missing",
+        "favorable_improvement": 0.0006416864187123172,
+        "simultaneous_95": [
+          -0.002800495383711241,
+          0.004083868221135875
+        ],
+        "holm_p": 1
+      },
+      {
+        "arm": "residual_rrr",
+        "pattern": "oct_missing",
+        "favorable_improvement": 0.05626839411814921,
+        "simultaneous_95": [
+          -0.013380211983359203,
+          0.12591700021965763
+        ],
+        "holm_p": 0.1638
+      },
+      {
+        "arm": "pca_free_mean",
+        "pattern": "cfp_missing",
+        "favorable_improvement": 0.0035254769408055164,
+        "simultaneous_95": [
+          -0.00018531780452567476,
+          0.007236271686136707
+        ],
+        "holm_p": 0.0632
+      },
+      {
+        "arm": "residual_rrr",
+        "pattern": "cfp_missing",
+        "favorable_improvement": 0,
+        "simultaneous_95": null,
+        "holm_p": 1
+      }
+    ],
+    "multiclass_brier": [
+      {
+        "arm": "pca_free_mean",
+        "pattern": "oct_missing",
+        "favorable_improvement": 0.00018847417555961643,
+        "simultaneous_95": [
+          -0.002314545791328567,
+          0.0026914941424477997
+        ],
+        "holm_p": 1
+      },
+      {
+        "arm": "residual_rrr",
+        "pattern": "oct_missing",
+        "favorable_improvement": 0.031586188305293916,
+        "simultaneous_95": [
+          -0.018302319383404986,
+          0.08147469599399282
+        ],
+        "holm_p": 0.4536
+      },
+      {
+        "arm": "pca_free_mean",
+        "pattern": "cfp_missing",
+        "favorable_improvement": 0.001407886896909183,
+        "simultaneous_95": [
+          -0.0007615109330843645,
+          0.0035772847269027303
+        ],
+        "holm_p": 0.4536
+      },
+      {
+        "arm": "residual_rrr",
+        "pattern": "cfp_missing",
+        "favorable_improvement": 0,
+        "simultaneous_95": null,
+        "holm_p": 1
+      }
+    ]
+  },
+  "interpretation": {
+    "teacher_question": "same frozen missing-modality strategy A vs A+LOOK",
+    "support": "development point-estimate gains exist, especially PCA free-mean, but no Macro-F1 simultaneous familywise 95% excludes zero",
+    "counterexample": "residual RRR cfp_missing selects an empty path and exactly matches A",
+    "limitations": [
+      "single seed",
+      "same development set selects checkpoint/tree and estimates effect",
+      "test sealed",
+      "participant bootstrap excludes training-seed variation"
+    ]
+  },
+  "evidence_sha256": {
+    "spec": "7d572fd5a770a29085fabd4fbe33c58533f79e6e35d518293315987c20d1e028",
+    "profile": "1dce2acec0c0c8cd55f3b9fe5dae4635a59b975b61db2ea7f5607f76ca4e9be1",
+    "host": "e881aab6179cb859b971f6380b3f9a91c5b49caa5183e3667b20c5157890ec1f",
+    "pca": "630f97dba059e00f61f5d13aeaad45d4f288af3c8fb75e0eed58479baeea5a5d",
+    "fit_profile": "d3783f262021b74c3dbddf13907b5b06e89d238698bafb3cc2000868223c48c8",
+    "pca_free_mean": "3a594de68c9aa9b3c3b8cbd0b4d1ab9121e406cc21f7adb2f07588079ae28aff",
+    "residual_rrr": "10c1efb7482c2821b607b8963e3816614cef05f8d54e44bd2107d2568717ad90",
+    "delivery": "9f91112ebf614a30c4637090045b13be6d4a07314003b5ee15f51f3944dea851",
+    "results": "301971921a95f4aadb4bf6b8bffc58717e5511ed8f34eadf4246bd1d6d068847",
+    "remote_report_zh": "524deeac6bfab1dfc51b69d377985e38ff13eb688060d8cfe4d50be2b7766f94",
+    "pipeline_status": "9eb33c28c2e8f7dae335854cb58f0b2a175dcf745f701b74ce477b99086501eb",
+    "sequence_active": "16e8187bbdaa0c0b95c04241968352eab1ccd6e919716576701273d783fabb85"
+  },
+  "independent_review": "pending"
+}
