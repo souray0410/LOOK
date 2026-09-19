@@ -77,7 +77,15 @@ class ImprovedDropoutFusion(nn.Module):
     def fused_feature(self,oct_feature,cfp_feature,*,state="complete"):
         if oct_feature.ndim!=2 or cfp_feature.ndim!=2 or len(oct_feature)!=len(cfp_feature):
             raise ValueError("Aligned participant feature matrices required")
-        if state=="complete": oct_value,cfp_value=oct_feature,cfp_feature
+        if isinstance(state, torch.Tensor):
+            if state.ndim != 1 or len(state) != len(oct_feature):
+                raise ValueError("One missing-state code per participant required")
+            codes = state.to(device=oct_feature.device, dtype=torch.long)
+            oct_value = oct_feature.clone()
+            cfp_value = cfp_feature.clone()
+            oct_value[codes == 1] = self.empty_oct(len(oct_feature)).to(oct_value)[codes == 1]
+            cfp_value[codes == 2] = self.empty_cfp(len(cfp_feature)).to(cfp_value)[codes == 2]
+        elif state=="complete": oct_value,cfp_value=oct_feature,cfp_feature
         elif state=="oct_missing": oct_value,cfp_value=self.empty_oct(len(cfp_feature)),cfp_feature
         elif state=="cfp_missing": oct_value,cfp_value=oct_feature,self.empty_cfp(len(oct_feature))
         else: raise ValueError("Unknown modality state")
@@ -118,3 +126,127 @@ class SigmoidContrastiveLoss(nn.Module):
 def multimodal_contrastive_loss(z_oct,z_cfp,z_fused,labels,criterion):
     """Registered three-pair fused/unimodal contrastive objective."""
     return criterion(z_oct,z_cfp,labels)+criterion(z_oct,z_fused,labels)+criterion(z_cfp,z_fused,labels)
+
+
+class ImprovedDropoutMHDLogitsOperation(nn.Module):
+    """MHD edge wrapper for the adapted author TNF/EmptyToken fusion."""
+    def __init__(self, fusion: ImprovedDropoutFusion):
+        super().__init__()
+        self.fusion = fusion
+
+    def forward(self, oct_feature: torch.Tensor, cfp_feature: torch.Tensor, state_code: torch.Tensor) -> torch.Tensor:
+        return self.fusion(oct_feature, cfp_feature, state=state_code)
+
+
+def _imd_state_codes(state, batch_size: int, device: torch.device) -> torch.Tensor:
+    mapping = {"complete": 0, "oct_missing": 1, "cfp_missing": 2}
+    if isinstance(state, str):
+        if state not in mapping: raise ValueError("Unknown IMD state")
+        return torch.full((batch_size,), mapping[state], dtype=torch.long, device=device)
+    value = torch.as_tensor(state, dtype=torch.long, device=device)
+    if value.ndim != 1 or len(value) != batch_size or not torch.isin(value, torch.tensor([0,1,2], device=device)).all():
+        raise ValueError("IMD state code must be 0/1/2 per participant")
+    return value
+
+
+def build_improved_dropout_host(first, second, device="cpu", *, hidden_dropout: float = 0.1, classifier_dropout: float = 0.1) -> "MHD_Graph":
+    """Build a frozen-encoder CFP/OCT MHD host for Improved Modality Dropout.
+
+    The encoders are copied from two complete observed-eye parents and frozen.
+    Only the author-style EmptyToken/TNF fusion and task head are trainable.
+    """
+    from mhd_framework.core import MHD_Edge, MHD_Graph, MHD_Node, MHD_Topo
+    from look.models.native_host import HostLoss, NativeCut, ObservedMean
+
+    a, b = first.graph, second.graph
+    if a.configuration() != b.configuration():
+        raise ValueError("Improved Modality Dropout requires matched observed-eye parents")
+    config = a.configuration()
+    if config.get("views", 1) != 1 or config.get("spatial_dims", 2) != 2:
+        raise ValueError("IMD host expects observed-eye 2D parents")
+    for parameter in first.parameters(): parameter.requires_grad_(False)
+    for parameter in second.parameters(): parameter.requires_grad_(False)
+
+    nodes, edges, definitions, groups, levels = [], [], [], [], {}
+    def node(name):
+        item = MHD_Node(len(nodes), name, MHD_Node.Message(torch.zeros(1, device=device)), aggregation="replace")
+        nodes.append(item); return item.id
+    roots = {name: node(name) for name in ("oct_input", "cfp_input", "eye_counts", "imd_state_code", "label_gt")}
+    def edge(name, module, inputs, output_name):
+        output = node(output_name)
+        item = MHD_Edge(len(edges), name, [MHD_Edge.Operation(module)])
+        edges.append(item); definitions.append((item.id, inputs, output)); return item.id, output
+
+    source = {"cfp": a, "oct": b}
+    previous = {"cfp": roots["cfp_input"], "oct": roots["oct_input"]}
+    groups.append([])
+    sites = []
+    for modality in ("oct", "cfp"):
+        eid, feat = edge(f"{modality}_features_edge", NativeCut(source[modality], "input", "features"), [previous[modality]], f"{modality}_features")
+        groups.append([eid]); sites.append(f"{modality}_features")
+        eid, pooled = edge(f"{modality}_observed_pool_edge", ObservedMean(), [feat, roots["eye_counts"]], f"{modality}_participant_feature")
+        groups.append([eid]); sites.append(f"{modality}_participant_feature")
+        previous[modality] = pooled
+    width = next(module.in_features for module in NativeCut(a, "features", "logits").modules() if isinstance(module, nn.Linear))
+    fusion = ImprovedDropoutFusion(width, width, config["num_classes"], dropout=hidden_dropout, classifier_dropout=classifier_dropout)
+    eid, logits = edge("improved_dropout_logits_edge", ImprovedDropoutMHDLogitsOperation(fusion), [previous["oct"], previous["cfp"], roots["imd_state_code"]], "fusion_logits")
+    groups.append([eid]); sites.append("fusion_logits")
+    eid, _ = edge("classification_loss_edge", HostLoss(), [logits, roots["label_gt"]], "loss")
+    groups.append([eid])
+
+    roles, sorts = [], []
+    for level, group in enumerate(groups):
+        role = torch.zeros(len(edges), len(nodes), dtype=torch.long)
+        order = torch.zeros_like(role)
+        for e in group:
+            _, inputs, out = definitions[e]
+            for j, n in enumerate(inputs):
+                role[e, n] = -1; order[e, n] = j
+            role[e, out] = 1; order[e, out] = len(inputs)
+            levels[nodes[out].name] = level
+        roles.append(role); sorts.append(order)
+    graph = MHD_Graph(set(nodes), set(edges), {MHD_Topo(roles + [-r for r in roles], sorts + [s.clone() for s in sorts])}, device=torch.device(device))
+    graph.forward_levels = list(range(len(groups)))
+    graph.backward_levels = list(range(2 * len(groups)-1, len(groups)-1, -1))
+    graph.model_levels = graph.forward_levels[:-1]
+    graph.node_level_map = levels
+    graph.correction_nodes = sites
+    graph.fusion_position = "improved_dropout_features"
+    graph.num_classes = config["num_classes"]
+    graph.observed_eye_input = True
+    graph.architecture_id = config["name"] + "_observed_improved_dropout"
+    graph.improved_dropout_provenance = {
+        "schema": "look_improved_modality_dropout_mhd_v1",
+        "author_repository": AUTHOR_REPOSITORY,
+        "author_commit": AUTHOR_COMMIT,
+        "author_license": AUTHOR_LICENSE,
+        "encoder_policy": "frozen complete observed-eye parents; fusion/head trainable",
+        "missing_state_codes": {"complete": 0, "oct_missing": 1, "cfp_missing": 2},
+        "adaptation": "CFP/OCT participant features; not author image+tabular dataset reproduction",
+    }
+    return graph
+
+
+def set_improved_dropout_state(graph, state, batch_size: int) -> None:
+    graph.get_node_by_name("imd_state_code").feature_message.current_state = _imd_state_codes(state, batch_size, graph.device)
+
+
+def forward_improved_dropout_host(graph, oct_tensor, cfp_tensor, counts, labels=None, state="complete", loss_scale=1.0):
+    from look.methods.operator import _reset_inputs
+    from look.models.native_host import set_observed_counts
+    _reset_inputs(graph, oct_tensor, cfp_tensor, counts)
+    set_observed_counts(graph, counts, len(oct_tensor))
+    set_improved_dropout_state(graph, state, len(counts))
+    if labels is not None:
+        if not 0 < loss_scale <= 1: raise ValueError("Invalid accumulation loss scale")
+        graph.get_edge_by_name("classification_loss_edge").edge_operations[0].function.scale = loss_scale
+        graph.get_node_by_name("label_gt").feature_message.current_state = labels.long()
+    graph.forward(levels=graph.model_levels if labels is None else graph.forward_levels)
+    return graph.get_node_by_name("fusion_logits").feature_message.current_state
+
+
+def improved_dropout_parameter_groups(graph, fusion_lr: float):
+    trainable = [p for p in graph.parameters() if p.requires_grad]
+    if not trainable:
+        raise ValueError("IMD host has no trainable fusion parameters")
+    return [{"params": trainable, "lr": fusion_lr, "group_name": "improved_dropout_fusion_and_head"}]
