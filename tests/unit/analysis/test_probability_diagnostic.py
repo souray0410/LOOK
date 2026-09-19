@@ -57,3 +57,9 @@ def test_metric_mismatch_rejected():
     wrong=dict(logit_metrics(y,z));wrong["negative_log_likelihood"]+=1e-4
     with pytest.raises(ValueError,match="Accepted metric mismatch"):
         p.analyze_pair(host,corr,wrong,logit_metrics(y,z))
+
+
+def test_probability_sum_tolerance_is_machine_epsilon_scaled():
+    assert p.PROBABILITY_SUM_ATOL == 8*np.finfo(np.float64).eps
+    assert p.PROBABILITY_SUM_ATOL > 1.5543122344752192e-15
+    assert p.PROBABILITY_SUM_ATOL < 2e-15

@@ -27,6 +27,7 @@ PATTERNS = ("oct_missing", "cfp_missing")
 BINS = ((0.5,0.6),(0.6,0.7),(0.7,0.8),(0.8,0.9),(0.9,1.0))
 QUANTILES = (0.0,0.25,0.5,0.75,0.9,0.95,1.0)
 METRIC_KEYS = ("macro_f1","macro_auroc_ovr","negative_log_likelihood","multiclass_brier")
+PROBABILITY_SUM_ATOL = 8*np.finfo(np.float64).eps
 
 
 def _read(path):
@@ -58,7 +59,7 @@ def _finite_binary_bundle(path, expected_sha256):
         raise ValueError("Saved probabilities differ from stable softmax(logits)")
     if not np.array_equal(scores,logits[:,1]-logits[:,0]):
         raise ValueError("Saved scores differ from logit_1-logit_0")
-    if np.any(probs<0) or np.any(probs>1) or not np.allclose(probs.sum(1),1.0,rtol=0,atol=1e-15):
+    if np.any(probs<0) or np.any(probs>1) or not np.allclose(probs.sum(1),1.0,rtol=0,atol=PROBABILITY_SUM_ATOL):
         raise ValueError("Saved probabilities are outside binary probability simplex")
     return dict(value,labels=y,logits=logits,probabilities=probs,participant_ids=ids,scores=scores)
 
