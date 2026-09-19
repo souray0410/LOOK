@@ -103,7 +103,8 @@ def initialize_spec(base_spec, source_root, output, physical_output):
     }
     if base.get("seed") != 3416 or base.get("training") != expected_training or base.get("test_access") is not False:
         raise ValueError("Accepted base R18 training identity changed")
-    if base.get("architecture") != "resnet18" or base.get("data_name") != "ukb_small_20260909_v1":
+    data_name = Path(base.get("data_root", "")).name
+    if base.get("architecture") != "resnet18" or data_name != "ukb_small_20260909_v1":
         raise ValueError("Accepted small-cohort identity changed")
     source_root = Path(source_root).resolve()
     commit = subprocess.check_output(["git", "-C", str(source_root), "rev-parse", "HEAD"], text=True).strip()
@@ -125,7 +126,7 @@ def initialize_spec(base_spec, source_root, output, physical_output):
     spec = {
         "schema": SCHEMA, "task_id": TASK_ID, "run_id": RUN_ID, "test_access": False,
         "seed": 3416, "architecture": "resnet18", "embracement_size": 256,
-        "data_name": base["data_name"], "data_root": base["data_root"],
+        "data_name": data_name, "data_root": base["data_root"],
         "data_audit_sha256": base["data_audit_sha256"],
         "initialization": base["initialization"], "training": base["training"],
         "source_commit": commit, "source_root": str(source_root),
