@@ -10342,5 +10342,47 @@
   ],
   "schema": "look_cohort_sequence_publication_v1",
   "sequence_id": "ws02_mmtm_A_plus_LOOK_20260918_v1",
-  "test_used": false
+  "test_used": false,
+  "fusion_stage_extension": {
+    "schema": "look_small_cohort_fusion_stage_extension_v1",
+    "state": "right_execution_and_audit_complete_pending_left_independent_acceptance",
+    "task_id": "look-ws02-fusion-stage-20260919-v1",
+    "sequence_id": "fusion_stage_2026_09_19_02_40_42_281912",
+    "deep_reference": {
+      "run_id": "2026_09_18_11_18_28_650020",
+      "role": "strict_reuse_no_retraining",
+      "public_config": "fusion_stage/configs/2026_09_18_11_18_28_650020/current.json"
+    },
+    "new_configurations": [
+      {
+        "run_id": "2026_09_19_02_40_42_281912_middle",
+        "position": "middle",
+        "public_config": "fusion_stage/configs/2026_09_19_02_40_42_281912_middle/current.json",
+        "right_execution_state": "accepted_pending_left_scientific_review"
+      },
+      {
+        "run_id": "2026_09_19_02_40_42_281912_features",
+        "position": "features",
+        "public_config": "fusion_stage/configs/2026_09_19_02_40_42_281912_features/current.json",
+        "right_execution_state": "accepted_pending_left_scientific_review"
+      }
+    ],
+    "mechanism_report": "../fusion_stage/README.md",
+    "mechanism_data": "../fusion_stage/current.json",
+    "right_audit": {
+      "state": "accepted_right_audit",
+      "server_receipt_sha256": "291051a82c4b13f918c0c60afd5f71da3d94710233bcc6cdeab0a3a41192f57d",
+      "participants": 296,
+      "bootstrap_resamples": 10000,
+      "contrasts": 8,
+      "test_used": false
+    },
+    "limitations": [
+      "single_seed_same_dev_selection",
+      "training_randomness_not_in_bootstrap",
+      "host_parameter_and_topology_differ",
+      "not_external_A_B_C_coverage",
+      "test_sealed"
+    ]
+  }
 }

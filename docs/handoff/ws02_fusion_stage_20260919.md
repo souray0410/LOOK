@@ -2,7 +2,7 @@
 
 任务：`look-ws02-fusion-stage-20260919-v1`
 
-状态：**开跑前协议与实现合同已锁定；本文件本身不表示GPU结果或科研接受。**
+状态：**右侧完整执行与独立审计已完成；等待左侧从WS02原始产物独立科研验收。当前不表示左侧已接受。**
 
 ## 问题
 
@@ -146,3 +146,71 @@ repair v3采用：
 7. repair resume需新的0130 one-shot marker；sequence与每个run必须持有同字节management overlay receipt。overlay receipt pin当前全部`src/look`，并从Git历史逐字节证明native_host/observed_host/family_greedy/positive_forward_tree/family_statistics/operator/evaluator/observed_pair与scientific source `7876dc8`相同。
 
 这套修复不改变数据、算法、搜索准则、候选、停止、test规则或已完成host；只把恢复/缓存管理从“整个目录字节相同”改为“原始证据永久保留＋fresh科学证据严格重验证＋运行计数显式非科学字段”。
+
+## 2026-09-19 实际执行与右侧审计完成
+
+实际执行身份：
+
+- deep严格引用run 2026_09_18_11_18_28_650020，不重训。
+- middle run 2026_09_19_02_40_42_281912_middle，host best/stop=9/24，240 updates。
+- features run 2026_09_19_02_40_42_281912_features，host best/stop=30/45，450 updates。
+- scientific source 7876dc85388336acb1b9032ff50b9e0b1db66c28。
+- 最终management/publication overlay a065da430fc280b259db39de8994705aa48b147f，数值模块与scientific source逐字节相同。
+- sequence completion SHA e45c3ec119ee5fcdb2e55b44a7cd161de3b2d0ef641cdfe8d48a441ae8e14b2a。
+- 三宿主累计publication SHA 7354806d6e912ba2e9b2871c45f8a8d4989ea20b425dc2f470e6ad63c1c459ad。
+- 右侧独立final audit SHA 291051a82c4b13f918c0c60afd5f71da3d94710233bcc6cdeab0a3a41192f57d。
+
+### 恢复与缓存验收
+
+两个新host训练完成后没有重训。正式下游前，8棵method×pattern tree均通过：
+
+- 正式worker环境固定CUBLAS_WORKSPACE_CONFIG=:4096:8、deterministic algorithms、matmul/cuDNN TF32关闭、threads=2。
+- accepted host完整state_dict、40个BN模块、模式、hooks、requires_grad前后一致。
+- source raw manifest前后逐文件一致。
+- complete source tree的全部prefix/candidate/selected path/best score/metrics/prediction values/moment payload/artifact SHA与revalidated tree科学投影完全相同。
+- 原先缺失的tree只计算缺失分支。
+- 296人final bank fresh replay精确。
+- JSON元数据使用独立inode；不可变tensor/prediction可hardlink；两阶段绝对路径迁移后所有引用必须落在revalidated tree内。
+- formal accepted writer记录profile_migration和no_refit=true，正式阶段仅重放/基线/交付，不第二次拟合同一棵tree。
+
+review evidence index SHA：9435a4d0bdd3c547895edacd22a347e188cd06604d6d6906c5e8680ca55fa67b。该归档明确是左侧审查后可重复生成的review evidence，不伪装成历史自动日志。
+
+### 每宿主主要结果（Macro-F1）
+
+|融合阶段|缺失|host|PCA+树|RRR+树|
+|---|---|---:|---:|---:|
+|deep|缺OCT|62.34%|69.24%|66.77%|
+|deep|缺CFP|56.72%|60.02%|61.37%|
+|middle|缺OCT|33.33%|63.67%|65.67%|
+|middle|缺CFP|40.59%|56.08%|56.41%|
+|features|缺OCT|57.49%|69.16%|68.39%|
+|features|缺CFP|52.77%|61.82%|62.50%|
+
+middle未修正宿主明显弱于deep/features，且参数量只有11.89M；所以middle出现更大的LOOK收益不能单独解释成早融合优于深融合。
+
+### 8项预登记跨宿主收益差
+
+定义仍为 (新宿主 method-host) - (deep method-host)，单位pp：
+
+|新宿主|方法|缺失|点差|8项同时95%|
+|---|---|---|---:|---|
+|middle|RRR|缺OCT|+27.91|[+18.96,+36.86]|
+|middle|RRR|缺CFP|+11.17|[-0.34,+22.69]|
+|middle|PCA|缺OCT|+23.44|[+13.70,+33.18]|
+|middle|PCA|缺CFP|+12.20|[+0.44,+23.95]|
+|features|RRR|缺OCT|+6.48|[-3.40,+16.35]|
+|features|RRR|缺CFP|+5.08|[-4.06,+14.21]|
+|features|PCA|缺OCT|+4.77|[-4.45,+13.99]|
+|features|PCA|缺CFP|+5.75|[-3.20,+14.71]|
+
+middle有3项同时区间不跨0、1项略跨0；features四项同时区间均跨0。不能据此排名最佳融合阶段：不同宿主参数量、拓扑、融合算子和训练权重不同，且只有单seed、同一dev参与选模。
+
+### 反例与边界
+
+- middle host缺OCT F1只有33.33%，LOOK后升至63到66%；大增益同时意味着基线修正空间更大。
+- probability quality不与F1统一：deep缺OCT PCA F1更高，但NLL从host 1.0803恶化到1.6217；RRR NLL更差到2.5447。
+- features与deep参数量相同（22.88M）但融合算子和拓扑不同；其4项跨宿主增益差同时区间均跨0，是重要反例。
+- 本机制只回答宿主融合阶段与LOOK收益关系；老师外部A/B/C与A/B/C+LOOK仍是独立未完成缺口。
+- test始终封存；participant bootstrap不包含训练随机性或独立test泛化。
+
+公开累计入口见 docs/reports/current/fusion_stage/README.md。当前仅为右侧完整执行/审计，等待左侧最终独立科研验收。

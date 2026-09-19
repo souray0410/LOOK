@@ -1,0 +1,29 @@
+{
+  "schema": "look_fusion_stage_public_audit_summary_v1",
+  "state": "accepted_right_audit_pending_left_independent_acceptance",
+  "task_id": "look-ws02-fusion-stage-20260919-v1",
+  "test_used": false,
+  "participants": 296,
+  "deep_reference": "2026_09_18_11_18_28_650020",
+  "new_runs": [
+    "2026_09_19_02_40_42_281912_middle",
+    "2026_09_19_02_40_42_281912_features"
+  ],
+  "scientific_source_commit": "7876dc85388336acb1b9032ff50b9e0b1db66c28",
+  "final_management_overlay_commit": "a065da430fc280b259db39de8994705aa48b147f",
+  "right_audit_server_sha256": "291051a82c4b13f918c0c60afd5f71da3d94710233bcc6cdeab0a3a41192f57d",
+  "sequence_completion_sha256": "e45c3ec119ee5fcdb2e55b44a7cd161de3b2d0ef641cdfe8d48a441ae8e14b2a",
+  "publication_current_sha256": "7354806d6e912ba2e9b2871c45f8a8d4989ea20b425dc2f470e6ad63c1c459ad",
+  "publication_readme_sha256": "04a54e86e01d6e3005241086a980c713f30771783393641de652bfb41938d40f",
+  "review_evidence_index_sha256": "9435a4d0bdd3c547895edacd22a347e188cd06604d6d6906c5e8680ca55fa67b",
+  "verification": {
+    "ordered_ids_labels_matched": true,
+    "independent_logit_metrics": true,
+    "duplicate_host_rows_exact": true,
+    "eight_contrast_bootstrap_recomputed": true,
+    "bootstrap_resamples": 10000,
+    "all_new_host_profiles_and_migrations_verified": true
+  },
+  "acceptance_boundary": "right-side execution/audit complete; left-side independent scientific acceptance pending",
+  "privacy": "No participant identifiers/predictions, model weights, credentials, or server-absolute paths are published."
+}

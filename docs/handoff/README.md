@@ -1,3 +1,9 @@
+## 2026-09-19：R18 fusion-stage有限包右侧完成，待左侧独立验收
+
+deep严格复用既有R18 accepted run；middle/features两个新宿主已完成host、PCA、两方法双缺失完整正收益树、296人重放、交付及三宿主8项跨宿主bootstrap。sequence completion为accepted，右侧独立audit SHA为291051a82c4b13f918c0c60afd5f71da3d94710233bcc6cdeab0a3a41192f57d。
+
+主要解释：middle相对deep的部分LOOK收益差很大，但middle未修正宿主显著更弱且参数量更少；features与deep等参数但4项同时区间全部跨0。因此当前不能宣布最佳融合阶段。老师外部A/B/C缺口仍保留。详见机制报告 docs/reports/current/fusion_stage/README.md 与完整handoff docs/handoff/ws02_fusion_stage_20260919.md。
+
 ## 2026-09-18：72项固定均值对照已完成
 
 LOOK固定空前缀/斜率/λ/秩，仅约束残差均值：两个已验收ResNet18宿主×2拟合×2缺失×9位置，72/72完成；旧自由预测逐元素现场重放，新增预测SHA及sklearn F1/AUROC独立重算通过。58项自由均值F1较高、10项较低、4项相同（相关条件，不是72个独立重复）。无新增训练或拟合；不能宣称自由均值必胜。首启rank字段错误保留，6a813d8加真实FamilyMap回归12项通过后恢复并完成下游。
