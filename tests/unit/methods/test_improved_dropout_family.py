@@ -92,3 +92,26 @@ def test_small_real_mhd_imd_family_tree_replays(tmp_path,arm,pattern):
     np.testing.assert_array_equal(first["participant_ids"],replay["participant_ids"])
     np.testing.assert_array_equal(first["labels"],replay["labels"])
     np.testing.assert_array_equal(first["logits"],replay["logits"])
+
+
+def test_encoder_state_audit_rejects_non_bn_change(tmp_path):
+    from look.studies.improved_dropout_delivery import _encoder_state_audit
+    root=tmp_path
+    (root/"profile/continuous_two_updates").mkdir(parents=True)
+    (root/"host").mkdir()
+    initial={
+        "edge_module_map.e0_o0.weight":torch.tensor([1.]),
+        "edge_module_map.e0_o0.running_mean":torch.tensor([0.]),
+        "edge_module_map.e1_o0.weight":torch.tensor([2.]),
+        "edge_module_map.e1_o0.running_var":torch.tensor([1.]),
+    }
+    selected={k:v.clone() for k,v in initial.items()}
+    selected["edge_module_map.e0_o0.running_mean"]+=1
+    torch.save({"model":initial},root/"profile/continuous_two_updates/best.pt")
+    torch.save({"model":selected},root/"host/best.pt")
+    audit=_encoder_state_audit(root)
+    assert audit["changed_bn_buffers"]==1 and audit["changed_non_bn"]==0
+    selected["edge_module_map.e1_o0.weight"]+=1
+    torch.save({"model":selected},root/"host/best.pt")
+    with pytest.raises(ValueError,match="non-BN"):
+        _encoder_state_audit(root)

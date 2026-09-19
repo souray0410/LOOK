@@ -29,12 +29,34 @@ A_PRED_SHA="212e1e4e32a25bf5873b64c66504b84166d0be9a1262f127ba49f4b9f3a6e0ca"
 def read(p): return json.loads(Path(p).read_text())
 
 
+def _encoder_state_audit(root):
+    root=Path(root)
+    initial=torch.load(root/"profile/continuous_two_updates/best.pt",map_location="cpu",weights_only=False)["model"]
+    selected=torch.load(root/"host/best.pt",map_location="cpu",weights_only=False)["model"]
+    encoder_keys=[key for key in initial if key.startswith("edge_module_map.e0_") or key.startswith("edge_module_map.e1_")]
+    if not encoder_keys or any(key not in selected for key in encoder_keys):
+        raise ValueError("IMD encoder checkpoint keys changed")
+    bn_names=("running_mean","running_var","num_batches_tracked")
+    changed_bn=[];changed_non_bn=[]
+    for key in encoder_keys:
+        left,right=initial[key],selected[key]
+        if torch.is_tensor(left) and not torch.equal(left,right):
+            (changed_bn if any(name in key for name in bn_names) else changed_non_bn).append(key)
+    if changed_non_bn:
+        raise ValueError("Frozen IMD encoder non-BN state changed")
+    if not changed_bn:
+        raise ValueError("Expected observed IMD BatchNorm-state adaptation is absent")
+    return {"encoder_state_keys":len(encoder_keys),"changed_bn_buffers":len(changed_bn),
+        "changed_non_bn":len(changed_non_bn),"changed_bn_keys":changed_bn}
+
+
 def continuation_identity(root,source_commit):
     root=Path(root);spec=read(root/"spec.json");receipt=read(root/"host/accepted.json")
     if file_sha256(root/"host/accepted.json")!=A_RECEIPT_SHA or receipt["files"]["best.pt"]!=A_BEST_SHA or receipt["files"]["development_predictions.npz"]!=A_PRED_SHA:
         raise ValueError("Frozen IMD A assets changed")
     if receipt.get("best_epoch")!=13 or receipt.get("stop_epoch")!=28 or receipt.get("state")!="accepted":
         raise ValueError("Frozen IMD A training identity changed")
+    encoder_audit=_encoder_state_audit(root)
     return {
         "schema":"look_imd_component_A_plus_LOOK_v1","source_A_commit":SOURCE_A_COMMIT,
         "continuation_source_commit":source_commit,"author_commit":AUTHOR_COMMIT,
@@ -44,6 +66,7 @@ def continuation_identity(root,source_commit):
         "selection":"development macro-F1 positive-forward tree; strict improvement",
         "method_identity":"simultaneous-modality-dropout + learnable-token target-task component adaptation; contrastive pretraining omitted",
         "encoder_boundary":"weights frozen but BatchNorm running buffers changed during target training; not author-frozen encoder-state reproduction",
+        "encoder_state_audit":encoder_audit,
         "test_access":False,
     }
 
@@ -85,7 +108,8 @@ def init(root,source_commit):
         "loss":"complete CE + oct-missing CE + cfp-missing CE, lambda=1",
         "learnable_tokens":True,"encoders_parameter_gradients":False,
         "encoder_bn_buffers_changed":True,
-        "encoder_bn_changed_keys":60,
+        "encoder_bn_changed_keys":identity["encoder_state_audit"]["changed_bn_buffers"],
+        "encoder_non_bn_changed_keys":identity["encoder_state_audit"]["changed_non_bn"],
         "label":"IMD target-task component adaptation, not the complete Learning Contrastive Multimodal Fusion method"
       },
       "frozen_A_assets":{"accepted_sha256":A_RECEIPT_SHA,"best_sha256":A_BEST_SHA,"predictions_sha256":A_PRED_SHA},
