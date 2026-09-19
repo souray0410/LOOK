@@ -2,13 +2,13 @@
   "schema": "research_project_status_v1",
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
-  "phase": "fusion_stage_scientifically_accepted_publish_v1_in_progress",
-  "next_acceptance": "fusion-stage原科学包已由左侧独立接受；当前只需完成生成器/累计页/main/精确CI发布验收。不得重启GPU或扩种子/骨干/融合位置。下一科研选择仅整理外部A/B/C与现有预测概率诊断可行性，由左侧另发有限包。",
+  "phase": "fusion_stage_scientifically_accepted_published",
+  "next_acceptance": "fusion-stage科学包与可读累计发布已进入main；科学evidence cutoff保持正式delivery时间不变。下一科研动作仅由左侧从外部A/B/C匹配或现有logits概率诊断中选择新的有限包；本包不再启动GPU、种子、骨干或融合位置扩展。",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "a065da430fc280b259db39de8994705aa48b147f",
+  "source_commit": "45955c3236dfb537754caa1b2496fa4bd0fa6656",
   "evidence_cutoff": "2026-09-19T03:50:58.949696+00:00",
   "verified_at": "2026-09-19T04:10:43.854209+00:00",
   "verification_scope": "runtime_and_evidence",
