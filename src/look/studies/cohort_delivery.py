@@ -41,6 +41,33 @@ PATTERNS=('oct_missing','cfp_missing')
 def read(p):return json.loads(Path(p).read_text())
 
 
+def tree_manifest(root):
+    root=Path(root)
+    return {str(path.relative_to(root)):file_sha256(path) for path in sorted(root.rglob('*')) if path.is_file()}
+
+
+def promote_profile_correction(root,arm,pattern,profile_receipt):
+    root=Path(root)
+    matches=[row for row in profile_receipt['records'] if row['arm']==arm and row['pattern']==pattern]
+    if len(matches)!=1:raise ValueError('Fusion fitting profile record mismatch')
+    expected=matches[0]['manifest']
+    source=root/'profile/fitting'/arm/pattern
+    target=root/arm/'corrections'/pattern
+    if source.exists() and target.exists():raise ValueError('Profile and formal correction trees both exist')
+    if source.exists():
+        if tree_manifest(source)!=expected:raise ValueError('Profile correction cache changed before promotion')
+        target.parent.mkdir(parents=True,exist_ok=True)
+        os.replace(source,target)
+    elif not target.exists():
+        raise ValueError('Fusion fitting profile correction cache missing')
+    if tree_manifest(target)!=expected:raise ValueError('Promoted correction cache changed')
+    receipt=root/'profile/fitting/promotions'/f'{arm}_{pattern}.json';receipt.parent.mkdir(parents=True,exist_ok=True)
+    atomic_write_json(dict(schema='look_fusion_profile_promotion_v1',identity=profile_receipt['identity'],arm=arm,
+        pattern=pattern,manifest=expected,source_role='full_fit_profile_exact_same_identity',target=str(target.relative_to(root)),
+        no_refit=True,test_access=False),receipt)
+    return target
+
+
 def validate(s):
     if s['schema']!='look_fresh_cohort_delivery_v1' or s['test_access'] is not False:
         raise ValueError('Undeclared study')
@@ -128,11 +155,8 @@ def work(s,root,stage):
         elif r.get('state')!='accepted':raise RuntimeError('Host not yet accepted: '+str(r.get('state')))
         elif s.get('study_kind')=='fusion_stage_v1':
             receipt=read(target/'accepted.json')
-            structure=dict(fusion_position=g.fusion_position,correction_sites=correction_sites(g),
-                parameters=sum(p.numel() for p in g.parameters()),
-                trainable_parameters=sum(p.numel() for p in g.parameters() if p.requires_grad),
-                architecture_id=g.architecture_id,
-                fusion_endpoint=g.native_host_provenance['fusion_endpoint'])
+            from look.studies.cohort_fusion_stage import runtime_host_structure
+            structure=runtime_host_structure(g,s['position'])
             if structure!=s['fusion_stage_structure']:
                 raise ValueError('Fusion-stage runtime structure differs from prespecified contract')
             if receipt.get('fusion_stage_structure') not in (None,structure):
@@ -155,15 +179,14 @@ def work(s,root,stage):
                         factor=16,candidates=[dict(rank=32,ridge_lambda=None)],pca_bank=bank,identity=identity,
                         output=target,device=torch.device('cuda:0'),workspace_bytes=s['workspace_bytes'],
                         mode='positive_forward_tree',should_pause=check,penalty_policy='prefix_train_pca_gcv')
-                    names=('selection.json','bank.pt','replay.json','feature_costs.json')
-                    hashes={name:file_sha256(target/name) for name in names}
+                    manifest=tree_manifest(target)
                     second=fit_family_trajectory(g,loader(fit),loader(dev),arm=arm,pattern=pattern,sites=correction_sites(g),
                         factor=16,candidates=[dict(rank=32,ridge_lambda=None)],pca_bank=bank,identity=identity,
                         output=target,device=torch.device('cuda:0'),workspace_bytes=s['workspace_bytes'],
                         mode='positive_forward_tree',should_pause=check,penalty_policy='prefix_train_pca_gcv')
-                    if hashes!={name:file_sha256(target/name) for name in names} or first[1]['final']!=second[1]['final']:
+                    if manifest!=tree_manifest(target) or first[1]['final']!=second[1]['final']:
                         raise ValueError('Fusion fitting profile recovery changed accepted evidence')
-                    records.append(dict(arm=arm,pattern=pattern,files=hashes,final=first[1]['final']))
+                    records.append(dict(arm=arm,pattern=pattern,manifest=manifest,final=first[1]['final']))
             state_equal(g,frozen);check();peak=torch.cuda.max_memory_reserved();disk_after=shutil.disk_usage(root).free
             if peak>s['gpu_budget_bytes']:raise MemoryError('Fusion fitting profile GPU budget breached')
             profile_bytes=sum(x.stat().st_size for x in out.rglob('*') if x.is_file())
@@ -173,18 +196,32 @@ def work(s,root,stage):
                 disk_free_before=disk_before,disk_free_after=disk_after,disk_reserve_bytes=s.get('disk_reserve_bytes',0)),
                 out/'accepted.json')
         elif stage in ARMS:
-            out=root/stage;records=[]
+            out=root/stage;records=[];profile_receipt=None
+            if s.get('study_kind')=='fusion_stage_v1':
+                profile_receipt=read(root/'profile/fitting/accepted.json')
+                if (profile_receipt.get('state')!='accepted' or profile_receipt.get('identity')!=identity
+                        or profile_receipt.get('test_access') is not False or profile_receipt.get('recovery_exact') is not True):
+                    raise ValueError('Fusion fitting profile is not accepted for migration')
             for pattern in PATTERNS:
                 atomic_write_json(dict(state='running',pattern=pattern,time=time.time()),out/'status.json')
-                arts,_=fit_family_trajectory(g,loader(fit),loader(dev),arm=stage,pattern=pattern,sites=correction_sites(g),
-                    factor=16,candidates=[dict(rank=32,ridge_lambda=None)],pca_bank=bank,identity=identity,
-                    output=out/'corrections'/pattern,device=torch.device('cuda:0'),workspace_bytes=s['workspace_bytes'],
-                    mode='positive_forward_tree',should_pause=check,penalty_policy='prefix_train_pca_gcv')
+                if profile_receipt is not None:
+                    correction=promote_profile_correction(root,stage,pattern,profile_receipt)
+                    arts=load_bank(correction)
+                    selection=read(correction/'selection.json')
+                else:
+                    correction=out/'corrections'/pattern
+                    arts,_=fit_family_trajectory(g,loader(fit),loader(dev),arm=stage,pattern=pattern,sites=correction_sites(g),
+                        factor=16,candidates=[dict(rank=32,ridge_lambda=None)],pca_bank=bank,identity=identity,
+                        output=correction,device=torch.device('cuda:0'),workspace_bytes=s['workspace_bytes'],
+                        mode='positive_forward_tree',should_pause=check,penalty_policy='prefix_train_pca_gcv')
+                    selection=None
                 a=evaluate_missing(g,loader(dev),torch.device('cuda:0'),fixed_pattern=pattern,artifact_banks={pattern:arts})
                 b=evaluate_missing(g,loader(dev),torch.device('cuda:0'),fixed_pattern=pattern,
-                    artifact_banks={pattern:load_bank(out/'corrections'/pattern)})
+                    artifact_banks={pattern:load_bank(correction)})
                 check_matched(a,b)
                 if not np.array_equal(a['logits'],b['logits']):raise ValueError('Correction replay mismatch')
+                if selection is not None and selection['final']['metrics']!=a['metrics']:
+                    raise ValueError('Promoted fitting profile result changed on formal replay')
                 baseline=evaluate_missing(g,loader(dev),torch.device('cuda:0'),fixed_pattern=pattern);check_matched(a,baseline)
                 for method,result in ((stage,a),('host',baseline)):
                     p=out/'development'/f'{method}_{pattern}.npz';save_prediction_bundle(result,p)
@@ -194,6 +231,27 @@ def work(s,root,stage):
                 host_best_sha256=h['files']['best.pt'],replay_exact=True),out/'accepted.json')
     atomic_write_json(dict(stage=stage,state='completed',time=time.time(),identity=identity,
         gpu_peak_reserved_bytes=torch.cuda.max_memory_reserved()),root/(stage+'_status.json'))
+
+
+def verify_fusion_formal_arm(s,root,arm):
+    root=Path(root);receipt=read(root/arm/'accepted.json');identity=stable_hash(s)
+    if receipt.get('state')!='accepted' or receipt.get('identity')!=identity or receipt.get('test_access') is not False:
+        raise ValueError('Fusion formal arm acceptance changed')
+    host=read(root/'host/accepted.json')
+    if receipt.get('host_best_sha256')!=host['files']['best.pt'] or receipt.get('replay_exact') is not True:
+        raise ValueError('Fusion formal arm host/replay identity changed')
+    migration=receipt.get('profile_migration',{})
+    if migration.get('schema')!='look_fusion_profile_migration_v1' or migration.get('no_refit') is not True:
+        raise ValueError('Fusion formal arm lacks accepted profile migration')
+    if file_sha256(root/'profile/fitting/accepted.json')!=migration.get('profile_receipt_sha256'):
+        raise ValueError('Fusion fitting profile receipt changed')
+    if set(migration.get('promotion_receipts',{}))!=set(PATTERNS):raise ValueError('Fusion promotion receipt coverage changed')
+    for pattern,digest in migration['promotion_receipts'].items():
+        if file_sha256(root/'profile/fitting/promotions'/f'{arm}_{pattern}.json')!=digest:
+            raise ValueError('Fusion promotion receipt changed')
+    for row in receipt['records']:
+        if file_sha256(row['path'])!=row['sha256']:raise ValueError('Fusion formal prediction changed')
+    return receipt
 
 
 def report(s,root):
@@ -273,6 +331,8 @@ def main():
                 if len(s['devices']) == 1:
                     # One project lane: finish each arm before launching the next.
                     for arm in ARMS:
+                        if s.get('study_kind')=='fusion_stage_v1' and (root/arm/'accepted.json').exists():
+                            verify_fusion_formal_arm(s,root,arm);continue
                         code=launch(arm,s['devices'][0]).wait()
                         if code:errors.append((arm,code))
                 else:

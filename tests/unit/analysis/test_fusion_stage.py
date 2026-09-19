@@ -181,3 +181,62 @@ def test_sequence_failure_isolated_and_features_still_runs(tmp_path,monkeypatch)
 def test_fusion_diagram_matches_position(position,needle):
     from look.analysis.cohort_publication import fusion_diagram
     assert needle in '\n'.join(fusion_diagram(position))
+
+def test_runtime_structure_uses_same_schema_as_prespecified():
+    from types import SimpleNamespace
+    from mhd_framework.models import create_model
+    from look.models.native_host import build_native_host
+    cfg=dict(name='resnet18',spatial_dims=2,in_channels=3,num_classes=2,views=1,granularity='block')
+    first=create_model(cfg,weights=None);second=create_model(cfg,weights=None)
+    graph=build_native_host(SimpleNamespace(graph=first),SimpleNamespace(graph=second),'middle','cpu')
+    actual=fusion.runtime_host_structure(graph,'middle')
+    assert actual==fusion.host_structure('middle')
+    wrong=dict(actual);wrong['position']='deep'
+    assert wrong!=fusion.host_structure('middle')
+
+
+def test_profile_promotion_is_exact_and_recoverable(tmp_path):
+    from look.studies import cohort_delivery as delivery
+    root=tmp_path/'run';source=root/'profile/fitting/residual_rrr/oct_missing'
+    source.mkdir(parents=True)
+    for name,data in [('selection.json',b'{}'),('bank.pt',b'bank'),('replay.json',b'{}'),('feature_costs.json',b'{}'),('nested.bin',b'nested')]:
+        (source/name).write_bytes(data)
+    manifest=delivery.tree_manifest(source)
+    receipt=dict(identity='id',records=[dict(arm='residual_rrr',pattern='oct_missing',manifest=manifest)])
+    target=delivery.promote_profile_correction(root,'residual_rrr','oct_missing',receipt)
+    assert not source.exists() and target.exists()
+    assert delivery.tree_manifest(target)==manifest
+    again=delivery.promote_profile_correction(root,'residual_rrr','oct_missing',receipt)
+    assert again==target
+    (target/'bank.pt').write_bytes(b'corrupt')
+    with pytest.raises(ValueError,match='Promoted correction cache changed'):
+        delivery.promote_profile_correction(root,'residual_rrr','oct_missing',receipt)
+
+def test_needs_review_requires_one_exact_repair_marker(tmp_path,monkeypatch):
+    from look.studies import cohort_sequence
+    spec={'run_id':'middle','output':str(tmp_path/'middle'),'position':'middle'}
+    Path(spec['output']).mkdir()
+    spec_path=tmp_path/'middle.json';spec_path.write_text(json.dumps(spec))
+    plan={'study_kind':'fusion_stage_v1','root':str(tmp_path/'sequence'),
+        'publication':str(tmp_path/'publication'),
+        'tasks':[{'role':'execute','position':'middle','spec':str(spec_path)}]}
+    root=Path(plan['root']);root.mkdir()
+    identity=stable_hash(plan)
+    (Path(spec['output'])/'pipeline_status.json').write_text(json.dumps({'state':'needs_review','error':'old'}))
+    (root/'status.json').write_text(json.dumps({'identity':identity,'tasks':{'middle':{'state':'needs_review'}}}))
+    monkeypatch.setattr(cohort_sequence,'validate_sequence',lambda p:[spec])
+    monkeypatch.setattr(cohort_sequence,'refresh',lambda plan,statuses:None)
+    monkeypatch.setattr(cohort_sequence,'publish',lambda root,out:{'matched_package':'accepted'})
+    launched=[]
+    cohort_sequence.run(plan,launch=lambda s,row: launched.append(s['run_id']) or ImmediateChild(0),interval=0)
+    assert launched==[]
+    pipeline=Path(spec['output'])/'pipeline_status.json'
+    marker=dict(schema='look_fusion_stage_repair_resume_v1',task_id=fusion.TASK_ID,run_id='middle',
+        spec_sha256=file_sha256(spec_path),prior_pipeline_status_sha256=file_sha256(pipeline),
+        repair_packet_sha256=fusion.REPAIR_0038_SHA256,test_access=False)
+    (Path(spec['output'])/'repair_resume.json').write_text(json.dumps(marker))
+    cohort_sequence.run(plan,launch=lambda s,row: launched.append(s['run_id']) or ImmediateChild(0),interval=0)
+    assert launched==['middle']
+    status=json.loads((root/'status.json').read_text())
+    assert status['tasks']['middle']['state']=='accepted'
+    assert list((root/'incidents').glob('middle_before_repair_*.json'))

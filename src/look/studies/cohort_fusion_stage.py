@@ -17,6 +17,7 @@ from look.methods.joint import correction_sites
 
 TASK_ID='look-ws02-fusion-stage-20260919-v1'
 STUDY_KIND='fusion_stage_v1'
+REPAIR_0038_SHA256='a58ece479f0b0cb8471c1fd62170ab480972ceac83eab9558f26b30de2e8712f'
 DEEP_RUN_ID='2026_09_18_11_18_28_650020'
 DEEP_SPEC_SHA256='f09a452f8584861ff5291cb262894e16f4ba4c7c962f43f6ba4cfbccb18929e8'
 DEEP_DELIVERY_SHA256='105f0d94c9020e9b008f46c4f24543878c63b7461fb1c350bbbd3c2d3706eb52'
@@ -62,6 +63,14 @@ def _fixed_science(spec):
     return {key:spec[key] for key in FIXED_KEYS}
 
 
+def runtime_host_structure(graph,position):
+    return dict(position=position,fusion_position=graph.fusion_position,
+        fusion_endpoint=graph.native_host_provenance['fusion_endpoint'],
+        architecture_id=graph.architecture_id,correction_sites=correction_sites(graph),
+        parameters=sum(p.numel() for p in graph.parameters()),
+        trainable_parameters=sum(p.numel() for p in graph.parameters() if p.requires_grad))
+
+
 def host_structure(position):
     from types import SimpleNamespace
     from mhd_framework.models import create_model
@@ -69,11 +78,7 @@ def host_structure(position):
     first=create_model(cfg,weights=None)
     second=create_model(cfg,weights=None)
     graph=build_native_host(SimpleNamespace(graph=first),SimpleNamespace(graph=second),position,'cpu')
-    return dict(position=position,fusion_position=graph.fusion_position,
-        fusion_endpoint=graph.native_host_provenance['fusion_endpoint'],
-        architecture_id=graph.architecture_id,correction_sites=correction_sites(graph),
-        parameters=sum(p.numel() for p in graph.parameters()),
-        trainable_parameters=sum(p.numel() for p in graph.parameters() if p.requires_grad))
+    return runtime_host_structure(graph,position)
 
 
 def validate_member(spec):
@@ -89,6 +94,21 @@ def validate_member(spec):
     reference=spec.get('fusion_stage_reference',{})
     if reference!={'run_id':DEEP_RUN_ID,'spec_sha256':DEEP_SPEC_SHA256,'delivery_sha256':DEEP_DELIVERY_SHA256}:
         raise ValueError('Fusion-stage reference changed')
+
+
+def validate_repair_resume(plan,row,spec,runroot):
+    marker=Path(runroot)/'repair_resume.json'
+    if not marker.exists():return None
+    value=read(marker)
+    pipeline=Path(runroot)/'pipeline_status.json'
+    if not pipeline.exists() or read(pipeline).get('state')!='needs_review':
+        raise ValueError('Fusion repair marker requires a needs_review pipeline')
+    expected=dict(schema='look_fusion_stage_repair_resume_v1',task_id=TASK_ID,run_id=spec['run_id'],
+        spec_sha256=file_sha256(row['spec']),prior_pipeline_status_sha256=file_sha256(pipeline),
+        repair_packet_sha256=REPAIR_0038_SHA256,test_access=False)
+    if {k:value.get(k) for k in expected}!=expected:
+        raise ValueError('Fusion repair resume marker changed')
+    return value
 
 
 def validate_sequence(plan):

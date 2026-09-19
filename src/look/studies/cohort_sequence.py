@@ -105,7 +105,19 @@ def run(plan, *, launch=None, interval=60):
                 if published['matched_package']!='accepted':raise ValueError('Incomplete reference')
                 statuses[rid]=dict(state='accepted_reference' if row['role']=='accepted_reference' else 'accepted');save();continue
             if row['role']=='accepted_reference':raise ValueError('Reference not accepted')
-            if statuses.get(rid,{}).get('state')=='needs_review':continue
+            if statuses.get(rid,{}).get('state')=='needs_review':
+                if plan.get('study_kind')!='fusion_stage_v1':
+                    continue
+                from look.studies.cohort_fusion_stage import validate_repair_resume
+                marker=validate_repair_resume(plan,row,s,runroot)
+                if marker is None:
+                    continue
+                incidents=root/'incidents';incidents.mkdir(exist_ok=True)
+                atomic_write_json(dict(run_id=rid,previous=statuses[rid],repair_marker=marker,time=time.time()),
+                    incidents/f'{rid}_before_repair_{time.time_ns()}.json')
+                statuses[rid]=dict(state='repair_resuming',started_at=time.time(),
+                    repair_packet_sha256=marker['repair_packet_sha256'])
+                save()
             statuses[rid]=dict(state='running',started_at=time.time());save()
             child=launch(s,row)
             while child.poll() is None:

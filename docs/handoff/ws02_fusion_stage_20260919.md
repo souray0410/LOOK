@@ -98,3 +98,30 @@ CPU-only图结构合同由当前MHD pin构造，不读训练数据、不加载�
 该机制包只回答“宿主融合阶段变化时LOOK收益是否一致”。老师外部方法A/B/C与A/B/C+LOOK的匹配缺口仍然保留，不能用本包冒充已全部回答。
 
 单seed、同dev用于宿主/路径选择；participant bootstrap不包含训练随机性或test泛化。最终科研接受仍需左侧独立核原始产物。
+
+
+## 2026-09-19 00:38 UTC：fusion-stage host结构元数据故障与同run修复
+
+现场状态：原 fusion sequence 的 middle/features 均为 `needs_review`，无活跃 sequence manager / cohort_delivery worker，GPU0/GPU1均空闲。旧失败不代表训练未完成：
+
+- middle run `2026_09_19_02_40_42_281912_middle`：host accepted，best epoch 9 / stop epoch 24，240 updates；best/last/history/dev prediction SHA 与 accepted receipt逐项一致。
+- features run `2026_09_19_02_40_42_281912_features`：host accepted，best epoch 30 / stop epoch 45，450 updates；同样全部SHA一致。
+- 两run的 PCA、fit_profile、residual_rrr、pca_free_mean 均尚未开始，故不存在半完成拟合缓存。
+- 旧 failure 发生在 host 已完成后、进入PCA前：runtime structure字典遗漏 `position` 字段，而预登记 `host_structure()` 含 `position`，完整dict比较必然失败。
+- 独立逐字段重算 middle/features 的 fusion endpoint、architecture_id、correction_sites、总/可训练参数量均与spec完全一致，除旧runtime字典缺 `position` 外没有科学结构差异。
+
+修复原则：不修改旧 scientific spec/source_commit `7876dc85388336acb1b9032ff50b9e0b1db66c28`，不重训已完成host。新管理修复使用共享 `runtime_host_structure(graph, position)` 生成预登记与runtime结构，避免双实现再次漂移；同run恢复必须有绑定原spec SHA、原pipeline failure SHA和repair packet SHA的一次性 `repair_resume.json`。默认 `needs_review` 仍禁止自动重试；若修复后再次失败，旧marker因pipeline SHA变化自动失效。
+
+### 完整拟合资源门槛与重复成本修复
+
+原 `fit_profile` 会完整执行两方法×两缺失的四棵正收益树，再由formal阶段重新拟合同样四棵树，工程上重复且不增加科学辨识。修复后：
+
+1. `fit_profile` 仍在**完整1264 train / 296 dev、同accepted host、同PCA、同算法/identity**上跑四棵完整树，不降样本、不缩树、不降低RAM/GPU/50GiB磁盘reserve。
+2. 每个 profile correction tree 记录**递归全文件 manifest/SHA**；同一目录第二次调用验证恢复后，manifest与final必须字节/数值稳定。
+3. formal arm 不再调用第二遍 `fit_family_trajectory`；它把 profile correction tree 在同一run内原子迁移到正式 `arm/corrections/<pattern>`，逐文件核manifest，然后重新加载bank并做完整296dev预测、序列化replay、未修正基线和正式accepted receipt。
+4. 正式 receipt 绑定 profile receipt SHA 与每个 promotion receipt SHA，标记 `no_refit=true`；任一缓存缺失、额外文件、SHA变化、profile身份变化或正式预测变化都会拒绝。
+5. 已accepted formal arm在sequence恢复时先完整核预测与迁移receipt，再精确复用，不重复正式重放。
+
+因此资源上界和恢复证据仍来自全量完整四树，正式科学计算只拟合一次；变化仅是缓存角色迁移和恢复编排，不改变算法、树搜索、样本、停止、缺失模拟或指标定义。
+
+老师外部A/B/C匹配缺口继续保留；fusion-stage不能替代这些问题。
