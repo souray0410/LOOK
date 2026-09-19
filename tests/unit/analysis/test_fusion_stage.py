@@ -221,14 +221,24 @@ def test_verify_formal_arm_requires_logical_v2_migration(tmp_path):
     correction=root/'profile/revalidated/residual_rrr/oct_missing';correction.mkdir(parents=True)
     (correction/'selection.json').write_text(json.dumps({'selected_path':[],'final':{'values_sha256':'v'}}))
     (correction/'bank.pt').write_bytes(b'bank')
-    audit=correction.parent/'audit'/correction.name;audit.mkdir(parents=True);(audit/'accepted.json').write_text('{}')
+    audit=correction.parent/'audit'/correction.name;audit.mkdir(parents=True)
+    runtime={'CUBLAS_WORKSPACE_CONFIG':':4096:8'}
+    revalidation=dict(schema='look_fusion_fresh_revalidation_v2',state='accepted',identity=identity,test_access=False,
+        source_raw_manifest_unchanged=True,graph_state_exact_before_after_and_fresh=True,
+        references_within_revalidated_tree=True,complete_source_science_exact=True,
+        revalidated_science_sha256='science',source_science_sha256='source',
+        runtime=runtime,graph_state_sha256='graph',
+        source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest')
+    (audit/'accepted.json').write_text(json.dumps(revalidation))
     out=root/'residual_rrr';(out/'development').mkdir(parents=True)
     pred=out/'development/residual_rrr_oct_missing.npz';pred.write_bytes(b'pred')
     row=dict(revalidated_root=str(correction.relative_to(root)),
         revalidation_receipt=str((audit/'accepted.json').relative_to(root)),
         revalidation_receipt_sha256=file_sha256(audit/'accepted.json'),
         selection_sha256=file_sha256(correction/'selection.json'),bank_sha256=file_sha256(correction/'bank.pt'),
-        selected_path=[],final_values_sha256='v')
+        selected_path=[],final_values_sha256='v',revalidated_science_sha256='science',
+        source_science_sha256='source',runtime_sha256=stable_hash(runtime),graph_state_sha256='graph',
+        source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest')
     migration=dict(schema='look_fusion_profile_migration_v2',no_refit=True,no_physical_relocation=True,
         source_role='fresh_revalidated_same_run_same_identity',profile_receipt_sha256=file_sha256(profile/'accepted.json'),
         patterns={'oct_missing':row,'cfp_missing':dict(row)})
@@ -263,10 +273,10 @@ def test_needs_review_requires_one_exact_repair_marker(tmp_path,monkeypatch):
     cohort_sequence.run(plan,launch=lambda s,row: launched.append(s['run_id']) or ImmediateChild(0),interval=0)
     assert launched==[]
     pipeline=Path(spec['output'])/'pipeline_status.json'
-    marker=dict(schema='look_fusion_stage_repair_resume_v1',task_id=fusion.TASK_ID,run_id='middle',
+    marker=dict(schema='look_fusion_stage_repair_resume_v2',task_id=fusion.TASK_ID,run_id='middle',
         spec_sha256=file_sha256(spec_path),prior_pipeline_status_sha256=file_sha256(pipeline),
-        repair_packet_sha256=fusion.REPAIR_0130_SHA256,test_access=False)
-    (Path(spec['output'])/'repair_resume.json').write_text(json.dumps(marker))
+        repair_packet_sha256=fusion.REPAIR_0207_SHA256,test_access=False)
+    (Path(spec['output'])/'repair_resume_0207.json').write_text(json.dumps(marker))
     overlay={'ok':True};(root/'management_overlay.json').write_text(json.dumps(overlay))
     (Path(spec['output'])/'management_overlay.json').write_text(json.dumps(overlay))
     monkeypatch.setattr(fusion,'verify_management_overlay',lambda path:overlay)
@@ -289,9 +299,66 @@ def test_fresh_evaluate_bank_uses_explicit_development_loader(tmp_path,monkeypat
         return Loader()
     result=dict(participant_ids=np.array(['a','b']),labels=np.array([0,1]),
         logits=np.array([[2.,0.],[0.,2.]]),metrics={'macro_f1':1.0})
+    monkeypatch.setattr(fresh,'formal_runtime_fingerprint',lambda:{'formal':True})
     monkeypatch.setattr(fresh,'evaluate_missing',lambda *a,**k:result)
     monkeypatch.setattr(fresh,'save_prediction_bundle',
         lambda value,path: np.savez(path,participant_ids=value['participant_ids'],labels=value['labels'],logits=value['logits']))
     value=fresh.evaluate_bank(None,loader,'cpu','oct_missing',[],tmp_path)
     assert calls==['development']
     assert value['data_role']=='development' and value['score']==1.0
+
+
+def test_revalidation_operational_fields_do_not_hide_tree_selection():
+    from look.studies import fusion_cache_revalidation as fresh
+    assert set(fresh.MUTABLE_OPERATIONAL_FIELDS)=={'feature_costs.json'}
+    assert 'best_path' not in sum(fresh.MUTABLE_OPERATIONAL_FIELDS.values(),[])
+    selection=dict(schema='look_positive_forward_tree_v1',contract_sha256='c',mode='positive_forward_tree',
+        decisions=[dict(identity='i',path=[],baseline=dict(role='development',data_role='development',score=.5,
+            values_sha256='a',metrics={'macro_f1':.5}),
+            candidates=[dict(index=0,node='n',key='k',score=.6,artifact='a.pt',sha256='s',
+                evidence=dict(role='development',data_role='development',score=.6,values_sha256='b',
+                    metrics={'macro_f1':.6}))],
+            children=[],terminal=True)],
+        final=dict(role='development',data_role='development',score=.6,values_sha256='b',metrics={'macro_f1':.6}),
+        selected_path=[dict(index=0,node='n',key='k',artifact='a.pt',sha256='s')],
+        site_attempts=1,candidate_evaluations=1,prefix_count=1,test_access=False,scientific_acceptance=False)
+    projected=fresh.selection_projection(selection)
+    changed=json.loads(json.dumps(selection));changed['decisions'][0]['candidates'][0]['score']=.61
+    assert fresh.selection_projection(changed)!=projected
+
+
+def test_revalidation_copy_separates_mutable_json_and_preserves_source_manifest(tmp_path):
+    from look.studies.fusion_cache_revalidation import copy_audit_tree,raw_manifest
+    from look.runtime.state import atomic_write_json
+    import os
+    source=tmp_path/'source';source.mkdir()
+    (source/'prefixes/root').mkdir(parents=True)
+    (source/'prefixes/root/site_000.json').write_text(json.dumps({'identity':'x','candidates':[]}))
+    (source/'family_moments').mkdir();(source/'family_moments/a.pt').write_bytes(b'immutable')
+    before=raw_manifest(source)
+    target=tmp_path/'target';copy_audit_tree(source,target)
+    assert os.stat(source/'prefixes/root/site_000.json').st_ino!=os.stat(target/'prefixes/root/site_000.json').st_ino
+    assert os.stat(source/'family_moments/a.pt').st_ino==os.stat(target/'family_moments/a.pt').st_ino
+    atomic_write_json({'identity':'x','candidates':[{'changed':True}]},target/'prefixes/root/site_000.json')
+    assert raw_manifest(source)==before
+
+
+def test_formal_runtime_fingerprint_requires_exact_worker_flags(monkeypatch):
+    from look.studies import fusion_cache_revalidation as fresh
+    import torch
+    old=dict(deterministic=torch.are_deterministic_algorithms_enabled(),
+        benchmark=torch.backends.cudnn.benchmark,matmul=torch.backends.cuda.matmul.allow_tf32,
+        cudnn=torch.backends.cudnn.allow_tf32,threads=torch.get_num_threads())
+    try:
+        monkeypatch.setenv('CUBLAS_WORKSPACE_CONFIG',':4096:8')
+        torch.set_num_threads(2);torch.use_deterministic_algorithms(True)
+        torch.backends.cudnn.benchmark=False;torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
+        value=fresh.formal_runtime_fingerprint()
+        assert value['CUBLAS_WORKSPACE_CONFIG']==':4096:8' and value['deterministic_algorithms'] is True
+        monkeypatch.setenv('CUBLAS_WORKSPACE_CONFIG',':16:8')
+        with pytest.raises(ValueError,match='formal deterministic worker'):
+            fresh.formal_runtime_fingerprint()
+    finally:
+        torch.set_num_threads(old['threads']);torch.use_deterministic_algorithms(old['deterministic'])
+        torch.backends.cudnn.benchmark=old['benchmark'];torch.backends.cuda.matmul.allow_tf32=old['matmul']
+        torch.backends.cudnn.allow_tf32=old['cudnn']

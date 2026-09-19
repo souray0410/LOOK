@@ -202,7 +202,13 @@ def work(s,root,stage):
                             or file_sha256(correction/'bank.pt')!=row['bank_sha256']):
                         raise ValueError('Fusion revalidated profile evidence changed')
                     revalidation=read(receipt_path)
-                    if revalidation.get('state')!='accepted' or revalidation.get('identity')!=identity:
+                    if (revalidation.get('schema')!='look_fusion_fresh_revalidation_v2'
+                            or revalidation.get('state')!='accepted' or revalidation.get('identity')!=identity
+                            or revalidation.get('test_access') is not False
+                            or revalidation.get('source_raw_manifest_unchanged') is not True
+                            or revalidation.get('graph_state_exact_before_after_and_fresh') is not True
+                            or revalidation.get('references_within_revalidated_tree') is not True
+                            or revalidation.get('complete_source_science_exact') is False):
                         raise ValueError('Fusion revalidation receipt changed')
                     arts=load_bank(correction);selection=read(correction/'selection.json')
                 else:
@@ -229,7 +235,13 @@ def work(s,root,stage):
                         selection_sha256=file_sha256(correction/'selection.json'),
                         bank_sha256=file_sha256(correction/'bank.pt'),
                         selected_path=selection['selected_path'],
-                        final_values_sha256=selection['final']['values_sha256'])
+                        final_values_sha256=selection['final']['values_sha256'],
+                        revalidated_science_sha256=revalidation['revalidated_science_sha256'],
+                        source_science_sha256=revalidation['source_science_sha256'],
+                        runtime_sha256=stable_hash(revalidation['runtime']),
+                        graph_state_sha256=revalidation['graph_state_sha256'],
+                        source_raw_manifest_sha256=revalidation['source_raw_manifest_sha256'],
+                        source_raw_manifest_final_sha256=revalidation['source_raw_manifest_final_sha256'])
                 baseline=evaluate_missing(g,loader(dev),torch.device('cuda:0'),fixed_pattern=pattern);check_matched(a,baseline)
                 for method,result in ((stage,a),('host',baseline)):
                     p=out/'development'/f'{method}_{pattern}.npz';save_prediction_bundle(result,p)
@@ -268,6 +280,19 @@ def verify_fusion_formal_arm(s,root,arm):
                 or file_sha256(correction/'selection.json')!=row['selection_sha256']
                 or file_sha256(correction/'bank.pt')!=row['bank_sha256']):
             raise ValueError('Fusion logical migration evidence changed')
+        revalidation=read(receipt_path)
+        if (revalidation.get('schema')!='look_fusion_fresh_revalidation_v2'
+                or revalidation.get('source_raw_manifest_unchanged') is not True
+                or revalidation.get('graph_state_exact_before_after_and_fresh') is not True
+                or revalidation.get('references_within_revalidated_tree') is not True
+                or revalidation.get('revalidated_science_sha256')!=row['revalidated_science_sha256']
+                or revalidation.get('source_science_sha256')!=row['source_science_sha256']
+                or stable_hash(revalidation.get('runtime'))!=row['runtime_sha256']
+                or revalidation.get('graph_state_sha256')!=row['graph_state_sha256']
+                or revalidation.get('source_raw_manifest_sha256')!=row['source_raw_manifest_sha256']
+                or revalidation.get('source_raw_manifest_final_sha256')!=row['source_raw_manifest_final_sha256']
+                or revalidation.get('complete_source_science_exact') is False):
+            raise ValueError('Fusion logical migration revalidation changed')
         selection=read(correction/'selection.json')
         if selection['selected_path']!=row['selected_path'] or selection['final']['values_sha256']!=row['final_values_sha256']:
             raise ValueError('Fusion logical migration scientific selection changed')

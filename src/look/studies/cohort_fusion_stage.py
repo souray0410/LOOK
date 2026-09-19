@@ -19,6 +19,7 @@ TASK_ID='look-ws02-fusion-stage-20260919-v1'
 STUDY_KIND='fusion_stage_v1'
 REPAIR_0038_SHA256='a58ece479f0b0cb8471c1fd62170ab480972ceac83eab9558f26b30de2e8712f'
 REPAIR_0130_SHA256='b7c382d8c97fb5b4bac34f631873e5564a6ac610f9c8adbb26a2d8e979ab8cbd'
+REPAIR_0207_SHA256='b03c96b816ebf535e15c94b68686ac9d7bacddb3e5b141a2099eceb1cf767eda'
 SCIENTIFIC_SOURCE_COMMIT='7876dc85388336acb1b9032ff50b9e0b1db66c28'
 NUMERICAL_MODULES=(
     'src/look/models/native_host.py','src/look/training/observed_host.py','src/look/methods/family_greedy.py',
@@ -120,15 +121,15 @@ def build_management_overlay_receipt(overlay_root,management_commit):
         old=_git_blob_sha(overlay_root,SCIENTIFIC_SOURCE_COMMIT,rel);new=overlay_files[rel]
         if old!=new:raise ValueError('Management overlay changed numerical module: '+rel)
         numerical[rel]=dict(scientific_sha256=old,overlay_sha256=new,equal=True)
-    return dict(schema='look_fusion_management_overlay_v1',task_id=TASK_ID,repair_packet_sha256=REPAIR_0130_SHA256,
+    return dict(schema='look_fusion_management_overlay_v2',task_id=TASK_ID,repair_packet_sha256=REPAIR_0207_SHA256,
         scientific_source_commit=SCIENTIFIC_SOURCE_COMMIT,management_commit=management_commit,
         overlay_root=str(overlay_root),overlay_files=overlay_files,numerical_modules=numerical,test_access=False)
 
 
 def verify_management_overlay(path):
     path=Path(path);value=read(path)
-    if (value.get('schema')!='look_fusion_management_overlay_v1' or value.get('task_id')!=TASK_ID
-            or value.get('repair_packet_sha256')!=REPAIR_0130_SHA256
+    if (value.get('schema')!='look_fusion_management_overlay_v2' or value.get('task_id')!=TASK_ID
+            or value.get('repair_packet_sha256')!=REPAIR_0207_SHA256
             or value.get('scientific_source_commit')!=SCIENTIFIC_SOURCE_COMMIT or value.get('test_access') is not False):
         raise ValueError('Fusion management overlay receipt changed')
     root=Path(value['overlay_root']).resolve()
@@ -146,15 +147,15 @@ def verify_management_overlay(path):
 
 
 def validate_repair_resume(plan,row,spec,runroot):
-    marker=Path(runroot)/'repair_resume.json'
+    marker=Path(runroot)/'repair_resume_0207.json'
     if not marker.exists():return None
     value=read(marker)
     pipeline=Path(runroot)/'pipeline_status.json'
     if not pipeline.exists() or read(pipeline).get('state')!='needs_review':
         raise ValueError('Fusion repair marker requires a needs_review pipeline')
-    expected=dict(schema='look_fusion_stage_repair_resume_v1',task_id=TASK_ID,run_id=spec['run_id'],
+    expected=dict(schema='look_fusion_stage_repair_resume_v2',task_id=TASK_ID,run_id=spec['run_id'],
         spec_sha256=file_sha256(row['spec']),prior_pipeline_status_sha256=file_sha256(pipeline),
-        repair_packet_sha256=REPAIR_0130_SHA256,test_access=False)
+        repair_packet_sha256=REPAIR_0207_SHA256,test_access=False)
     if {k:value.get(k) for k in expected}!=expected:
         raise ValueError('Fusion repair resume marker changed')
     sequence_overlay=verify_management_overlay(Path(plan['root'])/'management_overlay.json')
