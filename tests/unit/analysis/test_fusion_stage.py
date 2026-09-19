@@ -38,6 +38,18 @@ def register(spec):
     return spec
 
 
+def relocation_fixture(audit,pre_count=1,post_count=1):
+    audit=Path(audit);audit.mkdir(parents=True,exist_ok=True);summary={}
+    for phase,count in (('pre_fit',pre_count),('post_fit',post_count)):
+        value=dict(schema='look_fusion_evidence_relocation_v2',state='accepted',test_access=False,
+            phase=phase,source_root='/source',target_root='/target',mappings=[{'i':i} for i in range(count)],
+            mapping_count=count,verified_target_refs=count+1,no_scientific_value_change=True)
+        path=audit/f'evidence_relocation_{phase}.json';path.write_text(json.dumps(value))
+        summary[phase]=dict(receipt=str(path),sha256=file_sha256(path),
+            mapping_count=count,verified_target_refs=count+1)
+    return summary
+
+
 def test_registered_member_only_opens_middle_and_features(tmp_path):
     ordinary=base_spec(tmp_path,'middle')
     with pytest.raises(ValueError,match='Unregistered scope'):
@@ -223,10 +235,17 @@ def test_verify_formal_arm_requires_logical_v2_migration(tmp_path):
     (correction/'bank.pt').write_bytes(b'bank')
     audit=correction.parent/'audit'/correction.name;audit.mkdir(parents=True)
     runtime={'CUBLAS_WORKSPACE_CONFIG':':4096:8'}
+    relocation={}
+    for phase in ('pre_fit','post_fit'):
+        rp=root/f'relocation_{phase}.json'
+        rv=dict(schema='look_fusion_evidence_relocation_v2',state='accepted',test_access=False,phase=phase,
+            mapping_count=1,verified_target_refs=2,no_scientific_value_change=True)
+        rp.write_text(json.dumps(rv))
+        relocation[phase]=dict(receipt=str(rp),sha256=file_sha256(rp),mapping_count=1,verified_target_refs=2)
     revalidation=dict(schema='look_fusion_fresh_revalidation_v2',state='accepted',identity=identity,test_access=False,
         source_raw_manifest_unchanged=True,graph_state_exact_before_after_and_fresh=True,
         references_within_revalidated_tree=True,relocation_no_scientific_value_change=True,
-        relocation_receipt_sha256='reloc',relocation_mapping_count=2,complete_source_science_exact=True,
+        relocation=relocation,complete_source_science_exact=True,
         revalidated_science_sha256='science',source_science_sha256='source',
         runtime=runtime,graph_state_sha256='graph',
         source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest')
@@ -240,12 +259,10 @@ def test_verify_formal_arm_requires_logical_v2_migration(tmp_path):
         selected_path=[],final_values_sha256='v',revalidated_science_sha256='science',
         source_science_sha256='source',runtime_sha256=stable_hash(runtime),graph_state_sha256='graph',
         source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest',
-        relocation_receipt_sha256='reloc',relocation_mapping_count=2)
+        relocation=relocation)
     migration=dict(schema='look_fusion_profile_migration_v2',no_refit=True,no_physical_relocation=True,
         source_role='fresh_revalidated_same_run_same_identity',profile_receipt_sha256=file_sha256(profile/'accepted.json'),
         patterns={'oct_missing':row,'cfp_missing':dict(row)})
-    # create second referenced path for cfp to satisfy coverage without sharing missing files
-    migration['patterns']['cfp_missing']=dict(row)
     receipt=dict(state='accepted',identity=identity,test_access=False,host_best_sha256='hostsha',replay_exact=True,
         records=[dict(path=str(pred),sha256=file_sha256(pred))],profile_migration=migration)
     (out/'accepted.json').write_text(json.dumps(receipt))
@@ -399,21 +416,29 @@ def test_formal_verify_rejects_missing_relocation_binding(tmp_path):
     (correction/'bank.pt').write_bytes(b'bank')
     audit=correction.parent/'audit'/correction.name;audit.mkdir(parents=True)
     runtime={'CUBLAS_WORKSPACE_CONFIG':':4096:8'}
+    relocation={}
+    for phase in ('pre_fit','post_fit'):
+        rp=root/f'relocation_{phase}.json'
+        rv=dict(schema='look_fusion_evidence_relocation_v2',state='accepted',test_access=False,phase=phase,
+            mapping_count=1,verified_target_refs=2,no_scientific_value_change=True)
+        rp.write_text(json.dumps(rv))
+        relocation[phase]=dict(receipt=str(rp),sha256=file_sha256(rp),mapping_count=1,verified_target_refs=2)
     revalidation=dict(schema='look_fusion_fresh_revalidation_v2',state='accepted',identity=identity,test_access=False,
         source_raw_manifest_unchanged=True,graph_state_exact_before_after_and_fresh=True,
         references_within_revalidated_tree=True,relocation_no_scientific_value_change=True,
-        relocation_receipt_sha256='reloc',relocation_mapping_count=1,complete_source_science_exact=True,
+        relocation=relocation,complete_source_science_exact=True,
         revalidated_science_sha256='science',source_science_sha256='source',runtime=runtime,
         graph_state_sha256='graph',source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest')
     (audit/'accepted.json').write_text(json.dumps(revalidation))
     out=root/'residual_rrr';(out/'development').mkdir(parents=True)
     pred=out/'development/p.npz';pred.write_bytes(b'pred')
+    wrong_relocation={**relocation,'pre_fit':{**relocation['pre_fit'],'sha256':'wrong'}}
     row=dict(revalidated_root=str(correction.relative_to(root)),revalidation_receipt=str((audit/'accepted.json').relative_to(root)),
         revalidation_receipt_sha256=file_sha256(audit/'accepted.json'),selection_sha256=file_sha256(correction/'selection.json'),
         bank_sha256=file_sha256(correction/'bank.pt'),selected_path=[],final_values_sha256='v',
         revalidated_science_sha256='science',source_science_sha256='source',runtime_sha256=stable_hash(runtime),
         graph_state_sha256='graph',source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest',
-        relocation_receipt_sha256='wrong',relocation_mapping_count=1)
+        relocation=wrong_relocation)
     migration=dict(schema='look_fusion_profile_migration_v2',no_refit=True,no_physical_relocation=True,
         source_role='fresh_revalidated_same_run_same_identity',profile_receipt_sha256=file_sha256(profile/'accepted.json'),
         patterns={'oct_missing':row,'cfp_missing':dict(row)})
@@ -422,6 +447,7 @@ def test_formal_verify_rejects_missing_relocation_binding(tmp_path):
     (out/'accepted.json').write_text(json.dumps(receipt))
     with pytest.raises(ValueError,match='revalidation changed'):
         delivery.verify_fusion_formal_arm(spec,root,'residual_rrr')
+
 
 def test_graph_state_capture_is_pure_and_mode_drift_is_rejected():
     from types import SimpleNamespace

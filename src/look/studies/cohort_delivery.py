@@ -211,6 +211,7 @@ def work(s,root,stage):
                             or revalidation.get('relocation_no_scientific_value_change') is not True
                             or revalidation.get('complete_source_science_exact') is False):
                         raise ValueError('Fusion revalidation receipt changed')
+                    relocation=verify_revalidation_relocation(root,revalidation)
                     arts=load_bank(correction);selection=read(correction/'selection.json')
                 else:
                     correction=out/'corrections'/pattern
@@ -243,8 +244,7 @@ def work(s,root,stage):
                         graph_state_sha256=revalidation['graph_state_sha256'],
                         source_raw_manifest_sha256=revalidation['source_raw_manifest_sha256'],
                         source_raw_manifest_final_sha256=revalidation['source_raw_manifest_final_sha256'],
-                        relocation_receipt_sha256=revalidation['relocation_receipt_sha256'],
-                        relocation_mapping_count=revalidation['relocation_mapping_count'])
+                        relocation=relocation)
                 baseline=evaluate_missing(g,loader(dev),torch.device('cuda:0'),fixed_pattern=pattern);check_matched(a,baseline)
                 for method,result in ((stage,a),('host',baseline)):
                     p=out/'development'/f'{method}_{pattern}.npz';save_prediction_bundle(result,p)
@@ -259,6 +259,25 @@ def work(s,root,stage):
             atomic_write_json(accepted,out/'accepted.json')
     atomic_write_json(dict(stage=stage,state='completed',time=time.time(),identity=identity,
         gpu_peak_reserved_bytes=torch.cuda.max_memory_reserved()),root/(stage+'_status.json'))
+
+
+def verify_revalidation_relocation(root,revalidation):
+    root=Path(root).resolve()
+    relocation=revalidation.get('relocation',{})
+    if set(relocation)!= {'pre_fit','post_fit'} or revalidation.get('relocation_no_scientific_value_change') is not True:
+        raise ValueError('Fusion revalidation relocation coverage changed')
+    for phase,row in relocation.items():
+        path=Path(row.get('receipt','')).resolve()
+        if not path.is_relative_to(root) or not path.exists() or file_sha256(path)!=row.get('sha256'):
+            raise ValueError('Fusion relocation receipt path/SHA changed')
+        receipt=read(path)
+        if (receipt.get('schema')!='look_fusion_evidence_relocation_v2' or receipt.get('state')!='accepted'
+                or receipt.get('test_access') is not False or receipt.get('phase')!=phase
+                or receipt.get('mapping_count')!=row.get('mapping_count')
+                or receipt.get('verified_target_refs')!=row.get('verified_target_refs')
+                or receipt.get('no_scientific_value_change') is not True):
+            raise ValueError('Fusion relocation receipt content changed')
+    return relocation
 
 
 def verify_fusion_formal_arm(s,root,arm):
@@ -284,6 +303,7 @@ def verify_fusion_formal_arm(s,root,arm):
                 or file_sha256(correction/'bank.pt')!=row['bank_sha256']):
             raise ValueError('Fusion logical migration evidence changed')
         revalidation=read(receipt_path)
+        relocation=verify_revalidation_relocation(root,revalidation)
         if (revalidation.get('schema')!='look_fusion_fresh_revalidation_v2'
                 or revalidation.get('source_raw_manifest_unchanged') is not True
                 or revalidation.get('graph_state_exact_before_after_and_fresh') is not True
@@ -294,9 +314,7 @@ def verify_fusion_formal_arm(s,root,arm):
                 or revalidation.get('graph_state_sha256')!=row['graph_state_sha256']
                 or revalidation.get('source_raw_manifest_sha256')!=row['source_raw_manifest_sha256']
                 or revalidation.get('source_raw_manifest_final_sha256')!=row['source_raw_manifest_final_sha256']
-                or revalidation.get('relocation_receipt_sha256')!=row['relocation_receipt_sha256']
-                or revalidation.get('relocation_mapping_count')!=row['relocation_mapping_count']
-                or revalidation.get('relocation_no_scientific_value_change') is not True
+                or relocation!=row['relocation']
                 or revalidation.get('complete_source_science_exact') is False):
             raise ValueError('Fusion logical migration revalidation changed')
         selection=read(correction/'selection.json')
