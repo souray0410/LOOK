@@ -188,6 +188,26 @@ def _equal(a,b):
     return a==b
 
 
+def _profile_semantic_checkpoint(state):
+    """Normalize bookkeeping fields that intentionally differ across profile lanes.
+
+    Scientific identity is carried by model/optimizer/scheduler/RNG and by the
+    mask schedule SHA. Wall time and the absolute lane-specific schedule path
+    are not scientific state and must not make uninterrupted/resumed profiles
+    look different.
+    """
+    value=copy.deepcopy(state)
+    progress=value["progress"]
+    progress["seconds"]=0.0
+    path=progress.get("mask_schedule_path")
+    digest=progress.get("mask_schedule_sha256")
+    if path is not None:
+        if not digest:
+            raise ValueError("Profile checkpoint has a mask schedule path without SHA")
+        progress["mask_schedule_path"]="sha256:"+digest
+    return value
+
+
 def profile_resume(make_graph,train,development,config,seed,output,identity,device,should_pause=lambda:False):
     out=Path(output);out.mkdir(parents=True,exist_ok=True)
     if (out/"accepted.json").exists(): return json.loads((out/"accepted.json").read_text())

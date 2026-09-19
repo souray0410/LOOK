@@ -3,7 +3,8 @@ from types import SimpleNamespace
 import torch
 
 from look.training.balanced_dropout_host import (
-    _mask_inputs, _mask_schedule, _new_mask_generator, _participant_order_fingerprint, MASK_SEED_OFFSET,
+    _mask_inputs, _mask_schedule, _new_mask_generator, _participant_order_fingerprint,
+    _profile_semantic_checkpoint, MASK_SEED_OFFSET,
 )
 
 
@@ -64,3 +65,51 @@ def test_epoch_mask_schedule_rejects_participant_order_change(tmp_path):
         assert "participant order changed" in str(exc)
     else:
         raise AssertionError("participant-order mismatch must fail closed")
+
+
+def test_profile_semantic_checkpoint_normalizes_only_lane_bookkeeping():
+    base={
+        "progress":{
+            "seconds":1.25,
+            "mask_schedule_path":"/tmp/continuous/mask_schedules/epoch_001.json",
+            "mask_schedule_sha256":"abc123",
+            "updates":2,
+            "offset":32,
+            "mask_states":torch.tensor([0,1,2],dtype=torch.int64),
+        },
+        "model":{"x":torch.tensor([1.0])},
+    }
+    other={
+        "progress":{
+            "seconds":9.75,
+            "mask_schedule_path":"/tmp/resumed/mask_schedules/epoch_001.json",
+            "mask_schedule_sha256":"abc123",
+            "updates":2,
+            "offset":32,
+            "mask_states":torch.tensor([0,1,2],dtype=torch.int64),
+        },
+        "model":{"x":torch.tensor([1.0])},
+    }
+    a=_profile_semantic_checkpoint(base);b=_profile_semantic_checkpoint(other)
+    assert a["progress"]["seconds"]==b["progress"]["seconds"]==0.0
+    assert a["progress"]["mask_schedule_path"]==b["progress"]["mask_schedule_path"]=="sha256:abc123"
+    assert a["progress"]["updates"]==b["progress"]["updates"]==2
+    assert torch.equal(a["progress"]["mask_states"],b["progress"]["mask_states"])
+
+
+def test_profile_semantic_checkpoint_keeps_schedule_sha_identity():
+    value={"progress":{"seconds":0.0,"mask_schedule_path":"/tmp/a.json","mask_schedule_sha256":"left"}}
+    other={"progress":{"seconds":0.0,"mask_schedule_path":"/tmp/b.json","mask_schedule_sha256":"right"}}
+    a=_profile_semantic_checkpoint(value);b=_profile_semantic_checkpoint(other)
+    assert a["progress"]["mask_schedule_path"]!=b["progress"]["mask_schedule_path"]
+    assert a["progress"]["mask_schedule_sha256"]!=b["progress"]["mask_schedule_sha256"]
+
+
+def test_profile_semantic_checkpoint_rejects_unhashed_schedule_path():
+    value={"progress":{"seconds":0.0,"mask_schedule_path":"/tmp/a.json","mask_schedule_sha256":None}}
+    try:
+        _profile_semantic_checkpoint(value)
+    except ValueError as exc:
+        assert "without SHA" in str(exc)
+    else:
+        raise AssertionError("unhashed profile schedule path must fail closed")
