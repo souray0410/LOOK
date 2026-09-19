@@ -1,0 +1,52 @@
+{
+  "schema": "look_next_missing_method_A_contract_v1",
+  "state": "contract_ready_provenance_and_adapter_gate_pending",
+  "candidate": "ShaSpec",
+  "author_commit": "57a04fa88331ea3b2671795a15a1ae9a24fd310d",
+  "mechanism": "shared_specific_representation_plus_missing_feature_generation",
+  "distinct_from_embracenet": "generation/reconstruction-style missing representation vs categorical embracement/gating",
+  "selection_reason": "primary paper includes missing-modality classification; task-semantic match, not selected by expected score",
+  "training_authorized_now": false,
+  "test_access": false,
+  "hard_gates": [
+    "license_and_reuse_route",
+    "classification_recipe_or_explicit_project_adaptation_identity",
+    "core_shared_specific_generation_losses_preserved",
+    "symmetric_missing_protocol_preregistered",
+    "legal_LOOK_nodes",
+    "target_resource_resume_offline_acceptance"
+  ],
+  "data": {
+    "train": 1264,
+    "development": 296,
+    "test": "sealed",
+    "seed": 3416
+  },
+  "A_train_count": 1,
+  "look_families": [
+    "pca_free_mean",
+    "residual_rrr"
+  ],
+  "winner_preselected": false,
+  "primary_contrasts": 4,
+  "missing_states": [
+    "oct_missing",
+    "cfp_missing"
+  ],
+  "metrics": [
+    "macro_f1",
+    "macro_auroc_ovr",
+    "negative_log_likelihood",
+    "multiclass_brier"
+  ],
+  "bootstrap": {
+    "iterations": 10000,
+    "ordinary_paired_95": true,
+    "simultaneous_family_95": true,
+    "holm": true,
+    "zero_variance_rule": "simultaneous interval undefined; identity is not equivalence evidence"
+  },
+  "stop_after": "one accepted A + four complete LOOK trees + registered statistics + readable report",
+  "no_performance_driven_family_drop": true,
+  "source_evidence": "missing_method_evidence_20260919.md"
+}

@@ -1,3 +1,7 @@
+## 2026-09-19：后继A与远端离线接续准备
+
+下一最小A合同选择ShaSpec shared/specific + missing-feature generation家族作为与EmbraceNet机制不同的任务匹配候选；当前只锁合同，分类配方/许可/2D适配身份未闭环前不训练。后继远端有限包要求protocol/source/config/recovery/result全自包含，已启动包可在网页离线时按receipt接续；当前不声称存在Mac关机后能自行发明新科研包的常驻planner。详见 research_decisions/next_missing_method_A_contract_20260919.md 与 offline_execution_readiness_20260919.md。
+
 ## 2026-09-19：EmbraceNet单种子真实A+LOOK包已自检完成
 
 WS02 seed3416一个EmbraceNet A已按三态各1/3真实训练并在best epoch11/stop26冻结；9节点随机完整参考PCA、fit-profile、PCA/RRR两家族双缺失完整positive-forward tree、10k paired bootstrap与中文累计候选均完成。PCA缺OCT/缺CFP Macro-F1点估计+1.364/+1.131pp；RRR缺OCT+1.085pp、缺CFP空树。三个非退化Macro-F1同族simultaneous95%均包含0；RRR缺CFP为空路径恒等、零方差且simultaneous区间未定义。test封存；左侧已从WS02原产物独立重算并接受该单种子development科学结果。此前fusion sequence_active历史已归档，当前binding准确指向EmbraceNet完成态。详见 reports/current/embracenet_single_seed/README.md。

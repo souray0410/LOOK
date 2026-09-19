@@ -41,3 +41,8 @@ MMTM适配宿主的不修正与+LOOK数值已完成（宿主兼容性证据，�
 |外部A/B/C下一项怎样最直接回答A vs A+LOOK|MMTM适配A/A+LOOK已完成；EyeMoSt+/EDRL作者源码commit与文件SHA已审计|MMTM不是原完整视频/骨骼系统；EyeMoSt+/EDRL原方案均含3D OCT，而当前是2D切片|外部方法收益可能来自其自身缺失模态/不确定性损失、3D结构或容量，而非LOOK可附加性|旧EyeMoSt+/EDRL候选需按缺失处理能力重新分类；Stage A概率诊断已经完成但不替代外部方法对照。当前不自动选择任何新A|左侧先锁2D-OCT适配、原损失、无标签推理、初始化/停止/预算，才派GPU包|
 
 更完整的只读可行性建议见[外部A/B/C与概率损失：下一有限包可行性建议](external_abc_probability_feasibility_20260919.md)。该建议**不代表已经选择EyeMoSt+，也没有启动新实验**。
+
+
+## EmbraceNet之后的下一缺失方法A
+
+[next_missing_method_A_contract_20260919.md](next_missing_method_A_contract_20260919.md)：下一有限候选锁定ShaSpec机制家族，但真实训练前仍有作者分类配方/许可/2D适配身份硬门槛；PCA free-mean与residual RRR继续并列，无预设赢家。本集成包不启动第二A训练。

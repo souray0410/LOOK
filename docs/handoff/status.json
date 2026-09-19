@@ -130,7 +130,8 @@
     "2026-09-19 EmbraceNet repair v2：本机隔离CPU current-SHA专项16/16、相关回归30/30、作者当前SHA等价/RNG恢复、九节点双单缺失非零LOOK与统计目标审计通过；统一train/A/A+LOOK pre-R18 zero-mask入口。K32正式提案撤下，single-missing一次forward；complete平均logit目标用解析期望。无远端写入/GPU/参与者数据/test/训练。",
     "v1的EmbraceNet current-SHA CPU动态重验阻塞已由v2本机隔离CPU合法环境解决；历史被拒scp仍不重试/绕过，WS02部署gate另待未来合法流程。",
     "2026-09-19 EmbraceNet v3：修复公开plain/study图入口的外部prearm replay泄漏。available-input NaN失败、artifact/stop预校验失败及embrace前正常停止均清除未消费replay；有效exact replay仍一次性成功。专项24/24、相关回归30/30、独立图级probe通过。v2冻结证据不覆写；v3公式可读并明确随机完整参考PCA二阶矩合同。",
-    "2026-09-19 EmbraceNet single-seed真实包：WS02 GPU0完成1个seed3416 EmbraceNet A（best11/stop26）+ PCA/RRR×双缺失4个主对比、9节点PCA、fit-profile恢复/solver门槛、10k配对统计与中文累计候选；test封存。远端finite pipeline依receipt连续完成residual→report→verify。当前self_checked_pending_independent_review。"
+    "2026-09-19 EmbraceNet single-seed真实包：WS02 GPU0完成1个seed3416 EmbraceNet A（best11/stop26）+ PCA/RRR×双缺失4个主对比、9节点PCA、fit-profile恢复/solver门槛、10k配对统计与中文累计候选；test封存。远端finite pipeline依receipt连续完成residual→report→verify。当前self_checked_pending_independent_review。",
+    "2026-09-19 integration continuation：下一A有限合同锁定ShaSpec机制家族但训练前有实现/许可/2D分类身份等硬门槛；PCA/RRR不预设赢家。离线执行要求已记录为design_ready_not_deployed_for_next_A；不宣称常驻planner。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
@@ -266,6 +267,14 @@
     {
       "label": "EmbraceNet独立接受后的发布纠错与冻结写回机制诊断",
       "url": "docs/reports/current/embracenet_single_seed/integration_20260919.md"
+    },
+    {
+      "label": "下一缺失方法A最小合同",
+      "url": "docs/reports/current/research_decisions/next_missing_method_A_contract_20260919.md"
+    },
+    {
+      "label": "后继远端离线接续准备",
+      "url": "docs/handoff/offline_execution_readiness_20260919.md"
     }
   ]
 }
