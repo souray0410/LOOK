@@ -9,6 +9,32 @@ from look.runtime.state import atomic_write_json, file_sha256, stable_hash
 def read(p):return json.loads(Path(p).read_text())
 
 
+def correction_folder(root,arm,pattern,receipt):
+    root=Path(root).resolve()
+    migration=receipt.get('profile_migration')
+    if migration is None:
+        return root/arm/'corrections'/pattern
+    if (migration.get('schema')!='look_fusion_profile_migration_v2'
+            or migration.get('no_refit') is not True
+            or migration.get('no_physical_relocation') is not True
+            or migration.get('source_role')!='fresh_revalidated_same_run_same_identity'):
+        raise ValueError('Invalid fusion logical migration in publication')
+    row=migration.get('patterns',{}).get(pattern)
+    if row is None:
+        raise ValueError('Missing fusion migration pattern in publication')
+    folder=(root/row['revalidated_root']).resolve()
+    if not folder.is_relative_to(root):
+        raise ValueError('Fusion publication correction root escaped run')
+    receipt_path=(root/row['revalidation_receipt']).resolve()
+    if (not receipt_path.is_relative_to(root)
+            or file_sha256(receipt_path)!=row['revalidation_receipt_sha256']):
+        raise ValueError('Fusion publication revalidation receipt changed')
+    if (file_sha256(folder/'selection.json')!=row['selection_sha256']
+            or file_sha256(folder/'bank.pt')!=row['bank_sha256']):
+        raise ValueError('Fusion publication logical migration evidence changed')
+    return folder
+
+
 def publish(root,output):
     root=Path(root);out=Path(output);out.mkdir(parents=True,exist_ok=True)
     s=read(root/'spec.json');identity=stable_hash(s)
@@ -29,7 +55,7 @@ def publish(root,output):
         public['states'][stage]={k:v[k] for k in ('state','time','gpu_peak_reserved_bytes') if k in v}
     p=root/'host/status.json'
     if p.exists():public['host_progress']={k:v for k,v in read(p).items() if k in ('epoch','updates','offset','state','updated_at')}
-    assets=[]
+    assets=[];accepted_by_arm={}
     for role,path in [('host',root/'host'),*((arm,root/arm) for arm in s['arms'])]:
         p=path/'accepted.json'
         if not p.exists():continue
@@ -47,11 +73,13 @@ def publish(root,output):
                     artifact_ref=f'LOOK/{s["run_id"]}/host/{name}',sha256=r['files'][name],
                     access='restricted',availability='available',github_payload=False))
         else:
+            accepted_by_arm[role]=r
             for row in r['records']:
                 if file_sha256(row['path'])!=row['sha256']:raise ValueError('Prediction changed')
                 public['results'].append({k:row[k] for k in ('method','scenario','metrics')})
             for pattern in ('oct_missing','cfp_missing'):
-                p=path/'corrections'/pattern/'bank.pt'
+                folder=correction_folder(root,role,pattern,r)
+                p=folder/'bank.pt'
                 assets.append(dict(role='correction_bank',artifact_ref=f'LOOK/{s["run_id"]}/{role}/{pattern}/bank.pt',
                     sha256=file_sha256(p),access='restricted',availability='available',github_payload=False))
     unique={}
@@ -64,7 +92,7 @@ def publish(root,output):
     public['search_details']=[]
     for arm in s['arms']:
         for pattern in ('oct_missing','cfp_missing'):
-            folder=root/arm/'corrections'/pattern
+            folder=correction_folder(root,arm,pattern,accepted_by_arm[arm]) if arm in accepted_by_arm else root/arm/'corrections'/pattern
             selection=folder/'selection.json'
             if not selection.exists():continue
             tree=read(selection);contract=read(folder/'contract.json')
