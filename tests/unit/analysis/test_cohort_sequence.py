@@ -56,3 +56,48 @@ def test_exclusive_sequence_lock(tmp_path,monkeypatch):
     with (root/'sequence.lock').open('a') as lock:
         m.fcntl.flock(lock,m.fcntl.LOCK_EX|m.fcntl.LOCK_NB)
         with pytest.raises(BlockingIOError):m.run(p)
+
+
+def _public_config(run_id,architecture='resnet18',position='deep',mmtm=None):
+    rows=[]
+    for pattern in ('oct_missing','cfp_missing'):
+        for method,value in [('host',.5),('pca_free_mean',.6),('residual_rrr',.61)]:
+            rows.append(dict(method=method,scenario=pattern,metrics={'macro_f1':value}))
+    out=dict(run_id=run_id,architecture=architecture,position=position,matched_package='accepted',results=rows)
+    if mmtm is not None:out['mmtm']=mmtm
+    return out
+
+
+def test_register_fusion_extension_preserves_old_three_and_adds_middle_features_once():
+    old=[
+        _public_config('2026_09_18_09_35_40','resnet50','deep'),
+        _public_config('2026_09_18_11_18_28_650020','resnet18','deep'),
+        _public_config('2026_09_18_15_29_03_789799','resnet18','deep',{'stage':'stage3'})
+    ]
+    current=dict(schema='look_cohort_sequence_publication_v1',sequence_id='old',test_used=False,
+        order=[x['run_id'] for x in old],configurations=old,
+        execution={x['run_id']:{'state':'accepted'} for x in old})
+    fusion=dict(schema='look_fusion_stage_publication_v1',task_id='fusion',sequence_id='fusion-seq',
+        complete=True,test_used=False,order=['deep','middle','features'],
+        configurations=[old[1],_public_config('2026_09_19_02_40_42_281912_middle','resnet18','middle'),
+                        _public_config('2026_09_19_02_40_42_281912_features','resnet18','features')])
+    ext=m.register_fusion_extension(current,fusion,'left-audit')
+    current['fusion_stage_extension']=ext
+    displayed=m._display_publications(current)
+    assert [x['run_id'] for x in current['configurations']]==[x['run_id'] for x in old]
+    assert [x['run_id'] for x in displayed].count('2026_09_18_11_18_28_650020')==1
+    assert [x['position'] for x in displayed if x['architecture']=='resnet18' and 'mmtm' not in x]==['deep','middle','features']
+    assert [x['run_id'] for x in ext['configurations']]==[
+        '2026_09_19_02_40_42_281912_middle','2026_09_19_02_40_42_281912_features']
+    carried=m._carry_fusion_extension(current,dict(current, fusion_stage_extension=None))
+    assert carried['fusion_stage_extension']==ext
+
+
+def test_fusion_extension_rejects_duplicate_deep_registration():
+    deep=_public_config('2026_09_18_11_18_28_650020')
+    current=dict(configurations=[deep])
+    ext=dict(schema=m.FUSION_EXTENSION_SCHEMA,state='scientifically_accepted',test_used=False,
+        deep_reference={'run_id':deep['run_id'],'role':'strict_reuse_no_retraining'},
+        configurations=[deep,_public_config('2026_09_19_02_40_42_281912_features',position='features')])
+    with pytest.raises(ValueError,match='exactly middle/features'):
+        m.validate_fusion_extension(ext,current)

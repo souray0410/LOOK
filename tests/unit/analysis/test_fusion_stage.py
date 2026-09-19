@@ -537,3 +537,58 @@ def test_relocation_rejects_unrelated_absolute_prediction_path(tmp_path):
     (target/'prefixes/root/baseline.json').write_text(json.dumps({'identity':'root','evidence':evidence}))
     with pytest.raises(ValueError,match='outside both source and target'):
         fresh.relocate_cached_prediction_references(source,target,audit,'pre_fit')
+
+
+def test_fusion_publication_renderer_is_self_contained_and_preserves_scientific_current(tmp_path,monkeypatch):
+    specs=[];tasks=[];publications={}
+    values={
+        'deep':{
+            'oct_missing':(.6234485129791989,.6923955371315678,.6676900517802318,1.0803061904321414,1.6217475196758284,2.5446814379359752),
+            'cfp_missing':(.5671911989973542,.6001831501831503,.6137362637362638,1.,1.,1.)},
+        'middle':{
+            'oct_missing':(.3333333333333333,.6366862323331753,.656711104986967,1.,1.,1.),
+            'cfp_missing':(.4058544744912183,.5608108108108109,.5641444176835184,1.,1.,1.)},
+        'features':{
+            'oct_missing':(.5748717639249291,.6915501505834393,.6839023045919598,1.,1.,1.),
+            'cfp_missing':(.5276988282223884,.6182388860354961,.6249957199109741,1.,1.,1.)}}
+    for position in fusion.POSITIONS:
+        spec=dict(run_id='run-'+position,output=str(tmp_path/position),position=position,
+            seed=3416,factor=16,rank=32)
+        sp=tmp_path/(position+'.json');sp.write_text(json.dumps(spec))
+        specs.append(spec);tasks.append(dict(spec=str(sp)))
+        results=[]
+        for pattern in fusion.PATTERNS:
+            host,pca,rrr,host_nll,pca_nll,rrr_nll=values[position][pattern]
+            for method,f1,nll in [('host',host,host_nll),('pca_free_mean',pca,pca_nll),('residual_rrr',rrr,rrr_nll)]:
+                results.append(dict(method=method,scenario=pattern,metrics={
+                    'macro_f1':f1,'negative_log_likelihood':nll,'macro_auroc_ovr':.7,'multiclass_brier':.5}))
+        publications[position]=dict(run_id=spec['run_id'],architecture='resnet18',position=position,
+            matched_package='accepted',results=results,search_details=[
+                dict(sites=fusion.host_structure(position)['correction_sites'])],
+            host_structure=fusion.host_structure(position))
+    plan=dict(publication=str(tmp_path/'publication'),task_id='task',sequence_id='seq',tasks=tasks,
+        host_structures={p:fusion.host_structure(p) for p in fusion.POSITIONS},
+        cross_host_comparisons=fusion.CROSS_HOST_COMPARISONS)
+    statuses={spec['run_id']:{'state':'accepted_reference' if spec['position']=='deep' else 'accepted'} for spec in specs}
+    monkeypatch.setattr(pub,'publish',lambda root,out:publications[Path(root).name])
+    contrasts=[]
+    for definition in fusion.CROSS_HOST_COMPARISONS:
+        crosses=definition['position']=='features'
+        contrasts.append(dict(difference=.05,ordinary_95=[-.01,.11] if crosses else [.01,.09],
+            simultaneous_95=[-.02,.12] if crosses else [.001,.099],bootstrap_sd=.02,zero_variance=False))
+    monkeypatch.setattr(pub,'_cross_host_statistics',lambda plan,specs:dict(
+        iterations=10000,participants=296,seed=9123416,critical=2.6,
+        scope='conditional_on_selected_models_and_development_selection',
+        contrasts=contrasts,comparison_definitions=fusion.CROSS_HOST_COMPARISONS,
+        family='eight_prespecified_gain_differences_middle_features_vs_deep'))
+    current=pub.refresh(plan,statuses)
+    before=json.loads((tmp_path/'publication/current.json').read_text())
+    text=(tmp_path/'publication/README.md').read_text()
+    assert current==before
+    assert '1,264 train / 296 dev' in text and 'seed 3416' in text
+    assert 'x16' in text and 'q32' in text and 'CFP（彩色眼底照相）' in text and 'OCT（光学相干断层扫描中间切片）' in text
+    assert '中层特征图融合（Stage 2后）' in text and '深层特征图融合（Stage 4后）' in text and '每眼特征向量融合' in text
+    assert '33.33%' in text and '63.67%' in text and '65.67%' in text
+    assert '1.0803' in text and '1.6217' in text and '2.5447' in text and 'NLL越低越好' in text
+    assert 'features相对deep的4项收益差' in text and '不等于等效' in text
+    assert 'joint_stage' not in text.split('## 每个宿主内部结果')[0]
