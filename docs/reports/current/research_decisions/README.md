@@ -1,3 +1,7 @@
+## EmbraceNet v2 CPU闭环与统一统计合同（2026-09-19）
+
+v1 的工程 blocker 已由本机隔离 CPU 环境闭环：当前源码专项16/16、相关回归30/30、作者当前SHA等价/RNG恢复、九节点双缺失非零LOOK与统计目标审计均通过。v2 统一 train/A/A+LOOK 缺失入口，并把原 K32 正式提案修订为：单缺失每状态一次作者式forward；complete 若目标是平均logits，则使用解析 integrated mean logits，K32只作可选诊断。真实训练仍未授权。详见 [embracenet_adapter_repair_v2_20260919.md](embracenet_adapter_repair_v2_20260919.md)。
+
 ## EmbraceNet首个真正缺失方法适配（2026-09-19）
 
 已选 EmbraceNet 作为首个真正缺失方法 A；作者固定实现的四类合法输入输出/梯度/RNG及下一 AdamW 更新精确恢复已通过CPU对照。当前已实现R18/MHD九节点原型与明确 trial contract；未训练、test封存。传输恢复后新增 pre-R18 NaN-safe 入口和共同随机 trace helper，但上层安全检查拒绝了向既有WS02隔离CPU副本的同步，故当前SHA尚缺一次针对性动态重验；不得把传输前5项测试冒称覆盖新SHA。详见 [embracenet_adapter_readiness_20260919.md](embracenet_adapter_readiness_20260919.md)。

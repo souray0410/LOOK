@@ -1,3 +1,7 @@
+## 2026-09-19：EmbraceNet v2 本机CPU闭环
+
+v1 repair_required 后已在本机隔离venv完成当前SHA动态闭环：EmbraceNet16/16、相关回归30/30、作者当前SHA等价与完整RNG恢复、九节点双单缺失非零LOOK、单缺失多seed确定性及complete统计目标审计全部通过。train/A/A+LOOK现共用pre-R18 zero-mask入口。v2推荐不再把K32作为正式主估计：single-missing各一次正常author forward；complete integrated-mean-logit目标用解析期望，K32仅工程诊断。无远端写入/GPU/参与者数据/test/真实训练。详见 research_decisions/embracenet_adapter_repair_v2_20260919.md。
+
 ## 2026-09-19：EmbraceNet首个真正缺失方法CPU适配
 
 作者c61b63d/MIT固定源已完成四类合法输入输出/梯度/RNG零差及完整RNG恢复后下一AdamW更新精确一致。当前R18/MHD原型暴露实际9个LOOK节点，试运行合同固定1264/296/3416、作者默认c=256、三状态各1/3、complete dev Macro-F1选模及K=32共同随机评估；没有真实训练/GPU/test。传输恢复后新增研究入口pre-R18 NaN-safe masking/common-random helper，向既有WS02隔离CPU副本的同步被上层安全检查拒绝且未绕过，因此当前SHA还缺一次针对性CPU动态重验。详见 research_decisions/embracenet_adapter_readiness_20260919.md。

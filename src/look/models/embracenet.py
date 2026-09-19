@@ -93,6 +93,11 @@ class EmbraceNetFusion(nn.Module):
         }
 
     def set_sampling_state(self, state: Mapping[str, object]) -> None:
+        # Restoring a checkpoint is also a control-flow boundary: stale exact
+        # replay instructions and stale traces must never survive it, even when
+        # the supplied state is invalid and validation below raises.
+        self._next_replay_indices = None
+        self._last_trace = None
         if state.get("schema") != "look_embracenet_sampling_v1":
             raise ValueError("Unknown EmbraceNet sampling-state schema")
         if int(state.get("seed", self.sampling_seed)) != self.sampling_seed:
@@ -121,7 +126,20 @@ class EmbraceNetFusion(nn.Module):
     def set_replay_indices(self, indices: torch.Tensor) -> None:
         if self._next_replay_indices is not None:
             raise ValueError("A replay trace is already pending")
+        if not isinstance(indices, torch.Tensor):
+            raise TypeError("Replay modality_indices must be a tensor")
+        if indices.dtype not in (torch.int8, torch.int16, torch.int32, torch.int64, torch.uint8):
+            raise TypeError("Replay modality_indices must use an integer dtype")
+        if indices.ndim != 2 or indices.shape[1] != self.embracement_size:
+            raise ValueError(
+                f"Replay modality_indices must have shape [batch,{self.embracement_size}]"
+            )
+        if torch.any(indices < 0) or torch.any(indices >= self.num_modalities):
+            raise ValueError("Replay modality_indices contain an invalid modality")
         self._next_replay_indices = indices.detach().clone()
+
+    def clear_pending_replay(self) -> None:
+        self._next_replay_indices = None
 
     def pop_last_trace(self) -> dict[str, object]:
         if self._last_trace is None:
@@ -178,12 +196,81 @@ class EmbraceNetFusion(nn.Module):
                 raise ValueError("All EmbraceNet inputs must share device and dtype")
         return batch_size, device, dtype
 
+    def analytical_moments(
+        self,
+        input_list: Sequence[torch.Tensor],
+        availabilities: torch.Tensor | None = None,
+        selection_probabilities: torch.Tensor | None = None,
+    ) -> dict[str, torch.Tensor]:
+        """Exact first/coordinatewise-second moments of the author embracement.
+
+        This is an evaluation/statistics helper only. It does not replace the
+        stochastic forward used for training or ordinary author-domain replay.
+        Coordinate selections are conditionally independent in the author
+        implementation, so E[zz^T] = mu mu^T + diag(var).
+        """
+        batch_size, device, dtype = self._validate_inputs(input_list)
+        availability = self._matrix(
+            availabilities,
+            name="availabilities",
+            batch_size=batch_size,
+            num_modalities=self.num_modalities,
+            device=device,
+            dtype=dtype,
+            default=1.0,
+        )
+        if not torch.isfinite(availability).all() or not torch.all((availability == 0) | (availability == 1)):
+            raise ValueError("availabilities must contain only finite 0/1 values")
+        if torch.any(availability.sum(dim=1) == 0):
+            raise ValueError("Every sample must have at least one available modality")
+        probabilities = self._matrix(
+            selection_probabilities,
+            name="selection_probabilities",
+            batch_size=batch_size,
+            num_modalities=self.num_modalities,
+            device=device,
+            dtype=dtype,
+            default=1.0,
+        )
+        if not torch.isfinite(probabilities).all() or torch.any(probabilities < 0):
+            raise ValueError("selection_probabilities must be finite and non-negative")
+        probabilities = probabilities * availability
+        total = probabilities.sum(dim=-1, keepdim=True)
+        if torch.any(total <= 0):
+            raise ValueError("Available modalities must have positive total selection probability")
+        probabilities = probabilities / total
+        docking = []
+        for index, input_data in enumerate(input_list):
+            row_available = availability[:, index].bool().unsqueeze(1)
+            available_values = input_data[row_available.squeeze(1)]
+            if available_values.numel() and not torch.isfinite(available_values).all():
+                raise ValueError(f"Available modality {index} contains non-finite values")
+            safe_input = torch.where(row_available, input_data, torch.zeros_like(input_data))
+            value = safe_input if self.bypass_docking else torch.relu(getattr(self, f"docking_{index}")(safe_input))
+            docking.append(value)
+        stack = torch.stack(docking, dim=-1)
+        weights = probabilities.unsqueeze(1)
+        mean = (stack * weights).sum(dim=-1)
+        second = (stack.square() * weights).sum(dim=-1)
+        variance = (second - mean.square()).clamp_min(0)
+        return {
+            "mean": mean,
+            "second_moment_diagonal": second,
+            "variance_diagonal": variance,
+            "probabilities": probabilities,
+        }
+
     def forward(
         self,
         input_list: Sequence[torch.Tensor],
         availabilities: torch.Tensor | None = None,
         selection_probabilities: torch.Tensor | None = None,
     ) -> torch.Tensor:
+        # Consume/clear any pending exact replay before validations. A failed
+        # call must never leave replay armed for a later unrelated forward.
+        replay = self._next_replay_indices
+        self._next_replay_indices = None
+        self._last_trace = None
         batch_size, device, dtype = self._validate_inputs(input_list)
         availability = self._matrix(
             availabilities,
@@ -230,8 +317,6 @@ class EmbraceNetFusion(nn.Module):
 
         docking_output_stack = torch.stack(docking_output_list, dim=-1)
         state_before = self.get_sampling_state()
-        replay = self._next_replay_indices
-        self._next_replay_indices = None
         if replay is None:
             generator = self._generator_for(device)
             modality_indices = torch.multinomial(
@@ -251,6 +336,9 @@ class EmbraceNetFusion(nn.Module):
             selected_available = availability.gather(1, modality_indices)
             if not torch.all(selected_available == 1):
                 raise ValueError("Replay trace selects a modality unavailable in the current sample")
+            selected_probability = probabilities.gather(1, modality_indices)
+            if torch.any(selected_probability <= 0):
+                raise ValueError("Replay trace selects a zero-probability modality")
             replayed = True
 
         embraced = docking_output_stack.gather(2, modality_indices.unsqueeze(-1)).squeeze(-1)
@@ -310,6 +398,10 @@ def get_embracenet_trace(graph: MHD_Graph) -> dict[str, object]:
 
 def set_embracenet_replay(graph: MHD_Graph, modality_indices: torch.Tensor) -> None:
     _get_embracenet_operation(graph).set_replay_indices(modality_indices)
+
+
+def clear_embracenet_replay(graph: MHD_Graph) -> None:
+    _get_embracenet_operation(graph).clear_pending_replay()
 
 
 def build_embracenet_host(
@@ -473,6 +565,51 @@ def build_embracenet_host(
     return graph
 
 
+def _packed_counts(counts, eye_count: int) -> list[int]:
+    values = counts.detach().cpu().tolist() if isinstance(counts, torch.Tensor) else list(counts)
+    if any(type(value) is not int or value not in (1, 2) for value in values) or sum(values) != eye_count:
+        raise ValueError("Invalid observed-eye counts")
+    return values
+
+
+def _validated_availability(counts, eye_count: int, availabilities: torch.Tensor, device: torch.device) -> tuple[list[int], torch.Tensor]:
+    values = _packed_counts(counts, eye_count)
+    if availabilities.ndim != 2 or tuple(availabilities.shape) != (len(values), 2):
+        raise ValueError("EmbraceNet participant availabilities must have shape [participants,2]")
+    availability = availabilities.to(device=device, dtype=torch.float32)
+    if not torch.isfinite(availability).all() or not torch.all((availability == 0) | (availability == 1)):
+        raise ValueError("availabilities must contain only finite 0/1 values")
+    if torch.any(availability.sum(dim=1) == 0):
+        raise ValueError("Every participant must have at least one available modality")
+    return values, availability
+
+
+def prepare_embracenet_inputs(
+    oct_tensor: torch.Tensor,
+    cfp_tensor: torch.Tensor,
+    counts,
+    availabilities: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Shared train/A/A+LOOK missing-input contract before either R18 encoder."""
+    if oct_tensor.ndim != cfp_tensor.ndim or len(oct_tensor) != len(cfp_tensor):
+        raise ValueError("OCT and CFP packed-eye tensors must have matching batch structure")
+    if oct_tensor.device != cfp_tensor.device or oct_tensor.dtype != cfp_tensor.dtype:
+        raise ValueError("OCT and CFP packed-eye tensors must share device and dtype")
+    values, availability = _validated_availability(counts, len(oct_tensor), availabilities, oct_tensor.device)
+    repeats = torch.tensor(values, dtype=torch.long, device=availability.device)
+    eye_availability = availability.repeat_interleave(repeats, dim=0).bool()
+
+    def safe(value: torch.Tensor, column: int) -> torch.Tensor:
+        shape = (len(value),) + (1,) * (value.ndim - 1)
+        mask = eye_availability[:, column].reshape(shape)
+        observed = value[eye_availability[:, column]]
+        if observed.numel() and not torch.isfinite(observed).all():
+            raise ValueError("Available modality input contains non-finite values")
+        return torch.where(mask, value, torch.zeros_like(value))
+
+    return safe(oct_tensor, 0), safe(cfp_tensor, 1)
+
+
 def set_embracenet_context(
     graph: MHD_Graph,
     counts,
@@ -483,19 +620,36 @@ def set_embracenet_context(
     if not getattr(graph, "embracenet_missing_method", False):
         raise ValueError("Graph is not the EmbraceNet prototype")
     set_observed_counts(graph, counts, eye_count)
-    participant_count = len(counts) if not isinstance(counts, torch.Tensor) else counts.numel()
-    if availabilities.ndim != 2 or tuple(availabilities.shape) != (participant_count, 2):
-        raise ValueError("EmbraceNet participant availabilities must have shape [participants,2]")
-    availability = availabilities.to(device=graph.device)
+    _, availability = _validated_availability(counts, eye_count, availabilities, graph.device)
     probabilities = (
         torch.ones_like(availability, dtype=torch.float32, device=graph.device)
         if selection_probabilities is None
-        else selection_probabilities.to(device=graph.device)
+        else selection_probabilities.to(device=graph.device, dtype=torch.float32)
     )
-    if tuple(probabilities.shape) != (participant_count, 2):
+    if tuple(probabilities.shape) != tuple(availability.shape):
         raise ValueError("EmbraceNet selection probabilities must have shape [participants,2]")
+    if not torch.isfinite(probabilities).all() or torch.any(probabilities < 0):
+        raise ValueError("selection_probabilities must be finite and non-negative")
+    if torch.any((probabilities * availability).sum(dim=1) <= 0):
+        raise ValueError("Available modalities must have positive total selection probability")
     graph.get_node_by_name("embrace_availability").feature_message.current_state = availability
     graph.get_node_by_name("embrace_selection_probabilities").feature_message.current_state = probabilities
+
+
+def reset_embracenet_inputs(
+    graph: MHD_Graph,
+    oct_tensor: torch.Tensor,
+    cfp_tensor: torch.Tensor,
+    counts,
+    availabilities: torch.Tensor,
+    selection_probabilities: torch.Tensor | None = None,
+) -> None:
+    for item in graph.nodes:
+        item.reset()
+    safe_oct, safe_cfp = prepare_embracenet_inputs(oct_tensor, cfp_tensor, counts, availabilities)
+    graph.get_node_by_name("oct_input").feature_message.current_state = safe_oct
+    graph.get_node_by_name("cfp_input").feature_message.current_state = safe_cfp
+    set_embracenet_context(graph, counts, len(oct_tensor), availabilities, selection_probabilities)
 
 
 def forward_embracenet_host(
@@ -509,11 +663,14 @@ def forward_embracenet_host(
     labels: torch.Tensor | None = None,
     loss_scale: float = 1.0,
 ) -> torch.Tensor:
-    for item in graph.nodes:
-        item.reset()
-    graph.get_node_by_name("oct_input").feature_message.current_state = oct_tensor
-    graph.get_node_by_name("cfp_input").feature_message.current_state = cfp_tensor
-    set_embracenet_context(graph, counts, len(oct_tensor), availabilities, selection_probabilities)
+    reset_embracenet_inputs(
+        graph,
+        oct_tensor,
+        cfp_tensor,
+        counts,
+        availabilities,
+        selection_probabilities,
+    )
     if labels is not None:
         if not 0 < loss_scale <= 1:
             raise ValueError("Invalid accumulation loss scale")

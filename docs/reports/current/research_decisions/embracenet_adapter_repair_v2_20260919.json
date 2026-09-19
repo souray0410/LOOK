@@ -1,0 +1,136 @@
+{
+  "schema": "look_embracenet_adapter_repair_v2_contract_v1",
+  "task_id": "look-embracenet-adapter-repair-20260919-v2",
+  "state": "ready_for_left_review",
+  "scientific_acceptance": false,
+  "real_training": false,
+  "participant_data_used": false,
+  "test_access": false,
+  "gpu_used": false,
+  "primary_question": "same frozen EmbraceNet A versus A+LOOK under whole-modality missingness",
+  "primary_family": {
+    "trained_A_count": 1,
+    "seed": 3416,
+    "missing_states": [
+      "missing_oct",
+      "missing_cfp"
+    ],
+    "look_methods": [
+      "pca_free_mean",
+      "residual_rrr_free_mean"
+    ],
+    "paired_primary_contrasts": 4
+  },
+  "unified_missing_entry": {
+    "helper": "look.models.embracenet.prepare_embracenet_inputs/reset_embracenet_inputs",
+    "participant_level": true,
+    "both_eyes_together": true,
+    "unavailable_raw_handling": "torch.where zero before any R18/BN",
+    "train_A": true,
+    "ordinary_A_eval": true,
+    "A_plus_LOOK": true,
+    "bn_statement": "BN updates normally in train mode; same mask schedule -> same zero rows -> same BN updates regardless raw unavailable values"
+  },
+  "stochastic_contract": {
+    "training": "preserve author multinomial stochastic mechanism",
+    "single_missing_eval": "one ordinary author-style forward; categorical distribution degenerates to the only available modality",
+    "single_missing_rng": "one normal draw is consumed; development evaluation snapshots/restores private sampling state or uses an isolated eval clone",
+    "complete_primary_estimand": "analytical integrated mean logits",
+    "complete_formula": "mu_j=sum_m p_m d_mj; E[zz^T]=mu mu^T+diag(sum_m p_m d_mj^2-mu_j^2); E[logits]=W mu+b for current eval linear head",
+    "reported_probability": "softmax(E[logits])",
+    "not_equivalent_to": "E[softmax(logits)] or expected per-draw NLL/Brier",
+    "k32": "optional complete-state engineering/MC diagnostic only; not primary, not checkpoint selection"
+  },
+  "synthetic_estimand_evidence": {
+    "receipt_sha256": "a7ec454c565239ed8e0d508a1b5568b8114ea73ebaa0178b7bbd27de990d9b57",
+    "missing_oct_plain_seed_max_abs": 0,
+    "missing_oct_nonzero_look_seed_max_abs": 0,
+    "missing_cfp_plain_seed_max_abs": 0,
+    "missing_cfp_nonzero_look_seed_max_abs": 0,
+    "complete_pairwise_max_abs_from_seed1": [
+      1.0714675188064575,
+      1.8086345195770264,
+      1.5307079553604126
+    ],
+    "exact_expected_softmax_vs_softmax_mean_logits_max_abs": 0.31756851077079773,
+    "k32_average_logits_error_vs_analytic_mean_max_abs": 0.3393747806549072
+  },
+  "trial_contract": {
+    "data": {
+      "name": "ukb_small_20260909_v1",
+      "train": 1264,
+      "development": 296,
+      "test": "sealed",
+      "seed": 3416
+    },
+    "architecture": "two 2D ResNet18 encoders -> observed-eye participant mean -> EmbraceNet c=256 -> linear binary head",
+    "initialization": {
+      "kind": "public ImageNet V1 fresh",
+      "sha256": "f37072fd47e89c5e827621c5baffa7500819f7896bbacec160b1a16c560e07ec"
+    },
+    "inherited": {
+      "precision": "fp32",
+      "microbatch": 16,
+      "effective_batch": 128,
+      "optimizer": "AdamW",
+      "pretrained_lr": 0.0001,
+      "new_layer_lr": 0.001,
+      "weight_decay": 0.0001,
+      "clip": 5,
+      "warmup_epochs": 5,
+      "minimum_epochs": 8,
+      "patience": 15,
+      "epochs_cap": 100,
+      "loss": "unweighted_cross_entropy",
+      "checkpoint_metric": "complete dev Macro-F1",
+      "bn": "unchanged policy"
+    },
+    "new_scientific_choices_requiring_left_confirmation": {
+      "embracement_size": 256,
+      "complete_selection_probabilities": [
+        0.5,
+        0.5
+      ],
+      "training_missing_state_probabilities": {
+        "complete": 0.3333333333333333,
+        "missing_oct": 0.3333333333333333,
+        "missing_cfp": 0.3333333333333333
+      },
+      "complete_checkpoint_prediction": "analytical integrated-mean-logit",
+      "k32_role": "optional diagnostic only"
+    }
+  },
+  "look_nodes": [
+    "joint_input",
+    "joint_stem",
+    "joint_stage1",
+    "joint_stage2",
+    "joint_stage3",
+    "joint_stage4",
+    "joint_features",
+    "joint_participant_feature",
+    "embraced_feature"
+  ],
+  "local_cpu_environment": {
+    "python": "3.11.16",
+    "torch": "2.8.0",
+    "torchvision": "0.23.0",
+    "numpy": "2.2.6",
+    "pytest": "8.4.1",
+    "mhd_framework": "4",
+    "mhd_source_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0"
+  },
+  "source_sha256": {
+    "model": "5543c74e19acbdeb715ba3d76612282a9e4ef6028e38fab943b53676ef263c8d",
+    "runtime": "2f633c4d012f05915be8d413f29f9fcc5b855ce73b3ebbe7f8d4bf64e40b74e2",
+    "study": "ca16bc208aba4c15d166afeabcdbfef06467e9a463be3e2206e30c3628fe8cc7",
+    "tests": "bf35ef9e55e4808311eceb9fb372da64ae6cc4e7914df51cc79d518a4259dccb"
+  },
+  "validation": {
+    "embracenet_tests": "16/16 pass",
+    "regression": "30/30 pass",
+    "author_parity_current_model": "pass",
+    "estimand_full_mhd": "pass"
+  },
+  "next_gate": "left confirms the 1/3 training missing schedule and analytical integrated-mean-logit complete estimand; only then may a separate real-training packet be issued. WS02 runtime deployment gate remains future work."
+}

@@ -1,0 +1,98 @@
+{
+  "schema": "look_embracenet_adapter_repair_v2_cpu_acceptance_v1",
+  "task_id": "look-embracenet-adapter-repair-20260919-v2",
+  "state": "cpu_engineering_accepted_right_side_not_scientific_acceptance",
+  "environment": {
+    "root": "/Users/mengh/Documents/WebCodexProjects/Radon_Bridge/.webcodex-local/local_envs/look_embracenet_repair_v2",
+    "python": "3.11.16",
+    "torch": "2.8.0",
+    "torchvision": "0.23.0",
+    "numpy": "2.2.6",
+    "pytest": "8.4.1",
+    "mhd_framework_version": "4",
+    "mhd_import": "/Users/mengh/Documents/WebCodexProjects/Radon_Bridge/.webcodex-local/local_envs/look_embracenet_repair_v2/lib/python3.11/site-packages/mhd_framework/__init__.py",
+    "mhd_source_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0",
+    "global_environment_modified": false,
+    "remote_write": false
+  },
+  "fingerprints": {
+    "packet_sha256": "e98fcbb019a395918300a01a37d39a456067a24f61ad30e627e76821a8d0334b",
+    "model_sha256": "5543c74e19acbdeb715ba3d76612282a9e4ef6028e38fab943b53676ef263c8d",
+    "runtime_sha256": "2f633c4d012f05915be8d413f29f9fcc5b855ce73b3ebbe7f8d4bf64e40b74e2",
+    "study_sha256": "ca16bc208aba4c15d166afeabcdbfef06467e9a463be3e2206e30c3628fe8cc7",
+    "test_sha256": "bf35ef9e55e4808311eceb9fb372da64ae6cc4e7914df51cc79d518a4259dccb",
+    "author_reference_sha256": "8b3414181bd77cf37bb2f5b39d43bb2ce6cbd73bcf5afa8dbccb6b4e1d11df05",
+    "author_parity_receipt_sha256": "9bdea69dced0a7b3934e14bb1360012f679f15c95310661de7bd00161f75bf5e",
+    "estimand_receipt_sha256": "a7ec454c565239ed8e0d508a1b5568b8114ea73ebaa0178b7bbd27de990d9b57"
+  },
+  "commands": [
+    {
+      "name": "isolated_env_install",
+      "exit_code": 0,
+      "log": ".webcodex-local/task_packets/look_embracenet_adapter_repair_v2.env_install.log",
+      "log_sha256": "3a8506f5a7892d9df87dedc69292c3090670723ac7e12c8c0b6522cd3e27f801"
+    },
+    {
+      "name": "current_embracenet_dynamic_pytest",
+      "command": "PYTHONPATH=src <local_venv>/python -m pytest tests/unit/models/test_embracenet.py -q",
+      "exit_code": 0,
+      "result": "16 passed",
+      "log": ".webcodex-local/task_packets/look_embracenet_adapter_repair_v2.pytest_final.log",
+      "log_sha256": "7b644666187cbaa90bb3b5f87c75b21598852ffb0050be75839913836c825f44"
+    },
+    {
+      "name": "native_mmtm_linear_regression",
+      "command": "PYTHONPATH=src <local_venv>/python -m pytest tests/unit/models/test_native_host.py tests/unit/models/test_mmtm_host.py tests/unit/methods/test_linear_vector.py -q",
+      "exit_code": 0,
+      "result": "30 passed",
+      "log": ".webcodex-local/task_packets/look_embracenet_adapter_repair_v2.regression.log",
+      "log_sha256": "1ebf9fb8eca1460d12200ac860b20ea68339f93dd387746b90c768c18cf029d6"
+    },
+    {
+      "name": "author_parity_and_full_rng_recovery_current_model",
+      "command": "PYTHONPATH=<LOOK>/src <local_venv>/python look_embracenet_adapter_v1.author_parity.py --project-root <LOOK> --author-file <fixed_author>/embracenet.py --output <v2_author_receipt>",
+      "exit_code": 0,
+      "log": ".webcodex-local/task_packets/look_embracenet_adapter_repair_v2.author_parity.log",
+      "log_sha256": "9bdea69dced0a7b3934e14bb1360012f679f15c95310661de7bd00161f75bf5e"
+    },
+    {
+      "name": "full_mhd_single_missing_and_estimand_audit",
+      "command": "PYTHONPATH=<LOOK>/src <local_venv>/python look_embracenet_adapter_repair_v2.estimand_audit.py",
+      "exit_code": 0,
+      "log": ".webcodex-local/task_packets/look_embracenet_adapter_repair_v2.estimand_audit.log",
+      "log_sha256": "d92e2cd91848c3cd400d81940a40d96f5826c49b678e919f8a077a754f4b283d"
+    }
+  ],
+  "coverage": {
+    "shared_train_A_AplusLOOK_missing_helper": true,
+    "mixed_train_mode_BN_same_mask_invariance": true,
+    "unavailable_raw_gradient_zero": true,
+    "current_sha_dynamic_cpu": true,
+    "all_nine_sites_nonzero_LOOKArtifact_both_single_missing": true,
+    "no_op_equivalence": true,
+    "downstream_propagation_fixed_trace": true,
+    "artifact_boundary_fail_closed": true,
+    "replay_dtype_shape_range_zero_probability_fail_closed": true,
+    "failed_forward_and_sampling_restore_clear_pending_replay": true,
+    "nonzero_LOOK_sampling_restore_exact": true,
+    "both_single_missing_seed_determinism_full_MHD": true,
+    "complete_state_stochastic_full_MHD": true,
+    "analytical_first_and_second_coordinate_moments": true,
+    "author_legal_domain_output_gradient_rng_equivalence_current_model": true,
+    "next_AdamW_update_exact_after_full_rng_restore": true
+  },
+  "boundaries": {
+    "participant_data_used": false,
+    "train_data_used": false,
+    "dev_data_used": false,
+    "test_data_used": false,
+    "gpu_used": false,
+    "real_training": false,
+    "new_agent": false,
+    "fast_or_priority": false,
+    "main_push": false,
+    "remote_write": false
+  },
+  "target_runtime_gate": "WS02 remains unvalidated for this v2 current source; later authorized deployment must perform its own runtime/import/preflight without retrying the previously denied transfer route.",
+  "scientific_acceptance": false
+}

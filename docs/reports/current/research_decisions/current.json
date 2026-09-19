@@ -1,7 +1,7 @@
 {
   "schema": "research_decisions_v1",
   "project": "LOOK",
-  "reviewed_at": "2026-09-19T08:20:00+00:00",
+  "reviewed_at": "2026-09-19T08:55:00+00:00",
   "test_access": false,
   "decisions": [
     {
@@ -62,6 +62,17 @@
       "state": "implemented_author_cpu_validated_current_sha_dynamic_retest_blocked",
       "blocker": "恢复后新增pre-R18 NaN-safe入口与common-random helper；向既有WS02隔离CPU副本同步被上层安全检查拒绝，未绕过。因此传输前5项MHD测试不覆盖当前study/test SHA。",
       "next_trigger": "合法CPU环境对当前SHA完成针对性动态重验，随后左侧确认三状态1/3与K=32合同，才可另发GPU试运行包。"
+    },
+    {
+      "question": "EmbraceNet v2是否已形成可一次决策的CPU闭环与统一trial合同",
+      "accepted_evidence": "当前SHA本机隔离CPU：EmbraceNet专项16/16、native/MMTM/linear回归30/30；作者四合法域输出/梯度/RNG及下一AdamW恢复通过；九节点×两单缺失非零LOOK写回/恢复通过；完整MHD多seed证明两单缺失A与A+LOOK差0而complete仍随机。",
+      "decision": "右侧工程状态ready_for_left_review。统一trial保持一个A/3416、train三状态各1/3；主缺失对照每状态一次正常作者forward。complete checkpoint/诊断若目标为平均logits，推荐解析integrated mean logits；K32降为可选MC诊断。",
+      "state": "cpu_engineering_closed_scientific_choices_pending_left_confirmation",
+      "remaining_scientific_choices": [
+        "train complete/missingOCT/missingCFP各1/3",
+        "complete使用解析 integrated-mean-logit estimand；K32仅诊断"
+      ],
+      "next_trigger": "左侧确认以上两项后，另发真实GPU试运行包；本包不训练、不读test。"
     }
   ]
 }

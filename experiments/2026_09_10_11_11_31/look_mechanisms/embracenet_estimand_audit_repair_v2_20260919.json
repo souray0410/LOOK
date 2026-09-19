@@ -1,0 +1,82 @@
+{
+  "schema": "look_embracenet_repair_v2_estimand_audit_v1",
+  "full_mhd": {
+    "single_missing": {
+      "missing_oct": {
+        "seeds": [
+          1,
+          9,
+          27,
+          81
+        ],
+        "plain_max_abs_across_seeds": 0.0,
+        "look_nonzero_max_abs_across_seeds": 0.0,
+        "indices_all_expected_modality": true,
+        "index_hashes": [
+          "6ba64591dc5d5fa6ab9e575602829ad02f0fe517616bda69e4fe87b55b9d9836",
+          "6ba64591dc5d5fa6ab9e575602829ad02f0fe517616bda69e4fe87b55b9d9836",
+          "6ba64591dc5d5fa6ab9e575602829ad02f0fe517616bda69e4fe87b55b9d9836",
+          "6ba64591dc5d5fa6ab9e575602829ad02f0fe517616bda69e4fe87b55b9d9836"
+        ]
+      },
+      "missing_cfp": {
+        "seeds": [
+          1,
+          9,
+          27,
+          81
+        ],
+        "plain_max_abs_across_seeds": 0.0,
+        "look_nonzero_max_abs_across_seeds": 0.0,
+        "indices_all_expected_modality": true,
+        "index_hashes": [
+          "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1",
+          "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1",
+          "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1",
+          "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+        ]
+      }
+    },
+    "complete_pairwise_max_abs_from_seed1": [
+      1.0714675188064575,
+      1.8086345195770264,
+      1.5307079553604126
+    ],
+    "complete_is_stochastic": true,
+    "nonzero_look_site": "embraced_feature"
+  },
+  "analytical": {
+    "complete_variance_max": 5.25,
+    "single_missing_variance_max": 0.0,
+    "linear_head_mean_logits": [
+      [
+        2.870000123977661,
+        0.9099997282028198
+      ]
+    ],
+    "softmax_of_mean_logits": [
+      [
+        0.8765329718589783,
+        0.12346700578927994
+      ]
+    ],
+    "exact_expected_softmax": [
+      [
+        0.5589644908905029,
+        0.44103550910949707
+      ]
+    ],
+    "expected_softmax_vs_softmax_mean_logits_max_abs": 0.31756851077079773,
+    "k32_average_logits_max_abs_error_vs_analytic_mean": 0.3393747806549072,
+    "identity": "E[logits]=W E[z]+b for the current eval linear head; E[softmax(logits)] is a different estimand"
+  },
+  "recommendation": {
+    "primary_missing_comparison": "one ordinary author-style forward per single-missing state is numerically sufficient at fixed eval checkpoint; it still consumes one normal sampling draw to preserve the defined RNG contract",
+    "complete_integrated_logit_target": "use exact analytical E[z] and linear-head E[logits] rather than K32 Monte Carlo when this target is approved",
+    "k32": "not necessary for the integrated-mean-logit estimand; retain only as an optional implementation/uncertainty diagnostic, not model selection or primary statistics",
+    "different_target": "if expected softmax/per-draw NLL or Brier is desired, that is a distinct nonlinear estimand requiring a separately preregistered integration/MC protocol"
+  },
+  "test_access": false,
+  "participant_data_used": false,
+  "gpu_used": false
+}

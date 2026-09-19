@@ -1,0 +1,150 @@
+{
+  "author": {
+    "commit": "c61b63dadc6fc8d719bb77475f4734f62697144e",
+    "source_sha256": "8b3414181bd77cf37bb2f5b39d43bb2ce6cbd73bcf5afa8dbccb6b4e1d11df05"
+  },
+  "device": "cpu",
+  "gpu_used": false,
+  "legal_domain_parity": [
+    {
+      "author_legal_domain": true,
+      "input_gradient_max_abs": [
+        0.0,
+        0.0
+      ],
+      "name": "complete_equal",
+      "output_max_abs": 0.0,
+      "parameter_gradient_max_abs": {
+        "docking_0.bias": 0.0,
+        "docking_0.weight": 0.0,
+        "docking_1.bias": 0.0,
+        "docking_1.weight": 0.0
+      },
+      "project_draw_count": 39,
+      "project_trace_indices_sha256": "e2c031b4ddebd1969ef655f033f2638870945178113a42a7f5b50a5f294aa730",
+      "project_trace_probability_sha256": "9ba54d57656313e94dc021212d7e07524183ae6401113a0eac079e75d7301d33",
+      "project_uninitialized_before": true,
+      "rng_after_exact": true
+    },
+    {
+      "author_legal_domain": true,
+      "input_gradient_max_abs": [
+        0.0,
+        0.0
+      ],
+      "name": "missing_oct",
+      "output_max_abs": 0.0,
+      "parameter_gradient_max_abs": {
+        "docking_0.bias": 0.0,
+        "docking_0.weight": 0.0,
+        "docking_1.bias": 0.0,
+        "docking_1.weight": 0.0
+      },
+      "project_draw_count": 39,
+      "project_trace_indices_sha256": "cbc712cc220c8c5ef110b6a8f7b803bb9b1acfe6062957a96ea933e3dfe550d9",
+      "project_trace_probability_sha256": "e69c98fe8340a371108a1e671dbb88d247f4057fdbc3f0811504a3d3f67ac8ea",
+      "project_uninitialized_before": true,
+      "rng_after_exact": true
+    },
+    {
+      "author_legal_domain": true,
+      "input_gradient_max_abs": [
+        0.0,
+        0.0
+      ],
+      "name": "missing_cfp",
+      "output_max_abs": 0.0,
+      "parameter_gradient_max_abs": {
+        "docking_0.bias": 0.0,
+        "docking_0.weight": 0.0,
+        "docking_1.bias": 0.0,
+        "docking_1.weight": 0.0
+      },
+      "project_draw_count": 39,
+      "project_trace_indices_sha256": "6287e17fe5efcb191aec8a2578e685d0a1040a0ab53bd1f02c7f49cc6c8fced7",
+      "project_trace_probability_sha256": "942e56527b4331d67a1e31660f35714b88c898d83a6415ca1ba18018b007dc7d",
+      "project_uninitialized_before": true,
+      "rng_after_exact": true
+    },
+    {
+      "author_legal_domain": true,
+      "input_gradient_max_abs": [
+        0.0,
+        0.0
+      ],
+      "name": "complete_unequal_probabilities",
+      "output_max_abs": 0.0,
+      "parameter_gradient_max_abs": {
+        "docking_0.bias": 0.0,
+        "docking_0.weight": 0.0,
+        "docking_1.bias": 0.0,
+        "docking_1.weight": 0.0
+      },
+      "project_draw_count": 39,
+      "project_trace_indices_sha256": "506c5d13870f48e785a8a25b13359139ae2d5ea9a9b7ed3bfe33d5cd8713130b",
+      "project_trace_probability_sha256": "0fb8d76a7935343e5b6e09c6bc9a062ef88f40505e92f6154f82eb1d93eba2c3",
+      "project_uninitialized_before": true,
+      "rng_after_exact": true
+    }
+  ],
+  "missing_branch": {
+    "missing_cfp": {
+      "finite_missing_value_invariance": true,
+      "unavailable_docking_gradient_zero": true,
+      "unavailable_input_gradient_zero": true
+    },
+    "missing_oct": {
+      "finite_missing_value_invariance": true,
+      "unavailable_docking_gradient_zero": true,
+      "unavailable_input_gradient_zero": true
+    }
+  },
+  "optimizer_boundary_recovery": {
+    "embracenet_private_rng_exact": true,
+    "expected_scale": 0.9223304521004191,
+    "next_logits_exact": true,
+    "next_loss_exact": true,
+    "next_optimizer_state_exact": true,
+    "next_parameters_exact": true,
+    "python_numpy_torch_rng_exact": true
+  },
+  "project_fail_closed_extensions": {
+    "all_missing_author": {
+      "accepted": false,
+      "exception": "RuntimeError"
+    },
+    "all_missing_project": {
+      "accepted": false,
+      "exception": "ValueError",
+      "message": "Every sample must have at least one available modality"
+    },
+    "unavailable_nan_author": {
+      "accepted": true,
+      "finite": false
+    },
+    "unavailable_nan_project": {
+      "accepted": true,
+      "finite": true
+    },
+    "zero_probability_author": {
+      "accepted": false,
+      "exception": "RuntimeError"
+    },
+    "zero_probability_project": {
+      "accepted": false,
+      "exception": "ValueError",
+      "message": "Available modalities must have positive total selection probability"
+    }
+  },
+  "project_source": "5543c74e19acbdeb715ba3d76612282a9e4ef6028e38fab943b53676ef263c8d",
+  "real_training": false,
+  "sampling_trace_replay": {
+    "exact_indices_replay_output": true,
+    "indices_sha256": "fe35f1f0aa24100a09d93c32c0c9ae1a848cb52251d35879bb5762197231c476",
+    "probabilities_sha256": "bf075c946903168cf3db10e4a9594000153c60db3e97492b920a40a4da02d5c4",
+    "replay_consumes_no_private_rng": true
+  },
+  "schema": "look_embracenet_author_cpu_acceptance_v1",
+  "test_access": false,
+  "torch": "2.8.0"
+}
