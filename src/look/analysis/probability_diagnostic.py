@@ -268,9 +268,17 @@ def render_public(public_path, output_md):
         lines.append(f'|{labels[r["configuration"]]}|{patterns[r["pattern"]]}|{methods[r["method"]]}|{100*d["macro_f1"]:+.2f}|{100*d["macro_auroc_ovr"]:+.2f}|{d["nll"]:+.4f}|{d["brier"]:+.4f}|{c["positive_count"]}|{c["top_positive_contribution_nll"]:+.4f}|')
     worsened=sorted(p["rows"],key=lambda r:r["delta_metrics"]["nll"],reverse=True)
     top=worsened[0]
+    positive=[r for r in p["rows"] if r["delta_metrics"]["nll"]>0]
+    positive_f1=[r for r in positive if r["delta_metrics"]["macro_f1"]>0]
+    nll_brier_disagree=[r for r in positive if r["delta_metrics"]["brier"]<0]
+    wrong_wrong_positive=[r for r in positive
+        if r["by_transition"]["host_wrong_to_wrong"].get("contribution_nll",0)>0]
     lines+=["","## 怎么读这些反例","",
+        f'20对中有 **{len(positive)}/20** 对ΔNLL>0，而且这{len(positive)}对全部同时ΔF1>0；因此“F1提高但NLL恶化”不是只出现在单个配置。',
         f'ΔNLL最大的已接受配对是 **{labels[top["configuration"]]} / {patterns[top["pattern"]]} / {methods[top["method"]]}**：ΔNLL={top["delta_metrics"]["nll"]:+.4f}，ΔF1={100*top["delta_metrics"]["macro_f1"]:+.2f}pp。',
-        "这类结果只说明分类决策指标与概率损失可以朝不同方向变化。可能的描述性解释包括：修正了一部分边界决策，同时让另一部分仍错误的样本更自信；是否符合该候选解释必须看下方转移组/置信度组贡献，不能先验宣布。","",
+        f'在这{len(positive)}个ΔNLL>0配对中，**原错→仍错**组的NLL贡献全部为正（{len(wrong_wrong_positive)}/{len(positive)}）；R18 deep缺OCT尤其明显：剩余错误的损失扩大，与一部分原错→正确带来的F1收益同时存在。这支持“仍错误样本的概率损失被放大”作为描述性候选解释，但不能推出临床或因果机制。',
+        f'另外有 **{len(nll_brier_disagree)}/{len(positive)}** 个ΔNLL>0配对同时ΔBrier<0，说明NLL与Brier本身也可能方向相反，不能把“NLL恶化”简写成“所有概率质量/校准指标都恶化”。',
+        "固定宿主置信度箱没有出现跨配置统一的恶化区间：R18 deep缺OCT主要由[0.9,1]箱贡献，但MMTM/R50的正ΔNLL行并不遵循同一模式。因此本包不宣称某一置信度区间是统一原因。","",
         "每行的真实类别组、正确性转移组和固定置信度箱都经过私有完整加总验收；公共页面对人数<10的小组只显示“少于10，分层细节不公开”。Top10%项固定取ceil(0.1×296)=30个最大的正ΔNLL（若正值不足30则取全部），并与全部正/负贡献分开报告，避免总差接近0时使用不稳定百分比。","",
         "## 边界","",
         "- 本页不是预注册确认性实验，不新增显著性排名。",

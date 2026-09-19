@@ -63,3 +63,24 @@ def test_probability_sum_tolerance_is_machine_epsilon_scaled():
     assert p.PROBABILITY_SUM_ATOL == 8*np.finfo(np.float64).eps
     assert p.PROBABILITY_SUM_ATOL > 1.5543122344752192e-15
     assert p.PROBABILITY_SUM_ATOL < 2e-15
+
+
+def test_prediction_sha_corruption_rejected(tmp_path):
+    path=tmp_path/'p.npz'
+    y=np.array([0,1]);z=np.array([[2.,0.],[0.,2.]])
+    probs=probabilities_from_logits(z)
+    np.savez(path,labels=y,probabilities=probs,logits=z,scores=z[:,1]-z[:,0],
+        participant_ids=np.array(['a','b']),patterns=np.array(['x','x']))
+    with pytest.raises(ValueError,match='Prediction SHA changed'):
+        p._finite_binary_bundle(path,'0'*64)
+
+
+def test_saved_probability_corruption_rejected_even_with_matching_file_sha(tmp_path):
+    from look.runtime.state import file_sha256
+    path=tmp_path/'p.npz'
+    y=np.array([0,1]*148);z=np.tile(np.array([[2.,0.],[0.,2.]]),(148,1))
+    probs=probabilities_from_logits(z);probs[0]=[.5,.5]
+    np.savez(path,labels=y,probabilities=probs,logits=z,scores=z[:,1]-z[:,0],
+        participant_ids=np.array([f'id{i}' for i in range(296)]),patterns=np.array(['x']*296))
+    with pytest.raises(ValueError,match='stable softmax'):
+        p._finite_binary_bundle(path,file_sha256(path))
