@@ -2,15 +2,15 @@
   "schema": "research_project_status_v1",
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
-  "phase": "embracenet_single_seed_scientifically_accepted_integration_publication_in_progress",
-  "next_acceptance": "Stage A概率诊断已由左侧独立接受并进入发布收口；真正缺失方法A vs同一A+LOOK仍未完成。MMTM只作宿主兼容/组装证据，不计A/B/C。下一外部方法必须由新的有限协议选择；当前不启动GPU/test。",
+  "phase": "embracenet_single_seed_scientifically_accepted_integration_release_candidate",
+  "next_acceptance": "EmbraceNet已完成首个真实缺失方法A vs同一A+LOOK单seed development独立科学验收；当前发布纠错/后验机制解释集成收口。下一最小A合同为ShaSpec，但实现来源/许可/2D分类adaptation/core机制/缺失协议/合法LOOK节点/远端离线准入六门槛未闭环前不训练；test继续封存。",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
   "source_commit": "45955c3236dfb537754caa1b2496fa4bd0fa6656",
-  "evidence_cutoff": "2026-09-19T03:50:58.949696+00:00",
-  "verified_at": "2026-09-19T04:10:43.854209+00:00",
+  "evidence_cutoff": "2026-09-19T13:00:13.614454+00:00",
+  "verified_at": "2026-09-19T16:44:23.454878+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -74,6 +74,11 @@
       "summary": "ws02青光眼小队列R18/3416 fusion-stage机制包已由左侧独立科学验收：deep严格复用，middle/features两新宿主完整；296人F1/AUROC/NLL/Brier、8项10k区间及8棵树394前缀/674候选均独立核验通过。middle大LOOK增益伴随更弱未修正基线和更少参数，不能解释成早融合更优；deep缺OCT NLL 1.0803→PCA1.6217/残差2.5447是保留的概率反例。接受范围仅单seed/dev，test封存。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/fusion_stage/README.md"
+    },
+    {
+      "summary": "EmbraceNet作为首个真实缺失方法A：1264train/296dev/seed3416，同一冻结A下PCA free-mean缺OCT/缺CFP Macro-F1点估计+1.364/+1.131pp，RRR缺OCT+1.085pp、缺CFP为空路径恒等。左侧独立核385文件/203源码pin/86预测、四树16前缀73候选及四指标10k配对统计通过。三个非退化Macro-F1 simultaneous95%均包含0；第四项零方差simultaneous未定义；test未用。",
+      "scope": "preliminary_single_seed",
+      "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/embracenet_single_seed/README.md"
     }
   ],
   "limitations": [
@@ -250,31 +255,35 @@
     },
     {
       "label": "EmbraceNet首个真正缺失方法CPU适配、随机参考与唯一试运行合同",
-      "url": "docs/reports/current/research_decisions/embracenet_adapter_readiness_20260919.md"
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/research_decisions/embracenet_adapter_readiness_20260919.md"
     },
     {
       "label": "EmbraceNet v2 CPU闭环、单缺失确定性与统一统计合同",
-      "url": "docs/reports/current/research_decisions/embracenet_adapter_repair_v2_20260919.md"
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/research_decisions/embracenet_adapter_repair_v2_20260919.md"
     },
     {
       "label": "EmbraceNet v3 replay失败边界与完整参考二阶矩合同",
-      "url": "docs/reports/current/research_decisions/embracenet_adapter_repair_v3_20260919.md"
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/research_decisions/embracenet_adapter_repair_v3_20260919.md"
     },
     {
       "label": "EmbraceNet首个真实missing-method A+LOOK单种子当前页",
-      "url": "docs/reports/current/embracenet_single_seed/README.md"
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/embracenet_single_seed/README.md"
     },
     {
       "label": "EmbraceNet独立接受后的发布纠错与冻结写回机制诊断",
-      "url": "docs/reports/current/embracenet_single_seed/integration_20260919.md"
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/embracenet_single_seed/integration_20260919.md"
     },
     {
       "label": "下一缺失方法A最小合同",
-      "url": "docs/reports/current/research_decisions/next_missing_method_A_contract_20260919.md"
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/research_decisions/next_missing_method_A_contract_20260919.md"
     },
     {
       "label": "后继远端离线接续准备",
-      "url": "docs/handoff/offline_execution_readiness_20260919.md"
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/offline_execution_readiness_20260919.md"
+    },
+    {
+      "label": "EmbraceNet首个真实missing-method A+LOOK单种子结果及独立验收后的发布页",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/embracenet_single_seed/README.md"
     }
   ]
 }
