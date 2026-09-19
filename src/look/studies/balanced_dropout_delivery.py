@@ -209,6 +209,19 @@ def work(s,root,stage):
     atomic_write_json({"stage":stage,"state":"completed","identity":identity,"time":time.time(),"test_access":False},root/(stage+"_status.json"))
 
 
+def _registered_contrast_definitions():
+    return [
+        {
+            "arm": arm,
+            "pattern": pattern,
+            "method_key": (arm, pattern),
+            "reference_key": ("host", pattern),
+        }
+        for pattern in PATTERNS
+        for arm in ARMS
+    ]
+
+
 def report(s,root):
     validate(s);root=Path(root);identity=stable_hash(s);rows=[];arrays={}
     for arm in ARMS:
@@ -224,9 +237,10 @@ def report(s,root):
     for a in arrays.values():
         for k in ("participant_ids","labels"):
             if not np.array_equal(ref[k],a[k]): raise ValueError("Balanced-dropout report identity mismatch")
-    definitions=[]
-    for pattern in PATTERNS:
-        for arm in ARMS: definitions.append({"arm":arm,"pattern":pattern})
+    definitions=_registered_contrast_definitions()
+    for definition in definitions:
+        if definition["method_key"] not in arrays or definition["reference_key"] not in arrays:
+            raise ValueError("Balanced-dropout registered contrast predictions missing")
     logits={(m,p):v["logits"].astype(np.float64) for (m,p),v in arrays.items()}
     stats=_simultaneous_contrasts(ref["labels"].astype(np.int64),logits,definitions,10000,7341618)
     out=root/"delivery";out.mkdir(exist_ok=True)
