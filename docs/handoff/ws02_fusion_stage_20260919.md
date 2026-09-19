@@ -125,3 +125,24 @@ CPU-only图结构合同由当前MHD pin构造，不读训练数据、不加载�
 因此资源上界和恢复证据仍来自全量完整四树，正式科学计算只拟合一次；变化仅是缓存角色迁移和恢复编排，不改变算法、树搜索、样本、停止、缺失模拟或指标定义。
 
 老师外部A/B/C匹配缺口继续保留；fusion-stage不能替代这些问题。
+
+
+## 2026-09-19 01:30UTC repair：fit-profile恢复与缓存成本
+
+两个新host已完成且checkpoint冻结：middle best9/stop24/240 updates，features best30/stop45/450 updates；host runtime结构与预登记结构逐字段一致。原结构故障仅为管理代码构造receipt时漏了 `position`，不是宿主图或训练身份变化。
+
+第二故障发生在fit-profile恢复：原实现把完整trajectory第二次调用后的**整个目录字节manifest**当科学等价条件。目标环境诊断证明这不成立：
+- `feature_costs.json` 包含full/missing forward、completed cache hit等运行计数，会因恢复读取而变化；
+- 更重要的是，首次长程搜索保存的development evidence在fresh accepted host上可出现边界样本变化。当前fresh-host重放本身是确定的，但features residual/OCT旧selection与fresh replay相差一个参与者，且fresh最佳path改变；middle fresh最佳path也改变。
+- 因此不能通过放宽SHA把旧selection直接升格为正式结果。
+
+repair v3采用：
+1. `profile/fitting` 原始树、moments、artifacts、selection永久保留不改。
+2. 新建 `profile/revalidated`：对已有raw tree用hardlink复制immutable moments/artifacts，清除旧selection/progress authority，fresh-host重算所有已缓存候选的296dev evidence；随后调用**原未修改的positive-forward-tree算法**。已有prefix/candidate直接复用；只有fresh strict-positive拓扑真正需要、而旧树没有的下游分支才补算缺失moments/artifacts。
+3. 对尚未开始的另外树，直接在revalidated目录完整拟合一次；不存在“profile完整四树后formal再拟合四树”。
+4. 每棵revalidated tree完成后，`fit_family_trajectory`内部序列化bank replay必须exact；随后重新加载fresh accepted host再独立296dev重放，values SHA与metrics必须逐值一致。
+5. 原raw tree与revalidated tree分别保存完整manifest；科学receipt另锁selected path、bank fingerprint、moment payload fingerprint、prediction values SHA、participant order。
+6. formal阶段**不物理搬目录**，只逻辑引用同run `profile/revalidated/<arm>/<pattern>`，加载bank做296dev replay与host baseline，writer必须写 `look_fusion_profile_migration_v2`、`no_refit=true`、`no_physical_relocation=true`，verifier逐SHA复核revalidation receipt/selection/bank/predictions。
+7. repair resume需新的0130 one-shot marker；sequence与每个run必须持有同字节management overlay receipt。overlay receipt pin当前全部`src/look`，并从Git历史逐字节证明native_host/observed_host/family_greedy/positive_forward_tree/family_statistics/operator/evaluator/observed_pair与scientific source `7876dc8`相同。
+
+这套修复不改变数据、算法、搜索准则、候选、停止、test规则或已完成host；只把恢复/缓存管理从“整个目录字节相同”改为“原始证据永久保留＋fresh科学证据严格重验证＋运行计数显式非科学字段”。

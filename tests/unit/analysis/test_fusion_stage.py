@@ -195,22 +195,54 @@ def test_runtime_structure_uses_same_schema_as_prespecified():
     assert wrong!=fusion.host_structure('middle')
 
 
-def test_profile_promotion_is_exact_and_recoverable(tmp_path):
+def test_revalidation_copy_preserves_raw_tree_and_drops_old_authority(tmp_path):
+    from look.studies.fusion_cache_revalidation import copy_audit_tree,raw_manifest
+    source=tmp_path/'raw';source.mkdir()
+    (source/'family_moments').mkdir();(source/'family_moments/a.pt').write_bytes(b'moment')
+    (source/'prefixes/root').mkdir(parents=True);(source/'prefixes/root/site_000.json').write_text('{}')
+    (source/'prefixes/root/decision.json').write_text('{}')
+    for name in ('selection.json','tree_progress.json','bank.pt','replay.json','feature_costs.json'):
+        (source/name).write_bytes(b'old')
+    before=raw_manifest(source)
+    target=tmp_path/'revalidated';copy_audit_tree(source,target)
+    assert raw_manifest(source)==before
+    assert (target/'family_moments/a.pt').exists() and (target/'prefixes/root/site_000.json').exists()
+    assert not (target/'prefixes/root/decision.json').exists()
+    for name in ('selection.json','tree_progress.json','bank.pt','replay.json','feature_costs.json'):
+        assert not (target/name).exists()
+
+
+def test_verify_formal_arm_requires_logical_v2_migration(tmp_path):
     from look.studies import cohort_delivery as delivery
-    root=tmp_path/'run';source=root/'profile/fitting/residual_rrr/oct_missing'
-    source.mkdir(parents=True)
-    for name,data in [('selection.json',b'{}'),('bank.pt',b'bank'),('replay.json',b'{}'),('feature_costs.json',b'{}'),('nested.bin',b'nested')]:
-        (source/name).write_bytes(data)
-    manifest=delivery.tree_manifest(source)
-    receipt=dict(identity='id',records=[dict(arm='residual_rrr',pattern='oct_missing',manifest=manifest)])
-    target=delivery.promote_profile_correction(root,'residual_rrr','oct_missing',receipt)
-    assert not source.exists() and target.exists()
-    assert delivery.tree_manifest(target)==manifest
-    again=delivery.promote_profile_correction(root,'residual_rrr','oct_missing',receipt)
-    assert again==target
-    (target/'bank.pt').write_bytes(b'corrupt')
-    with pytest.raises(ValueError,match='Promoted correction cache changed'):
-        delivery.promote_profile_correction(root,'residual_rrr','oct_missing',receipt)
+    root=tmp_path/'run';root.mkdir()
+    spec={'x':1};identity=stable_hash(spec)
+    (root/'host').mkdir();(root/'host/accepted.json').write_text(json.dumps({'files':{'best.pt':'hostsha'}}))
+    profile=root/'profile/fitting';profile.mkdir(parents=True);(profile/'accepted.json').write_text('{}')
+    correction=root/'profile/revalidated/residual_rrr/oct_missing';correction.mkdir(parents=True)
+    (correction/'selection.json').write_text(json.dumps({'selected_path':[],'final':{'values_sha256':'v'}}))
+    (correction/'bank.pt').write_bytes(b'bank')
+    audit=correction.parent/'audit'/correction.name;audit.mkdir(parents=True);(audit/'accepted.json').write_text('{}')
+    out=root/'residual_rrr';(out/'development').mkdir(parents=True)
+    pred=out/'development/residual_rrr_oct_missing.npz';pred.write_bytes(b'pred')
+    row=dict(revalidated_root=str(correction.relative_to(root)),
+        revalidation_receipt=str((audit/'accepted.json').relative_to(root)),
+        revalidation_receipt_sha256=file_sha256(audit/'accepted.json'),
+        selection_sha256=file_sha256(correction/'selection.json'),bank_sha256=file_sha256(correction/'bank.pt'),
+        selected_path=[],final_values_sha256='v')
+    migration=dict(schema='look_fusion_profile_migration_v2',no_refit=True,no_physical_relocation=True,
+        source_role='fresh_revalidated_same_run_same_identity',profile_receipt_sha256=file_sha256(profile/'accepted.json'),
+        patterns={'oct_missing':row,'cfp_missing':dict(row)})
+    # create second referenced path for cfp to satisfy coverage without sharing missing files
+    migration['patterns']['cfp_missing']=dict(row)
+    receipt=dict(state='accepted',identity=identity,test_access=False,host_best_sha256='hostsha',replay_exact=True,
+        records=[dict(path=str(pred),sha256=file_sha256(pred))],profile_migration=migration)
+    (out/'accepted.json').write_text(json.dumps(receipt))
+    assert delivery.verify_fusion_formal_arm(spec,root,'residual_rrr')['profile_migration']['no_refit']
+    bad=json.loads((out/'accepted.json').read_text());bad['profile_migration']['no_physical_relocation']=False
+    (out/'accepted.json').write_text(json.dumps(bad))
+    with pytest.raises(ValueError,match='logical profile migration'):
+        delivery.verify_fusion_formal_arm(spec,root,'residual_rrr')
+
 
 def test_needs_review_requires_one_exact_repair_marker(tmp_path,monkeypatch):
     from look.studies import cohort_sequence
@@ -233,8 +265,11 @@ def test_needs_review_requires_one_exact_repair_marker(tmp_path,monkeypatch):
     pipeline=Path(spec['output'])/'pipeline_status.json'
     marker=dict(schema='look_fusion_stage_repair_resume_v1',task_id=fusion.TASK_ID,run_id='middle',
         spec_sha256=file_sha256(spec_path),prior_pipeline_status_sha256=file_sha256(pipeline),
-        repair_packet_sha256=fusion.REPAIR_0038_SHA256,test_access=False)
+        repair_packet_sha256=fusion.REPAIR_0130_SHA256,test_access=False)
     (Path(spec['output'])/'repair_resume.json').write_text(json.dumps(marker))
+    overlay={'ok':True};(root/'management_overlay.json').write_text(json.dumps(overlay))
+    (Path(spec['output'])/'management_overlay.json').write_text(json.dumps(overlay))
+    monkeypatch.setattr(fusion,'verify_management_overlay',lambda path:overlay)
     cohort_sequence.run(plan,launch=lambda s,row: launched.append(s['run_id']) or ImmediateChild(0),interval=0)
     assert launched==['middle']
     status=json.loads((root/'status.json').read_text())

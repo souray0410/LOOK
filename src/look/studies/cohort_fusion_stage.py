@@ -18,6 +18,12 @@ from look.methods.joint import correction_sites
 TASK_ID='look-ws02-fusion-stage-20260919-v1'
 STUDY_KIND='fusion_stage_v1'
 REPAIR_0038_SHA256='a58ece479f0b0cb8471c1fd62170ab480972ceac83eab9558f26b30de2e8712f'
+REPAIR_0130_SHA256='b7c382d8c97fb5b4bac34f631873e5564a6ac610f9c8adbb26a2d8e979ab8cbd'
+SCIENTIFIC_SOURCE_COMMIT='7876dc85388336acb1b9032ff50b9e0b1db66c28'
+NUMERICAL_MODULES=(
+    'src/look/models/native_host.py','src/look/training/observed_host.py','src/look/methods/family_greedy.py',
+    'src/look/methods/positive_forward_tree.py','src/look/methods/family_statistics.py','src/look/methods/operator.py',
+    'src/look/evaluation/evaluator.py','src/look/data/observed_pair.py')
 DEEP_RUN_ID='2026_09_18_11_18_28_650020'
 DEEP_SPEC_SHA256='f09a452f8584861ff5291cb262894e16f4ba4c7c962f43f6ba4cfbccb18929e8'
 DEEP_DELIVERY_SHA256='105f0d94c9020e9b008f46c4f24543878c63b7461fb1c350bbbd3c2d3706eb52'
@@ -96,6 +102,49 @@ def validate_member(spec):
         raise ValueError('Fusion-stage reference changed')
 
 
+def _git_blob_sha(root,commit,rel):
+    data=subprocess.check_output(['git','-C',str(root),'show',f'{commit}:{rel}'])
+    import hashlib
+    return hashlib.sha256(data).hexdigest()
+
+
+def build_management_overlay_receipt(overlay_root,management_commit):
+    overlay_root=Path(overlay_root).resolve()
+    head=subprocess.check_output(['git','-C',str(overlay_root),'rev-parse','HEAD'],text=True).strip()
+    if head!=management_commit or subprocess.check_output(['git','-C',str(overlay_root),'status','--porcelain'],text=True).strip():
+        raise ValueError('Management overlay Git identity changed')
+    files=subprocess.check_output(['git','-C',str(overlay_root),'ls-files','src/look'],text=True).splitlines()
+    overlay_files={rel:file_sha256(overlay_root/rel) for rel in files}
+    numerical={}
+    for rel in NUMERICAL_MODULES:
+        old=_git_blob_sha(overlay_root,SCIENTIFIC_SOURCE_COMMIT,rel);new=overlay_files[rel]
+        if old!=new:raise ValueError('Management overlay changed numerical module: '+rel)
+        numerical[rel]=dict(scientific_sha256=old,overlay_sha256=new,equal=True)
+    return dict(schema='look_fusion_management_overlay_v1',task_id=TASK_ID,repair_packet_sha256=REPAIR_0130_SHA256,
+        scientific_source_commit=SCIENTIFIC_SOURCE_COMMIT,management_commit=management_commit,
+        overlay_root=str(overlay_root),overlay_files=overlay_files,numerical_modules=numerical,test_access=False)
+
+
+def verify_management_overlay(path):
+    path=Path(path);value=read(path)
+    if (value.get('schema')!='look_fusion_management_overlay_v1' or value.get('task_id')!=TASK_ID
+            or value.get('repair_packet_sha256')!=REPAIR_0130_SHA256
+            or value.get('scientific_source_commit')!=SCIENTIFIC_SOURCE_COMMIT or value.get('test_access') is not False):
+        raise ValueError('Fusion management overlay receipt changed')
+    root=Path(value['overlay_root']).resolve()
+    if subprocess.check_output(['git','-C',str(root),'rev-parse','HEAD'],text=True).strip()!=value['management_commit']:
+        raise ValueError('Fusion management overlay commit changed')
+    for rel,digest in value['overlay_files'].items():
+        if file_sha256(root/rel)!=digest:raise ValueError('Fusion management overlay file changed: '+rel)
+    if set(value.get('numerical_modules',{}))!=set(NUMERICAL_MODULES):raise ValueError('Fusion numerical overlay coverage changed')
+    for rel,row in value['numerical_modules'].items():
+        if row.get('equal') is not True or row.get('scientific_sha256')!=row.get('overlay_sha256'):
+            raise ValueError('Fusion numerical overlay equivalence changed')
+        if _git_blob_sha(root,SCIENTIFIC_SOURCE_COMMIT,rel)!=row['scientific_sha256']:
+            raise ValueError('Fusion scientific numerical source changed')
+    return value
+
+
 def validate_repair_resume(plan,row,spec,runroot):
     marker=Path(runroot)/'repair_resume.json'
     if not marker.exists():return None
@@ -105,9 +154,14 @@ def validate_repair_resume(plan,row,spec,runroot):
         raise ValueError('Fusion repair marker requires a needs_review pipeline')
     expected=dict(schema='look_fusion_stage_repair_resume_v1',task_id=TASK_ID,run_id=spec['run_id'],
         spec_sha256=file_sha256(row['spec']),prior_pipeline_status_sha256=file_sha256(pipeline),
-        repair_packet_sha256=REPAIR_0038_SHA256,test_access=False)
+        repair_packet_sha256=REPAIR_0130_SHA256,test_access=False)
     if {k:value.get(k) for k in expected}!=expected:
         raise ValueError('Fusion repair resume marker changed')
+    sequence_overlay=verify_management_overlay(Path(plan['root'])/'management_overlay.json')
+    run_overlay=verify_management_overlay(Path(runroot)/'management_overlay.json')
+    if file_sha256(Path(plan['root'])/'management_overlay.json')!=file_sha256(Path(runroot)/'management_overlay.json'):
+        raise ValueError('Fusion management overlay receipts differ between sequence and run')
+    if sequence_overlay!=run_overlay:raise ValueError('Fusion management overlay contents differ')
     return value
 
 
@@ -208,7 +262,10 @@ def main():
     a=sub.add_parser('prepare')
     for name in ('reference_root','output','run_root','publication','sequence_id','source_root','source_commit','middle_run_id','features_run_id'):
         a.add_argument('--'+name.replace('_','-'),required=True)
+    r=sub.add_parser('repair-receipt');r.add_argument('--overlay-root',required=True);r.add_argument('--management-commit',required=True);r.add_argument('--output',required=True)
     args=p.parse_args()
+    if args.command=='repair-receipt':
+        value=build_management_overlay_receipt(args.overlay_root,args.management_commit);atomic_write_json(value,args.output);print(json.dumps(value,sort_keys=True));return
     if args.command=='prepare':
         keys=('reference_root','output','run_root','publication','sequence_id','source_root','source_commit','middle_run_id','features_run_id')
         value=prepare(**{key:getattr(args,key) for key in keys})
