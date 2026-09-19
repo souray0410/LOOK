@@ -2,7 +2,7 @@
 
 任务：`look-ws02-fusion-stage-20260919-v1`
 
-状态：**右侧完整执行与独立审计已完成；等待左侧从WS02原始产物独立科研验收。当前不表示左侧已接受。**
+状态：**左侧已从WS02原始产物独立科学验收通过；当前仅剩本发布包的生成器/累计页/main/CI发布验收。接受范围仍限WS02单seed/dev fusion-stage机制包。**
 
 ## 问题
 
@@ -73,7 +73,9 @@ CPU-only图结构合同由当前MHD pin构造，不读训练数据、不加载�
 
 新middle/features的actual host receipt必须与这个预登记结构逐字段一致，否则formal拒绝。
 
-## 执行与故障隔离
+## 执行与故障隔离（开跑前初始方案；后续已被02:07完整环境核验及最终逻辑迁移取代）
+
+> **历史方案，非最终生效规则。** 本节保留开跑前编排以解释故障来源；其中“fit_profile后formal重新拟合”的描述最终没有采用。02:07后的正式规则是：完整source tree的selection/progress/path/best score均严格保持；formal仅逻辑引用已验收revalidated tree，`no_refit=true`、`no_physical_relocation=true`，不第二次拟合同一棵tree。
 
 使用原 `cohort_sequence` / `cohort_delivery`：
 - deep accepted reference只publish，不launch。
@@ -100,7 +102,7 @@ CPU-only图结构合同由当前MHD pin构造，不读训练数据、不加载�
 单seed、同dev用于宿主/路径选择；participant bootstrap不包含训练随机性或test泛化。最终科研接受仍需左侧独立核原始产物。
 
 
-## 2026-09-19 00:38 UTC：fusion-stage host结构元数据故障与同run修复
+## 2026-09-19 00:38 UTC：fusion-stage host结构元数据故障与同run修复（历史方案；后续已取代）
 
 现场状态：原 fusion sequence 的 middle/features 均为 `needs_review`，无活跃 sequence manager / cohort_delivery worker，GPU0/GPU1均空闲。旧失败不代表训练未完成：
 
@@ -112,9 +114,11 @@ CPU-only图结构合同由当前MHD pin构造，不读训练数据、不加载�
 
 修复原则：不修改旧 scientific spec/source_commit `7876dc85388336acb1b9032ff50b9e0b1db66c28`，不重训已完成host。新管理修复使用共享 `runtime_host_structure(graph, position)` 生成预登记与runtime结构，避免双实现再次漂移；同run恢复必须有绑定原spec SHA、原pipeline failure SHA和repair packet SHA的一次性 `repair_resume.json`。默认 `needs_review` 仍禁止自动重试；若修复后再次失败，旧marker因pipeline SHA变化自动失效。
 
-### 完整拟合资源门槛与重复成本修复
+### 完整拟合资源门槛与重复成本修复（当时方案；最终未采用物理迁移）
 
-原 `fit_profile` 会完整执行两方法×两缺失的四棵正收益树，再由formal阶段重新拟合同样四棵树，工程上重复且不增加科学辨识。修复后：
+> **已被02:07完整环境核验和最终逻辑迁移取代。** 下面第3点的“原子迁移到正式目录”是00:38时的临时设计，并非最终执行。最终没有物理搬目录；formal通过`look_fusion_profile_migration_v2`逻辑引用同run的`profile/revalidated/...`，并要求`no_refit=true`、`no_physical_relocation=true`。原完整source tree的科学JSON、selection/progress/path/best score在最终左审计中保持精确一致。
+
+原 `fit_profile` 会完整执行两方法×两缺失的四棵正收益树，再由formal阶段重新拟合同样四棵树，工程上重复且不增加科学辨识。**以下列表记录当时提出的修复方案，不代表最终生效实现：**
 
 1. `fit_profile` 仍在**完整1264 train / 296 dev、同accepted host、同PCA、同算法/identity**上跑四棵完整树，不降样本、不缩树、不降低RAM/GPU/50GiB磁盘reserve。
 2. 每个 profile correction tree 记录**递归全文件 manifest/SHA**；同一目录第二次调用验证恢复后，manifest与final必须字节/数值稳定。
@@ -127,16 +131,18 @@ CPU-only图结构合同由当前MHD pin构造，不读训练数据、不加载�
 老师外部A/B/C匹配缺口继续保留；fusion-stage不能替代这些问题。
 
 
-## 2026-09-19 01:30UTC repair：fit-profile恢复与缓存成本
+## 2026-09-19 01:30UTC repair：fit-profile恢复与缓存成本（历史诊断；后续已纠正）
 
 两个新host已完成且checkpoint冻结：middle best9/stop24/240 updates，features best30/stop45/450 updates；host runtime结构与预登记结构逐字段一致。原结构故障仅为管理代码构造receipt时漏了 `position`，不是宿主图或训练身份变化。
 
-第二故障发生在fit-profile恢复：原实现把完整trajectory第二次调用后的**整个目录字节manifest**当科学等价条件。目标环境诊断证明这不成立：
+第二故障发生在fit-profile恢复：原实现把完整trajectory第二次调用后的**整个目录字节manifest**当科学等价条件。**本段以下fresh-score/path差异来自当时未完整复现正式worker数值环境的诊断，现已明确作废，不能再作为旧cache无效证据。** 当时观察到：
 - `feature_costs.json` 包含full/missing forward、completed cache hit等运行计数，会因恢复读取而变化；
 - 更重要的是，首次长程搜索保存的development evidence在fresh accepted host上可出现边界样本变化。当前fresh-host重放本身是确定的，但features residual/OCT旧selection与fresh replay相差一个参与者，且fresh最佳path改变；middle fresh最佳path也改变。
-- 因此不能通过放宽SHA把旧selection直接升格为正式结果。
+- 因此当时暂不允许通过放宽SHA直接升格旧selection。**后续02:07使用完整正式数值环境复核后，原完整source tree的selection/progress/path/best score与正式证据精确一致；上面的fresh最佳path变化不再成立。**
 
-repair v3采用：
+> **最终唯一生效规则：** 原`profile/fitting`证据永久保留；完整source tree只做严格科学投影/原始manifest/最终bank replay验收，不重选路径；原先确实未完成的tree才补算缺失分支；formal只逻辑引用revalidated tree并完整296dev重放，不物理迁移、不第二次拟合。
+
+repair v3的下列条目保留为恢复设计演进记录，其中“fresh重算已有候选/重选路径”的部分已被上述最终规则取代：
 1. `profile/fitting` 原始树、moments、artifacts、selection永久保留不改。
 2. 新建 `profile/revalidated`：对已有raw tree用hardlink复制immutable moments/artifacts，清除旧selection/progress authority，fresh-host重算所有已缓存候选的296dev evidence；随后调用**原未修改的positive-forward-tree算法**。已有prefix/candidate直接复用；只有fresh strict-positive拓扑真正需要、而旧树没有的下游分支才补算缺失moments/artifacts。
 3. 对尚未开始的另外树，直接在revalidated目录完整拟合一次；不存在“profile完整四树后formal再拟合四树”。
@@ -147,7 +153,7 @@ repair v3采用：
 
 这套修复不改变数据、算法、搜索准则、候选、停止、test规则或已完成host；只把恢复/缓存管理从“整个目录字节相同”改为“原始证据永久保留＋fresh科学证据严格重验证＋运行计数显式非科学字段”。
 
-## 2026-09-19 实际执行与右侧审计完成
+## 2026-09-19 实际执行、右侧审计与左侧独立科学验收完成
 
 实际执行身份：
 
@@ -174,6 +180,8 @@ repair v3采用：
 - formal accepted writer记录profile_migration和no_refit=true，正式阶段仅重放/基线/交付，不第二次拟合同一棵tree。
 
 review evidence index SHA：9435a4d0bdd3c547895edacd22a347e188cd06604d6d6906c5e8680ca55fa67b。该归档明确是左侧审查后可重复生成的review evidence，不伪装成历史自动日志。
+
+左侧最终独立审计于2026-09-19T04:10:43Z完成，verdict=`scientifically_accepted_publication_pending`，audit SHA=`db5b1ea423f70b1bf727fd92216ca8b2d96cd75da52a6aa9b14b0e9b00afe050`。左侧独立核验包括5010个独立文件内容、10362个绑定hash检查、706次prediction文件检查、296人F1/AUROC/NLL/Brier重算、8项10k bootstrap，以及8棵树394前缀/674候选的严格下游覆盖。所有原完整source tree的selection/progress/contract/replay除逻辑路径迁移外保持一致；没有因错误环境诊断而重选旧完整树。
 
 ### 每宿主主要结果（Macro-F1）
 
@@ -213,4 +221,4 @@ middle有3项同时区间不跨0、1项略跨0；features四项同时区间均�
 - 本机制只回答宿主融合阶段与LOOK收益关系；老师外部A/B/C与A/B/C+LOOK仍是独立未完成缺口。
 - test始终封存；participant bootstrap不包含训练随机性或独立test泛化。
 
-公开累计入口见 docs/reports/current/fusion_stage/README.md。当前仅为右侧完整执行/审计，等待左侧最终独立科研验收。
+公开累计入口见 docs/reports/current/fusion_stage/README.md。当前科学包已由左侧独立验收；本文件此后只等待发布层main/CI核验，不再启动该机制包GPU生命周期。

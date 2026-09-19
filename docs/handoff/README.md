@@ -1,8 +1,8 @@
-## 2026-09-19：R18 fusion-stage有限包右侧完成，待左侧独立验收
+## 2026-09-19：R18 fusion-stage有限包已由左侧独立科学验收
 
 deep严格复用既有R18 accepted run；middle/features两个新宿主已完成host、PCA、两方法双缺失完整正收益树、296人重放、交付及三宿主8项跨宿主bootstrap。sequence completion为accepted，右侧独立audit SHA为291051a82c4b13f918c0c60afd5f71da3d94710233bcc6cdeab0a3a41192f57d。
 
-主要解释：middle相对deep的部分LOOK收益差很大，但middle未修正宿主显著更弱且参数量更少；features与deep等参数但4项同时区间全部跨0。因此当前不能宣布最佳融合阶段。老师外部A/B/C缺口仍保留。详见机制报告 docs/reports/current/fusion_stage/README.md 与完整handoff docs/handoff/ws02_fusion_stage_20260919.md。
+主要解释：middle相对deep的部分LOOK收益差很大，但middle未修正宿主显著更弱且参数量更少；features与deep等参数但4项同时区间全部跨0。因此当前不能宣布最佳融合阶段。该机制包科学验收已完成并停止GPU生命周期；老师外部A/B/C缺口仍保留。详见机制报告 docs/reports/current/fusion_stage/README.md 与完整handoff docs/handoff/ws02_fusion_stage_20260919.md。
 
 ## 2026-09-18：72项固定均值对照已完成
 

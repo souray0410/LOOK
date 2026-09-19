@@ -1,7 +1,7 @@
 {
   "schema": "research_decisions_v1",
   "project": "LOOK",
-  "reviewed_at": "2026-09-18T13:45:47.590023+00:00",
+  "reviewed_at": "2026-09-19T04:10:43.854209+00:00",
   "test_access": false,
   "decisions": [
     {
@@ -25,6 +25,26 @@
       "decision": "现有大队列两拟合方法匹配任务保持；小队列用于诊断与尚未锁定扩展排序，不因单种子负结果删除正式臂。",
       "state": "existing_Ibex_queue_preserved",
       "reason": "数据、任务及输入不同；内部探索不是独立确认。"
+    },
+    {
+      "question": "fusion-stage中middle出现较大LOOK增益后，是否应继续扩融合位置/骨干/种子",
+      "accepted_evidence": "WS02 R18 seed3416；deep严格复用，middle/features两新宿主；左侧独立核296人四指标、8项10k bootstrap、8树394前缀/674候选后科学接受。",
+      "counterexample": "middle缺OCT host F1仅33.33%，PCA/RRR为63.67/65.67%，仍低于deep PCA/RRR 69.24/66.77；middle参数11.89M而deep/features22.88M。features相对deep的4项收益差同时95%均跨0。deep缺OCT NLL从1.0803恶化到1.6217/2.5447，尽管F1提高。",
+      "alternative_explanation": "middle更大增益可由更弱宿主基线、更少参数及不同拓扑/训练权重带来的更大修正空间解释，不能归因于早融合本身。",
+      "decision": "停止本fusion-stage机制包GPU生命周期，不继续堆融合位置/骨干/种子；保留全部正式对照。",
+      "next_action_cost": "无新增GPU。下一步只整理外部A/B/C适配与已有logits概率诊断的CPU/只读可行性，等待左侧另行锁定。",
+      "recheck_trigger": "只有左侧明确提出新的因果问题并锁定匹配容量/拓扑/种子协议，才重新讨论fusion扩展。",
+      "state": "scientifically_accepted_stop_expansion"
+    },
+    {
+      "question": "外部A/B/C下一项怎样最直接回答“原A vs A+LOOK”，同时解释概率损失反例",
+      "accepted_evidence": "MMTM Stage3适配A/A+LOOK已完成并验收；external_sources已固定EyeMoSt+与EDRL作者commit/file SHA。fusion-stage显示F1与NLL可反向变化。",
+      "counterexample": "MMTM只是一个适配A，不是原论文完整视频/骨骼系统；EyeMoSt+/EDRL原方案均含3D OCT，而当前小队列OCT为2D切片，不能直接称原方法复现。",
+      "alternative_explanation": "外部方法收益可能来自其自身缺失模态/不确定性损失、3D结构或容量差异，而非LOOK可附加性；必须同一适配宿主内做A vs A+LOOK。",
+      "decision": "不在本包启动新实验。若左侧选择下一外部匹配，EyeMoSt+是剩余候选中最直接的一项；EDRL先保留为更高耦合候选。另可用现有预测做无训练概率损失定位。",
+      "next_action_cost": "EyeMoSt+需要新的匹配外部宿主训练与A/A+LOOK重放，但可复用现有数据审计、缺失模拟、评价/bootstrap；EDRL还需先证明2D切片下essence-point/解耦机制仍有实质意义。概率诊断只读现有logits，无GPU训练。",
+      "recheck_trigger": "左侧需先锁定EyeMoSt+的2D-OCT编码器适配、原Student-t/置信度损失、推理不依赖标签、初始化/停止/预算；或锁定EDRL的2D机制保真准则后才派发GPU包。",
+      "state": "feasibility_only_left_decision_required"
     }
   ]
 }

@@ -2,15 +2,15 @@
   "schema": "research_project_status_v1",
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
-  "phase": "fusion_stage_right_audit_complete_pending_left_review",
-  "next_acceptance": "R18 fusion-stage有限包已完成右侧执行与独立审计；下一门槛仅为左侧从WS02原始host/PCA/revalidation/formal预测与8项bootstrap独立验收。老师外部A/B/C仍未完成，本包不自动启动新方法/种子/骨干。",
+  "phase": "fusion_stage_scientifically_accepted_publish_v1_in_progress",
+  "next_acceptance": "fusion-stage原科学包已由左侧独立接受；当前只需完成生成器/累计页/main/精确CI发布验收。不得重启GPU或扩种子/骨干/融合位置。下一科研选择仅整理外部A/B/C与现有预测概率诊断可行性，由左侧另发有限包。",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
   "source_commit": "a065da430fc280b259db39de8994705aa48b147f",
-  "evidence_cutoff": "2026-09-19T03:51:00.996465+00:00",
-  "verified_at": "2026-09-19T03:58:06+00:00",
+  "evidence_cutoff": "2026-09-19T03:50:58.949696+00:00",
+  "verified_at": "2026-09-19T04:10:43.854209+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -71,7 +71,7 @@
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/small_cohort/README.md"
     },
     {
-      "summary": "ws02青光眼小队列R18/3416融合阶段机制包右侧完整：deep严格复用，middle/features两新宿主均按原训练停止规则完成。middle宿主缺OCT/缺CFP不修正F1为33.33/40.59%，LOOK收益相对deep增益差在RRR缺OCT+27.91pp、PCA缺OCT+23.44pp等较大；features四项增益差约+4.77到+6.48pp且8项同时区间均跨0。middle参数量仅11.89M且宿主基线显著更弱，不能将更大LOOK收益解释成早融合总体更优。296人指标、8项10kbootstrap及缓存/迁移SHA由右侧独立重算通过；仅单seed/dev，左侧科研验收尚未完成。",
+      "summary": "ws02青光眼小队列R18/3416 fusion-stage机制包已由左侧独立科学验收：deep严格复用，middle/features两新宿主完整；296人F1/AUROC/NLL/Brier、8项10k区间及8棵树394前缀/674候选均独立核验通过。middle大LOOK增益伴随更弱未修正基线和更少参数，不能解释成早融合更优；deep缺OCT NLL 1.0803→PCA1.6217/残差2.5447是保留的概率反例。接受范围仅单seed/dev，test封存。",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/fusion_stage/README.md"
     }
@@ -124,13 +124,15 @@
     "2026-09-18 13:40UTC现场：ws02有限任务已正常结束且GPU空闲，独立最终核验并用新显示生成器发布；不是新任务在训练。Ibex两CPU进程及新周期error=null，1allocation运行/23待批；LOOK原残差内存保护失败仍待充足资源，Dense3D暂停epoch5/15319updates，新32仍4登记文件无正式更新。",
     "LOOK固定空前缀/斜率/λ/秩，仅约束残差均值：两个已验收ResNet18宿主×2拟合×2缺失×9位置，72/72完成；旧自由预测逐元素现场重放，新增预测SHA及sklearn F1/AUROC独立重算通过。58项自由均值F1较高、10项较低、4项相同（相关条件，不是72个独立重复）。无新增训练或拟合；不能宣称自由均值必胜。首启rank字段错误保留，6a813d8加真实FamilyMap回归12项通过后恢复并完成下游。",
     "2026-09-19 fusion-stage有限包：deep run2026_09_18_11_18_28_650020严格引用；middle/features host分别best/stop=9/24、30/45，240/450更新，未重训恢复。8/8拟合树通过正式CuBLAS确定性环境、graph state/BN、source manifest、完整prefix/candidate evidence及两阶段路径迁移验收；两个新run formal/delivery与三宿主累计publication完成。右侧最终audit SHA291051a82c4b13f918c0c60afd5f71da3d94710233bcc6cdeab0a3a41192f57d。",
-    "repair链保留：初始host structure receipt漏position；fit-profile raw恢复比较误把运行计数/路径变化当科学变化；后续诊断未完整匹配正式worker环境；publication先后补逻辑迁移bank路径与feature-cost provenance。各次失败均保留证据，未重训host或重拟合已完成完整tree。"
+    "repair链保留：初始host structure receipt漏position；fit-profile raw恢复比较误把运行计数/路径变化当科学变化；后续诊断未完整匹配正式worker环境；publication先后补逻辑迁移bank路径与feature-cost provenance。各次失败均保留证据，未重训host或重拟合已完成完整tree。",
+    "2026-09-19 左侧fusion-stage独立审计通过：5010独立文件内容、10362 hash绑定、706预测文件检查、296人四指标、8项10k区间、8树394前缀/674候选均通过；audit SHA db5b1ea423f70b1bf727fd92216ca8b2d96cd75da52a6aa9b14b0e9b00afe050。科学current SHA7354806d保持不变，发布包仅修生成器/可读累计。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
     "2026-09-18用户授权优先公平拟合方法比较、再扩展。取消新增best-forward与正收益树的重复性能比较；已有结果保留。首包均值自由保持一致，约束均值优先固定前缀机制消融，广矩阵保留后续。",
     "用户授权ws02优先LOOK并沿用旧数据开展当前方法设计；平台统一标准、不同数据/初始化独立身份。后继优先老师9月13日问题，中文为主的周报呈现变化及真实缺项。",
-    "fusion-stage解释决策：middle对deep的部分LOOK收益差同时区间不跨0，但middle宿主本身更弱且参数量更少；features与deep等参数但4项同时区间全跨0。当前不按点估计宣布最佳融合阶段，也不扩种子/骨干；等待左侧独立验收后再回到老师A/B/C缺口。"
+    "fusion-stage解释决策：middle对deep的部分LOOK收益差同时区间不跨0，但middle宿主本身更弱且参数量更少；features与deep等参数但4项同时区间全跨0。当前不按点估计宣布最佳融合阶段，也不扩种子/骨干；等待左侧独立验收后再回到老师A/B/C缺口。",
+    "fusion-stage科学包已接受后停止其GPU生命周期：不因middle大增益继续堆融合位置/骨干/种子；middle更弱宿主基线是主要替代解释，features相对deep四项同时区间跨零。下一研究回到外部A/B/C匹配与现有logits概率损失定位，由左侧另行锁定。"
   ],
   "evidence": [
     {
