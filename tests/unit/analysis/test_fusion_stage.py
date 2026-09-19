@@ -438,13 +438,14 @@ def test_graph_state_capture_is_pure_and_mode_drift_is_rejected():
     before_training={name:m.training for name,m in graph.named_modules()}
     before_state={k:v.detach().clone() for k,v in graph.state_dict().items()}
     capture=fresh.capture_graph_state(graph)
-    assert capture['node_messages']['oct_input'] is not None
-    assert node.feature_message.current_state is not None
+    assert capture['node_messages']['oct_input']['feature_current_matches_initial'] is False
+    assert not torch.equal(node.feature_message.current_state,node.feature_message.initial_state)
     assert {name:m.training for name,m in graph.named_modules()}==before_training
     assert all(torch.equal(before_state[k],v) for k,v in graph.state_dict().items())
     prepared=fresh.prepare_for_evaluation(graph)
     assert prepared['transient_messages_reset'] is True
-    assert node.feature_message.current_state is None
+    assert torch.equal(node.feature_message.current_state,node.feature_message.initial_state)
+    assert prepared['after']['node_messages']['oct_input']['feature_current_matches_initial'] is True
     assert prepared['before']['scientific']==prepared['after']['scientific']
     # Fault injection: any child train-mode drift must be visible and rejected.
     child=next(m for name,m in graph.named_modules() if name and hasattr(m,'training'))
@@ -470,3 +471,43 @@ def test_capture_graph_state_does_not_silently_eval_graph():
     with pytest.raises(ValueError,match='mode drifted from eval'):
         fresh.assert_evaluation_mode(capture)
     assert graph.training is True
+
+def test_two_phase_relocation_normalizes_prefix_and_authority_without_touching_source(tmp_path):
+    from look.studies import fusion_cache_revalidation as fresh
+    source=tmp_path/'source';target=tmp_path/'target';audit=tmp_path/'audit'
+    (source/'predictions').mkdir(parents=True);(source/'prefixes/root').mkdir(parents=True)
+    ids=np.array(['a','b']);labels=np.array([0,1]);logits=np.array([[2.,0.],[0.,2.]])
+    pred=source/'predictions/p.npz';np.savez(pred,participant_ids=ids,labels=labels,logits=logits)
+    evidence=dict(role='development',data_role='development',score=1.0,prediction=str(pred),
+        sha256=file_sha256(pred),values_sha256=fresh.saved_prediction_values_sha(pred),metrics={'macro_f1':1.0})
+    (source/'prefixes/root/baseline.json').write_text(json.dumps({'identity':'root','evidence':evidence}))
+    before=fresh.raw_manifest(source)
+    fresh.copy_audit_tree(source,target)
+    pre,pre_path=fresh.relocate_cached_prediction_references(source,target,audit,'pre_fit')
+    prefix=json.loads((target/'prefixes/root/baseline.json').read_text())
+    assert Path(prefix['evidence']['prediction']).is_relative_to(target)
+    assert pre['mapping_count']==1 and pre['verified_target_refs']==0
+    assert file_sha256(pre_path)
+    # Simulate authority files written after fit from the original source evidence.
+    selection=dict(decisions=[],selected_path=[],final=dict(evidence),schema='s',contract_sha256='c',
+        mode='positive_forward_tree',site_attempts=0,candidate_evaluations=0,prefix_count=0,
+        test_access=False,scientific_acceptance=False)
+    (target/'selection.json').write_text(json.dumps(selection))
+    post,post_path=fresh.relocate_cached_prediction_references(source,target,audit,'post_fit')
+    final=json.loads((target/'selection.json').read_text())['final']
+    assert Path(final['prediction']).is_relative_to(target)
+    assert post['mapping_count']==1
+    assert file_sha256(post_path)
+    assert fresh.raw_manifest(source)==before
+
+
+def test_relocation_rejects_unrelated_absolute_prediction_path(tmp_path):
+    from look.studies import fusion_cache_revalidation as fresh
+    source=tmp_path/'source';target=tmp_path/'target';audit=tmp_path/'audit';other=tmp_path/'other'
+    (source/'prefixes/root').mkdir(parents=True);(target/'prefixes/root').mkdir(parents=True);other.mkdir()
+    pred=other/'p.npz';np.savez(pred,participant_ids=np.array(['a']),labels=np.array([0]),logits=np.array([[1.,0.]]))
+    evidence=dict(role='development',data_role='development',score=1.0,prediction=str(pred),
+        sha256=file_sha256(pred),values_sha256=fresh.saved_prediction_values_sha(pred),metrics={'macro_f1':1.0})
+    (target/'prefixes/root/baseline.json').write_text(json.dumps({'identity':'root','evidence':evidence}))
+    with pytest.raises(ValueError,match='outside both source and target'):
+        fresh.relocate_cached_prediction_references(source,target,audit,'pre_fit')

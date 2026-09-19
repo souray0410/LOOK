@@ -97,8 +97,17 @@ def capture_graph_state(graph):
                 num_batches_tracked=None if module.num_batches_tracked is None else int(module.num_batches_tracked.item()))
     messages={}
     for node in graph.nodes:
-        value=node.feature_message.current_state
-        messages[node.name]=None if value is None else dict(shape=list(value.shape),sha256=_tensor_sha(value))
+        current=node.feature_message.current_state
+        initial=node.feature_message.initial_state
+        gradient_current=node.gradient_message.current_state
+        gradient_initial=node.gradient_message.initial_state
+        messages[node.name]=dict(
+            feature_initial_shape=list(initial.shape),feature_initial_sha256=_tensor_sha(initial),
+            feature_current_shape=list(current.shape),feature_current_sha256=_tensor_sha(current),
+            feature_current_matches_initial=torch.equal(current,initial),
+            gradient_initial_shape=list(gradient_initial.shape),gradient_initial_sha256=_tensor_sha(gradient_initial),
+            gradient_current_shape=list(gradient_current.shape),gradient_current_sha256=_tensor_sha(gradient_current),
+            gradient_current_matches_initial=torch.equal(gradient_current,gradient_initial))
     scientific=dict(graph_training=graph.training,state_dict=state,batchnorm=bn,modules=modules,
         requires_grad={name:p.requires_grad for name,p in graph.named_parameters()})
     return dict(scientific=scientific,scientific_sha256=stable_hash(scientific),node_messages=messages)
@@ -121,10 +130,12 @@ def prepare_for_evaluation(graph):
     assert_evaluation_mode(after)
     if before['scientific']!=after['scientific']:
         raise ValueError('Resetting transient MHD messages changed scientific graph state')
-    uncleared=[name for name,value in after['node_messages'].items() if value is not None]
-    if uncleared:
-        raise ValueError('MHD transient message reset was incomplete: '+','.join(uncleared[:8]))
-    return dict(before=before,after=after,transient_messages_reset=True)
+    not_reset=[name for name,value in after['node_messages'].items()
+        if value['feature_current_matches_initial'] is not True or value['gradient_current_matches_initial'] is not True]
+    if not_reset:
+        raise ValueError('MHD transient message reset was incomplete: '+','.join(not_reset[:8]))
+    return dict(before=before,after=after,transient_messages_reset=True,
+        reset_semantics='feature_message.current_state equals feature_message.initial_state after node.reset()')
 
 
 def evidence_projection(value):
@@ -246,40 +257,54 @@ def copy_audit_tree(source,target):
         path.unlink()
 
 
-def relocate_cached_prediction_references(source,target,audit):
+def relocate_cached_prediction_references(source,target,audit,phase):
     source=Path(source).resolve();target=Path(target).resolve();audit=Path(audit)
     mappings=[]
+    verified_target_refs=0
     def walk(value):
+        nonlocal verified_target_refs
         changed=False
         if isinstance(value,dict):
             if 'prediction' in value:
                 old=Path(value['prediction']).resolve()
-                if not old.is_relative_to(source):
-                    raise ValueError('Cached prediction reference is outside source tree')
-                rel=old.relative_to(source);new=(target/rel).resolve()
-                if not new.is_relative_to(target) or not new.exists():
-                    raise ValueError('Relocated prediction target is missing or escaped target tree')
                 expected_sha=value.get('sha256');expected_values=value.get('values_sha256')
-                if (file_sha256(old)!=expected_sha or file_sha256(new)!=expected_sha
-                        or saved_prediction_values_sha(old)!=expected_values
-                        or saved_prediction_values_sha(new)!=expected_values):
-                    raise ValueError('Relocated prediction evidence changed')
-                mappings.append(dict(source=str(old),target=str(new),relative=str(rel),
-                    sha256=expected_sha,values_sha256=expected_values))
-                value['prediction']=str(new);changed=True
+                if old.is_relative_to(target):
+                    if (not old.exists() or file_sha256(old)!=expected_sha
+                            or saved_prediction_values_sha(old)!=expected_values):
+                        raise ValueError('Existing target prediction evidence changed')
+                    verified_target_refs+=1
+                elif old.is_relative_to(source):
+                    rel=old.relative_to(source);new=(target/rel).resolve()
+                    if not new.is_relative_to(target) or not new.exists():
+                        raise ValueError('Relocated prediction target is missing or escaped target tree')
+                    if (file_sha256(old)!=expected_sha or file_sha256(new)!=expected_sha
+                            or saved_prediction_values_sha(old)!=expected_values
+                            or saved_prediction_values_sha(new)!=expected_values):
+                        raise ValueError('Relocated prediction evidence changed')
+                    mappings.append(dict(source=str(old),target=str(new),relative=str(rel),
+                        sha256=expected_sha,values_sha256=expected_values))
+                    value['prediction']=str(new);changed=True
+                else:
+                    raise ValueError('Cached prediction reference is outside both source and target trees')
             for child in value.values():
                 if walk(child):changed=True
         elif isinstance(value,list):
             for child in value:
                 if walk(child):changed=True
         return changed
-    for path in sorted((target/'prefixes').rglob('*.json')):
+
+    files=[*sorted((target/'prefixes').rglob('*.json'))]
+    for name in ('selection.json','tree_progress.json','replay.json'):
+        path=target/name
+        if path.exists():files.append(path)
+    for path in files:
         value=json.loads(path.read_text())
         if walk(value):atomic_write_json(value,path)
-    receipt=dict(schema='look_fusion_evidence_relocation_v1',state='accepted',test_access=False,
-        source_root=str(source),target_root=str(target),mappings=mappings,
-        mapping_count=len(mappings),no_scientific_value_change=True)
-    path=audit/'evidence_relocation.json';path.parent.mkdir(parents=True,exist_ok=True)
+    receipt=dict(schema='look_fusion_evidence_relocation_v2',state='accepted',test_access=False,
+        phase=phase,source_root=str(source),target_root=str(target),mappings=mappings,
+        mapping_count=len(mappings),verified_target_refs=verified_target_refs,
+        no_scientific_value_change=True)
+    path=audit/f'evidence_relocation_{phase}.json';path.parent.mkdir(parents=True,exist_ok=True)
     atomic_write_json(receipt,path)
     return receipt,path
 
@@ -349,11 +374,11 @@ def revalidate_or_fit(*,source,target,graph,loader,device,arm,pattern,sites,fact
     source_complete=all((source/name).exists() for name in ('selection.json','bank.pt','tree_progress.json','replay.json'))
     source_science=science_projection(source) if source_complete else None
     copy_audit_tree(source,target)
-    relocation,relocation_path=relocate_cached_prediction_references(source,target,audit) if source.exists() else (
-        dict(schema='look_fusion_evidence_relocation_v1',state='accepted',test_access=False,
+    relocation_pre,relocation_pre_path=relocate_cached_prediction_references(source,target,audit,'pre_fit') if source.exists() else (
+        dict(schema='look_fusion_evidence_relocation_v2',state='accepted',test_access=False,phase='pre_fit',
             source_root=str(source.resolve()),target_root=str(target.resolve()),mappings=[],mapping_count=0,
-            no_scientific_value_change=True), audit/'evidence_relocation.json')
-    if not relocation_path.exists():atomic_write_json(relocation,relocation_path)
+            verified_target_refs=0,no_scientific_value_change=True), audit/'evidence_relocation_pre_fit.json')
+    if not relocation_pre_path.exists():atomic_write_json(relocation_pre,relocation_pre_path)
     cache_verification=dict(mode='verify_committed_prefix_candidate_evidence_without_rewrite',
         source_complete=source_complete,
         source_decisions=0 if not source_complete else len(json.loads((source/'selection.json').read_text())['decisions']))
@@ -361,6 +386,11 @@ def revalidate_or_fit(*,source,target,graph,loader,device,arm,pattern,sites,fact
         factor=factor,candidates=[dict(rank=32,ridge_lambda=None)],pca_bank=pca_bank,identity=identity,
         output=target,device=device,workspace_bytes=workspace_bytes,mode='positive_forward_tree',
         should_pause=should_pause,penalty_policy='prefix_train_pca_gcv')
+    relocation_post,relocation_post_path=relocate_cached_prediction_references(source,target,audit,'post_fit') if source.exists() else (
+        dict(schema='look_fusion_evidence_relocation_v2',state='accepted',test_access=False,phase='post_fit',
+            source_root=str(source.resolve()),target_root=str(target.resolve()),mappings=[],mapping_count=0,
+            verified_target_refs=0,no_scientific_value_change=True), audit/'evidence_relocation_post_fit.json')
+    if not relocation_post_path.exists():atomic_write_json(relocation_post,relocation_post_path)
     end_state=capture_graph_state(graph)
     assert_evaluation_mode(end_state)
     if end_state['scientific']!=start_state['scientific']:
@@ -390,6 +420,8 @@ def revalidate_or_fit(*,source,target,graph,loader,device,arm,pattern,sites,fact
         source_raw_manifest_sha256=source_manifest_sha,source_raw_manifest_final_sha256=source_manifest_final_sha,
         source_raw_manifest_unchanged=True,revalidated_raw_manifest_sha256=target_manifest_sha,
         cache_verification=cache_verification,
+        relocation=dict(pre_fit_receipt=str(relocation_pre_path),pre_fit_sha256=file_sha256(relocation_pre_path),
+            post_fit_receipt=str(relocation_post_path),post_fit_sha256=file_sha256(relocation_post_path)),
         mutable_operational_fields=MUTABLE_OPERATIONAL_FIELDS,runtime=runtime,
         graph_state_sha256=start_state['scientific_sha256'],graph_state_exact_before_after_and_fresh=True,
         graph_state_observation='capture_graph_state is read-only; prepare_for_evaluation only resets transient MHD messages and requires eval mode',
