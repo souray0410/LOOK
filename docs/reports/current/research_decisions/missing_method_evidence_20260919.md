@@ -67,3 +67,65 @@ LOOK 的主问题是：一个已经合理训练、明确用于处理整模态缺
 - 选择哪个A、2D适配、训练/停止预算和合法LOOK节点是新科学协议；本盘点不授权训练。
 - 精确GPU/墙钟成本只能在候选协议锁定后做目标环境profile。
 - LOOK缺失方法主比较仍未完成；证据盘点完成不能冒充实验完成。
+
+## 逐候选公平匹配、复用与接口边界
+
+### ShaSpec
+
+- **训练配对 / 作者配方：** Primary paper studies missing-modality classification and segmentation under dedicated/non-dedicated missing settings. The pinned public repository exposes BraTS 3D segmentation code; the paper classification implementation/recipe is not present there, so a symmetric CFP-missing/OCT-missing training schedule is NOT yet author-code-locked.
+- **推理可用输入：** Scientific role is prediction from available modalities with unavailable-modality information reconstructed/generated in feature space. For the eye adapter, inference must use only the actually available CFP/OCT branch plus ShaSpec missing-feature mechanism; absent modality and target label remain forbidden.
+- **A vs A+LOOK怎么固定：** Train one paper-faithful adapted ShaSpec A once; freeze that exact checkpoint and all missing-input rules. Compare A vs the same frozen A plus LOOK. +LOOK may fit/read/write only legal internal representations and must not retrain A or remove ShaSpec shared/specific/generation/auxiliary objectives.
+- **可复用现资产：** 1264/296 audited split, seed3416, sealed test；2D CFP/OCT preprocessing and ordered participants；LOOK PCA/RRR positive-forward-tree fit/replay；Macro-F1/AUROC/NLL/Brier and paired participant evaluation
+- **不能直接复用：** existing R18/R50/MMTM checkpoints as ShaSpec A weights；BraTS 3D segmentation weights as an eye classifier
+- **能排除的替代解释：** Same frozen ShaSpec A separates incremental LOOK correction from gains caused by retraining/replacing the missing-modality method.
+- **需要左侧科学取舍：** paper-faithful 2D classification architecture because author classification code is absent from pinned repo；symmetric missing-OCT/missing-CFP training policy；mandatory ShaSpec losses/feature-generation terms；implementation provenance/license route；legal LOOK node and complete-input reference semantics；optimizer/stopping/budget
+- **纯工程接口：** two 2D modality encoders；shared/specific feature tensors；missing-feature generation/fusion path；binary classification score adapter；MHD node exposure while preserving ShaSpec losses
+- **作者报告/实现局限：** Repo checked here is BraTS 3D segmentation code; paper classification task exists but its code recipe was not found. No explicit repository license file was found.
+
+### U-HVED
+
+- **训练配对 / 作者配方：** Author implementation is TensorFlow 1.12/NiftyNet for 3D BraTS. It builds a hetero-modal variational latent from observed modality subsets, jointly reconstructs modalities and segments tumour; subset handling is intrinsic to the model/inference.
+- **推理可用输入：** One or more available MRI modalities; latent fusion supports subsets and decoder produces completion/segmentation. Eye use would need a new 2D two-modality classification head/decoder contract.
+- **A vs A+LOOK怎么固定：** Adapt and train one 2D U-HVED A with its variational/completion objective preserved; freeze it. A+LOOK must use that same A and legal latent/classifier representation, with no A retraining.
+- **可复用现资产：** cohort/split/preprocessing/evaluation/test policy；LOOK fit/replay after legal nodes exist
+- **不能直接复用：** author 3D BraTS weights；legacy TensorFlow graph as a direct LOOK host；existing R18/MMTM weights
+- **能排除的替代解释：** Represents an explicit generative/completion family, testing LOOK after missing information is modelled rather than after a plain fusion host.
+- **需要左侧科学取舍：** whether image reconstruction is scientifically necessary or latent completion is sufficient；2D generative architecture and losses；classifier attachment and complete reference；training/stopping budget
+- **纯工程接口：** new 2D variational encoders/decoder；latent subset fusion；binary classifier adapter；MHD latent/read-write nodes
+- **作者报告/实现局限：** 3D segmentation/completion in a legacy TensorFlow/NiftyNet stack; no author eye-classification recipe.
+
+### RFNet
+
+- **训练配对 / 作者配方：** Author code trains a 3D BraTS segmentation network with modality masks, fused loss plus per-modality/region-aware regularization; README evaluates complete/incomplete modality combinations (15 subset states).
+- **推理可用输入：** Available modality subset with feature mask; output is segmentation. A 2D eye-classification adaptation would need a new task head and a principled replacement for region/segmentation auxiliary semantics.
+- **A vs A+LOOK怎么固定：** Train one faithful adapted RFNet A once and freeze it; compare same A vs A+LOOK. Region-aware/per-modality regularizers cannot be deleted merely to simplify LOOK insertion.
+- **可复用现资产：** cohort/split/evaluation/test policy；LOOK fit/replay after legal fused representation is defined
+- **不能直接复用：** 3D RFNet weights；segmentation-region heads as a binary classifier；existing LOOK host weights
+- **能排除的替代解释：** Tests LOOK after explicit available-modality robust fusion, but only if the classification adapter preserves what makes RFNet RFNet.
+- **需要左侧科学取舍：** meaning of region-aware mechanism for image-level grading；classification analogue of per-modality auxiliary regularization；2D architecture/capacity and stop budget；implementation/license route
+- **纯工程接口：** 2D per-modality encoders；availability mask；region/fusion representation；per-modality and fused classification heads；legal LOOK fused node
+- **作者报告/实现局限：** Author task is 3D tumour segmentation, not image-level classification; no explicit repository license file found.
+
+### mmFormer
+
+- **训练配对 / 作者配方：** Author code is 3D BraTS incomplete segmentation with explicit modality masks, modality-specific encoders/intra-modal Transformers, inter-modal Transformer, fused and auxiliary losses.
+- **推理可用输入：** 3D multimodal tensor plus availability mask; can evaluate modality subsets. Eye adaptation needs two 2D image streams and a classification head.
+- **A vs A+LOOK怎么固定：** Train one fixed 2D classification mmFormer A once; freeze checkpoint/masks. A+LOOK reads/writes legal modality-specific/fused representations without retraining A or removing auxiliary regularizers.
+- **可复用现资产：** Apache-2.0 implementation concepts/code subject to adapter review；cohort/preprocessing/evaluation/test policy；LOOK fit/replay infrastructure
+- **不能直接复用：** 3D BraTS pretrained weights as eye classifier；existing R18/MMTM weights
+- **能排除的替代解释：** Would test an explicit mask-aware robust-fusion family, but the new Transformer host/capacity remains a large cross-method confound.
+- **需要左侧科学取舍：** 2D classification architecture preserving mmFormer core；capacity/compute policy；classification loss/auxiliary heads；legal LOOK node；training/stopping budget
+- **纯工程接口：** 2D modality encoders；availability masker；intra/inter-modal transformer tokens；binary classification head；MHD token/fused-node exposure
+- **作者报告/实现局限：** Author task is 3D segmentation; adapting to 2D binary grading substantially changes task/head/capacity.
+
+### Missing-Aware Prompts
+
+- **训练配对 / 作者配方：** Pinned author config explicitly defines missing_ratio train/val/test=0.7, missing_type=both, both_ratio=0.5; base ViLT can be fixed, prompt_length=16 and prompt_layers=0..5. Downstream configs include visual-recognition classification tasks.
+- **推理可用输入：** Image/text inputs with explicit missing-type handling/prompts. Current CFP/OCT are two image modalities, so directly reusing image-text semantics/pretraining is not a faithful adapter.
+- **A vs A+LOOK怎么固定：** Only after a two-image missing-aware-prompt A is scientifically defined: train prompt/adapted A once, freeze it, then compare same A vs A+LOOK without changing missing prompts/backbone.
+- **可复用现资产：** classification evaluation concept；cohort/test policy；LOOK fit/replay once legal transformer node exists
+- **不能直接复用：** ViLT image-text pretrained semantics as an automatically matched CFP/OCT host；existing R18/MMTM weights
+- **能排除的替代解释：** Represents a parameter-efficient missing-aware adaptation family, but image-text→image-image redesign is itself a major alternative explanation.
+- **需要左侧科学取舍：** two-image prompt semantics；backbone/pretraining identity；missing simulation policy for CFP/OCT；capacity/freeze policy；license/implementation route；legal LOOK token/node
+- **纯工程接口：** two-image tokenization/backbone；missing-type prompt injection；binary classification head；LOOK transformer-node exposure
+- **作者报告/实现局限：** Classification is relevant but modality types are image/text rather than two medical images; no explicit repository license file found.

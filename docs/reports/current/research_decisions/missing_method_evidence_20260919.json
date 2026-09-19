@@ -43,7 +43,37 @@
         "symmetric CFP/OCT missing training requires protocol",
         "2D adapter/core-loss/LOOK-node contract required",
         "license route unresolved"
-      ]
+      ],
+      "training_pairing": "Primary paper studies missing-modality classification and segmentation under dedicated/non-dedicated missing settings. The pinned public repository exposes BraTS 3D segmentation code; the paper classification implementation/recipe is not present there, so a symmetric CFP-missing/OCT-missing training schedule is NOT yet author-code-locked.",
+      "inference_inputs": "Scientific role is prediction from available modalities with unavailable-modality information reconstructed/generated in feature space. For the eye adapter, inference must use only the actually available CFP/OCT branch plus ShaSpec missing-feature mechanism; absent modality and target label remain forbidden.",
+      "fair_A_vs_A_LOOK": "Train one paper-faithful adapted ShaSpec A once; freeze that exact checkpoint and all missing-input rules. Compare A vs the same frozen A plus LOOK. +LOOK may fit/read/write only legal internal representations and must not retrain A or remove ShaSpec shared/specific/generation/auxiliary objectives.",
+      "reusable_assets": [
+        "1264/296 audited split, seed3416, sealed test",
+        "2D CFP/OCT preprocessing and ordered participants",
+        "LOOK PCA/RRR positive-forward-tree fit/replay",
+        "Macro-F1/AUROC/NLL/Brier and paired participant evaluation"
+      ],
+      "not_reusable": [
+        "existing R18/R50/MMTM checkpoints as ShaSpec A weights",
+        "BraTS 3D segmentation weights as an eye classifier"
+      ],
+      "alternative_explanation_removed": "Same frozen ShaSpec A separates incremental LOOK correction from gains caused by retraining/replacing the missing-modality method.",
+      "scientific_decisions": [
+        "paper-faithful 2D classification architecture because author classification code is absent from pinned repo",
+        "symmetric missing-OCT/missing-CFP training policy",
+        "mandatory ShaSpec losses/feature-generation terms",
+        "implementation provenance/license route",
+        "legal LOOK node and complete-input reference semantics",
+        "optimizer/stopping/budget"
+      ],
+      "engineering_interface": [
+        "two 2D modality encoders",
+        "shared/specific feature tensors",
+        "missing-feature generation/fusion path",
+        "binary classification score adapter",
+        "MHD node exposure while preserving ShaSpec losses"
+      ],
+      "author_recipe_limitations": "Repo checked here is BraTS 3D segmentation code; paper classification task exists but its code recipe was not found. No explicit repository license file was found."
     },
     {
       "id": "u_hved",
@@ -65,7 +95,33 @@
         "3D to 2D classification adaptation",
         "legacy framework",
         "new classifier/reference contract"
-      ]
+      ],
+      "training_pairing": "Author implementation is TensorFlow 1.12/NiftyNet for 3D BraTS. It builds a hetero-modal variational latent from observed modality subsets, jointly reconstructs modalities and segments tumour; subset handling is intrinsic to the model/inference.",
+      "inference_inputs": "One or more available MRI modalities; latent fusion supports subsets and decoder produces completion/segmentation. Eye use would need a new 2D two-modality classification head/decoder contract.",
+      "fair_A_vs_A_LOOK": "Adapt and train one 2D U-HVED A with its variational/completion objective preserved; freeze it. A+LOOK must use that same A and legal latent/classifier representation, with no A retraining.",
+      "reusable_assets": [
+        "cohort/split/preprocessing/evaluation/test policy",
+        "LOOK fit/replay after legal nodes exist"
+      ],
+      "not_reusable": [
+        "author 3D BraTS weights",
+        "legacy TensorFlow graph as a direct LOOK host",
+        "existing R18/MMTM weights"
+      ],
+      "alternative_explanation_removed": "Represents an explicit generative/completion family, testing LOOK after missing information is modelled rather than after a plain fusion host.",
+      "scientific_decisions": [
+        "whether image reconstruction is scientifically necessary or latent completion is sufficient",
+        "2D generative architecture and losses",
+        "classifier attachment and complete reference",
+        "training/stopping budget"
+      ],
+      "engineering_interface": [
+        "new 2D variational encoders/decoder",
+        "latent subset fusion",
+        "binary classifier adapter",
+        "MHD latent/read-write nodes"
+      ],
+      "author_recipe_limitations": "3D segmentation/completion in a legacy TensorFlow/NiftyNet stack; no author eye-classification recipe."
     },
     {
       "id": "rfnet",
@@ -86,7 +142,34 @@
       "blockers": [
         "region/segmentation semantics do not map directly to eye classification",
         "license unresolved"
-      ]
+      ],
+      "training_pairing": "Author code trains a 3D BraTS segmentation network with modality masks, fused loss plus per-modality/region-aware regularization; README evaluates complete/incomplete modality combinations (15 subset states).",
+      "inference_inputs": "Available modality subset with feature mask; output is segmentation. A 2D eye-classification adaptation would need a new task head and a principled replacement for region/segmentation auxiliary semantics.",
+      "fair_A_vs_A_LOOK": "Train one faithful adapted RFNet A once and freeze it; compare same A vs A+LOOK. Region-aware/per-modality regularizers cannot be deleted merely to simplify LOOK insertion.",
+      "reusable_assets": [
+        "cohort/split/evaluation/test policy",
+        "LOOK fit/replay after legal fused representation is defined"
+      ],
+      "not_reusable": [
+        "3D RFNet weights",
+        "segmentation-region heads as a binary classifier",
+        "existing LOOK host weights"
+      ],
+      "alternative_explanation_removed": "Tests LOOK after explicit available-modality robust fusion, but only if the classification adapter preserves what makes RFNet RFNet.",
+      "scientific_decisions": [
+        "meaning of region-aware mechanism for image-level grading",
+        "classification analogue of per-modality auxiliary regularization",
+        "2D architecture/capacity and stop budget",
+        "implementation/license route"
+      ],
+      "engineering_interface": [
+        "2D per-modality encoders",
+        "availability mask",
+        "region/fusion representation",
+        "per-modality and fused classification heads",
+        "legal LOOK fused node"
+      ],
+      "author_recipe_limitations": "Author task is 3D tumour segmentation, not image-level classification; no explicit repository license file found."
     },
     {
       "id": "mmformer",
@@ -107,7 +190,35 @@
       "blockers": [
         "large architecture/capacity confound",
         "new 2D classification transformer required"
-      ]
+      ],
+      "training_pairing": "Author code is 3D BraTS incomplete segmentation with explicit modality masks, modality-specific encoders/intra-modal Transformers, inter-modal Transformer, fused and auxiliary losses.",
+      "inference_inputs": "3D multimodal tensor plus availability mask; can evaluate modality subsets. Eye adaptation needs two 2D image streams and a classification head.",
+      "fair_A_vs_A_LOOK": "Train one fixed 2D classification mmFormer A once; freeze checkpoint/masks. A+LOOK reads/writes legal modality-specific/fused representations without retraining A or removing auxiliary regularizers.",
+      "reusable_assets": [
+        "Apache-2.0 implementation concepts/code subject to adapter review",
+        "cohort/preprocessing/evaluation/test policy",
+        "LOOK fit/replay infrastructure"
+      ],
+      "not_reusable": [
+        "3D BraTS pretrained weights as eye classifier",
+        "existing R18/MMTM weights"
+      ],
+      "alternative_explanation_removed": "Would test an explicit mask-aware robust-fusion family, but the new Transformer host/capacity remains a large cross-method confound.",
+      "scientific_decisions": [
+        "2D classification architecture preserving mmFormer core",
+        "capacity/compute policy",
+        "classification loss/auxiliary heads",
+        "legal LOOK node",
+        "training/stopping budget"
+      ],
+      "engineering_interface": [
+        "2D modality encoders",
+        "availability masker",
+        "intra/inter-modal transformer tokens",
+        "binary classification head",
+        "MHD token/fused-node exposure"
+      ],
+      "author_recipe_limitations": "Author task is 3D segmentation; adapting to 2D binary grading substantially changes task/head/capacity."
     },
     {
       "id": "missing_aware_prompts",
@@ -129,7 +240,35 @@
         "image-text to CFP/OCT redesign",
         "new backbone/pretraining identity",
         "license unresolved"
-      ]
+      ],
+      "training_pairing": "Pinned author config explicitly defines missing_ratio train/val/test=0.7, missing_type=both, both_ratio=0.5; base ViLT can be fixed, prompt_length=16 and prompt_layers=0..5. Downstream configs include visual-recognition classification tasks.",
+      "inference_inputs": "Image/text inputs with explicit missing-type handling/prompts. Current CFP/OCT are two image modalities, so directly reusing image-text semantics/pretraining is not a faithful adapter.",
+      "fair_A_vs_A_LOOK": "Only after a two-image missing-aware-prompt A is scientifically defined: train prompt/adapted A once, freeze it, then compare same A vs A+LOOK without changing missing prompts/backbone.",
+      "reusable_assets": [
+        "classification evaluation concept",
+        "cohort/test policy",
+        "LOOK fit/replay once legal transformer node exists"
+      ],
+      "not_reusable": [
+        "ViLT image-text pretrained semantics as an automatically matched CFP/OCT host",
+        "existing R18/MMTM weights"
+      ],
+      "alternative_explanation_removed": "Represents a parameter-efficient missing-aware adaptation family, but image-text→image-image redesign is itself a major alternative explanation.",
+      "scientific_decisions": [
+        "two-image prompt semantics",
+        "backbone/pretraining identity",
+        "missing simulation policy for CFP/OCT",
+        "capacity/freeze policy",
+        "license/implementation route",
+        "legal LOOK token/node"
+      ],
+      "engineering_interface": [
+        "two-image tokenization/backbone",
+        "missing-type prompt injection",
+        "binary classification head",
+        "LOOK transformer-node exposure"
+      ],
+      "author_recipe_limitations": "Classification is relevant but modality types are image/text rather than two medical images; no explicit repository license file found."
     }
   ],
   "screened_out": {
@@ -138,7 +277,10 @@
     "repo": "https://github.com/Jun-Jie-Shi/M2FTrans",
     "commit": "03a0b28ae03ad1a7dea5fb874c7b47c1439caa34",
     "license": "MIT",
-    "reason": "scientifically applicable but redundant with the 3D robust-transformer family for the first package"
+    "reason": "scientifically applicable but redundant with the 3D robust-transformer family for the first package",
+    "mechanism": "3D multimodal transformer with masked/incomplete-modality fusion for BraTS segmentation",
+    "author_task": "3D incomplete multimodal brain tumour segmentation",
+    "why_screened_not_invalid": "Scientifically applicable family, but first-package information overlaps mmFormer/RFNet while preserving the same 3D segmentation/high-capacity adaptation confounds."
   },
   "reusable_assets": [
     "1264 train/296 dev, seed3416, sealed test",
