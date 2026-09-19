@@ -3,7 +3,7 @@
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
   "phase": "embracenet_single_seed_scientifically_accepted_integration_publication_in_progress",
-  "next_acceptance": "Stage A概率诊断已独立接受；当前完成缺失方法一手证据/公平匹配盘点。MMTM只作宿主兼容/组装证据，不计LOOK缺失方法A/B/C。下一训练方法与配方由左侧从有限候选裁决；本包不启动GPU/test。",
+  "next_acceptance": "Stage A概率诊断已由左侧独立接受并进入发布收口；真正缺失方法A vs同一A+LOOK仍未完成。MMTM只作宿主兼容/组装证据，不计A/B/C。下一外部方法必须由新的有限协议选择；当前不启动GPU/test。",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
@@ -91,8 +91,7 @@
   ],
   "blockers": [
     "独立仿射家族完整主搜索与代表起点并行对照仍有验收缺口，整周重复种子门槛保持关闭。",
-    "真实跨租期到期恢复尚未发生；已绑定自动接续并通过锁、状态、资源和两层owner测试，但不等于实际到期恢复完成。",
-    "EmbraceNet当前study/test SHA的恢复后动态CPU重验被上层传输安全检查阻塞；禁止用传输前5项测试替代，且不绕过安全拒绝。"
+    "真实跨租期到期恢复尚未发生；已绑定自动接续并通过锁、状态、资源和两层owner测试，但不等于实际到期恢复完成。"
   ],
   "actions": [
     "新q32正式步骤因全量dev RSS增长失败，已确认旧step死亡；原run/spec恢复至51909172.10。allocator环境调整后通过782批完整dev，自动进入train joint_input×16拟合。不是科学完成，拟合验收仍待完成。",
@@ -139,6 +138,7 @@
     "用户授权ws02优先LOOK并沿用旧数据开展当前方法设计；平台统一标准、不同数据/初始化独立身份。后继优先老师9月13日问题，中文为主的周报呈现变化及真实缺项。",
     "fusion-stage解释决策：middle对deep的部分LOOK收益差同时区间不跨0，但middle宿主本身更弱且参数量更少；features与deep等参数但4项同时区间全跨0。当前不按点估计宣布最佳融合阶段，也不扩种子/骨干；等待左侧独立验收后再回到老师A/B/C缺口。",
     "fusion-stage科学包已接受后停止其GPU生命周期：不因middle大增益继续堆融合位置/骨干/种子；middle更弱宿主基线是主要替代解释，features相对deep四项同时区间跨零。下一研究回到外部A/B/C匹配与现有logits概率损失定位，由左侧另行锁定。",
+    "2026-09-19比较角色纠正：LOOK缺失方法A必须实际处理整模态缺失；MMTM/fusion-stage不计A/B/C覆盖。Stage A概率诊断已左侧独立接受，只作描述性解释。",
     "2026-09-19比较角色纠正：LOOK缺失方法A必须实际处理整模态缺失；MMTM/fusion-stage/fixed-mean/fixed-prefix不计A/B/C覆盖。Stage A概率诊断只作描述性解释。GAN/微调是类别例子而非必跑表。",
     "EmbraceNet trial唯一推荐：1264train/296dev/seed3416沿用accepted R18训练与BN/停止；c=256，complete选择概率0.5/0.5，train complete/missingOCT/missingCFP各1/3；K=32 common-random评估，checkpoint仍按complete dev Macro-F1，A与A+LOOK同state逐draw复用精确indices。左审及当前SHA CPU重验前不训练。",
     "EmbraceNet v2统一trial待左侧最终确认两项新科学选择：train三状态各1/3；complete checkpoint/诊断使用解析integrated mean logits，K32仅可选诊断。其余R18训练/BN/batch/停止/label/split/test规则继承不变。",
@@ -238,6 +238,10 @@
     {
       "label": "fusion-stage预登记、结构合同、修复与验收边界",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/ws02_fusion_stage_20260919.md"
+    },
+    {
+      "label": "Stage A概率损失反例定位",
+      "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/probability_diagnostic/README.md"
     },
     {
       "label": "LOOK缺失方法一手证据与公平合同",

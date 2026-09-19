@@ -16,7 +16,7 @@ v1 repair_required 后已在本机隔离venv完成当前SHA动态闭环：Embrac
 
 ## 2026-09-19：LOOK外部比较角色纠正
 
-当前LOOK主问题是“真正缺失模态处理策略 A vs 同一 A + LOOK”。MMTM既有结果保留为宿主兼容/组装证据，不计缺失方法A/B/C；fusion-stage等为LOOK机制证据。GAN/微调只是例子，不是必跑表。候选一手证据和公平合同见 docs/reports/current/research_decisions/missing_method_evidence_20260919.md。历史MMTM数值与cutoff不改。
+当前LOOK主问题是“真正缺失模态处理策略 A vs 同一 A + LOOK”。MMTM既有结果保留为宿主兼容/组装证据，不计缺失方法A/B/C；fusion-stage等为LOOK机制证据。Stage A概率诊断已由左侧独立接受，只解释既有预测反例。当前不自动选择或训练新的外部A。
 
 ## 2026-09-19：R18 fusion-stage有限包已由左侧独立科学验收
 

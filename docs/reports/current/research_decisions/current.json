@@ -17,9 +17,8 @@
       "question": "老师提出的已有方法A能否加LOOK进一步获益",
       "decision": "MMTM matched package is retained as host compatibility/assembly evidence only; it is not a LOOK missing-modality method A. The corrected missing-method A vs A+LOOK question remains open.",
       "state": "superseded_role_mapping_preserve_MMTM_numeric_evidence",
-      "reason": "The research object is whole-modality missingness handling. Host gating/fusion compatibility does not establish missing-modality processing.",
-      "followthrough": "Original MMTM numeric evidence remains unchanged and useful for interface compatibility/probability counterexamples. It no longer counts toward missing-method A/B/C coverage.",
-      "role_correction": "2026-09-19 comparison_scope_correction"
+      "reason": "Whole-modality missingness handling is the target research object; host gating/fusion compatibility does not establish missing-modality processing.",
+      "followthrough": "Original MMTM numeric evidence remains unchanged; it no longer counts toward missing-method A/B/C coverage."
     },
     {
       "question": "ws02结果如何反馈Ibex",
@@ -39,21 +38,13 @@
     },
     {
       "question": "外部A/B/C下一项怎样最直接回答“原A vs A+LOOK”，同时解释概率损失反例",
-      "accepted_evidence": "Stage A probability decomposition is independently accepted as descriptive evidence only. Primary-paper/pinned-author-code inventory now covers ShaSpec, U-HVED, RFNet, mmFormer and Missing-Aware Prompts; M2FTrans is screened as a redundant high-cost family member.",
-      "counterexample": "MMTM/fusion-position evidence does not answer the corrected missing-method question. EyeMoSt+ prior source review is retained but paused/reclassified; it is not automatically the next LOOK A.",
-      "alternative_explanation": "A fair test must compare a reasonably trained missing-modality strategy A with the exact same frozen A plus LOOK; otherwise retraining, host capacity or fusion changes can explain the gain.",
-      "decision": "No external training is authorized here. ShaSpec is the finite first-package recommendation for left review because its primary paper explicitly includes missing-modality classification, but adapter/licensing/symmetric-missing protocol decisions remain open.",
-      "next_action_cost": "If approved later: one new A training plus normal LOOK fit/evaluation; exact GPU time requires adapter profile. No current accepted host weights substitute for the new A.",
-      "recheck_trigger": "Left must lock the selected method, implementation provenance/license route, 2D adapter, core losses, missing-input policy, stop/selection budget and legal LOOK node before any GPU package.",
-      "state": "missing_method_primary_evidence_inventory_ready_left_decision_required"
-    },
-    {
-      "question": "纠正后的LOOK缺失方法主比较覆盖到了什么",
-      "accepted_evidence": "MMTM compatibility, fusion-stage mechanisms and Stage A probability diagnostic are accepted in their own scopes.",
-      "decision": "None of those count as a completed missing-modality A/B/C matched comparison. Primary-evidence inventory recommends ShaSpec for left consideration only.",
-      "state": "missing_method_comparison_not_started_candidate_inventory_ready",
-      "reason": "LOOK asks whether it adds value after an existing missing-modality handling strategy; examples such as GAN or robust fine-tuning are categories, not a mandated list.",
-      "next_trigger": "Left issues a finite selected-A protocol after reviewing missing_method_evidence_20260919."
+      "accepted_evidence": "Stage A probability decomposition is independently accepted as descriptive evidence only. MMTM is compatibility/assembly evidence, not a missing-method A.",
+      "counterexample": "Fusion/MMTM evidence cannot answer the corrected missing-method question; EyeMoSt+ prior source review is paused/reclassified.",
+      "alternative_explanation": "外部方法收益可能来自其自身缺失模态/不确定性损失、3D结构或容量差异，而非LOOK可附加性；必须同一适配宿主内做A vs A+LOOK。",
+      "decision": "Do not auto-select or train a new external A from current main. A new finite evidence/protocol package must choose a true missing-modality strategy.",
+      "next_action_cost": "No GPU action in this publication. Candidate-specific cost remains pending protocol selection.",
+      "recheck_trigger": "左侧需先锁定EyeMoSt+的2D-OCT编码器适配、原Student-t/置信度损失、推理不依赖标签、初始化/停止/预算；或锁定EDRL的2D机制保真准则后才派发GPU包。",
+      "state": "scope_corrected_candidate_selection_pending"
     },
     {
       "question": "EmbraceNet作为首个真正缺失方法A的CPU适配与试运行合同是否就绪",

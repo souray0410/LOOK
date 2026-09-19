@@ -1,22 +1,6 @@
-## EmbraceNet v3 replay失败边界与二阶矩合同（2026-09-19）
-
-左侧v2图级探针发现的外部prearm replay泄漏已在公开plain/study入口统一修复；当前专项24/24、相关回归30/30及独立图级probe通过。v2冻结证据不覆写，其损坏公式由[v3可发布合同](embracenet_adapter_repair_v3_20260919.md)勘误。v3同时明确：complete分类的integrated mean logits只需一阶矩，但若embraced_feature的LOOK PCA仍针对作者随机完整参考分布，则必须用解析二阶矩保留条件抽样方差；mean-only PCA属于新的科学目标，不能静默切换。真实训练仍未授权。
-
-## EmbraceNet v2 CPU闭环与统一统计合同（2026-09-19）
-
-v1 的工程 blocker 已由本机隔离 CPU 环境闭环：当前源码专项16/16、相关回归30/30、作者当前SHA等价/RNG恢复、九节点双缺失非零LOOK与统计目标审计均通过。v2 统一 train/A/A+LOOK 缺失入口，并把原 K32 正式提案修订为：单缺失每状态一次作者式forward；complete 若目标是平均logits，则使用解析 integrated mean logits，K32只作可选诊断。真实训练仍未授权。详见 [embracenet_adapter_repair_v2_20260919.md](embracenet_adapter_repair_v2_20260919.md)。
-
-## EmbraceNet首个真正缺失方法适配（2026-09-19）
-
-已选 EmbraceNet 作为首个真正缺失方法 A；作者固定实现的四类合法输入输出/梯度/RNG及下一 AdamW 更新精确恢复已通过CPU对照。当前已实现R18/MHD九节点原型与明确 trial contract；未训练、test封存。传输恢复后新增 pre-R18 NaN-safe 入口和共同随机 trace helper，但上层安全检查拒绝了向既有WS02隔离CPU副本的同步，故当前SHA尚缺一次针对性动态重验；不得把传输前5项测试冒称覆盖新SHA。详见 [embracenet_adapter_readiness_20260919.md](embracenet_adapter_readiness_20260919.md)。
-
 # 当前比较角色纠正（2026-09-19）
 
-LOOK 的外部 A 现在严格定义为“处理整模态缺失的既有方法/策略”；主比较是同一个合理训练 A 与同一个 A + LOOK。MMTM、融合阶段、固定均值/固定前缀继续保留各自数值，但属于宿主兼容/组装或 LOOK 机制证据，**不计缺失方法 A/B/C 完成**。GAN、缺失鲁棒微调只是类别例子，不是必跑清单。
-
-有限一手候选与公平匹配合同见 missing_method_evidence_20260919.md。Stage A 概率诊断只解释既有预测反例，不替代外部缺失方法实验。
-
-缺失方法的**适配合同就绪度**见 [missing_method_contract_readiness_20260919.md](missing_method_contract_readiness_20260919.md)：已核清 ShaSpec 分类/缺失训练出处，并补 ModDrop、EmbraceNet 两个低成本类别代表；该文档仅 ready_for_left_review，不构成训练授权或科学接受。
+LOOK 的外部 A 现在指真正处理整模态缺失的既有方法/策略；主比较是同一个合理训练 A 与同一个 A + LOOK。MMTM、融合阶段与固定前缀/均值保留原数值，但不计缺失方法A/B/C完成。Stage A概率诊断已独立接受，只解释既有概率损失反例。新的外部方法仍待单独有限协议选择。
 
 ## 固定均值对照：2026-09-18新证据
 
@@ -30,7 +14,7 @@ LOOK 的外部 A 现在严格定义为“处理整模态缺失的既有方法/�
 |---|---|---|
 |ResNet50小队列上，残差相对PCA的F1差异约+0.32和−0.07个百分点，两区间均跨零|不能叫残差稳定更好，也不能叫两方法等效|两方法都保留；R18匹配包与36项空前缀诊断已完成，后续优先真正的缺失方法 A vs 同一 A+LOOK；MMTM仅保留兼容性证据|
 |已有完整正收益树包括相同规则的best-forward路径|不能据此推出泛化与成本一定更好|不增加重复性能比较，已有结果保留|
-|老师关心已有方法是否可加LOOK|换骨干不能回答这个问题|MMTM适配结果已验收但只作宿主兼容/组装证据；真正缺失方法 A vs 同一 A+LOOK 仍未完成|
+|老师关心已有方法是否可加LOOK|换骨干不能回答这个问题|MMTM结果已验收但只作宿主兼容/组装证据；真正缺失方法A vs同一A+LOOK仍未完成|
 |小队列可快速发现反例和工程问题|不能替代Ibex的正式重复或不同数据任务|Ibex继续原匹配任务；仅调整未锁定探索优先级|
 
 工程错误先修复；有效负结果保留。出现F1提高但AUROC/校准下降时，两面都报告，并优先定位原因。单种子结果均为探索性；不为赶汇报缩短停止标准，不触碰test。详细决策身份与触发条件：[current.json](current.json)。
@@ -49,8 +33,11 @@ MMTM适配宿主的不修正与+LOOK数值已完成（宿主兼容性证据，�
 
 回答了“LOOK能否组装到这个门控宿主并在缺失输入下工作”的兼容性局部问题；不能说MMTM宿主优于无MMTM宿主，也不能说复现了作者完整系统。两拟合差异仅+0.73/+0.54pp且区间跨零，暂不删任一方法。缺OCT的NLL上升说明F1收益与概率质量需分开解释；下一步优先已批准的固定前缀/λ机制诊断与教师问题整理，不立即堆重复骨干。下一GPU任务尚未派发，Ibex正式任务独立保留。
 
-## 2026-09-19：fusion-stage验收后的停止条件与缺失方法纠正
+## 2026-09-19：fusion-stage验收后的停止条件与下一候选
 
-fusion-stage已科学验收并停止GPU生命周期；middle大增益仍有弱基线/小容量替代解释，features对deep四项同时区间跨零。
+|问题|已接受证据|反例|替代解释|下一动作／成本|重新检查触发|
+|---|---|---|---|---|---|
+|是否因middle较大LOOK收益继续堆融合位置/骨干/种子|deep严格复用＋middle/features两个新R18宿主；296人四指标、8项10k区间、8树394前缀/674候选已由左侧独立验收|middle缺OCT未修正仅33.33%，PCA/RRR 63.67/65.67仍低于deep 69.24/66.77；features相对deep四项同时区间全跨0；deep缺OCT NLL 1.0803→1.6217/2.5447|middle参数更少、基线更弱、拓扑/训练权重不同，较大修正增益不等于早融合因果优势|停止fusion-stage GPU生命周期；不新增融合位置/骨干/种子。成本=0新GPU|只有左侧提出新的因果问题并锁定容量/拓扑/种子匹配协议才重开|
+|外部A/B/C下一项怎样最直接回答A vs A+LOOK|MMTM适配A/A+LOOK已完成；EyeMoSt+/EDRL作者源码commit与文件SHA已审计|MMTM不是原完整视频/骨骼系统；EyeMoSt+/EDRL原方案均含3D OCT，而当前是2D切片|外部方法收益可能来自其自身缺失模态/不确定性损失、3D结构或容量，而非LOOK可附加性|旧EyeMoSt+/EDRL候选需按缺失处理能力重新分类；Stage A概率诊断已经完成但不替代外部方法对照。当前不自动选择任何新A|左侧先锁2D-OCT适配、原损失、无标签推理、初始化/停止/预算，才派GPU包|
 
-外部缺失方法主问题现在按 missing_method_evidence_20260919.md 重新映射：MMTM不计A/B/C；EyeMoSt+旧审查留档但不作为下一A；当前有限首包建议是由左侧评估ShaSpec能否形成paper-faithful 2D classification A。没有新训练授权。
+更完整的只读可行性建议见[外部A/B/C与概率损失：下一有限包可行性建议](external_abc_probability_feasibility_20260919.md)。该建议**不代表已经选择EyeMoSt+，也没有启动新实验**。
