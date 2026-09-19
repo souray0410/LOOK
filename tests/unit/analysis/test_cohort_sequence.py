@@ -123,3 +123,12 @@ def test_do_not_preserve_old_config_when_scientific_value_changed():
     kept=m._preserve_accepted_config_records({'configurations':[old]},[new])
     assert kept[0] is new
     assert kept[0]['results'][0]['metrics']['macro_f1']==.123
+
+
+def test_fusion_extension_detail_links_target_fusion_stage_pages():
+    deep=_public_config('2026_09_18_11_18_28_650020')
+    middle=_public_config('2026_09_19_02_40_42_281912_middle',position='middle')
+    features=_public_config('2026_09_19_02_40_42_281912_features',position='features')
+    current=dict(configurations=[deep],fusion_stage_extension=dict(configurations=[middle,features]))
+    assert m._detail_href(current,deep)=='configs/2026_09_18_11_18_28_650020/README.md'
+    assert m._detail_href(current,middle)=='../fusion_stage/configs/2026_09_19_02_40_42_281912_middle/README.md'

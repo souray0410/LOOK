@@ -85,6 +85,15 @@ def _display_execution(current):
     return result
 
 
+def _detail_href(current,publication):
+    extension=current.get('fusion_stage_extension')
+    fusion_ids={p.get('run_id') for p in extension.get('configurations',[])} if extension else set()
+    if publication.get('run_id') in fusion_ids:
+        return f'../fusion_stage/configs/{publication["run_id"]}/README.md'
+    return f'configs/{publication["run_id"]}/README.md'
+
+
+
 def _publication_science_projection(publication):
     value=copy.deepcopy(publication)
     value.pop('publication_verified_at_utc',None)
@@ -163,7 +172,7 @@ def refresh(plan, statuses):
         label={'accepted':'已验收','running':'执行中','not_started':'未启动','needs_review':'故障待修复','accepted_reference':'已验收复用'}.get(state,state)
         progress=p.get('host_progress',{})
         if state=='running' and progress:label+=f'；宿主epoch {progress.get("epoch","—")} / 更新{progress.get("updates","—")}'
-        lines.append(f'|{i+1}|{host_label(p)}|{label}|[配置、指标、树路径](configs/{p["run_id"]}/README.md)|')
+        lines.append(f'|{i+1}|{host_label(p)}|{label}|[配置、指标、树路径]({_detail_href(current,p)})|')
     lines+=['','## 累计结果（Macro-F1，百分比）','',
         '只展示已完整匹配验收的配置；每一行应横向比较，跨骨干不把某个最高数值直接叫稳定最佳。','',
         '|骨干|缺失状态|不修正|PCA＋树|自由低秩残差＋树|残差−PCA（百分点）|','|---|---|---:|---:|---:|---:|']
