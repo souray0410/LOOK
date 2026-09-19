@@ -379,7 +379,7 @@ def test_relocation_map_moves_prediction_references_without_changing_values_or_s
     (source/'prefixes/root/baseline.json').write_text(json.dumps({'identity':'x','evidence':evidence}))
     before=fresh.raw_manifest(source)
     fresh.copy_audit_tree(source,target)
-    receipt,path=fresh.relocate_cached_prediction_references(source,target,audit)
+    receipt,path=fresh.relocate_cached_prediction_references(source,target,audit,'pre_fit')
     row=json.loads((target/'prefixes/root/baseline.json').read_text())['evidence']
     assert Path(row['prediction']).resolve().is_relative_to(target.resolve())
     assert row['sha256']==file_sha256(pred)==file_sha256(row['prediction'])
