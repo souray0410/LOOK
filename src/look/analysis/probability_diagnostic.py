@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import math
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -237,6 +238,7 @@ def analyze(spec_path, private_output, public_output):
         test_access=False,participant_count=296,pair_count=20,input_unique_file_count=len(input_files),
         input_files=sorted(input_files.values(),key=lambda x:x["sha256"]),rows=private_rows)
     public=dict(schema="look_probability_diagnostic_public_v1",
+        diagnostic_generated_at=datetime.now(timezone.utc).isoformat(),
         purpose=spec["purpose"],test_used=False,participant_count=296,pair_count=20,
         methods=spec["methods"],patterns=spec["patterns"],fixed_bins=spec["bins"],
         quantiles=spec["quantiles"],top_positive_fraction=spec["top_positive_fraction"],
