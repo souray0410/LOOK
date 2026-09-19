@@ -82,12 +82,8 @@ def _tensor_sha(tensor):
     return h.hexdigest()
 
 
-def graph_state_projection(graph):
-    # Ephemeral MHD message states are reset before capture; scientific module
-    # parameters/buffers, BN state, modes, hooks and requires_grad must match.
-    for node in graph.nodes:
-        node.reset()
-    graph.eval()
+def capture_graph_state(graph):
+    # Pure observation: never calls eval(), train(), reset() or mutates a node.
     state={key:_tensor_sha(value) for key,value in graph.state_dict().items()}
     modules={}
     bn={}
@@ -99,10 +95,36 @@ def graph_state_projection(graph):
                 running_mean=None if module.running_mean is None else _tensor_sha(module.running_mean),
                 running_var=None if module.running_var is None else _tensor_sha(module.running_var),
                 num_batches_tracked=None if module.num_batches_tracked is None else int(module.num_batches_tracked.item()))
-    value=dict(graph_training=graph.training,state_dict=state,batchnorm=bn,modules=modules,
+    messages={}
+    for node in graph.nodes:
+        value=node.feature_message.current_state
+        messages[node.name]=None if value is None else dict(shape=list(value.shape),sha256=_tensor_sha(value))
+    scientific=dict(graph_training=graph.training,state_dict=state,batchnorm=bn,modules=modules,
         requires_grad={name:p.requires_grad for name,p in graph.named_parameters()})
-    value['sha256']=stable_hash(value)
-    return value
+    return dict(scientific=scientific,scientific_sha256=stable_hash(scientific),node_messages=messages)
+
+
+def assert_evaluation_mode(capture):
+    scientific=capture['scientific']
+    training=[name for name,row in scientific['modules'].items() if row['training']]
+    if scientific['graph_training'] or training:
+        raise ValueError('Fusion revalidation graph/module mode drifted from eval: '+','.join(training[:8]))
+
+
+def prepare_for_evaluation(graph):
+    # Evaluation mode is a precondition, not something this helper silently fixes.
+    before=capture_graph_state(graph)
+    assert_evaluation_mode(before)
+    for node in graph.nodes:
+        node.reset()
+    after=capture_graph_state(graph)
+    assert_evaluation_mode(after)
+    if before['scientific']!=after['scientific']:
+        raise ValueError('Resetting transient MHD messages changed scientific graph state')
+    uncleared=[name for name,value in after['node_messages'].items() if value is not None]
+    if uncleared:
+        raise ValueError('MHD transient message reset was incomplete: '+','.join(uncleared[:8]))
+    return dict(before=before,after=after,transient_messages_reset=True)
 
 
 def evidence_projection(value):
@@ -224,6 +246,44 @@ def copy_audit_tree(source,target):
         path.unlink()
 
 
+def relocate_cached_prediction_references(source,target,audit):
+    source=Path(source).resolve();target=Path(target).resolve();audit=Path(audit)
+    mappings=[]
+    def walk(value):
+        changed=False
+        if isinstance(value,dict):
+            if 'prediction' in value:
+                old=Path(value['prediction']).resolve()
+                if not old.is_relative_to(source):
+                    raise ValueError('Cached prediction reference is outside source tree')
+                rel=old.relative_to(source);new=(target/rel).resolve()
+                if not new.is_relative_to(target) or not new.exists():
+                    raise ValueError('Relocated prediction target is missing or escaped target tree')
+                expected_sha=value.get('sha256');expected_values=value.get('values_sha256')
+                if (file_sha256(old)!=expected_sha or file_sha256(new)!=expected_sha
+                        or saved_prediction_values_sha(old)!=expected_values
+                        or saved_prediction_values_sha(new)!=expected_values):
+                    raise ValueError('Relocated prediction evidence changed')
+                mappings.append(dict(source=str(old),target=str(new),relative=str(rel),
+                    sha256=expected_sha,values_sha256=expected_values))
+                value['prediction']=str(new);changed=True
+            for child in value.values():
+                if walk(child):changed=True
+        elif isinstance(value,list):
+            for child in value:
+                if walk(child):changed=True
+        return changed
+    for path in sorted((target/'prefixes').rglob('*.json')):
+        value=json.loads(path.read_text())
+        if walk(value):atomic_write_json(value,path)
+    receipt=dict(schema='look_fusion_evidence_relocation_v1',state='accepted',test_access=False,
+        source_root=str(source),target_root=str(target),mappings=mappings,
+        mapping_count=len(mappings),no_scientific_value_change=True)
+    path=audit/'evidence_relocation.json';path.parent.mkdir(parents=True,exist_ok=True)
+    atomic_write_json(receipt,path)
+    return receipt,path
+
+
 def refresh_cached_evidence(source,target,graph,loader,device,pattern):
     source,target=Path(source),Path(target)
     if not source.exists() or not (source/'selection.json').exists():
@@ -282,12 +342,18 @@ def revalidate_or_fit(*,source,target,graph,loader,device,arm,pattern,sites,fact
     source,target=Path(source),Path(target)
     audit=target.parent/'audit'/target.name
     runtime=formal_runtime_fingerprint()
-    start_state=graph_state_projection(graph)
+    preparation=prepare_for_evaluation(graph)
+    start_state=preparation['after']
     source_manifest=raw_manifest(source) if source.exists() else {}
     source_manifest_sha=write_manifest(source_manifest,audit/'source_raw_manifest.json')
     source_complete=all((source/name).exists() for name in ('selection.json','bank.pt','tree_progress.json','replay.json'))
     source_science=science_projection(source) if source_complete else None
     copy_audit_tree(source,target)
+    relocation,relocation_path=relocate_cached_prediction_references(source,target,audit) if source.exists() else (
+        dict(schema='look_fusion_evidence_relocation_v1',state='accepted',test_access=False,
+            source_root=str(source.resolve()),target_root=str(target.resolve()),mappings=[],mapping_count=0,
+            no_scientific_value_change=True), audit/'evidence_relocation.json')
+    if not relocation_path.exists():atomic_write_json(relocation,relocation_path)
     cache_verification=dict(mode='verify_committed_prefix_candidate_evidence_without_rewrite',
         source_complete=source_complete,
         source_decisions=0 if not source_complete else len(json.loads((source/'selection.json').read_text())['decisions']))
@@ -295,12 +361,14 @@ def revalidate_or_fit(*,source,target,graph,loader,device,arm,pattern,sites,fact
         factor=factor,candidates=[dict(rank=32,ridge_lambda=None)],pca_bank=pca_bank,identity=identity,
         output=target,device=device,workspace_bytes=workspace_bytes,mode='positive_forward_tree',
         should_pause=should_pause,penalty_policy='prefix_train_pca_gcv')
-    end_state=graph_state_projection(graph)
-    if end_state!=start_state:
+    end_state=capture_graph_state(graph)
+    assert_evaluation_mode(end_state)
+    if end_state['scientific']!=start_state['scientific']:
         raise ValueError('Fusion revalidation changed accepted host parameters/buffers/modes/hooks')
     fresh=load_fresh_graph()
-    fresh_state=graph_state_projection(fresh)
-    if fresh_state!=start_state:
+    fresh_preparation=prepare_for_evaluation(fresh)
+    fresh_state=fresh_preparation['after']
+    if fresh_state['scientific']!=start_state['scientific']:
         raise ValueError('Fresh accepted host state differs during fusion revalidation')
     replay=evaluate_missing(fresh,loader('development'),device,fixed_pattern=pattern,artifact_banks={pattern:bank})
     values_sha=prediction_values_sha(replay)
@@ -323,12 +391,15 @@ def revalidate_or_fit(*,source,target,graph,loader,device,arm,pattern,sites,fact
         source_raw_manifest_unchanged=True,revalidated_raw_manifest_sha256=target_manifest_sha,
         cache_verification=cache_verification,
         mutable_operational_fields=MUTABLE_OPERATIONAL_FIELDS,runtime=runtime,
-        graph_state_sha256=start_state['sha256'],graph_state_exact_before_after_and_fresh=True,
+        graph_state_sha256=start_state['scientific_sha256'],graph_state_exact_before_after_and_fresh=True,
+        graph_state_observation='capture_graph_state is read-only; prepare_for_evaluation only resets transient MHD messages and requires eval mode',
         source_science_sha256=None if source_science is None else source_science['sha256'],
         revalidated_science_sha256=target_science['sha256'],
         complete_source_science_exact=None if source_science is None else True,
         feature_costs_source=feature_costs(source/'feature_costs.json'),
         feature_costs_revalidated=feature_costs(target/'feature_costs.json'),
+        relocation_receipt_sha256=file_sha256(relocation_path),relocation_mapping_count=relocation['mapping_count'],
+        relocation_no_scientific_value_change=relocation['no_scientific_value_change'],
         final_values_sha256=values_sha,final_metrics=replay['metrics'],
         participant_count=len(replay['participant_ids']),
         participant_ids_sha256=hashlib.sha256(np.ascontiguousarray(replay['participant_ids']).tobytes()).hexdigest(),

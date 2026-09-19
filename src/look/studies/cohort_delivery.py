@@ -85,7 +85,7 @@ def load_selected(s,root):
 def work(s,root,stage):
     import psutil
     validate(s);root=Path(root);identity=stable_hash(s); stop=False;resource_peak={'rss':0}
-    if s.get('study_kind')=='fusion_stage_v1' and (root/'repair_resume.json').exists():
+    if s.get('study_kind')=='fusion_stage_v1' and (root/'repair_resume_0207.json').exists():
         from look.studies.cohort_fusion_stage import verify_management_overlay
         verify_management_overlay(root/'management_overlay.json')
     def request(*_):
@@ -208,6 +208,7 @@ def work(s,root,stage):
                             or revalidation.get('source_raw_manifest_unchanged') is not True
                             or revalidation.get('graph_state_exact_before_after_and_fresh') is not True
                             or revalidation.get('references_within_revalidated_tree') is not True
+                            or revalidation.get('relocation_no_scientific_value_change') is not True
                             or revalidation.get('complete_source_science_exact') is False):
                         raise ValueError('Fusion revalidation receipt changed')
                     arts=load_bank(correction);selection=read(correction/'selection.json')
@@ -241,7 +242,9 @@ def work(s,root,stage):
                         runtime_sha256=stable_hash(revalidation['runtime']),
                         graph_state_sha256=revalidation['graph_state_sha256'],
                         source_raw_manifest_sha256=revalidation['source_raw_manifest_sha256'],
-                        source_raw_manifest_final_sha256=revalidation['source_raw_manifest_final_sha256'])
+                        source_raw_manifest_final_sha256=revalidation['source_raw_manifest_final_sha256'],
+                        relocation_receipt_sha256=revalidation['relocation_receipt_sha256'],
+                        relocation_mapping_count=revalidation['relocation_mapping_count'])
                 baseline=evaluate_missing(g,loader(dev),torch.device('cuda:0'),fixed_pattern=pattern);check_matched(a,baseline)
                 for method,result in ((stage,a),('host',baseline)):
                     p=out/'development'/f'{method}_{pattern}.npz';save_prediction_bundle(result,p)
@@ -291,6 +294,9 @@ def verify_fusion_formal_arm(s,root,arm):
                 or revalidation.get('graph_state_sha256')!=row['graph_state_sha256']
                 or revalidation.get('source_raw_manifest_sha256')!=row['source_raw_manifest_sha256']
                 or revalidation.get('source_raw_manifest_final_sha256')!=row['source_raw_manifest_final_sha256']
+                or revalidation.get('relocation_receipt_sha256')!=row['relocation_receipt_sha256']
+                or revalidation.get('relocation_mapping_count')!=row['relocation_mapping_count']
+                or revalidation.get('relocation_no_scientific_value_change') is not True
                 or revalidation.get('complete_source_science_exact') is False):
             raise ValueError('Fusion logical migration revalidation changed')
         selection=read(correction/'selection.json')

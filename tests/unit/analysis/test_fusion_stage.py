@@ -225,7 +225,8 @@ def test_verify_formal_arm_requires_logical_v2_migration(tmp_path):
     runtime={'CUBLAS_WORKSPACE_CONFIG':':4096:8'}
     revalidation=dict(schema='look_fusion_fresh_revalidation_v2',state='accepted',identity=identity,test_access=False,
         source_raw_manifest_unchanged=True,graph_state_exact_before_after_and_fresh=True,
-        references_within_revalidated_tree=True,complete_source_science_exact=True,
+        references_within_revalidated_tree=True,relocation_no_scientific_value_change=True,
+        relocation_receipt_sha256='reloc',relocation_mapping_count=2,complete_source_science_exact=True,
         revalidated_science_sha256='science',source_science_sha256='source',
         runtime=runtime,graph_state_sha256='graph',
         source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest')
@@ -238,7 +239,8 @@ def test_verify_formal_arm_requires_logical_v2_migration(tmp_path):
         selection_sha256=file_sha256(correction/'selection.json'),bank_sha256=file_sha256(correction/'bank.pt'),
         selected_path=[],final_values_sha256='v',revalidated_science_sha256='science',
         source_science_sha256='source',runtime_sha256=stable_hash(runtime),graph_state_sha256='graph',
-        source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest')
+        source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest',
+        relocation_receipt_sha256='reloc',relocation_mapping_count=2)
     migration=dict(schema='look_fusion_profile_migration_v2',no_refit=True,no_physical_relocation=True,
         source_role='fresh_revalidated_same_run_same_identity',profile_receipt_sha256=file_sha256(profile/'accepted.json'),
         patterns={'oct_missing':row,'cfp_missing':dict(row)})
@@ -362,3 +364,109 @@ def test_formal_runtime_fingerprint_requires_exact_worker_flags(monkeypatch):
         torch.set_num_threads(old['threads']);torch.use_deterministic_algorithms(old['deterministic'])
         torch.backends.cudnn.benchmark=old['benchmark'];torch.backends.cuda.matmul.allow_tf32=old['matmul']
         torch.backends.cudnn.allow_tf32=old['cudnn']
+
+
+def test_relocation_map_moves_prediction_references_without_changing_values_or_source(tmp_path):
+    from look.studies import fusion_cache_revalidation as fresh
+    source=tmp_path/'source';target=tmp_path/'target';audit=tmp_path/'audit'
+    (source/'prefixes/root').mkdir(parents=True);(source/'predictions').mkdir()
+    ids=np.array(['a','b']);labels=np.array([0,1]);logits=np.array([[2.,0.],[0.,2.]])
+    pred=source/'predictions/p.npz';np.savez(pred,participant_ids=ids,labels=labels,logits=logits)
+    result=dict(participant_ids=ids,labels=labels,logits=logits)
+    values=fresh.prediction_values_sha(result)
+    evidence=dict(role='development',data_role='development',score=1.0,prediction=str(pred),
+        sha256=file_sha256(pred),values_sha256=values,metrics={'macro_f1':1.0})
+    (source/'prefixes/root/baseline.json').write_text(json.dumps({'identity':'x','evidence':evidence}))
+    before=fresh.raw_manifest(source)
+    fresh.copy_audit_tree(source,target)
+    receipt,path=fresh.relocate_cached_prediction_references(source,target,audit)
+    row=json.loads((target/'prefixes/root/baseline.json').read_text())['evidence']
+    assert Path(row['prediction']).resolve().is_relative_to(target.resolve())
+    assert row['sha256']==file_sha256(pred)==file_sha256(row['prediction'])
+    assert row['values_sha256']==fresh.saved_prediction_values_sha(row['prediction'])==values
+    assert receipt['mapping_count']==1 and receipt['no_scientific_value_change'] is True
+    assert file_sha256(path)
+    assert fresh.raw_manifest(source)==before
+
+
+def test_formal_verify_rejects_missing_relocation_binding(tmp_path):
+    from look.studies import cohort_delivery as delivery
+    root=tmp_path/'run';root.mkdir();spec={'x':1};identity=stable_hash(spec)
+    (root/'host').mkdir();(root/'host/accepted.json').write_text(json.dumps({'files':{'best.pt':'hostsha'}}))
+    profile=root/'profile/fitting';profile.mkdir(parents=True);(profile/'accepted.json').write_text('{}')
+    correction=root/'profile/revalidated/residual_rrr/oct_missing';correction.mkdir(parents=True)
+    (correction/'selection.json').write_text(json.dumps({'selected_path':[],'final':{'values_sha256':'v'}}))
+    (correction/'bank.pt').write_bytes(b'bank')
+    audit=correction.parent/'audit'/correction.name;audit.mkdir(parents=True)
+    runtime={'CUBLAS_WORKSPACE_CONFIG':':4096:8'}
+    revalidation=dict(schema='look_fusion_fresh_revalidation_v2',state='accepted',identity=identity,test_access=False,
+        source_raw_manifest_unchanged=True,graph_state_exact_before_after_and_fresh=True,
+        references_within_revalidated_tree=True,relocation_no_scientific_value_change=True,
+        relocation_receipt_sha256='reloc',relocation_mapping_count=1,complete_source_science_exact=True,
+        revalidated_science_sha256='science',source_science_sha256='source',runtime=runtime,
+        graph_state_sha256='graph',source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest')
+    (audit/'accepted.json').write_text(json.dumps(revalidation))
+    out=root/'residual_rrr';(out/'development').mkdir(parents=True)
+    pred=out/'development/p.npz';pred.write_bytes(b'pred')
+    row=dict(revalidated_root=str(correction.relative_to(root)),revalidation_receipt=str((audit/'accepted.json').relative_to(root)),
+        revalidation_receipt_sha256=file_sha256(audit/'accepted.json'),selection_sha256=file_sha256(correction/'selection.json'),
+        bank_sha256=file_sha256(correction/'bank.pt'),selected_path=[],final_values_sha256='v',
+        revalidated_science_sha256='science',source_science_sha256='source',runtime_sha256=stable_hash(runtime),
+        graph_state_sha256='graph',source_raw_manifest_sha256='manifest',source_raw_manifest_final_sha256='manifest',
+        relocation_receipt_sha256='wrong',relocation_mapping_count=1)
+    migration=dict(schema='look_fusion_profile_migration_v2',no_refit=True,no_physical_relocation=True,
+        source_role='fresh_revalidated_same_run_same_identity',profile_receipt_sha256=file_sha256(profile/'accepted.json'),
+        patterns={'oct_missing':row,'cfp_missing':dict(row)})
+    receipt=dict(state='accepted',identity=identity,test_access=False,host_best_sha256='hostsha',replay_exact=True,
+        records=[dict(path=str(pred),sha256=file_sha256(pred))],profile_migration=migration)
+    (out/'accepted.json').write_text(json.dumps(receipt))
+    with pytest.raises(ValueError,match='revalidation changed'):
+        delivery.verify_fusion_formal_arm(spec,root,'residual_rrr')
+
+def test_graph_state_capture_is_pure_and_mode_drift_is_rejected():
+    from types import SimpleNamespace
+    import torch
+    from mhd_framework.models import create_model
+    from look.models.native_host import build_native_host
+    from look.studies import fusion_cache_revalidation as fresh
+    cfg=dict(name='resnet18',spatial_dims=2,in_channels=3,num_classes=2,views=1,granularity='block')
+    first=create_model(cfg,weights=None);second=create_model(cfg,weights=None)
+    graph=build_native_host(SimpleNamespace(graph=first),SimpleNamespace(graph=second),'deep','cpu')
+    graph.eval()
+    node=graph.get_node_by_name('oct_input')
+    node.feature_message.current_state=torch.ones(1,3,8,8)
+    before_training={name:m.training for name,m in graph.named_modules()}
+    before_state={k:v.detach().clone() for k,v in graph.state_dict().items()}
+    capture=fresh.capture_graph_state(graph)
+    assert capture['node_messages']['oct_input'] is not None
+    assert node.feature_message.current_state is not None
+    assert {name:m.training for name,m in graph.named_modules()}==before_training
+    assert all(torch.equal(before_state[k],v) for k,v in graph.state_dict().items())
+    prepared=fresh.prepare_for_evaluation(graph)
+    assert prepared['transient_messages_reset'] is True
+    assert node.feature_message.current_state is None
+    assert prepared['before']['scientific']==prepared['after']['scientific']
+    # Fault injection: any child train-mode drift must be visible and rejected.
+    child=next(m for name,m in graph.named_modules() if name and hasattr(m,'training'))
+    child.train()
+    drift=fresh.capture_graph_state(graph)
+    assert drift['scientific']['modules'][next(name for name,m in graph.named_modules() if m is child)]['training'] is True
+    with pytest.raises(ValueError,match='mode drifted from eval'):
+        fresh.prepare_for_evaluation(graph)
+
+
+def test_capture_graph_state_does_not_silently_eval_graph():
+    from types import SimpleNamespace
+    from mhd_framework.models import create_model
+    from look.models.native_host import build_native_host
+    from look.studies import fusion_cache_revalidation as fresh
+    cfg=dict(name='resnet18',spatial_dims=2,in_channels=3,num_classes=2,views=1,granularity='block')
+    graph=build_native_host(SimpleNamespace(graph=create_model(cfg,weights=None)),
+        SimpleNamespace(graph=create_model(cfg,weights=None)),'features','cpu')
+    graph.train()
+    capture=fresh.capture_graph_state(graph)
+    assert capture['scientific']['graph_training'] is True
+    assert graph.training is True
+    with pytest.raises(ValueError,match='mode drifted from eval'):
+        fresh.assert_evaluation_mode(capture)
+    assert graph.training is True
