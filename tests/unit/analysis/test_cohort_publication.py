@@ -103,7 +103,10 @@ def test_fusion_logical_migration_resolves_revalidated_correction(tmp_path):
     folder=root/'profile/revalidated/residual_rrr/oct_missing';folder.mkdir(parents=True)
     (folder/'selection.json').write_text('{}');(folder/'bank.pt').write_bytes(b'bank')
     audit=root/'profile/revalidated/residual_rrr/audit/oct_missing';audit.mkdir(parents=True)
-    (audit/'accepted.json').write_text(json.dumps({'state':'accepted'}))
+    revalidation=dict(schema='look_fusion_fresh_revalidation_v2',state='accepted',test_access=False,
+        source_complete=True,feature_costs_source=dict(full_forwards=10,missing_forwards=10,completed_hits=0,skipped_batches=0),
+        feature_costs_revalidated={})
+    (audit/'accepted.json').write_text(json.dumps(revalidation))
     row=dict(revalidated_root=str(folder.relative_to(root)),
         revalidation_receipt=str((audit/'accepted.json').relative_to(root)),
         revalidation_receipt_sha256=file_sha256(audit/'accepted.json'),
@@ -113,6 +116,10 @@ def test_fusion_logical_migration_resolves_revalidated_correction(tmp_path):
         no_physical_relocation=True,source_role='fresh_revalidated_same_run_same_identity',
         patterns={'oct_missing':row}))
     assert correction_folder(root,'residual_rrr','oct_missing',receipt)==folder.resolve()
+    from look.analysis.cohort_publication import correction_feature_costs
+    costs=correction_feature_costs(root,'residual_rrr','oct_missing',receipt,folder)
+    assert costs['feature_costs']['full_forwards']==10
+    assert costs['feature_costs_provenance']=='profile_source_complete_tree'
     (folder/'bank.pt').write_bytes(b'changed')
     with pytest.raises(ValueError,match='logical migration evidence changed'):
         correction_folder(root,'residual_rrr','oct_missing',receipt)

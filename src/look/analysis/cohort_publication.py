@@ -9,11 +9,11 @@ from look.runtime.state import atomic_write_json, file_sha256, stable_hash
 def read(p):return json.loads(Path(p).read_text())
 
 
-def correction_folder(root,arm,pattern,receipt):
+def fusion_migration_context(root,arm,pattern,receipt):
     root=Path(root).resolve()
     migration=receipt.get('profile_migration')
     if migration is None:
-        return root/arm/'corrections'/pattern
+        return None
     if (migration.get('schema')!='look_fusion_profile_migration_v2'
             or migration.get('no_refit') is not True
             or migration.get('no_physical_relocation') is not True
@@ -29,10 +29,44 @@ def correction_folder(root,arm,pattern,receipt):
     if (not receipt_path.is_relative_to(root)
             or file_sha256(receipt_path)!=row['revalidation_receipt_sha256']):
         raise ValueError('Fusion publication revalidation receipt changed')
+    revalidation=read(receipt_path)
+    if (revalidation.get('schema')!='look_fusion_fresh_revalidation_v2'
+            or revalidation.get('state')!='accepted' or revalidation.get('test_access') is not False):
+        raise ValueError('Fusion publication revalidation receipt is not accepted')
     if (file_sha256(folder/'selection.json')!=row['selection_sha256']
             or file_sha256(folder/'bank.pt')!=row['bank_sha256']):
         raise ValueError('Fusion publication logical migration evidence changed')
-    return folder
+    return dict(folder=folder,row=row,revalidation=revalidation)
+
+
+def correction_folder(root,arm,pattern,receipt):
+    context=fusion_migration_context(root,arm,pattern,receipt)
+    return (Path(root).resolve()/arm/'corrections'/pattern) if context is None else context['folder']
+
+
+def correction_feature_costs(root,arm,pattern,receipt,folder):
+    context=fusion_migration_context(root,arm,pattern,receipt)
+    if context is None:
+        return dict(feature_costs=read(Path(folder)/'feature_costs.json'),
+            feature_costs_provenance='formal_correction_tree')
+    revalidation=context['revalidation']
+    source_costs=revalidation.get('feature_costs_source') or {}
+    fresh_costs=revalidation.get('feature_costs_revalidated') or {}
+    if revalidation.get('source_complete') is True:
+        if not source_costs:
+            raise ValueError('Complete fusion source tree lacks original feature costs')
+        costs=source_costs;provenance='profile_source_complete_tree'
+    else:
+        if not fresh_costs:
+            raise ValueError('Newly completed fusion tree lacks revalidation feature costs')
+        costs=fresh_costs;provenance='revalidation_incremental_missing_tree'
+    required={'full_forwards','missing_forwards','completed_hits','skipped_batches'}
+    if set(costs)!=required or any(type(costs[key]) is not int or costs[key]<0 for key in required):
+        raise ValueError('Fusion feature-cost counters changed')
+    return dict(feature_costs=costs,feature_costs_provenance=provenance)
+
+
+
 
 
 def publish(root,output):
@@ -92,9 +126,11 @@ def publish(root,output):
     public['search_details']=[]
     for arm in s['arms']:
         for pattern in ('oct_missing','cfp_missing'):
-            folder=correction_folder(root,arm,pattern,accepted_by_arm[arm]) if arm in accepted_by_arm else root/arm/'corrections'/pattern
+            receipt=accepted_by_arm.get(arm,{})
+            folder=correction_folder(root,arm,pattern,receipt)
             selection=folder/'selection.json'
             if not selection.exists():continue
+            cost_context=correction_feature_costs(root,arm,pattern,receipt,folder)
             tree=read(selection);contract=read(folder/'contract.json')
             if file_sha256(folder/'contract.json')!=tree['contract_sha256']:
                 raise ValueError('Search contract changed')
@@ -119,7 +155,8 @@ def publish(root,output):
             public['search_details'].append(dict(method=arm,scenario=pattern,mode=tree['mode'],sites=contract['sites'],
                 candidates=contract['identity']['candidates'],penalty_policy=contract['identity']['penalty_policy'],
                 selected_path=chosen,candidate_evaluations=tree['candidate_evaluations'],prefix_count=tree['prefix_count'],
-                site_attempts=tree['site_attempts'],feature_costs=read(folder/'feature_costs.json'),
+                site_attempts=tree['site_attempts'],feature_costs=cost_context['feature_costs'],
+                feature_costs_provenance=cost_context['feature_costs_provenance'],
                 selection_sha256=file_sha256(selection),contract_sha256=file_sha256(folder/'contract.json'),branches=branches))
     delivery=root/'delivery/accepted.json'
     if delivery.exists():
@@ -298,7 +335,9 @@ def render(p):
         '|---|---:|---:|---:|---:|']
     for d in p.get('search_details',[]):
         c=d['feature_costs'];lines.append(f'|{NAMES[d["method"]]}／{PATTERNS[d["scenario"]]}|{c["full_forwards"]}|{c["missing_forwards"]}|{c["completed_hits"]}|{c["skipped_batches"]}|')
-    lines+=['','缓存边界：共同原模型和完整训练PCA基复用；同一前缀一次扫描收集多个下游位置的统计，已提交统计可恢复。上表记录这次首次运行的实际命中，不把“有缓存机制”写成“每次都命中”。本次完整统计命中为0，完整侧仍有重复前向；不能声称跨前缀完整特征已经全部缓存或这是最优速度。上述计数不包含全部开发集评价，不能直接换算总耗时。','',
+    provenances=sorted({d.get('feature_costs_provenance','formal_correction_tree') for d in p.get('search_details',[])})
+    lines+=['',f'成本计数来源：{", ".join(provenances)}。fusion-stage逻辑迁移时，完整旧tree引用原profile首次拟合计数；原先缺失而在revalidation补齐的tree引用本次增量计数。计数是运行/缓存证据，不参与科学路径选择。','',
+        '缓存边界：共同原模型和完整训练PCA基复用；同一前缀一次扫描收集多个下游位置的统计，已提交统计可恢复。上表记录对应完整拟合或补算阶段的实际计数，不把“有缓存机制”写成“每次都命中”。上述计数不包含全部开发集评价，不能直接换算总耗时。','',
         '</details>','',
         '## 5．其他指标和不确定性','',
         '下面仍按同一缺失状态比较，AUROC越高越好；NLL和Brier越低越好。','',
