@@ -1,0 +1,24 @@
+{
+  "schema": "look_probability_diagnostic_public_audit_summary_v1",
+  "state": "right_stageA_complete_pending_left_review",
+  "task_id": "look-probability-and-external-readiness-20260919-v1",
+  "scope": "Stage A only: existing accepted dev predictions; post-hoc descriptive CPU diagnostic",
+  "pair_count": 20,
+  "participant_count": 296,
+  "test_used": false,
+  "spec_sha256": "275c5299e39dd409264d299cfe26130cdf5426a1e53309d64948515beae75ee5",
+  "private_audit_sha256": "7101a268dfb29455894ab0a46bf51c27a8c4ad3c63fab93c651e6807169ee963",
+  "independent_audit_sha256": "a6c2b72deb36188d1021d3036e027c432a6815fd4b9a37d444506411d01accd1",
+  "public_current_sha256": "b0484cfb3b7d518c2d636f09509f13734d77620ab08661602efac4168834d12e",
+  "public_readme_sha256": "55057d1124e55a929b202615bf332ca0bce8e1b645ef762926cef8af12383814",
+  "independent_max_abs_error": 0.0,
+  "summary": {
+    "delta_nll_positive_pairs": 8,
+    "delta_nll_positive_and_delta_f1_positive": 8,
+    "delta_nll_positive_but_delta_brier_negative": 5,
+    "wrong_to_wrong_nll_contribution_positive_in_all_delta_nll_positive_pairs": true,
+    "largest_delta_nll_pair": "r18_deep__oct_missing__residual_rrr"
+  },
+  "interpretation_boundary": "Descriptive localization only. No new significance ranking, calibration fit, causal mechanism claim, model forward pass, or test access.",
+  "latest_scope_correction": "External EyeMoSt+ advancement paused. MMTM is compatibility/assembly evidence and is not counted as LOOK missing-modality method A/B/C completion. Stage B source review is preserved but excluded from this Stage A acceptance request."
+}
