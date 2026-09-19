@@ -1,0 +1,42 @@
+{
+  "schema": "look_embracenet_single_seed_authorized_v1",
+  "state": "authorized_preregistered_not_yet_executed",
+  "packet_sha256": "fd3300c0cdbfa3d168eca5e9e4563b4c5e3d9fdf4dc7e0111bdea89ccd3339f1",
+  "authorization_sha256": "bad1710372f092f662c87e4d41e60c591decb0ab8dccadb0a75934e91313bd01",
+  "phd_research_sha256": "1d24eddf2f939a82ca3ed821c803739a727b8f403d20457e22291a28530ddb2e",
+  "base_head": "9581f107524f12d37751212f1be8718437a5fa0a",
+  "seed": 3416,
+  "train": 1264,
+  "development": 296,
+  "test": "sealed",
+  "training_states": {
+    "complete": 0.3333333333333333,
+    "oct_missing": 0.3333333333333333,
+    "cfp_missing": 0.3333333333333333
+  },
+  "complete_selection": "analytical_integrated_mean_logits",
+  "complete_reference_pca": "analytic_author_stochastic_second_moment",
+  "look": {
+    "families": [
+      "pca_free_mean",
+      "residual_rrr"
+    ],
+    "patterns": [
+      "oct_missing",
+      "cfp_missing"
+    ],
+    "trees": 4,
+    "rank": 32,
+    "spatial_factor": 16,
+    "mode": "positive_forward_tree"
+  },
+  "bootstrap": {
+    "iterations": 10000,
+    "ordinary_paired_95": true,
+    "simultaneous_family_95": true
+  },
+  "target": "WS02 GPU0",
+  "gpu1_protected": true,
+  "main_push": false,
+  "scientific_acceptance": false
+}

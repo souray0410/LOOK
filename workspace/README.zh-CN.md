@@ -1,3 +1,4 @@
+- [PHD_RESEARCH_STANDARD.md](PHD_RESEARCH_STANDARD.md)：2026-09-19 用户授权后的共享科研设计/执行/留档边界；源文件 /Users/mengh/Documents/PHD/standards/research.md。
 # 研究项目工作规范
 
 LOOK 与 Radon_Bridge 使用相同源码职责、配置模式和管理命令。MHD_Framework 是独立工具箱，按安装版本选择 API，不携带本研究的服务器配置。
