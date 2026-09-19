@@ -113,3 +113,11 @@ def test_profile_semantic_checkpoint_rejects_unhashed_schedule_path():
         assert "without SHA" in str(exc)
     else:
         raise AssertionError("unhashed profile schedule path must fail closed")
+
+
+def test_profile_resume_uses_semantic_checkpoint_normalization():
+    import inspect
+    from look.training import balanced_dropout_host as module
+    source=inspect.getsource(module.profile_resume)
+    assert "cp=_profile_semantic_checkpoint(c);rp=_profile_semantic_checkpoint(r)" in source
+    assert 'cp["progress"]["seconds"]=0.0' not in source

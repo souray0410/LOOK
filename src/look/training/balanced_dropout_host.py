@@ -219,7 +219,7 @@ def profile_resume(make_graph,train,development,config,seed,output,identity,devi
     del g;torch.cuda.empty_cache();reset();g=make_graph();train_balanced_dropout_host(g,train,development,config,seed,out/"resumed",identity,device,should_pause,preflight_target_updates=1)
     del g;torch.cuda.empty_cache();g=make_graph();train_balanced_dropout_host(g,train,development,config,seed,out/"resumed",identity,device,should_pause,preflight_target_updates=2)
     c=torch.load(out/"continuous/last.pt",map_location="cpu",weights_only=False);r=torch.load(out/"resumed/last.pt",map_location="cpu",weights_only=False)
-    cp=copy.deepcopy(c);rp=copy.deepcopy(r);cp["progress"]["seconds"]=0.0;rp["progress"]["seconds"]=0.0
+    cp=_profile_semantic_checkpoint(c);rp=_profile_semantic_checkpoint(r)
     exact={key:_equal(cp[key],rp[key]) for key in ("model","optimizer","scheduler","progress","rng","node_ids")}
     if not all(exact.values()): raise ValueError("Balanced-dropout uninterrupted/resumed update differs: "+repr(exact))
     def eval_state(state):
