@@ -1,12 +1,12 @@
 {
   "schema": "research_project_status_v1",
   "project": "LOOK",
-  "goal": "缺失模态线性修正的可复现机制研究",
+  "goal": "\u7f3a\u5931\u6a21\u6001\u7ebf\u6027\u4fee\u6b63\u7684\u53ef\u590d\u73b0\u673a\u5236\u7814\u7a76",
   "phase": "embracenet_single_seed_scientifically_accepted_integration_release_candidate",
-  "next_acceptance": "EmbraceNet已完成首个真实缺失方法A vs同一A+LOOK单seed development独立科学验收；当前发布纠错/后验机制解释集成收口。下一最小A合同为ShaSpec，但实现来源/许可/2D分类adaptation/core机制/缺失协议/合法LOOK节点/远端离线准入六门槛未闭环前不训练；test继续封存。",
+  "next_acceptance": "EmbraceNet\u5df2\u5b8c\u6210\u9996\u4e2a\u771f\u5b9e\u7f3a\u5931\u65b9\u6cd5A vs\u540c\u4e00A+LOOK\u5355seed development\u72ec\u7acb\u79d1\u5b66\u9a8c\u6536\uff1b\u5f53\u524d\u53d1\u5e03\u7ea0\u9519/\u540e\u9a8c\u673a\u5236\u89e3\u91ca\u96c6\u6210\u6536\u53e3\u3002\u4e0b\u4e00\u6700\u5c0fA\u5408\u540c\u4e3aShaSpec\uff0c\u4f46\u5b9e\u73b0\u6765\u6e90/\u8bb8\u53ef/2D\u5206\u7c7badaptation/core\u673a\u5236/\u7f3a\u5931\u534f\u8bae/\u5408\u6cd5LOOK\u8282\u70b9/\u8fdc\u7aef\u79bb\u7ebf\u51c6\u5165\u516d\u95e8\u69db\u672a\u95ed\u73af\u524d\u4e0d\u8bad\u7ec3\uff1btest\u7ee7\u7eed\u5c01\u5b58\u3002",
   "dependencies": [
-    "宿主验收",
-    "当前算法与匹配对照的实际执行证据"
+    "\u5bbf\u4e3b\u9a8c\u6536",
+    "\u5f53\u524d\u7b97\u6cd5\u4e0e\u5339\u914d\u5bf9\u7167\u7684\u5b9e\u9645\u6267\u884c\u8bc1\u636e"
   ],
   "source_commit": "45955c3236dfb537754caa1b2496fa4bd0fa6656",
   "evidence_cutoff": "2026-09-19T13:00:13.614454+00:00",
@@ -21,140 +21,142 @@
   },
   "results": [
     {
-      "summary": "白内障ResNet50深层融合3416，末端原PCA含开关策略：缺OCT macro-F1 71.33%→75.52%，缺CFP 53.14%→56.78%。这是已验收末端案例，不是新best-forward或test结果。",
+      "summary": "\u767d\u5185\u969cResNet50\u6df1\u5c42\u878d\u54083416\uff0c\u672b\u7aef\u539fPCA\u542b\u5f00\u5173\u7b56\u7565\uff1a\u7f3aOCT macro-F1 71.33%\u219275.52%\uff0c\u7f3aCFP 53.14%\u219256.78%\u3002\u8fd9\u662f\u5df2\u9a8c\u6536\u672b\u7aef\u6848\u4f8b\uff0c\u4e0d\u662f\u65b0best-forward\u6216test\u7ed3\u679c\u3002",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
     },
     {
-      "summary": "白内障ResNet50特征融合3416缺CFP：原PCA候选54.50%低于不修正56.39%，实际single_final开关保留56.39%；候选负结果不能冒充最终部署性能。",
+      "summary": "\u767d\u5185\u969cResNet50\u7279\u5f81\u878d\u54083416\u7f3aCFP\uff1a\u539fPCA\u5019\u900954.50%\u4f4e\u4e8e\u4e0d\u4fee\u6b6356.39%\uff0c\u5b9e\u9645single_final\u5f00\u5173\u4fdd\u755956.39%\uff1b\u5019\u9009\u8d1f\u7ed3\u679c\u4e0d\u80fd\u5192\u5145\u6700\u7ec8\u90e8\u7f72\u6027\u80fd\u3002",
       "scope": "negative_result",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
     },
     {
-      "summary": "新best-forward首轮9/9候选齐全，白内障深层融合3416缺OCT：不修正71.33%，选参与者级融合特征75.47%（+4.13pp）；12510名dev，q32、空间16倍。预测重算与SHA通过；此句为首轮历史截点；现已完成双缺失验收，见下方完整配置记录。",
+      "summary": "\u65b0best-forward\u9996\u8f6e9/9\u5019\u9009\u9f50\u5168\uff0c\u767d\u5185\u969c\u6df1\u5c42\u878d\u54083416\u7f3aOCT\uff1a\u4e0d\u4fee\u6b6371.33%\uff0c\u9009\u53c2\u4e0e\u8005\u7ea7\u878d\u5408\u7279\u5f8175.47%\uff08+4.13pp\uff09\uff1b12510\u540ddev\uff0cq32\u3001\u7a7a\u95f416\u500d\u3002\u9884\u6d4b\u91cd\u7b97\u4e0eSHA\u901a\u8fc7\uff1b\u6b64\u53e5\u4e3a\u9996\u8f6e\u5386\u53f2\u622a\u70b9\uff1b\u73b0\u5df2\u5b8c\u6210\u53cc\u7f3a\u5931\u9a8c\u6536\uff0c\u89c1\u4e0b\u65b9\u5b8c\u6574\u914d\u7f6e\u8bb0\u5f55\u3002",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
     },
     {
-      "summary": "正收益树3416/x16/q32缺OCT首个下游组合：Stage1 72.0771%，Stage1再加Stage2 66.6867%（对前缀−5.3904pp），该扩展拒绝，保留72.0771%。12510名dev预测SHA及指标重算通过；只是候选级结果，不是整树最终输出。",
+      "summary": "\u6b63\u6536\u76ca\u68113416/x16/q32\u7f3aOCT\u9996\u4e2a\u4e0b\u6e38\u7ec4\u5408\uff1aStage1 72.0771%\uff0cStage1\u518d\u52a0Stage2 66.6867%\uff08\u5bf9\u524d\u7f00\u22125.3904pp\uff09\uff0c\u8be5\u6269\u5c55\u62d2\u7edd\uff0c\u4fdd\u755972.0771%\u300212510\u540ddev\u9884\u6d4bSHA\u53ca\u6307\u6807\u91cd\u7b97\u901a\u8fc7\uff1b\u53ea\u662f\u5019\u9009\u7ea7\u7ed3\u679c\uff0c\u4e0d\u662f\u6574\u6811\u6700\u7ec8\u8f93\u51fa\u3002",
       "scope": "negative_result",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/positive_forward_tree_20260917.md"
     },
     {
-      "summary": "同一Stage1前缀的6个下游已全部评价：融合特征73.1424%、参与者融合特征73.2999%，对Stage1 72.0771%分别+1.0653/+1.2228pp，保留两正扩展；另4项拒绝。12510名dev预测SHA及重算通过。仍低于首轮仅末端75.4662%，不是整树最终结果。",
+      "summary": "\u540c\u4e00Stage1\u524d\u7f00\u76846\u4e2a\u4e0b\u6e38\u5df2\u5168\u90e8\u8bc4\u4ef7\uff1a\u878d\u5408\u7279\u5f8173.1424%\u3001\u53c2\u4e0e\u8005\u878d\u5408\u7279\u5f8173.2999%\uff0c\u5bf9Stage1 72.0771%\u5206\u522b+1.0653/+1.2228pp\uff0c\u4fdd\u7559\u4e24\u6b63\u6269\u5c55\uff1b\u53e64\u9879\u62d2\u7edd\u300212510\u540ddev\u9884\u6d4bSHA\u53ca\u91cd\u7b97\u901a\u8fc7\u3002\u4ecd\u4f4e\u4e8e\u9996\u8f6e\u4ec5\u672b\u7aef75.4662%\uff0c\u4e0d\u662f\u6574\u6811\u6700\u7ec8\u7ed3\u679c\u3002",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/positive_forward_tree_20260917.md"
     },
     {
-      "summary": "缺OCT正收益树已完成17候选/8前缀，18份唯一预测重算及SHA通过；12510名dev，3416/x16/q32。最终仍为单参与者融合特征：71.3331%→75.4662%，+4.1330pp；未发现比best-forward该状态更高的选中dev分数。此句为单状态历史截点；双状态现已验收，整周包仍未验收。",
+      "summary": "\u7f3aOCT\u6b63\u6536\u76ca\u6811\u5df2\u5b8c\u621017\u5019\u9009/8\u524d\u7f00\uff0c18\u4efd\u552f\u4e00\u9884\u6d4b\u91cd\u7b97\u53caSHA\u901a\u8fc7\uff1b12510\u540ddev\uff0c3416/x16/q32\u3002\u6700\u7ec8\u4ecd\u4e3a\u5355\u53c2\u4e0e\u8005\u878d\u5408\u7279\u5f81\uff1a71.3331%\u219275.4662%\uff0c+4.1330pp\uff1b\u672a\u53d1\u73b0\u6bd4best-forward\u8be5\u72b6\u6001\u66f4\u9ad8\u7684\u9009\u4e2ddev\u5206\u6570\u3002\u6b64\u53e5\u4e3a\u5355\u72b6\u6001\u5386\u53f2\u622a\u70b9\uff1b\u53cc\u72b6\u6001\u73b0\u5df2\u9a8c\u6536\uff0c\u6574\u5468\u5305\u4ecd\u672a\u9a8c\u6536\u3002",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/current_results_20260917.md"
     },
     {
-      "summary": "best-forward白内障/ResNet50深层融合/3416/x16/q32完整双缺失配置已重放和报告验收：12510名dev，缺OCT macro-F1 71.3331→75.4662%，缺CFP 53.1402→56.9855%；缺CFP选joint_stem→joint_stage3，AUROC69.0933→67.9745%且校准恶化。该对照完成时主树尚未完成；主树现已验收，整周包和test未完成。",
+      "summary": "best-forward\u767d\u5185\u969c/ResNet50\u6df1\u5c42\u878d\u5408/3416/x16/q32\u5b8c\u6574\u53cc\u7f3a\u5931\u914d\u7f6e\u5df2\u91cd\u653e\u548c\u62a5\u544a\u9a8c\u6536\uff1a12510\u540ddev\uff0c\u7f3aOCT macro-F1 71.3331\u219275.4662%\uff0c\u7f3aCFP 53.1402\u219256.9855%\uff1b\u7f3aCFP\u9009joint_stem\u2192joint_stage3\uff0cAUROC69.0933\u219267.9745%\u4e14\u6821\u51c6\u6076\u5316\u3002\u8be5\u5bf9\u7167\u5b8c\u6210\u65f6\u4e3b\u6811\u5c1a\u672a\u5b8c\u6210\uff1b\u4e3b\u6811\u73b0\u5df2\u9a8c\u6536\uff0c\u6574\u5468\u5305\u548ctest\u672a\u5b8c\u6210\u3002",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/best_forward/README.md"
     },
     {
-      "summary": "主线正收益树白内障/ResNet50深层融合/3416/x16/q32双缺失配置已验收：缺OCT71.3331→75.4662%，缺CFP53.1402→57.6058%。缺CFP选stem→stage1→stage3，比best-forward多0.6203pp，但AUROC低于宿主、NLL/Brier变差；仅dev单种子。",
+      "summary": "\u4e3b\u7ebf\u6b63\u6536\u76ca\u6811\u767d\u5185\u969c/ResNet50\u6df1\u5c42\u878d\u5408/3416/x16/q32\u53cc\u7f3a\u5931\u914d\u7f6e\u5df2\u9a8c\u6536\uff1a\u7f3aOCT71.3331\u219275.4662%\uff0c\u7f3aCFP53.1402\u219257.6058%\u3002\u7f3aCFP\u9009stem\u2192stage1\u2192stage3\uff0c\u6bd4best-forward\u591a0.6203pp\uff0c\u4f46AUROC\u4f4e\u4e8e\u5bbf\u4e3b\u3001NLL/Brier\u53d8\u5dee\uff1b\u4ec5dev\u5355\u79cd\u5b50\u3002",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/search_policies/README.md"
     },
     {
-      "summary": "ws02青光眼小队列1264train/296dev，ResNet18/deep/3416/x16/q32两方法两缺失完整正收益树已验收，8预测记录SHA、顺序、F1/AUROC独立重算通过。缺OCT不修正62.3449%、PCA69.2396%、自由低秩残差66.7690%；缺CFP56.7191%、60.0183%、61.3736%。残差−PCA普通95%区间均跨零，不能判定统一赢家。",
+      "summary": "ws02\u9752\u5149\u773c\u5c0f\u961f\u52171264train/296dev\uff0cResNet18/deep/3416/x16/q32\u4e24\u65b9\u6cd5\u4e24\u7f3a\u5931\u5b8c\u6574\u6b63\u6536\u76ca\u6811\u5df2\u9a8c\u6536\uff0c8\u9884\u6d4b\u8bb0\u5f55SHA\u3001\u987a\u5e8f\u3001F1/AUROC\u72ec\u7acb\u91cd\u7b97\u901a\u8fc7\u3002\u7f3aOCT\u4e0d\u4fee\u6b6362.3449%\u3001PCA69.2396%\u3001\u81ea\u7531\u4f4e\u79e9\u6b8b\u5dee66.7690%\uff1b\u7f3aCFP56.7191%\u300160.0183%\u300161.3736%\u3002\u6b8b\u5dee\u2212PCA\u666e\u901a95%\u533a\u95f4\u5747\u8de8\u96f6\uff0c\u4e0d\u80fd\u5224\u5b9a\u7edf\u4e00\u8d62\u5bb6\u3002",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/small_cohort/README.md"
     },
     {
-      "summary": "MMTM门控宿主无LOOK/+LOOK兼容证据已完成（不计缺失方法A/B/C）：296dev/3416，缺OCT不修正58.0638%、PCA62.7767%、残差63.5068%；缺CFP41.8162%、58.4455%、58.9863%。两方法差值普通95%均跨零；缺OCT NLL仍恶化。8份预测SHA/有序参与者/F1/AUROC及同宿主独立核验通过，仅开发集单种子探索。",
+      "summary": "MMTM\u95e8\u63a7\u5bbf\u4e3b\u65e0LOOK/+LOOK\u517c\u5bb9\u8bc1\u636e\u5df2\u5b8c\u6210\uff08\u4e0d\u8ba1\u7f3a\u5931\u65b9\u6cd5A/B/C\uff09\uff1a296dev/3416\uff0c\u7f3aOCT\u4e0d\u4fee\u6b6358.0638%\u3001PCA62.7767%\u3001\u6b8b\u5dee63.5068%\uff1b\u7f3aCFP41.8162%\u300158.4455%\u300158.9863%\u3002\u4e24\u65b9\u6cd5\u5dee\u503c\u666e\u901a95%\u5747\u8de8\u96f6\uff1b\u7f3aOCT NLL\u4ecd\u6076\u5316\u30028\u4efd\u9884\u6d4bSHA/\u6709\u5e8f\u53c2\u4e0e\u8005/F1/AUROC\u53ca\u540c\u5bbf\u4e3b\u72ec\u7acb\u6838\u9a8c\u901a\u8fc7\uff0c\u4ec5\u5f00\u53d1\u96c6\u5355\u79cd\u5b50\u63a2\u7d22\u3002",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/small_cohort/README.md"
     },
     {
-      "summary": "ws02青光眼小队列R18/3416 fusion-stage机制包已由左侧独立科学验收：deep严格复用，middle/features两新宿主完整；296人F1/AUROC/NLL/Brier、8项10k区间及8棵树394前缀/674候选均独立核验通过。middle大LOOK增益伴随更弱未修正基线和更少参数，不能解释成早融合更优；deep缺OCT NLL 1.0803→PCA1.6217/残差2.5447是保留的概率反例。接受范围仅单seed/dev，test封存。",
+      "summary": "ws02\u9752\u5149\u773c\u5c0f\u961f\u5217R18/3416 fusion-stage\u673a\u5236\u5305\u5df2\u7531\u5de6\u4fa7\u72ec\u7acb\u79d1\u5b66\u9a8c\u6536\uff1adeep\u4e25\u683c\u590d\u7528\uff0cmiddle/features\u4e24\u65b0\u5bbf\u4e3b\u5b8c\u6574\uff1b296\u4ebaF1/AUROC/NLL/Brier\u30018\u987910k\u533a\u95f4\u53ca8\u68f5\u6811394\u524d\u7f00/674\u5019\u9009\u5747\u72ec\u7acb\u6838\u9a8c\u901a\u8fc7\u3002middle\u5927LOOK\u589e\u76ca\u4f34\u968f\u66f4\u5f31\u672a\u4fee\u6b63\u57fa\u7ebf\u548c\u66f4\u5c11\u53c2\u6570\uff0c\u4e0d\u80fd\u89e3\u91ca\u6210\u65e9\u878d\u5408\u66f4\u4f18\uff1bdeep\u7f3aOCT NLL 1.0803\u2192PCA1.6217/\u6b8b\u5dee2.5447\u662f\u4fdd\u7559\u7684\u6982\u7387\u53cd\u4f8b\u3002\u63a5\u53d7\u8303\u56f4\u4ec5\u5355seed/dev\uff0ctest\u5c01\u5b58\u3002",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/fusion_stage/README.md"
     },
     {
-      "summary": "EmbraceNet作为首个真实缺失方法A：1264train/296dev/seed3416，同一冻结A下PCA free-mean缺OCT/缺CFP Macro-F1点估计+1.364/+1.131pp，RRR缺OCT+1.085pp、缺CFP为空路径恒等。左侧独立核385文件/203源码pin/86预测、四树16前缀73候选及四指标10k配对统计通过。三个非退化Macro-F1 simultaneous95%均包含0；第四项零方差simultaneous未定义；test未用。",
+      "summary": "EmbraceNet\u4f5c\u4e3a\u9996\u4e2a\u771f\u5b9e\u7f3a\u5931\u65b9\u6cd5A\uff1a1264train/296dev/seed3416\uff0c\u540c\u4e00\u51bb\u7ed3A\u4e0bPCA free-mean\u7f3aOCT/\u7f3aCFP Macro-F1\u70b9\u4f30\u8ba1+1.364/+1.131pp\uff0cRRR\u7f3aOCT+1.085pp\u3001\u7f3aCFP\u4e3a\u7a7a\u8def\u5f84\u6052\u7b49\u3002\u5de6\u4fa7\u72ec\u7acb\u6838385\u6587\u4ef6/203\u6e90\u7801pin/86\u9884\u6d4b\u3001\u56db\u681116\u524d\u7f0073\u5019\u9009\u53ca\u56db\u6307\u680710k\u914d\u5bf9\u7edf\u8ba1\u901a\u8fc7\u3002\u4e09\u4e2a\u975e\u9000\u5316Macro-F1 simultaneous95%\u5747\u5305\u542b0\uff1b\u7b2c\u56db\u9879\u96f6\u65b9\u5deesimultaneous\u672a\u5b9a\u4e49\uff1btest\u672a\u7528\u3002",
       "scope": "preliminary_single_seed",
       "acceptance_url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/embracenet_single_seed/README.md"
     }
   ],
   "limitations": [
-    "当前搜索上线使用原PCA/GCV算子；不能代替其他线性修正方法独立搜索。",
-    "首种子五路线统计为dev探索结果，不代表多种子重复或独立test。",
-    "预检和任务登记不等于正式研究完成。",
-    "本次刷新核验管理实现、节点及计算进程；既有数值结果保留原evidence_cutoff，不作为本次新增结果。",
-    "正收益树首配置双状态已接受；完整有限周包、其他线性家族和重复种子仍未接受，test封存。",
-    "跨租期自动恢复已绑定并测试，尚无实际跨租期恢复验收；完成当前配置不等于此门槛关闭。",
-    "本轮新增运行核验限ws02小队列fresh-host，Ibex数值与运行事实保留原证据截止；两平台是不同数据及初始化配方，不混合排名。",
-    "不同骨干完整匹配包仍是同一小队列单种子探索；共同dev的选择偏差和训练随机性未被bootstrap消除。",
-    "2026-09-19 fusion-stage结果仅限WS02青光眼小队列、R18、seed3416、同一dev选模；participant bootstrap不含训练随机性/test泛化，test继续封存。",
-    "middle/deep/features同时改变宿主拓扑、参数量、训练权重和融合算子；middle仅11.89M且未修正基线远低于deep，跨宿主LOOK增益差不能解释成单一融合层因果效应。",
-    "fusion-stage机制不替代老师外部方法A/B/C及A/B/C+LOOK匹配缺口；这些外部比较仍保持未完成。"
+    "\u5f53\u524d\u641c\u7d22\u4e0a\u7ebf\u4f7f\u7528\u539fPCA/GCV\u7b97\u5b50\uff1b\u4e0d\u80fd\u4ee3\u66ff\u5176\u4ed6\u7ebf\u6027\u4fee\u6b63\u65b9\u6cd5\u72ec\u7acb\u641c\u7d22\u3002",
+    "\u9996\u79cd\u5b50\u4e94\u8def\u7ebf\u7edf\u8ba1\u4e3adev\u63a2\u7d22\u7ed3\u679c\uff0c\u4e0d\u4ee3\u8868\u591a\u79cd\u5b50\u91cd\u590d\u6216\u72ec\u7acbtest\u3002",
+    "\u9884\u68c0\u548c\u4efb\u52a1\u767b\u8bb0\u4e0d\u7b49\u4e8e\u6b63\u5f0f\u7814\u7a76\u5b8c\u6210\u3002",
+    "\u672c\u6b21\u5237\u65b0\u6838\u9a8c\u7ba1\u7406\u5b9e\u73b0\u3001\u8282\u70b9\u53ca\u8ba1\u7b97\u8fdb\u7a0b\uff1b\u65e2\u6709\u6570\u503c\u7ed3\u679c\u4fdd\u7559\u539fevidence_cutoff\uff0c\u4e0d\u4f5c\u4e3a\u672c\u6b21\u65b0\u589e\u7ed3\u679c\u3002",
+    "\u6b63\u6536\u76ca\u6811\u9996\u914d\u7f6e\u53cc\u72b6\u6001\u5df2\u63a5\u53d7\uff1b\u5b8c\u6574\u6709\u9650\u5468\u5305\u3001\u5176\u4ed6\u7ebf\u6027\u5bb6\u65cf\u548c\u91cd\u590d\u79cd\u5b50\u4ecd\u672a\u63a5\u53d7\uff0ctest\u5c01\u5b58\u3002",
+    "\u8de8\u79df\u671f\u81ea\u52a8\u6062\u590d\u5df2\u7ed1\u5b9a\u5e76\u6d4b\u8bd5\uff0c\u5c1a\u65e0\u5b9e\u9645\u8de8\u79df\u671f\u6062\u590d\u9a8c\u6536\uff1b\u5b8c\u6210\u5f53\u524d\u914d\u7f6e\u4e0d\u7b49\u4e8e\u6b64\u95e8\u69db\u5173\u95ed\u3002",
+    "\u672c\u8f6e\u65b0\u589e\u8fd0\u884c\u6838\u9a8c\u9650ws02\u5c0f\u961f\u5217fresh-host\uff0cIbex\u6570\u503c\u4e0e\u8fd0\u884c\u4e8b\u5b9e\u4fdd\u7559\u539f\u8bc1\u636e\u622a\u6b62\uff1b\u4e24\u5e73\u53f0\u662f\u4e0d\u540c\u6570\u636e\u53ca\u521d\u59cb\u5316\u914d\u65b9\uff0c\u4e0d\u6df7\u5408\u6392\u540d\u3002",
+    "\u4e0d\u540c\u9aa8\u5e72\u5b8c\u6574\u5339\u914d\u5305\u4ecd\u662f\u540c\u4e00\u5c0f\u961f\u5217\u5355\u79cd\u5b50\u63a2\u7d22\uff1b\u5171\u540cdev\u7684\u9009\u62e9\u504f\u5dee\u548c\u8bad\u7ec3\u968f\u673a\u6027\u672a\u88abbootstrap\u6d88\u9664\u3002",
+    "2026-09-19 fusion-stage\u7ed3\u679c\u4ec5\u9650WS02\u9752\u5149\u773c\u5c0f\u961f\u5217\u3001R18\u3001seed3416\u3001\u540c\u4e00dev\u9009\u6a21\uff1bparticipant bootstrap\u4e0d\u542b\u8bad\u7ec3\u968f\u673a\u6027/test\u6cdb\u5316\uff0ctest\u7ee7\u7eed\u5c01\u5b58\u3002",
+    "middle/deep/features\u540c\u65f6\u6539\u53d8\u5bbf\u4e3b\u62d3\u6251\u3001\u53c2\u6570\u91cf\u3001\u8bad\u7ec3\u6743\u91cd\u548c\u878d\u5408\u7b97\u5b50\uff1bmiddle\u4ec511.89M\u4e14\u672a\u4fee\u6b63\u57fa\u7ebf\u8fdc\u4f4e\u4e8edeep\uff0c\u8de8\u5bbf\u4e3bLOOK\u589e\u76ca\u5dee\u4e0d\u80fd\u89e3\u91ca\u6210\u5355\u4e00\u878d\u5408\u5c42\u56e0\u679c\u6548\u5e94\u3002",
+    "fusion-stage\u673a\u5236\u4e0d\u66ff\u4ee3\u8001\u5e08\u5916\u90e8\u65b9\u6cd5A/B/C\u53caA/B/C+LOOK\u5339\u914d\u7f3a\u53e3\uff1b\u8fd9\u4e9b\u5916\u90e8\u6bd4\u8f83\u4ecd\u4fdd\u6301\u672a\u5b8c\u6210\u3002",
+    "V5 rollout candidate repairs are not deployed; framework/asset migration is in progress."
   ],
   "blockers": [
-    "独立仿射家族完整主搜索与代表起点并行对照仍有验收缺口，整周重复种子门槛保持关闭。",
-    "真实跨租期到期恢复尚未发生；已绑定自动接续并通过锁、状态、资源和两层owner测试，但不等于实际到期恢复完成。"
+    "\u72ec\u7acb\u4eff\u5c04\u5bb6\u65cf\u5b8c\u6574\u4e3b\u641c\u7d22\u4e0e\u4ee3\u8868\u8d77\u70b9\u5e76\u884c\u5bf9\u7167\u4ecd\u6709\u9a8c\u6536\u7f3a\u53e3\uff0c\u6574\u5468\u91cd\u590d\u79cd\u5b50\u95e8\u69db\u4fdd\u6301\u5173\u95ed\u3002",
+    "\u771f\u5b9e\u8de8\u79df\u671f\u5230\u671f\u6062\u590d\u5c1a\u672a\u53d1\u751f\uff1b\u5df2\u7ed1\u5b9a\u81ea\u52a8\u63a5\u7eed\u5e76\u901a\u8fc7\u9501\u3001\u72b6\u6001\u3001\u8d44\u6e90\u548c\u4e24\u5c42owner\u6d4b\u8bd5\uff0c\u4f46\u4e0d\u7b49\u4e8e\u5b9e\u9645\u5230\u671f\u6062\u590d\u5b8c\u6210\u3002"
   ],
   "actions": [
-    "新q32正式步骤因全量dev RSS增长失败，已确认旧step死亡；原run/spec恢复至51909172.10。allocator环境调整后通过782批完整dev，自动进入train joint_input×16拟合。不是科学完成，拟合验收仍待完成。",
-    "源方法仍b6bbc27；恢复orchestrator4fbfbae、只读进展watchdog b72124e；18原测试+3故障检查通过。watchdog每30秒，既有维护故障期15分钟。保护其他健康worker与owner。",
-    "其他线性算子best-forward正式部署仍未完成，不能用本PCA/GCV配置宣称整周研究已接通。",
-    "故障/恢复事件持久化观察器b8769d4已在Ibex部署，5项测试通过；历史失败与恢复观察追加记录。既有维护负责修复后运行和下游验收，不以健康状态自动关闭。完整配置仍未验收。",
-    "本次重新核查7份宿主验收记录及6份末端报告CSV SHA；主力best-forward仍在第二位置拟合。完整病例为0，三种空间路线及独立仿射搜索尚无完整比较；全表与计划已发布，禁止用完成数代替研究结果。",
-    "共同采用PHD完整交付优先与真实依赖并行准则；本地和Ibex独立代码测试通过，新队列准备不等于正式派发已验收。",
-    "五配置保留原run/spec编译为独立任务；当前主搜索活跃且首轮已有5个位置记录。登录管理器丢失后，已锁定原manager/claim接续只读生命周期观察，未重启GPU训练。四起点并行仍待派发交接验收。",
-    "ec4dc8f共享特征提取通过103算子/搜索测试、3迁移测试、真实宿主逐位相同及512train全路径一致验收。保留7候选显式迁移，51909172.17正式推进；配置v3继承已验收MALLOC资源环境，先前短暂启动尝试与修复均保留。未改科学配置或解封test。",
-    "2026-09-17 15:54 Saudi：有限同run租期恢复入口v3部署，三项管理测试及真实live/锁占用防重复通过；existing owner集成另有绑定凭证。只读累计发布observer运行，先发布覆盖、仅在单配置报告验收后发布四个匹配单元。正式共享cache 776→916，配置尚未完整接受。",
+    "\u65b0q32\u6b63\u5f0f\u6b65\u9aa4\u56e0\u5168\u91cfdev RSS\u589e\u957f\u5931\u8d25\uff0c\u5df2\u786e\u8ba4\u65e7step\u6b7b\u4ea1\uff1b\u539frun/spec\u6062\u590d\u81f351909172.10\u3002allocator\u73af\u5883\u8c03\u6574\u540e\u901a\u8fc7782\u6279\u5b8c\u6574dev\uff0c\u81ea\u52a8\u8fdb\u5165train joint_input\u00d716\u62df\u5408\u3002\u4e0d\u662f\u79d1\u5b66\u5b8c\u6210\uff0c\u62df\u5408\u9a8c\u6536\u4ecd\u5f85\u5b8c\u6210\u3002",
+    "\u6e90\u65b9\u6cd5\u4ecdb6bbc27\uff1b\u6062\u590dorchestrator4fbfbae\u3001\u53ea\u8bfb\u8fdb\u5c55watchdog b72124e\uff1b18\u539f\u6d4b\u8bd5+3\u6545\u969c\u68c0\u67e5\u901a\u8fc7\u3002watchdog\u6bcf30\u79d2\uff0c\u65e2\u6709\u7ef4\u62a4\u6545\u969c\u671f15\u5206\u949f\u3002\u4fdd\u62a4\u5176\u4ed6\u5065\u5eb7worker\u4e0eowner\u3002",
+    "\u5176\u4ed6\u7ebf\u6027\u7b97\u5b50best-forward\u6b63\u5f0f\u90e8\u7f72\u4ecd\u672a\u5b8c\u6210\uff0c\u4e0d\u80fd\u7528\u672cPCA/GCV\u914d\u7f6e\u5ba3\u79f0\u6574\u5468\u7814\u7a76\u5df2\u63a5\u901a\u3002",
+    "\u6545\u969c/\u6062\u590d\u4e8b\u4ef6\u6301\u4e45\u5316\u89c2\u5bdf\u5668b8769d4\u5df2\u5728Ibex\u90e8\u7f72\uff0c5\u9879\u6d4b\u8bd5\u901a\u8fc7\uff1b\u5386\u53f2\u5931\u8d25\u4e0e\u6062\u590d\u89c2\u5bdf\u8ffd\u52a0\u8bb0\u5f55\u3002\u65e2\u6709\u7ef4\u62a4\u8d1f\u8d23\u4fee\u590d\u540e\u8fd0\u884c\u548c\u4e0b\u6e38\u9a8c\u6536\uff0c\u4e0d\u4ee5\u5065\u5eb7\u72b6\u6001\u81ea\u52a8\u5173\u95ed\u3002\u5b8c\u6574\u914d\u7f6e\u4ecd\u672a\u9a8c\u6536\u3002",
+    "\u672c\u6b21\u91cd\u65b0\u6838\u67e57\u4efd\u5bbf\u4e3b\u9a8c\u6536\u8bb0\u5f55\u53ca6\u4efd\u672b\u7aef\u62a5\u544aCSV SHA\uff1b\u4e3b\u529bbest-forward\u4ecd\u5728\u7b2c\u4e8c\u4f4d\u7f6e\u62df\u5408\u3002\u5b8c\u6574\u75c5\u4f8b\u4e3a0\uff0c\u4e09\u79cd\u7a7a\u95f4\u8def\u7ebf\u53ca\u72ec\u7acb\u4eff\u5c04\u641c\u7d22\u5c1a\u65e0\u5b8c\u6574\u6bd4\u8f83\uff1b\u5168\u8868\u4e0e\u8ba1\u5212\u5df2\u53d1\u5e03\uff0c\u7981\u6b62\u7528\u5b8c\u6210\u6570\u4ee3\u66ff\u7814\u7a76\u7ed3\u679c\u3002",
+    "\u5171\u540c\u91c7\u7528PHD\u5b8c\u6574\u4ea4\u4ed8\u4f18\u5148\u4e0e\u771f\u5b9e\u4f9d\u8d56\u5e76\u884c\u51c6\u5219\uff1b\u672c\u5730\u548cIbex\u72ec\u7acb\u4ee3\u7801\u6d4b\u8bd5\u901a\u8fc7\uff0c\u65b0\u961f\u5217\u51c6\u5907\u4e0d\u7b49\u4e8e\u6b63\u5f0f\u6d3e\u53d1\u5df2\u9a8c\u6536\u3002",
+    "\u4e94\u914d\u7f6e\u4fdd\u7559\u539frun/spec\u7f16\u8bd1\u4e3a\u72ec\u7acb\u4efb\u52a1\uff1b\u5f53\u524d\u4e3b\u641c\u7d22\u6d3b\u8dc3\u4e14\u9996\u8f6e\u5df2\u67095\u4e2a\u4f4d\u7f6e\u8bb0\u5f55\u3002\u767b\u5f55\u7ba1\u7406\u5668\u4e22\u5931\u540e\uff0c\u5df2\u9501\u5b9a\u539fmanager/claim\u63a5\u7eed\u53ea\u8bfb\u751f\u547d\u5468\u671f\u89c2\u5bdf\uff0c\u672a\u91cd\u542fGPU\u8bad\u7ec3\u3002\u56db\u8d77\u70b9\u5e76\u884c\u4ecd\u5f85\u6d3e\u53d1\u4ea4\u63a5\u9a8c\u6536\u3002",
+    "ec4dc8f\u5171\u4eab\u7279\u5f81\u63d0\u53d6\u901a\u8fc7103\u7b97\u5b50/\u641c\u7d22\u6d4b\u8bd5\u30013\u8fc1\u79fb\u6d4b\u8bd5\u3001\u771f\u5b9e\u5bbf\u4e3b\u9010\u4f4d\u76f8\u540c\u53ca512train\u5168\u8def\u5f84\u4e00\u81f4\u9a8c\u6536\u3002\u4fdd\u75597\u5019\u9009\u663e\u5f0f\u8fc1\u79fb\uff0c51909172.17\u6b63\u5f0f\u63a8\u8fdb\uff1b\u914d\u7f6ev3\u7ee7\u627f\u5df2\u9a8c\u6536MALLOC\u8d44\u6e90\u73af\u5883\uff0c\u5148\u524d\u77ed\u6682\u542f\u52a8\u5c1d\u8bd5\u4e0e\u4fee\u590d\u5747\u4fdd\u7559\u3002\u672a\u6539\u79d1\u5b66\u914d\u7f6e\u6216\u89e3\u5c01test\u3002",
+    "2026-09-17 15:54 Saudi\uff1a\u6709\u9650\u540crun\u79df\u671f\u6062\u590d\u5165\u53e3v3\u90e8\u7f72\uff0c\u4e09\u9879\u7ba1\u7406\u6d4b\u8bd5\u53ca\u771f\u5b9elive/\u9501\u5360\u7528\u9632\u91cd\u590d\u901a\u8fc7\uff1bexisting owner\u96c6\u6210\u53e6\u6709\u7ed1\u5b9a\u51ed\u8bc1\u3002\u53ea\u8bfb\u7d2f\u8ba1\u53d1\u5e03observer\u8fd0\u884c\uff0c\u5148\u53d1\u5e03\u8986\u76d6\u3001\u4ec5\u5728\u5355\u914d\u7f6e\u62a5\u544a\u9a8c\u6536\u540e\u53d1\u5e03\u56db\u4e2a\u5339\u914d\u5355\u5143\u3002\u6b63\u5f0f\u5171\u4eabcache 776\u2192916\uff0c\u914d\u7f6e\u5c1a\u672a\u5b8c\u6574\u63a5\u53d7\u3002",
     "Activated priority-owner v4 for10 pending and future LOOK allocations; real CPU daemon cycle error=null, original GPU steps retained. Versioned repair for missing scheduling dependency accepted.",
-    "用户明确修订主线为positive_forward_tree：每位置保留自身最优且对本前缀严格提升的候选，全部正扩展递归。08bf6cc及158源码匹配；27+21针对测试与真实宿主profile通过。正式51919716.20迁移空前缀9候选形成3分支，Stage1下游统计256→320批，完整侧缓存命中，缺失侧按非空前缀重算。旧best-forward保持对照；没有新最终科研指标。",
-    "v5两层优先接续已绑定10份待批LOOK及未来申请，旧best-forward与原fallback保留；Slurm查询短暂超时后实际管理周期error=null恢复，统一20份旧申请waiting_grant，未重启GPU/重复申请。正式Stage1前缀统计推进至1184批，完整侧缓存命中1184、缺失侧重新前向1184、完整侧新增前向0。",
-    "18:03 Saudi核验：Stage1前缀共享train统计3651批完成，完整参考缓存命中3651且新增完整前向0；10个候选评价已提交。新候选dev继续执行，日志新鲜，dispatcher error=null。扫描加载1672秒、缺失前向361秒，主要成本仍在数据供应；主任务未停止。",
-    "18:21 Saudi：Stage1后追加Stage3/Stage4的dev macro-F1分别70.5513%/61.5176%，均低于前缀72.0771%，不保留；共12次候选评价，当前最佳75.4662%仍来自首轮，不是新组合收益。",
-    "18:55 Saudi：Stage1六下游齐全，decision保留两正子分支，后续前缀统计缓存持续更新。共15次候选，6个发现前缀；LOOK/R&B管理无新错误，3运行21待批。",
-    "2026-09-17 v6 CPU周期与watcher真实接续核验，原GPU扫描持续更新；middle/features仍等待科学依赖，未提前释放重复种子。管理层细节见next_fusion_activation_20260917.md。",
-    "19:56UTC独立复核best-forward247科研文件+5交付文件SHA及4预测的参与者顺序/指标；原manager accepted，CPU累计publication自动更新。主树缺CFP仍运行，未释放重复种子。",
-    "2026-09-18 03:45UTC：正收益树自动双状态重放/报告/累计发布，root独立验392+5文件SHA、四份预测指标与跨策略同序宿主输出、选中权重。完整配置接受；完整周包与其他种子未放行。",
-    "2026-09-18实现完整维度多位置充分统计缓存、同前缀GCV参考规则、独立family runner与原dispatcher任务类型；当前为代码验收，正式部署/领取待单列回执，不能复用低维PCA缓存冒充自由拟合。",
-    "2026-09-18 05:34UTC：自由均值低秩残差134份GPU预检产物SHA通过，原run在51919716.23全量入口实际统计224批。owner_v7唯一CPU/watcher接替通过，原claims拒绝重复领取RRR、PCA自由均值可候选；10LOOK绑定更新、其余11项不变。两臂匹配及跨租期恢复仍待验收，旧结果cutoff不刷新。",
-    "2026-09-18 ws02小队列fresh-host匹配包已实际启动：1264train/296dev，3416/ResNet50deep/x16/q32，两自由均值拟合臂。43CPU及真实GPU预检通过；目录绑定故障修复后正式22→71更新、epoch3→8，best/last及验证history推进。完整拟合结果尚无，Ibex原结果保留原cutoff；详见ws02_cohort_delivery_20260918.md。",
-    "2026-09-18 06:51UTC：ws02共同宿主按原平台规则27轮停止、best12、270更新，重放接受；独立重算296人完整输入Macro-F1=69.2142%、AUROC=74.4522%。9/9 PCA基完成，两自由均值方法已分别在双GPU完成首前缀79train批并评候选。仅宿主接受，尚无完整缺失方法比较。权重SHA已入小队列current.json，受限资产不上传。",
-    "2026-09-18 07:42UTC核验，仅ws02小队列：同run两方法/两缺失均完成；自动CPU报告修复成功，独立8预测SHA、296人同序、F1/AUROC重算及同宿主通过，去重后6行。重复发布字节/mtime不变；身份冲突/预测篡改/重复矛盾/报告不一致保护5测试通过。RRR/PCA缺OCT69.9046/69.5821%，缺CFP61.6980/61.7695%，两方法差值区间均跨零。不是Ibex恢复、整个周包或独立test验收；发布链的定时GitHub端仍由原维护负责，不冒充实时。",
-    "2026-09-18：单GPU有限序列已实际完成R18宿主→PCA→残差树→PCA树→重放统计，R50精确引用；不自动扩大近似骨干/种子。下一包按当前研究决策登记，未验收MMTM接口不称已训练。Ibex23待批/1allocation及RPC间歇超时，既有保护与claims保留。",
-    "2026-09-18 09:12UTC维护：精确复用R50/R18接受的首轮候选完成36项固定空前缀/同位置拟合诊断，未新增GPU拟合或训练；两臂宿主、位置集合、基线及penalty policy一致，非固定lambda或斜率机制。",
-    "2026-09-18维护主动修正结果列表中的历史截点措辞：不改原数值与scientific cutoff，明确旧“主树/双状态未完成”已被后续完整配置验收取代。MMTM有限小队列协议与节点适配实现单独登记，CPU验收不等于正式训练。",
-    "2026-09-18 12:31UTC：a9833e6，MMTM Stage3/R18/作者scale1随机门控单配置实际GPU预检通过（完整296dev、恢复2更新），同run正式3→62更新/epoch7，断点SHA与/proc通过。首次启动缺CuBLAS环境已归档修复，原确定性/训练标准未变；当前不是完整A/A+LOOK验收。累计页面已新增配置，旧两配置复用。",
-    "2026-09-18 13:40UTC现场：ws02有限任务已正常结束且GPU空闲，独立最终核验并用新显示生成器发布；不是新任务在训练。Ibex两CPU进程及新周期error=null，1allocation运行/23待批；LOOK原残差内存保护失败仍待充足资源，Dense3D暂停epoch5/15319updates，新32仍4登记文件无正式更新。",
-    "LOOK固定空前缀/斜率/λ/秩，仅约束残差均值：两个已验收ResNet18宿主×2拟合×2缺失×9位置，72/72完成；旧自由预测逐元素现场重放，新增预测SHA及sklearn F1/AUROC独立重算通过。58项自由均值F1较高、10项较低、4项相同（相关条件，不是72个独立重复）。无新增训练或拟合；不能宣称自由均值必胜。首启rank字段错误保留，6a813d8加真实FamilyMap回归12项通过后恢复并完成下游。",
-    "2026-09-19 fusion-stage有限包：deep run2026_09_18_11_18_28_650020严格引用；middle/features host分别best/stop=9/24、30/45，240/450更新，未重训恢复。8/8拟合树通过正式CuBLAS确定性环境、graph state/BN、source manifest、完整prefix/candidate evidence及两阶段路径迁移验收；两个新run formal/delivery与三宿主累计publication完成。右侧最终audit SHA291051a82c4b13f918c0c60afd5f71da3d94710233bcc6cdeab0a3a41192f57d。",
-    "repair链保留：初始host structure receipt漏position；fit-profile raw恢复比较误把运行计数/路径变化当科学变化；后续诊断未完整匹配正式worker环境；publication先后补逻辑迁移bank路径与feature-cost provenance。各次失败均保留证据，未重训host或重拟合已完成完整tree。",
-    "2026-09-19 左侧fusion-stage独立审计通过：5010独立文件内容、10362 hash绑定、706预测文件检查、296人四指标、8项10k区间、8树394前缀/674候选均通过；audit SHA db5b1ea423f70b1bf727fd92216ca8b2d96cd75da52a6aa9b14b0e9b00afe050。科学current SHA7354806d保持不变，发布包仅修生成器/可读累计。",
-    "2026-09-19 EmbraceNet首个真正缺失方法A：作者固定实现四合法输入输出/梯度/RNG零差与下一AdamW更新精确恢复已落盘；R18/MHD九节点原型及唯一trial合同已实现。恢复后新增pre-R18 NaN-safe入口/common-random helper，向既有WS02隔离CPU副本同步被上层安全检查拒绝且未绕过，故当前SHA尚缺一次针对性动态CPU重验；无真实训练/GPU/test。",
-    "2026-09-19 EmbraceNet repair v2：本机隔离CPU current-SHA专项16/16、相关回归30/30、作者当前SHA等价/RNG恢复、九节点双单缺失非零LOOK与统计目标审计通过；统一train/A/A+LOOK pre-R18 zero-mask入口。K32正式提案撤下，single-missing一次forward；complete平均logit目标用解析期望。无远端写入/GPU/参与者数据/test/训练。",
-    "v1的EmbraceNet current-SHA CPU动态重验阻塞已由v2本机隔离CPU合法环境解决；历史被拒scp仍不重试/绕过，WS02部署gate另待未来合法流程。",
-    "2026-09-19 EmbraceNet v3：修复公开plain/study图入口的外部prearm replay泄漏。available-input NaN失败、artifact/stop预校验失败及embrace前正常停止均清除未消费replay；有效exact replay仍一次性成功。专项24/24、相关回归30/30、独立图级probe通过。v2冻结证据不覆写；v3公式可读并明确随机完整参考PCA二阶矩合同。",
-    "2026-09-19 EmbraceNet single-seed真实包：WS02 GPU0完成1个seed3416 EmbraceNet A（best11/stop26）+ PCA/RRR×双缺失4个主对比、9节点PCA、fit-profile恢复/solver门槛、10k配对统计与中文累计候选；test封存。远端finite pipeline依receipt连续完成residual→report→verify。当前self_checked_pending_independent_review。",
-    "2026-09-19 integration continuation：下一A有限合同锁定ShaSpec机制家族但训练前有实现/许可/2D分类身份等硬门槛；PCA/RRR不预设赢家。离线执行要求已记录为design_ready_not_deployed_for_next_A；不宣称常驻planner。"
+    "\u7528\u6237\u660e\u786e\u4fee\u8ba2\u4e3b\u7ebf\u4e3apositive_forward_tree\uff1a\u6bcf\u4f4d\u7f6e\u4fdd\u7559\u81ea\u8eab\u6700\u4f18\u4e14\u5bf9\u672c\u524d\u7f00\u4e25\u683c\u63d0\u5347\u7684\u5019\u9009\uff0c\u5168\u90e8\u6b63\u6269\u5c55\u9012\u5f52\u300208bf6cc\u53ca158\u6e90\u7801\u5339\u914d\uff1b27+21\u9488\u5bf9\u6d4b\u8bd5\u4e0e\u771f\u5b9e\u5bbf\u4e3bprofile\u901a\u8fc7\u3002\u6b63\u5f0f51919716.20\u8fc1\u79fb\u7a7a\u524d\u7f009\u5019\u9009\u5f62\u62103\u5206\u652f\uff0cStage1\u4e0b\u6e38\u7edf\u8ba1256\u2192320\u6279\uff0c\u5b8c\u6574\u4fa7\u7f13\u5b58\u547d\u4e2d\uff0c\u7f3a\u5931\u4fa7\u6309\u975e\u7a7a\u524d\u7f00\u91cd\u7b97\u3002\u65e7best-forward\u4fdd\u6301\u5bf9\u7167\uff1b\u6ca1\u6709\u65b0\u6700\u7ec8\u79d1\u7814\u6307\u6807\u3002",
+    "v5\u4e24\u5c42\u4f18\u5148\u63a5\u7eed\u5df2\u7ed1\u5b9a10\u4efd\u5f85\u6279LOOK\u53ca\u672a\u6765\u7533\u8bf7\uff0c\u65e7best-forward\u4e0e\u539ffallback\u4fdd\u7559\uff1bSlurm\u67e5\u8be2\u77ed\u6682\u8d85\u65f6\u540e\u5b9e\u9645\u7ba1\u7406\u5468\u671ferror=null\u6062\u590d\uff0c\u7edf\u4e0020\u4efd\u65e7\u7533\u8bf7waiting_grant\uff0c\u672a\u91cd\u542fGPU/\u91cd\u590d\u7533\u8bf7\u3002\u6b63\u5f0fStage1\u524d\u7f00\u7edf\u8ba1\u63a8\u8fdb\u81f31184\u6279\uff0c\u5b8c\u6574\u4fa7\u7f13\u5b58\u547d\u4e2d1184\u3001\u7f3a\u5931\u4fa7\u91cd\u65b0\u524d\u54111184\u3001\u5b8c\u6574\u4fa7\u65b0\u589e\u524d\u54110\u3002",
+    "18:03 Saudi\u6838\u9a8c\uff1aStage1\u524d\u7f00\u5171\u4eabtrain\u7edf\u8ba13651\u6279\u5b8c\u6210\uff0c\u5b8c\u6574\u53c2\u8003\u7f13\u5b58\u547d\u4e2d3651\u4e14\u65b0\u589e\u5b8c\u6574\u524d\u54110\uff1b10\u4e2a\u5019\u9009\u8bc4\u4ef7\u5df2\u63d0\u4ea4\u3002\u65b0\u5019\u9009dev\u7ee7\u7eed\u6267\u884c\uff0c\u65e5\u5fd7\u65b0\u9c9c\uff0cdispatcher error=null\u3002\u626b\u63cf\u52a0\u8f7d1672\u79d2\u3001\u7f3a\u5931\u524d\u5411361\u79d2\uff0c\u4e3b\u8981\u6210\u672c\u4ecd\u5728\u6570\u636e\u4f9b\u5e94\uff1b\u4e3b\u4efb\u52a1\u672a\u505c\u6b62\u3002",
+    "18:21 Saudi\uff1aStage1\u540e\u8ffd\u52a0Stage3/Stage4\u7684dev macro-F1\u5206\u522b70.5513%/61.5176%\uff0c\u5747\u4f4e\u4e8e\u524d\u7f0072.0771%\uff0c\u4e0d\u4fdd\u7559\uff1b\u517112\u6b21\u5019\u9009\u8bc4\u4ef7\uff0c\u5f53\u524d\u6700\u4f7375.4662%\u4ecd\u6765\u81ea\u9996\u8f6e\uff0c\u4e0d\u662f\u65b0\u7ec4\u5408\u6536\u76ca\u3002",
+    "18:55 Saudi\uff1aStage1\u516d\u4e0b\u6e38\u9f50\u5168\uff0cdecision\u4fdd\u7559\u4e24\u6b63\u5b50\u5206\u652f\uff0c\u540e\u7eed\u524d\u7f00\u7edf\u8ba1\u7f13\u5b58\u6301\u7eed\u66f4\u65b0\u3002\u517115\u6b21\u5019\u9009\uff0c6\u4e2a\u53d1\u73b0\u524d\u7f00\uff1bLOOK/R&B\u7ba1\u7406\u65e0\u65b0\u9519\u8bef\uff0c3\u8fd0\u884c21\u5f85\u6279\u3002",
+    "2026-09-17 v6 CPU\u5468\u671f\u4e0ewatcher\u771f\u5b9e\u63a5\u7eed\u6838\u9a8c\uff0c\u539fGPU\u626b\u63cf\u6301\u7eed\u66f4\u65b0\uff1bmiddle/features\u4ecd\u7b49\u5f85\u79d1\u5b66\u4f9d\u8d56\uff0c\u672a\u63d0\u524d\u91ca\u653e\u91cd\u590d\u79cd\u5b50\u3002\u7ba1\u7406\u5c42\u7ec6\u8282\u89c1next_fusion_activation_20260917.md\u3002",
+    "19:56UTC\u72ec\u7acb\u590d\u6838best-forward247\u79d1\u7814\u6587\u4ef6+5\u4ea4\u4ed8\u6587\u4ef6SHA\u53ca4\u9884\u6d4b\u7684\u53c2\u4e0e\u8005\u987a\u5e8f/\u6307\u6807\uff1b\u539fmanager accepted\uff0cCPU\u7d2f\u8ba1publication\u81ea\u52a8\u66f4\u65b0\u3002\u4e3b\u6811\u7f3aCFP\u4ecd\u8fd0\u884c\uff0c\u672a\u91ca\u653e\u91cd\u590d\u79cd\u5b50\u3002",
+    "2026-09-18 03:45UTC\uff1a\u6b63\u6536\u76ca\u6811\u81ea\u52a8\u53cc\u72b6\u6001\u91cd\u653e/\u62a5\u544a/\u7d2f\u8ba1\u53d1\u5e03\uff0croot\u72ec\u7acb\u9a8c392+5\u6587\u4ef6SHA\u3001\u56db\u4efd\u9884\u6d4b\u6307\u6807\u4e0e\u8de8\u7b56\u7565\u540c\u5e8f\u5bbf\u4e3b\u8f93\u51fa\u3001\u9009\u4e2d\u6743\u91cd\u3002\u5b8c\u6574\u914d\u7f6e\u63a5\u53d7\uff1b\u5b8c\u6574\u5468\u5305\u4e0e\u5176\u4ed6\u79cd\u5b50\u672a\u653e\u884c\u3002",
+    "2026-09-18\u5b9e\u73b0\u5b8c\u6574\u7ef4\u5ea6\u591a\u4f4d\u7f6e\u5145\u5206\u7edf\u8ba1\u7f13\u5b58\u3001\u540c\u524d\u7f00GCV\u53c2\u8003\u89c4\u5219\u3001\u72ec\u7acbfamily runner\u4e0e\u539fdispatcher\u4efb\u52a1\u7c7b\u578b\uff1b\u5f53\u524d\u4e3a\u4ee3\u7801\u9a8c\u6536\uff0c\u6b63\u5f0f\u90e8\u7f72/\u9886\u53d6\u5f85\u5355\u5217\u56de\u6267\uff0c\u4e0d\u80fd\u590d\u7528\u4f4e\u7ef4PCA\u7f13\u5b58\u5192\u5145\u81ea\u7531\u62df\u5408\u3002",
+    "2026-09-18 05:34UTC\uff1a\u81ea\u7531\u5747\u503c\u4f4e\u79e9\u6b8b\u5dee134\u4efdGPU\u9884\u68c0\u4ea7\u7269SHA\u901a\u8fc7\uff0c\u539frun\u572851919716.23\u5168\u91cf\u5165\u53e3\u5b9e\u9645\u7edf\u8ba1224\u6279\u3002owner_v7\u552f\u4e00CPU/watcher\u63a5\u66ff\u901a\u8fc7\uff0c\u539fclaims\u62d2\u7edd\u91cd\u590d\u9886\u53d6RRR\u3001PCA\u81ea\u7531\u5747\u503c\u53ef\u5019\u9009\uff1b10LOOK\u7ed1\u5b9a\u66f4\u65b0\u3001\u5176\u4f5911\u9879\u4e0d\u53d8\u3002\u4e24\u81c2\u5339\u914d\u53ca\u8de8\u79df\u671f\u6062\u590d\u4ecd\u5f85\u9a8c\u6536\uff0c\u65e7\u7ed3\u679ccutoff\u4e0d\u5237\u65b0\u3002",
+    "2026-09-18 ws02\u5c0f\u961f\u5217fresh-host\u5339\u914d\u5305\u5df2\u5b9e\u9645\u542f\u52a8\uff1a1264train/296dev\uff0c3416/ResNet50deep/x16/q32\uff0c\u4e24\u81ea\u7531\u5747\u503c\u62df\u5408\u81c2\u300243CPU\u53ca\u771f\u5b9eGPU\u9884\u68c0\u901a\u8fc7\uff1b\u76ee\u5f55\u7ed1\u5b9a\u6545\u969c\u4fee\u590d\u540e\u6b63\u5f0f22\u219271\u66f4\u65b0\u3001epoch3\u21928\uff0cbest/last\u53ca\u9a8c\u8bc1history\u63a8\u8fdb\u3002\u5b8c\u6574\u62df\u5408\u7ed3\u679c\u5c1a\u65e0\uff0cIbex\u539f\u7ed3\u679c\u4fdd\u7559\u539fcutoff\uff1b\u8be6\u89c1ws02_cohort_delivery_20260918.md\u3002",
+    "2026-09-18 06:51UTC\uff1aws02\u5171\u540c\u5bbf\u4e3b\u6309\u539f\u5e73\u53f0\u89c4\u521927\u8f6e\u505c\u6b62\u3001best12\u3001270\u66f4\u65b0\uff0c\u91cd\u653e\u63a5\u53d7\uff1b\u72ec\u7acb\u91cd\u7b97296\u4eba\u5b8c\u6574\u8f93\u5165Macro-F1=69.2142%\u3001AUROC=74.4522%\u30029/9 PCA\u57fa\u5b8c\u6210\uff0c\u4e24\u81ea\u7531\u5747\u503c\u65b9\u6cd5\u5df2\u5206\u522b\u5728\u53ccGPU\u5b8c\u6210\u9996\u524d\u7f0079train\u6279\u5e76\u8bc4\u5019\u9009\u3002\u4ec5\u5bbf\u4e3b\u63a5\u53d7\uff0c\u5c1a\u65e0\u5b8c\u6574\u7f3a\u5931\u65b9\u6cd5\u6bd4\u8f83\u3002\u6743\u91cdSHA\u5df2\u5165\u5c0f\u961f\u5217current.json\uff0c\u53d7\u9650\u8d44\u4ea7\u4e0d\u4e0a\u4f20\u3002",
+    "2026-09-18 07:42UTC\u6838\u9a8c\uff0c\u4ec5ws02\u5c0f\u961f\u5217\uff1a\u540crun\u4e24\u65b9\u6cd5/\u4e24\u7f3a\u5931\u5747\u5b8c\u6210\uff1b\u81ea\u52a8CPU\u62a5\u544a\u4fee\u590d\u6210\u529f\uff0c\u72ec\u7acb8\u9884\u6d4bSHA\u3001296\u4eba\u540c\u5e8f\u3001F1/AUROC\u91cd\u7b97\u53ca\u540c\u5bbf\u4e3b\u901a\u8fc7\uff0c\u53bb\u91cd\u540e6\u884c\u3002\u91cd\u590d\u53d1\u5e03\u5b57\u8282/mtime\u4e0d\u53d8\uff1b\u8eab\u4efd\u51b2\u7a81/\u9884\u6d4b\u7be1\u6539/\u91cd\u590d\u77db\u76fe/\u62a5\u544a\u4e0d\u4e00\u81f4\u4fdd\u62a45\u6d4b\u8bd5\u901a\u8fc7\u3002RRR/PCA\u7f3aOCT69.9046/69.5821%\uff0c\u7f3aCFP61.6980/61.7695%\uff0c\u4e24\u65b9\u6cd5\u5dee\u503c\u533a\u95f4\u5747\u8de8\u96f6\u3002\u4e0d\u662fIbex\u6062\u590d\u3001\u6574\u4e2a\u5468\u5305\u6216\u72ec\u7acbtest\u9a8c\u6536\uff1b\u53d1\u5e03\u94fe\u7684\u5b9a\u65f6GitHub\u7aef\u4ecd\u7531\u539f\u7ef4\u62a4\u8d1f\u8d23\uff0c\u4e0d\u5192\u5145\u5b9e\u65f6\u3002",
+    "2026-09-18\uff1a\u5355GPU\u6709\u9650\u5e8f\u5217\u5df2\u5b9e\u9645\u5b8c\u6210R18\u5bbf\u4e3b\u2192PCA\u2192\u6b8b\u5dee\u6811\u2192PCA\u6811\u2192\u91cd\u653e\u7edf\u8ba1\uff0cR50\u7cbe\u786e\u5f15\u7528\uff1b\u4e0d\u81ea\u52a8\u6269\u5927\u8fd1\u4f3c\u9aa8\u5e72/\u79cd\u5b50\u3002\u4e0b\u4e00\u5305\u6309\u5f53\u524d\u7814\u7a76\u51b3\u7b56\u767b\u8bb0\uff0c\u672a\u9a8c\u6536MMTM\u63a5\u53e3\u4e0d\u79f0\u5df2\u8bad\u7ec3\u3002Ibex23\u5f85\u6279/1allocation\u53caRPC\u95f4\u6b47\u8d85\u65f6\uff0c\u65e2\u6709\u4fdd\u62a4\u4e0eclaims\u4fdd\u7559\u3002",
+    "2026-09-18 09:12UTC\u7ef4\u62a4\uff1a\u7cbe\u786e\u590d\u7528R50/R18\u63a5\u53d7\u7684\u9996\u8f6e\u5019\u9009\u5b8c\u621036\u9879\u56fa\u5b9a\u7a7a\u524d\u7f00/\u540c\u4f4d\u7f6e\u62df\u5408\u8bca\u65ad\uff0c\u672a\u65b0\u589eGPU\u62df\u5408\u6216\u8bad\u7ec3\uff1b\u4e24\u81c2\u5bbf\u4e3b\u3001\u4f4d\u7f6e\u96c6\u5408\u3001\u57fa\u7ebf\u53capenalty policy\u4e00\u81f4\uff0c\u975e\u56fa\u5b9alambda\u6216\u659c\u7387\u673a\u5236\u3002",
+    "2026-09-18\u7ef4\u62a4\u4e3b\u52a8\u4fee\u6b63\u7ed3\u679c\u5217\u8868\u4e2d\u7684\u5386\u53f2\u622a\u70b9\u63aa\u8f9e\uff1a\u4e0d\u6539\u539f\u6570\u503c\u4e0escientific cutoff\uff0c\u660e\u786e\u65e7\u201c\u4e3b\u6811/\u53cc\u72b6\u6001\u672a\u5b8c\u6210\u201d\u5df2\u88ab\u540e\u7eed\u5b8c\u6574\u914d\u7f6e\u9a8c\u6536\u53d6\u4ee3\u3002MMTM\u6709\u9650\u5c0f\u961f\u5217\u534f\u8bae\u4e0e\u8282\u70b9\u9002\u914d\u5b9e\u73b0\u5355\u72ec\u767b\u8bb0\uff0cCPU\u9a8c\u6536\u4e0d\u7b49\u4e8e\u6b63\u5f0f\u8bad\u7ec3\u3002",
+    "2026-09-18 12:31UTC\uff1aa9833e6\uff0cMMTM Stage3/R18/\u4f5c\u8005scale1\u968f\u673a\u95e8\u63a7\u5355\u914d\u7f6e\u5b9e\u9645GPU\u9884\u68c0\u901a\u8fc7\uff08\u5b8c\u6574296dev\u3001\u6062\u590d2\u66f4\u65b0\uff09\uff0c\u540crun\u6b63\u5f0f3\u219262\u66f4\u65b0/epoch7\uff0c\u65ad\u70b9SHA\u4e0e/proc\u901a\u8fc7\u3002\u9996\u6b21\u542f\u52a8\u7f3aCuBLAS\u73af\u5883\u5df2\u5f52\u6863\u4fee\u590d\uff0c\u539f\u786e\u5b9a\u6027/\u8bad\u7ec3\u6807\u51c6\u672a\u53d8\uff1b\u5f53\u524d\u4e0d\u662f\u5b8c\u6574A/A+LOOK\u9a8c\u6536\u3002\u7d2f\u8ba1\u9875\u9762\u5df2\u65b0\u589e\u914d\u7f6e\uff0c\u65e7\u4e24\u914d\u7f6e\u590d\u7528\u3002",
+    "2026-09-18 13:40UTC\u73b0\u573a\uff1aws02\u6709\u9650\u4efb\u52a1\u5df2\u6b63\u5e38\u7ed3\u675f\u4e14GPU\u7a7a\u95f2\uff0c\u72ec\u7acb\u6700\u7ec8\u6838\u9a8c\u5e76\u7528\u65b0\u663e\u793a\u751f\u6210\u5668\u53d1\u5e03\uff1b\u4e0d\u662f\u65b0\u4efb\u52a1\u5728\u8bad\u7ec3\u3002Ibex\u4e24CPU\u8fdb\u7a0b\u53ca\u65b0\u5468\u671ferror=null\uff0c1allocation\u8fd0\u884c/23\u5f85\u6279\uff1bLOOK\u539f\u6b8b\u5dee\u5185\u5b58\u4fdd\u62a4\u5931\u8d25\u4ecd\u5f85\u5145\u8db3\u8d44\u6e90\uff0cDense3D\u6682\u505cepoch5/15319updates\uff0c\u65b032\u4ecd4\u767b\u8bb0\u6587\u4ef6\u65e0\u6b63\u5f0f\u66f4\u65b0\u3002",
+    "LOOK\u56fa\u5b9a\u7a7a\u524d\u7f00/\u659c\u7387/\u03bb/\u79e9\uff0c\u4ec5\u7ea6\u675f\u6b8b\u5dee\u5747\u503c\uff1a\u4e24\u4e2a\u5df2\u9a8c\u6536ResNet18\u5bbf\u4e3b\u00d72\u62df\u5408\u00d72\u7f3a\u5931\u00d79\u4f4d\u7f6e\uff0c72/72\u5b8c\u6210\uff1b\u65e7\u81ea\u7531\u9884\u6d4b\u9010\u5143\u7d20\u73b0\u573a\u91cd\u653e\uff0c\u65b0\u589e\u9884\u6d4bSHA\u53casklearn F1/AUROC\u72ec\u7acb\u91cd\u7b97\u901a\u8fc7\u300258\u9879\u81ea\u7531\u5747\u503cF1\u8f83\u9ad8\u300110\u9879\u8f83\u4f4e\u30014\u9879\u76f8\u540c\uff08\u76f8\u5173\u6761\u4ef6\uff0c\u4e0d\u662f72\u4e2a\u72ec\u7acb\u91cd\u590d\uff09\u3002\u65e0\u65b0\u589e\u8bad\u7ec3\u6216\u62df\u5408\uff1b\u4e0d\u80fd\u5ba3\u79f0\u81ea\u7531\u5747\u503c\u5fc5\u80dc\u3002\u9996\u542frank\u5b57\u6bb5\u9519\u8bef\u4fdd\u7559\uff0c6a813d8\u52a0\u771f\u5b9eFamilyMap\u56de\u5f5212\u9879\u901a\u8fc7\u540e\u6062\u590d\u5e76\u5b8c\u6210\u4e0b\u6e38\u3002",
+    "2026-09-19 fusion-stage\u6709\u9650\u5305\uff1adeep run2026_09_18_11_18_28_650020\u4e25\u683c\u5f15\u7528\uff1bmiddle/features host\u5206\u522bbest/stop=9/24\u300130/45\uff0c240/450\u66f4\u65b0\uff0c\u672a\u91cd\u8bad\u6062\u590d\u30028/8\u62df\u5408\u6811\u901a\u8fc7\u6b63\u5f0fCuBLAS\u786e\u5b9a\u6027\u73af\u5883\u3001graph state/BN\u3001source manifest\u3001\u5b8c\u6574prefix/candidate evidence\u53ca\u4e24\u9636\u6bb5\u8def\u5f84\u8fc1\u79fb\u9a8c\u6536\uff1b\u4e24\u4e2a\u65b0run formal/delivery\u4e0e\u4e09\u5bbf\u4e3b\u7d2f\u8ba1publication\u5b8c\u6210\u3002\u53f3\u4fa7\u6700\u7ec8audit SHA291051a82c4b13f918c0c60afd5f71da3d94710233bcc6cdeab0a3a41192f57d\u3002",
+    "repair\u94fe\u4fdd\u7559\uff1a\u521d\u59cbhost structure receipt\u6f0fposition\uff1bfit-profile raw\u6062\u590d\u6bd4\u8f83\u8bef\u628a\u8fd0\u884c\u8ba1\u6570/\u8def\u5f84\u53d8\u5316\u5f53\u79d1\u5b66\u53d8\u5316\uff1b\u540e\u7eed\u8bca\u65ad\u672a\u5b8c\u6574\u5339\u914d\u6b63\u5f0fworker\u73af\u5883\uff1bpublication\u5148\u540e\u8865\u903b\u8f91\u8fc1\u79fbbank\u8def\u5f84\u4e0efeature-cost provenance\u3002\u5404\u6b21\u5931\u8d25\u5747\u4fdd\u7559\u8bc1\u636e\uff0c\u672a\u91cd\u8badhost\u6216\u91cd\u62df\u5408\u5df2\u5b8c\u6210\u5b8c\u6574tree\u3002",
+    "2026-09-19 \u5de6\u4fa7fusion-stage\u72ec\u7acb\u5ba1\u8ba1\u901a\u8fc7\uff1a5010\u72ec\u7acb\u6587\u4ef6\u5185\u5bb9\u300110362 hash\u7ed1\u5b9a\u3001706\u9884\u6d4b\u6587\u4ef6\u68c0\u67e5\u3001296\u4eba\u56db\u6307\u6807\u30018\u987910k\u533a\u95f4\u30018\u6811394\u524d\u7f00/674\u5019\u9009\u5747\u901a\u8fc7\uff1baudit SHA db5b1ea423f70b1bf727fd92216ca8b2d96cd75da52a6aa9b14b0e9b00afe050\u3002\u79d1\u5b66current SHA7354806d\u4fdd\u6301\u4e0d\u53d8\uff0c\u53d1\u5e03\u5305\u4ec5\u4fee\u751f\u6210\u5668/\u53ef\u8bfb\u7d2f\u8ba1\u3002",
+    "2026-09-19 EmbraceNet\u9996\u4e2a\u771f\u6b63\u7f3a\u5931\u65b9\u6cd5A\uff1a\u4f5c\u8005\u56fa\u5b9a\u5b9e\u73b0\u56db\u5408\u6cd5\u8f93\u5165\u8f93\u51fa/\u68af\u5ea6/RNG\u96f6\u5dee\u4e0e\u4e0b\u4e00AdamW\u66f4\u65b0\u7cbe\u786e\u6062\u590d\u5df2\u843d\u76d8\uff1bR18/MHD\u4e5d\u8282\u70b9\u539f\u578b\u53ca\u552f\u4e00trial\u5408\u540c\u5df2\u5b9e\u73b0\u3002\u6062\u590d\u540e\u65b0\u589epre-R18 NaN-safe\u5165\u53e3/common-random helper\uff0c\u5411\u65e2\u6709WS02\u9694\u79bbCPU\u526f\u672c\u540c\u6b65\u88ab\u4e0a\u5c42\u5b89\u5168\u68c0\u67e5\u62d2\u7edd\u4e14\u672a\u7ed5\u8fc7\uff0c\u6545\u5f53\u524dSHA\u5c1a\u7f3a\u4e00\u6b21\u9488\u5bf9\u6027\u52a8\u6001CPU\u91cd\u9a8c\uff1b\u65e0\u771f\u5b9e\u8bad\u7ec3/GPU/test\u3002",
+    "2026-09-19 EmbraceNet repair v2\uff1a\u672c\u673a\u9694\u79bbCPU current-SHA\u4e13\u987916/16\u3001\u76f8\u5173\u56de\u5f5230/30\u3001\u4f5c\u8005\u5f53\u524dSHA\u7b49\u4ef7/RNG\u6062\u590d\u3001\u4e5d\u8282\u70b9\u53cc\u5355\u7f3a\u5931\u975e\u96f6LOOK\u4e0e\u7edf\u8ba1\u76ee\u6807\u5ba1\u8ba1\u901a\u8fc7\uff1b\u7edf\u4e00train/A/A+LOOK pre-R18 zero-mask\u5165\u53e3\u3002K32\u6b63\u5f0f\u63d0\u6848\u64a4\u4e0b\uff0csingle-missing\u4e00\u6b21forward\uff1bcomplete\u5e73\u5747logit\u76ee\u6807\u7528\u89e3\u6790\u671f\u671b\u3002\u65e0\u8fdc\u7aef\u5199\u5165/GPU/\u53c2\u4e0e\u8005\u6570\u636e/test/\u8bad\u7ec3\u3002",
+    "v1\u7684EmbraceNet current-SHA CPU\u52a8\u6001\u91cd\u9a8c\u963b\u585e\u5df2\u7531v2\u672c\u673a\u9694\u79bbCPU\u5408\u6cd5\u73af\u5883\u89e3\u51b3\uff1b\u5386\u53f2\u88ab\u62d2scp\u4ecd\u4e0d\u91cd\u8bd5/\u7ed5\u8fc7\uff0cWS02\u90e8\u7f72gate\u53e6\u5f85\u672a\u6765\u5408\u6cd5\u6d41\u7a0b\u3002",
+    "2026-09-19 EmbraceNet v3\uff1a\u4fee\u590d\u516c\u5f00plain/study\u56fe\u5165\u53e3\u7684\u5916\u90e8prearm replay\u6cc4\u6f0f\u3002available-input NaN\u5931\u8d25\u3001artifact/stop\u9884\u6821\u9a8c\u5931\u8d25\u53caembrace\u524d\u6b63\u5e38\u505c\u6b62\u5747\u6e05\u9664\u672a\u6d88\u8d39replay\uff1b\u6709\u6548exact replay\u4ecd\u4e00\u6b21\u6027\u6210\u529f\u3002\u4e13\u987924/24\u3001\u76f8\u5173\u56de\u5f5230/30\u3001\u72ec\u7acb\u56fe\u7ea7probe\u901a\u8fc7\u3002v2\u51bb\u7ed3\u8bc1\u636e\u4e0d\u8986\u5199\uff1bv3\u516c\u5f0f\u53ef\u8bfb\u5e76\u660e\u786e\u968f\u673a\u5b8c\u6574\u53c2\u8003PCA\u4e8c\u9636\u77e9\u5408\u540c\u3002",
+    "2026-09-19 EmbraceNet single-seed\u771f\u5b9e\u5305\uff1aWS02 GPU0\u5b8c\u62101\u4e2aseed3416 EmbraceNet A\uff08best11/stop26\uff09+ PCA/RRR\u00d7\u53cc\u7f3a\u59314\u4e2a\u4e3b\u5bf9\u6bd4\u30019\u8282\u70b9PCA\u3001fit-profile\u6062\u590d/solver\u95e8\u69db\u300110k\u914d\u5bf9\u7edf\u8ba1\u4e0e\u4e2d\u6587\u7d2f\u8ba1\u5019\u9009\uff1btest\u5c01\u5b58\u3002\u8fdc\u7aeffinite pipeline\u4f9dreceipt\u8fde\u7eed\u5b8c\u6210residual\u2192report\u2192verify\u3002\u5f53\u524dself_checked_pending_independent_review\u3002",
+    "2026-09-19 integration continuation\uff1a\u4e0b\u4e00A\u6709\u9650\u5408\u540c\u9501\u5b9aShaSpec\u673a\u5236\u5bb6\u65cf\u4f46\u8bad\u7ec3\u524d\u6709\u5b9e\u73b0/\u8bb8\u53ef/2D\u5206\u7c7b\u8eab\u4efd\u7b49\u786c\u95e8\u69db\uff1bPCA/RRR\u4e0d\u9884\u8bbe\u8d62\u5bb6\u3002\u79bb\u7ebf\u6267\u884c\u8981\u6c42\u5df2\u8bb0\u5f55\u4e3adesign_ready_not_deployed_for_next_A\uff1b\u4e0d\u5ba3\u79f0\u5e38\u9a7bplanner\u3002",
+    "Normal dispatch and priority qualification share the same weekly/dependency policy; qualification is followed by an exclusive target claim before parent pause. Late probes cannot pause a finished parent. Failed workers are quarantined per claim. Runtime suite 96 passed against the original pinned V4. Candidate only; no live owner changed."
   ],
   "decisions": [
-    "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
-    "2026-09-18用户授权优先公平拟合方法比较、再扩展。取消新增best-forward与正收益树的重复性能比较；已有结果保留。首包均值自由保持一致，约束均值优先固定前缀机制消融，广矩阵保留后续。",
-    "用户授权ws02优先LOOK并沿用旧数据开展当前方法设计；平台统一标准、不同数据/初始化独立身份。后继优先老师9月13日问题，中文为主的周报呈现变化及真实缺项。",
-    "fusion-stage解释决策：middle对deep的部分LOOK收益差同时区间不跨0，但middle宿主本身更弱且参数量更少；features与deep等参数但4项同时区间全跨0。当前不按点估计宣布最佳融合阶段，也不扩种子/骨干；等待左侧独立验收后再回到老师A/B/C缺口。",
-    "fusion-stage科学包已接受后停止其GPU生命周期：不因middle大增益继续堆融合位置/骨干/种子；middle更弱宿主基线是主要替代解释，features相对deep四项同时区间跨零。下一研究回到外部A/B/C匹配与现有logits概率损失定位，由左侧另行锁定。",
-    "2026-09-19比较角色纠正：LOOK缺失方法A必须实际处理整模态缺失；MMTM/fusion-stage不计A/B/C覆盖。Stage A概率诊断已左侧独立接受，只作描述性解释。",
-    "2026-09-19比较角色纠正：LOOK缺失方法A必须实际处理整模态缺失；MMTM/fusion-stage/fixed-mean/fixed-prefix不计A/B/C覆盖。Stage A概率诊断只作描述性解释。GAN/微调是类别例子而非必跑表。",
-    "EmbraceNet trial唯一推荐：1264train/296dev/seed3416沿用accepted R18训练与BN/停止；c=256，complete选择概率0.5/0.5，train complete/missingOCT/missingCFP各1/3；K=32 common-random评估，checkpoint仍按complete dev Macro-F1，A与A+LOOK同state逐draw复用精确indices。左审及当前SHA CPU重验前不训练。",
-    "EmbraceNet v2统一trial待左侧最终确认两项新科学选择：train三状态各1/3；complete checkpoint/诊断使用解析integrated mean logits，K32仅可选诊断。其余R18训练/BN/batch/停止/label/split/test规则继承不变。",
-    "EmbraceNet v3统计合同：complete分类integrated-mean-logit用E[z]即可；但embraced_feature LOOK PCA若参考作者随机完整分布，必须使用Sigma_full，包含平均diag(v_i)条件抽样方差。只用mean feature的Sigma_mean属于新科学目标，需另行确认。",
-    "EmbraceNet真实A+LOOK单种子点估计：PCA缺OCT+1.364pp、缺CFP+1.131pp；RRR缺OCT+1.085pp、缺CFP空树+0。所有Macro-F1同族simultaneous95%跨0；不宣布稳定优势，不因阴性自动补seed/调参。",
+    "2026-09-17 \u7528\u6237\u6388\u6743\u66f4\u6362\u4e3b\u641c\u7d22\u7b56\u7565\uff1b\u8fd9\u662f\u89c1\u8fc7\u9996\u8f6edev\u4e4b\u540e\u7684\u63a2\u7d22\u6027\u4fee\u8ba2\u3002\u6240\u6709\u6b63\u4f4d\u7f6e\u5206\u652f\u4fdd\u7559\uff0c\u4e0d\u5168\u5c40\u53ea\u53d6\u6700\u4f73\u3001\u4e0d\u63a2\u7d22\u8d1f\u6536\u76ca\u524d\u7f00\u8865\u6551\uff1b\u65b0run\u72ec\u7acb\u8eab\u4efd\uff0c\u65e7\u7ed3\u679c\u4e0d\u6539\u5199\u3002",
+    "2026-09-18\u7528\u6237\u6388\u6743\u4f18\u5148\u516c\u5e73\u62df\u5408\u65b9\u6cd5\u6bd4\u8f83\u3001\u518d\u6269\u5c55\u3002\u53d6\u6d88\u65b0\u589ebest-forward\u4e0e\u6b63\u6536\u76ca\u6811\u7684\u91cd\u590d\u6027\u80fd\u6bd4\u8f83\uff1b\u5df2\u6709\u7ed3\u679c\u4fdd\u7559\u3002\u9996\u5305\u5747\u503c\u81ea\u7531\u4fdd\u6301\u4e00\u81f4\uff0c\u7ea6\u675f\u5747\u503c\u4f18\u5148\u56fa\u5b9a\u524d\u7f00\u673a\u5236\u6d88\u878d\uff0c\u5e7f\u77e9\u9635\u4fdd\u7559\u540e\u7eed\u3002",
+    "\u7528\u6237\u6388\u6743ws02\u4f18\u5148LOOK\u5e76\u6cbf\u7528\u65e7\u6570\u636e\u5f00\u5c55\u5f53\u524d\u65b9\u6cd5\u8bbe\u8ba1\uff1b\u5e73\u53f0\u7edf\u4e00\u6807\u51c6\u3001\u4e0d\u540c\u6570\u636e/\u521d\u59cb\u5316\u72ec\u7acb\u8eab\u4efd\u3002\u540e\u7ee7\u4f18\u5148\u8001\u5e089\u670813\u65e5\u95ee\u9898\uff0c\u4e2d\u6587\u4e3a\u4e3b\u7684\u5468\u62a5\u5448\u73b0\u53d8\u5316\u53ca\u771f\u5b9e\u7f3a\u9879\u3002",
+    "fusion-stage\u89e3\u91ca\u51b3\u7b56\uff1amiddle\u5bf9deep\u7684\u90e8\u5206LOOK\u6536\u76ca\u5dee\u540c\u65f6\u533a\u95f4\u4e0d\u8de80\uff0c\u4f46middle\u5bbf\u4e3b\u672c\u8eab\u66f4\u5f31\u4e14\u53c2\u6570\u91cf\u66f4\u5c11\uff1bfeatures\u4e0edeep\u7b49\u53c2\u6570\u4f464\u9879\u540c\u65f6\u533a\u95f4\u5168\u8de80\u3002\u5f53\u524d\u4e0d\u6309\u70b9\u4f30\u8ba1\u5ba3\u5e03\u6700\u4f73\u878d\u5408\u9636\u6bb5\uff0c\u4e5f\u4e0d\u6269\u79cd\u5b50/\u9aa8\u5e72\uff1b\u7b49\u5f85\u5de6\u4fa7\u72ec\u7acb\u9a8c\u6536\u540e\u518d\u56de\u5230\u8001\u5e08A/B/C\u7f3a\u53e3\u3002",
+    "fusion-stage\u79d1\u5b66\u5305\u5df2\u63a5\u53d7\u540e\u505c\u6b62\u5176GPU\u751f\u547d\u5468\u671f\uff1a\u4e0d\u56e0middle\u5927\u589e\u76ca\u7ee7\u7eed\u5806\u878d\u5408\u4f4d\u7f6e/\u9aa8\u5e72/\u79cd\u5b50\uff1bmiddle\u66f4\u5f31\u5bbf\u4e3b\u57fa\u7ebf\u662f\u4e3b\u8981\u66ff\u4ee3\u89e3\u91ca\uff0cfeatures\u76f8\u5bf9deep\u56db\u9879\u540c\u65f6\u533a\u95f4\u8de8\u96f6\u3002\u4e0b\u4e00\u7814\u7a76\u56de\u5230\u5916\u90e8A/B/C\u5339\u914d\u4e0e\u73b0\u6709logits\u6982\u7387\u635f\u5931\u5b9a\u4f4d\uff0c\u7531\u5de6\u4fa7\u53e6\u884c\u9501\u5b9a\u3002",
+    "2026-09-19\u6bd4\u8f83\u89d2\u8272\u7ea0\u6b63\uff1aLOOK\u7f3a\u5931\u65b9\u6cd5A\u5fc5\u987b\u5b9e\u9645\u5904\u7406\u6574\u6a21\u6001\u7f3a\u5931\uff1bMMTM/fusion-stage\u4e0d\u8ba1A/B/C\u8986\u76d6\u3002Stage A\u6982\u7387\u8bca\u65ad\u5df2\u5de6\u4fa7\u72ec\u7acb\u63a5\u53d7\uff0c\u53ea\u4f5c\u63cf\u8ff0\u6027\u89e3\u91ca\u3002",
+    "2026-09-19\u6bd4\u8f83\u89d2\u8272\u7ea0\u6b63\uff1aLOOK\u7f3a\u5931\u65b9\u6cd5A\u5fc5\u987b\u5b9e\u9645\u5904\u7406\u6574\u6a21\u6001\u7f3a\u5931\uff1bMMTM/fusion-stage/fixed-mean/fixed-prefix\u4e0d\u8ba1A/B/C\u8986\u76d6\u3002Stage A\u6982\u7387\u8bca\u65ad\u53ea\u4f5c\u63cf\u8ff0\u6027\u89e3\u91ca\u3002GAN/\u5fae\u8c03\u662f\u7c7b\u522b\u4f8b\u5b50\u800c\u975e\u5fc5\u8dd1\u8868\u3002",
+    "EmbraceNet trial\u552f\u4e00\u63a8\u8350\uff1a1264train/296dev/seed3416\u6cbf\u7528accepted R18\u8bad\u7ec3\u4e0eBN/\u505c\u6b62\uff1bc=256\uff0ccomplete\u9009\u62e9\u6982\u73870.5/0.5\uff0ctrain complete/missingOCT/missingCFP\u54041/3\uff1bK=32 common-random\u8bc4\u4f30\uff0ccheckpoint\u4ecd\u6309complete dev Macro-F1\uff0cA\u4e0eA+LOOK\u540cstate\u9010draw\u590d\u7528\u7cbe\u786eindices\u3002\u5de6\u5ba1\u53ca\u5f53\u524dSHA CPU\u91cd\u9a8c\u524d\u4e0d\u8bad\u7ec3\u3002",
+    "EmbraceNet v2\u7edf\u4e00trial\u5f85\u5de6\u4fa7\u6700\u7ec8\u786e\u8ba4\u4e24\u9879\u65b0\u79d1\u5b66\u9009\u62e9\uff1atrain\u4e09\u72b6\u6001\u54041/3\uff1bcomplete checkpoint/\u8bca\u65ad\u4f7f\u7528\u89e3\u6790integrated mean logits\uff0cK32\u4ec5\u53ef\u9009\u8bca\u65ad\u3002\u5176\u4f59R18\u8bad\u7ec3/BN/batch/\u505c\u6b62/label/split/test\u89c4\u5219\u7ee7\u627f\u4e0d\u53d8\u3002",
+    "EmbraceNet v3\u7edf\u8ba1\u5408\u540c\uff1acomplete\u5206\u7c7bintegrated-mean-logit\u7528E[z]\u5373\u53ef\uff1b\u4f46embraced_feature LOOK PCA\u82e5\u53c2\u8003\u4f5c\u8005\u968f\u673a\u5b8c\u6574\u5206\u5e03\uff0c\u5fc5\u987b\u4f7f\u7528Sigma_full\uff0c\u5305\u542b\u5e73\u5747diag(v_i)\u6761\u4ef6\u62bd\u6837\u65b9\u5dee\u3002\u53ea\u7528mean feature\u7684Sigma_mean\u5c5e\u4e8e\u65b0\u79d1\u5b66\u76ee\u6807\uff0c\u9700\u53e6\u884c\u786e\u8ba4\u3002",
+    "EmbraceNet\u771f\u5b9eA+LOOK\u5355\u79cd\u5b50\u70b9\u4f30\u8ba1\uff1aPCA\u7f3aOCT+1.364pp\u3001\u7f3aCFP+1.131pp\uff1bRRR\u7f3aOCT+1.085pp\u3001\u7f3aCFP\u7a7a\u6811+0\u3002\u6240\u6709Macro-F1\u540c\u65cfsimultaneous95%\u8de80\uff1b\u4e0d\u5ba3\u5e03\u7a33\u5b9a\u4f18\u52bf\uff0c\u4e0d\u56e0\u9634\u6027\u81ea\u52a8\u8865seed/\u8c03\u53c2\u3002",
     "EmbraceNet left audit accepted the scoped single-seed development science. Publication correction: three nondegenerate simultaneous intervals include zero; residual_rrr/cfp_missing is an exact zero-variance identity with simultaneous_95=null, not equivalence evidence. Frozen branch diagnostic: joint_input PCA gain is entirely through the available modality branch; missing-branch-only writeback leaves logits identical to A."
   ],
   "evidence": [
     {
-      "label": "正收益分支树规则、缓存、迁移、资源验收与正式下游进度",
+      "label": "\u6b63\u6536\u76ca\u5206\u652f\u6811\u89c4\u5219\u3001\u7f13\u5b58\u3001\u8fc1\u79fb\u3001\u8d44\u6e90\u9a8c\u6536\u4e0e\u6b63\u5f0f\u4e0b\u6e38\u8fdb\u5ea6",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/positive_forward_tree_20260917.md"
     },
     {
@@ -206,83 +208,83 @@
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/priority_owner_activation_20260917.md"
     },
     {
-      "label": "后继融合管理接续边界",
+      "label": "\u540e\u7ee7\u878d\u5408\u7ba1\u7406\u63a5\u7eed\u8fb9\u754c",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/next_fusion_activation_20260917.md"
     },
     {
-      "label": "已完成best-forward双缺失配置、路径及多指标反例",
+      "label": "\u5df2\u5b8c\u6210best-forward\u53cc\u7f3a\u5931\u914d\u7f6e\u3001\u8def\u5f84\u53ca\u591a\u6307\u6807\u53cd\u4f8b",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/best_forward/README.md"
     },
     {
-      "label": "两种搜索策略的累计匹配结果、路径、成本与反例",
+      "label": "\u4e24\u79cd\u641c\u7d22\u7b56\u7565\u7684\u7d2f\u8ba1\u5339\u914d\u7ed3\u679c\u3001\u8def\u5f84\u3001\u6210\u672c\u4e0e\u53cd\u4f8b",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/search_policies/README.md"
     },
     {
-      "label": "拟合方法优先与实验必要性复审",
+      "label": "\u62df\u5408\u65b9\u6cd5\u4f18\u5148\u4e0e\u5b9e\u9a8c\u5fc5\u8981\u6027\u590d\u5ba1",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/fitting_method_priority_20260918.md"
     },
     {
-      "label": "小队列两自由均值方法匹配结果与发布核验",
+      "label": "\u5c0f\u961f\u5217\u4e24\u81ea\u7531\u5747\u503c\u65b9\u6cd5\u5339\u914d\u7ed3\u679c\u4e0e\u53d1\u5e03\u6838\u9a8c",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/small_cohort/README.md"
     },
     {
-      "label": "同空前缀同位置诊断",
+      "label": "\u540c\u7a7a\u524d\u7f00\u540c\u4f4d\u7f6e\u8bca\u65ad",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/fixed_prefix/README.md"
     },
     {
-      "label": "MMTM A/A+LOOK有限配方及工程验收边界",
+      "label": "MMTM A/A+LOOK\u6709\u9650\u914d\u65b9\u53ca\u5de5\u7a0b\u9a8c\u6536\u8fb9\u754c",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/mmtm_cohort_20260918.md"
     },
     {
-      "label": "2026-09-18：72项固定均值对照已完成",
+      "label": "2026-09-18\uff1a72\u9879\u56fa\u5b9a\u5747\u503c\u5bf9\u7167\u5df2\u5b8c\u6210",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/fixed_mean/README.md"
     },
     {
-      "label": "R18 middle/deep/features融合阶段完整右侧结果与8项跨宿主区间",
+      "label": "R18 middle/deep/features\u878d\u5408\u9636\u6bb5\u5b8c\u6574\u53f3\u4fa7\u7ed3\u679c\u4e0e8\u9879\u8de8\u5bbf\u4e3b\u533a\u95f4",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/fusion_stage/README.md"
     },
     {
-      "label": "fusion-stage预登记、结构合同、修复与验收边界",
+      "label": "fusion-stage\u9884\u767b\u8bb0\u3001\u7ed3\u6784\u5408\u540c\u3001\u4fee\u590d\u4e0e\u9a8c\u6536\u8fb9\u754c",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/ws02_fusion_stage_20260919.md"
     },
     {
-      "label": "Stage A概率损失反例定位",
+      "label": "Stage A\u6982\u7387\u635f\u5931\u53cd\u4f8b\u5b9a\u4f4d",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/probability_diagnostic/README.md"
     },
     {
-      "label": "LOOK缺失方法一手证据与公平合同",
+      "label": "LOOK\u7f3a\u5931\u65b9\u6cd5\u4e00\u624b\u8bc1\u636e\u4e0e\u516c\u5e73\u5408\u540c",
       "url": "https://github.com/souray0410/LOOK/blob/webcodex/probability-readiness-20260919/docs/reports/current/research_decisions/missing_method_evidence_20260919.md"
     },
     {
-      "label": "EmbraceNet首个真正缺失方法CPU适配、随机参考与唯一试运行合同",
+      "label": "EmbraceNet\u9996\u4e2a\u771f\u6b63\u7f3a\u5931\u65b9\u6cd5CPU\u9002\u914d\u3001\u968f\u673a\u53c2\u8003\u4e0e\u552f\u4e00\u8bd5\u8fd0\u884c\u5408\u540c",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/research_decisions/embracenet_adapter_readiness_20260919.md"
     },
     {
-      "label": "EmbraceNet v2 CPU闭环、单缺失确定性与统一统计合同",
+      "label": "EmbraceNet v2 CPU\u95ed\u73af\u3001\u5355\u7f3a\u5931\u786e\u5b9a\u6027\u4e0e\u7edf\u4e00\u7edf\u8ba1\u5408\u540c",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/research_decisions/embracenet_adapter_repair_v2_20260919.md"
     },
     {
-      "label": "EmbraceNet v3 replay失败边界与完整参考二阶矩合同",
+      "label": "EmbraceNet v3 replay\u5931\u8d25\u8fb9\u754c\u4e0e\u5b8c\u6574\u53c2\u8003\u4e8c\u9636\u77e9\u5408\u540c",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/research_decisions/embracenet_adapter_repair_v3_20260919.md"
     },
     {
-      "label": "EmbraceNet首个真实missing-method A+LOOK单种子当前页",
+      "label": "EmbraceNet\u9996\u4e2a\u771f\u5b9emissing-method A+LOOK\u5355\u79cd\u5b50\u5f53\u524d\u9875",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/embracenet_single_seed/README.md"
     },
     {
-      "label": "EmbraceNet独立接受后的发布纠错与冻结写回机制诊断",
+      "label": "EmbraceNet\u72ec\u7acb\u63a5\u53d7\u540e\u7684\u53d1\u5e03\u7ea0\u9519\u4e0e\u51bb\u7ed3\u5199\u56de\u673a\u5236\u8bca\u65ad",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/embracenet_single_seed/integration_20260919.md"
     },
     {
-      "label": "下一缺失方法A最小合同",
+      "label": "\u4e0b\u4e00\u7f3a\u5931\u65b9\u6cd5A\u6700\u5c0f\u5408\u540c",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/research_decisions/next_missing_method_A_contract_20260919.md"
     },
     {
-      "label": "后继远端离线接续准备",
+      "label": "\u540e\u7ee7\u8fdc\u7aef\u79bb\u7ebf\u63a5\u7eed\u51c6\u5907",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/handoff/offline_execution_readiness_20260919.md"
     },
     {
-      "label": "EmbraceNet首个真实missing-method A+LOOK单种子结果及独立验收后的发布页",
+      "label": "EmbraceNet\u9996\u4e2a\u771f\u5b9emissing-method A+LOOK\u5355\u79cd\u5b50\u7ed3\u679c\u53ca\u72ec\u7acb\u9a8c\u6536\u540e\u7684\u53d1\u5e03\u9875",
       "url": "https://github.com/souray0410/LOOK/blob/main/docs/reports/current/embracenet_single_seed/README.md"
     }
   ]

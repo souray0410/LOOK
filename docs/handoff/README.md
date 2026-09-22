@@ -401,3 +401,12 @@ remain pending; this does not certify the weekly matched package.
 MMTM适配宿主同一A与A+LOOK已完成：296dev/3416，缺OCT不修正58.0638%、PCA62.7767%、残差63.5068%；缺CFP41.8162%、58.4455%、58.9863%。两方法差值普通95%均跨零；缺OCT NLL仍恶化。8份预测SHA/有序参与者/F1/AUROC及同宿主独立核验通过，仅开发集单种子探索。
 
 ws02本批有限流程已正常结束，GPU空闲；下一个研究包尚未运行。Ibex当前1运行allocation/23待批，两个派发器活跃且周期无错误；LOOK原内存保护故障等待资源，Dense3D暂停，新32无正式更新。不能把管理器健康当GPU科研任务正在运行。
+
+
+## 2026-09-22 V5 rollout repair candidate
+
+Normal dispatch and priority qualification share the same weekly/dependency policy; qualification is followed by an exclusive target claim before parent pause. Late probes cannot pause a finished parent. Failed workers are quarantined per claim. Runtime suite 96 passed against the original pinned V4. Candidate only; no live owner changed.
+
+The approved migration targets direct V5 execution and explicit artifact conversion.
+No V4 runtime fallback will be added. Existing healthy immutable sources remain
+unmodified until completed-step checkpoint handover and numerical acceptance.

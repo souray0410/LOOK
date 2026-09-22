@@ -178,7 +178,7 @@ def active_search_modes(config, claims):
     return counts
 
 
-def admissible_work(config, claims):
+def admissible_work(config, claims, reservation=None):
     result = []; rejected = []
     counts=active_search_modes(config,claims)
     candidates = work(config)
@@ -196,7 +196,13 @@ def admissible_work(config, claims):
             continue
         if (not config.get('delivery_policy') and task.get('execution')=='look_search' and task.get('search_mode')=='greedy'
             and counts['greedy']>=config.get('search_control_maximum',2)):continue
-        if not eligible(task, claims): continue
+        reserved = reservation is not None and task['run_dir'] == reservation[0]['run_dir']
+        if reserved:
+            current=read(claims.path(task['run_dir']));token=reservation[1]
+            if (current.get('state')!='claimed' or any(current.get(k)!=token.get(k)
+                    for k in ('owner','generation','spec_sha256','job_id'))):
+                raise RuntimeError('Priority reservation ownership changed')
+        elif not eligible(task, claims): continue
         if task.get('execution') == 'native':
             try: native_api_preflight(task, config)
             except (ValueError, OSError, subprocess.SubprocessError) as exc:
@@ -206,6 +212,32 @@ def admissible_work(config, claims):
         atomic_write_json(dict(rejected=rejected, ready=len(result), updated_at=time.time(),
                                test_access=False), Path(config['output'])/'api_admission.json')
     return result
+
+
+def priority_work(config, claims):
+    """Preemption uses exactly the dispatch policy and dependency filters."""
+    excluded={'native','look_spatial','look_linear','look_suffix','look_search',
+              'look_family_search','look_affine_terminal','look_affine_progressive'}
+    return [task for task in admissible_work(config,claims) if task['execution'] not in excluded]
+
+
+def reserve_priority(qualified, claims, owner, job, native):
+    """Claim before pausing; a failed handover leaves native work untouched."""
+    from scheduling.project_priority import request_pause,sha
+    target,profile,identity,root=qualified
+    token=claims.acquire(target['run_dir'],target['spec_sha256'],owner,job)
+    receipt=None
+    try:
+        receipt=request_pause(target,native['run_dir'],profile,sha(profile),identity,root)
+        claims.update(target['run_dir'],owner,priority_handover=receipt,
+                      source_native_run=native['run_dir'])
+    except Exception:
+        claims.release(target['run_dir'],owner,'paused',step_dead=True)
+        pause=Path(native['run_dir'])/'pause.json'
+        if receipt is not None and read(pause)==receipt:
+            pause.unlink(missing_ok=True)
+        raise
+    return target,token,native
 
 
 def verify_delivery_dependency(entry):
@@ -379,14 +411,21 @@ def gpu_owner(config_path):
     config=read(config_path);job=os.environ['SLURM_JOB_ID'];end=float(os.environ['LOOK_ALLOCATION_END'])
     if torch.cuda.device_count()!=1 or torch.cuda.get_device_properties(0).total_memory<78*1024**3:raise ValueError('A10080 single-device binding required')
     root=Path(config['output'])/job;root.mkdir(exist_ok=True);claims=Claims(config['claims']);owner='look-workflow-'+job
+    reservation=None;resume_native=None
     while time.time()<end-1800:
-        candidates=admissible_work(config,claims)
+        candidates=admissible_work(config,claims,reservation=reservation)
         candidates=[t for t in candidates if t['execution'] not in ('look_spatial','look_linear','look_affine_progressive') or float(os.environ.get('LOOK_ALLOCATION_MEMORY_GIB','0'))>=512]
+        if reservation and not any(t['run_dir']==reservation[0]['run_dir'] for t in candidates):
+            claims.release(reservation[0]['run_dir'],owner,'paused',step_dead=True)
+            resume_native=reservation[2];reservation=None
         if not candidates:break
         prior=read(root/'last_execution.json').get('kind')
         primary=[t for t in candidates if t['execution']=='look']
         supplement=[t for t in candidates if t['execution'] in ('look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_family_search','look_affine_terminal','look_affine_progressive')]
-        if config.get('delivery_policy'):task=candidates[0]
+        fallback=next((t for t in candidates if resume_native and t['run_dir']==resume_native['run_dir']),None)
+        if reservation:task=reservation[0]
+        elif fallback:task=fallback;resume_native=None
+        elif config.get('delivery_policy'):task=candidates[0]
         elif supplement and (not primary or prior=='look' or any(t['execution'] in ('look_terminal','look_suffix','look_search','look_family_search','look_affine_terminal') for t in supplement)):
             # Neural continuations first, then controls, then sample curves.
             priority={'host_training':0,'student_training':1,'correction':2,'sample_curve':3}
@@ -397,7 +436,9 @@ def gpu_owner(config_path):
         atomic_write_json(dict(kind=task['execution']),root/'last_execution.json')
         run=Path(task['run_dir']);spec=read(task['spec'])
         try:
-            if task['execution']=='look_search':
+            if reservation and task['run_dir']==reservation[0]['run_dir']:
+                token=reservation[1];resume_native=reservation[2];reservation=None
+            elif task['execution']=='look_search':
                 # The extra lock only serializes search admission. Ownership still
                 # belongs to the original shared Claims implementation.
                 with (Path(config['claims'])/'look_search_admission.lock').open('a') as admission:
@@ -414,8 +455,14 @@ def gpu_owner(config_path):
             '--config',str(config_path),'--execute',task['spec'],'--run',str(run),
             '--kind',task['execution'],'--record',str(record)]
         (run/'pause.json').unlink(missing_ok=True)
-        with (attempt/'worker.log').open('x') as log:
-            child=subprocess.Popen(command,env=environment,stdout=log,stderr=subprocess.STDOUT)
+        try:
+            with (attempt/'worker.log').open('x') as log:
+                child=subprocess.Popen(command,env=environment,stdout=log,stderr=subprocess.STDOUT)
+        except OSError as error:
+            claims.release(run,owner,'failed',step_dead=True)
+            atomic_write_json(dict(reason='worker_launch_failed',run=str(run),error=repr(error),
+                                   time=time.time()),attempt/'failure.json')
+            continue
         step=None
         priority=None
         if config.get('project_priority_enabled'):
@@ -426,7 +473,10 @@ def gpu_owner(config_path):
             if r.get('step') and step is None:
                 step=r['step'];claims.update(run,owner,state='running',step=step)
             if priority is not None:
-                try:priority.poll([t for t in work(config) if t['execution'] not in ('native','look_spatial','look_linear','look_suffix','look_search','look_family_search','look_affine_terminal','look_affine_progressive') and eligible(t,claims)])
+                try:
+                    qualified=priority.poll(priority_work(config,claims))
+                    if qualified is not None and reservation is None:
+                        reservation=reserve_priority(qualified,claims,owner,job,task)
                 except Exception as exc:
                     atomic_write_json(dict(state='priority_deferred',error=repr(exc)),attempt/'priority_error.json')
             if time.time()>end-900:
@@ -443,8 +493,11 @@ def gpu_owner(config_path):
             claims.release(run,owner,'failed',step_dead=True)
             atomic_write_json(dict(reason='worker_failed', run=str(run), job=job, step=step,
                 returncode=child.returncode, log=str(attempt/'worker.log'), time=time.time()),
-                Path(config['output'])/'admission_hold.json')
-            break  # No retry of a deterministic probe failure or fresh allocation loop.
+                attempt/'failure.json')
+            if reservation:
+                claims.release(reservation[0]['run_dir'],owner,'paused',step_dead=True)
+                reservation=None
+            continue  # Quarantine this claim; unrelated configurations may proceed.
         state=read(run/'status.json').get('state')
         if state=='completed' or (state=='infeasible' and task['execution']=='look_mechanism'):
             if task['execution']=='native':
@@ -487,6 +540,8 @@ def gpu_owner(config_path):
                         error=repr(error),test_access=False),Path(config['output'])/'delivery_error.json')
         elif state=='paused':claims.release(run,owner,'paused',step_dead=True)
         else:claims.release(run,owner,'failed',step_dead=True)
+    if reservation:
+        claims.release(reservation[0]['run_dir'],owner,'paused',step_dead=True)
     atomic_write_json(dict(state='owner_finished',updated_at=time.time()),root/'status.json')
 
 
