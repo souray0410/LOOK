@@ -1,20 +1,46 @@
 """Two-rank trainer gradients/updates versus a direct global-batch reference."""
-import importlib.util
-from pathlib import Path
 import torch
 from mhd_framework.utils import (initialize_mhd_distributed, destroy_mhd_distributed,
     MHD_Trainer, MHD_Monitor, MHD_ParallelConfig)
 
 
+from mhd_framework.core import MHD_Edge, MHD_Graph, MHD_Node, MHD_Topo
+
+
+class LearnableMeanSquare(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.scale = torch.nn.Parameter(torch.ones(4))
+
+    def forward(self, value):
+        return (value.square() * self.scale).mean(dim=-1)
+
+
+def build_graph(device):
+    # This fixture depends on public V5 APIs, not the framework test directory.
+    names = ['input', 'hidden', 'per_sample_loss', 'loss']
+    states = [torch.zeros(2, 4), torch.zeros(2, 4), torch.zeros(2), torch.zeros(())]
+    nodes = {MHD_Node(i, name, MHD_Node.Message(state.to(device)), memory=False)
+             for i, (name, state) in enumerate(zip(names, states))}
+    modules = [torch.nn.Linear(4, 4, bias=False), LearnableMeanSquare(), lambda value: value.mean()]
+    edges = {MHD_Edge(i, name, [MHD_Edge.Operation(module)])
+             for i, (name, module) in enumerate(zip(['projection', 'loss_reduce', 'mean'], modules))}
+    roles, orders = [], []
+    for i in range(3):
+        role = torch.zeros(3, 4, device=device, dtype=torch.int64)
+        order = torch.zeros_like(role)
+        role[i, i], role[i, i + 1], order[i, i + 1] = -1, 1, 1
+        roles.append(role)
+        orders.append(order)
+    topology = MHD_Topo(roles + [-role for role in reversed(roles)], orders + list(reversed(orders)))
+    return MHD_Graph(nodes, edges, {topology}, device=device)
+
+
 def main():
-    root = Path(__file__).resolve().parents[2]
-    spec = importlib.util.spec_from_file_location('mhd_ddp_fixture',root/'third_party/MHD_Framework/tests/integration/distributed.py')
-    fixture = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(fixture)
     context = initialize_mhd_distributed()
     assert context.world_size == 2
     torch.manual_seed(182)
-    graph = fixture.build_graph(context.device)
+    graph = build_graph(context.device)
     weight = graph.get_edge_by_name('projection').edge_operations[0].function.weight
     scale = graph.get_edge_by_name('loss_reduce').edge_operations[0].function.scale
     reference = [torch.nn.Parameter(p.detach().clone()) for p in (weight,scale)]
