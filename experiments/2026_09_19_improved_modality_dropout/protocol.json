@@ -1,0 +1,36 @@
+{
+  "schema": "look_improved_modality_dropout_core_protocol_v1",
+  "task_id": "ws02-overnight-teacher-20260919-v1",
+  "state": "core_implemented_cpu_fidelity_pending",
+  "paper": {
+    "title": "Learning Contrastive Multimodal Fusion with Improved Modality Dropout for Disease Detection and Prediction",
+    "venue": "MICCAI 2025",
+    "arxiv": "2509.18284",
+    "author_repo": "omron-sinicx/medical-modality-dropout",
+    "commit": "8040d96b2dec48cf8fc7d13b45e15af0d07952ed",
+    "license": "MIT",
+    "source_sha256": {
+      "LICENSE": "37c8a634b6163f3d097ebab2326ceef793769000e08a06263544bdf421ad25b6",
+      "README": "522b0d7e5001541f1336e6947f27b1adae35f69c035e8f8fff78692cef1d89f9",
+      "contrastive_loss": "c1b5a48eb2f99cb4934a49910639b724c66013fd6bfea7f778d5fce9fbeab549",
+      "tnf": "c5a9d5c72bb1545df07f563ce22df2ec6908492cb652ccd259500558d8f41c18"
+    }
+  },
+  "paper_contract": {
+    "encoders": "pretrained unimodal encoders frozen",
+    "fusion": "TNF MLP with per-modality LayerNorm and task classifier",
+    "missing_tokens": "learnable zero-initialized EmptyToken",
+    "target_loss": "complete + lambda*(oct_missing + cfp_missing), lambda=1",
+    "contrastive": "three supervised sigmoid/BCE pairs: oct-cfp, oct-fused, cfp-fused"
+  },
+  "project_adaptation": {
+    "modalities": [
+      "OCT participant feature",
+      "CFP participant feature"
+    ],
+    "boundary": "two-image adaptation; not author image+tabular dataset/system reproduction",
+    "next_gate": "pin accepted encoder-source A; build MHD graph; prove encoder freeze/identity, synthetic source parity, resume exactness and target resource profile before GPU",
+    "test": "sealed"
+  },
+  "training_now": false
+}

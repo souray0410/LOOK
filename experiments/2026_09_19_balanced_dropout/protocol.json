@@ -1,0 +1,79 @@
+{
+  "schema": "look_balanced_dropout_preregistered_protocol_v1",
+  "task_id": "ws02-overnight-teacher-20260919-v1",
+  "question": "After balanced participant-level modality-dropout fine-tuning adapts the ordinary R18 deep host to missing inputs, does either LOOK family add value on the same frozen A?",
+  "source": {
+    "run": "2026_09_18_11_18_28_650020",
+    "spec_sha256": "f09a452f8584861ff5291cb262894e16f4ba4c7c962f43f6ba4cfbccb18929e8",
+    "host_receipt_sha256": "daef1a7f0871ba21f7c97c42c44bf7ecb11614901dc5a56f61d9c4afaf8c9a7d",
+    "best_pt_sha256": "f37eacbc49b7dd45797f63b440781de3dbd419b47ffb9f12deb736206cb297c4",
+    "best_epoch": 35,
+    "stop_epoch": 50
+  },
+  "A": {
+    "name": "balanced modality-dropout fine-tuning / 三态缺失鲁棒微调",
+    "seed": 3416,
+    "states": {
+      "complete": 0.3333333333333333,
+      "oct_missing": 0.3333333333333333,
+      "cfp_missing": 0.3333333333333333
+    },
+    "participant_level": true,
+    "all_eyes_same": true,
+    "filler": "zero after ImageNet normalization before encoder",
+    "bn": "ordinary train-mode updates including zeroed branch",
+    "selection": "complete development Macro-F1; epoch0 eligible; strict improvement",
+    "optimizer": "exact accepted ordinary R18 deep training dictionary; fresh optimizer/scheduler",
+    "full_only_control": false
+  },
+  "look": {
+    "families": [
+      "pca_free_mean",
+      "residual_rrr"
+    ],
+    "factor": 16,
+    "rank": 32,
+    "search": "positive_forward_tree",
+    "penalty_policy": "prefix_train_pca_gcv",
+    "complete_reference": "deterministic complete-input train features of the frozen new A"
+  },
+  "primary_contrasts": [
+    [
+      "pca_free_mean",
+      "oct_missing"
+    ],
+    [
+      "residual_rrr",
+      "oct_missing"
+    ],
+    [
+      "pca_free_mean",
+      "cfp_missing"
+    ],
+    [
+      "residual_rrr",
+      "cfp_missing"
+    ]
+  ],
+  "statistics": {
+    "iterations": 10000,
+    "paired": true,
+    "ordinary_95": true,
+    "simultaneous_family_95": true,
+    "metrics": [
+      "macro_f1",
+      "macro_auroc_ovr",
+      "negative_log_likelihood",
+      "multiclass_brier"
+    ]
+  },
+  "bounds": {
+    "train": 1264,
+    "development": 296,
+    "test": "sealed",
+    "gpu": "WS02 GPU0",
+    "no_new_architecture": true,
+    "no_embracenet_weights": true,
+    "single_seed": true
+  }
+}
