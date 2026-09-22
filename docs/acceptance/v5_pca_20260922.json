@@ -1,0 +1,96 @@
+{
+  "state": "accepted_pca_migration",
+  "source_manifest_sha256": "b7ad8918f97bc55aaad2fd442912dcb5fe25bb83a05c824f1d0cf965d574f7b7",
+  "target_manifest_sha256": "b14e8bdd217037646909ca0b4b721a30051f9532defa061be12a436fd0689648",
+  "feature_replay_sha256": "2343d53b54ce9deebe5f8ca62dc7fed5fc68daa3a43c17de640fb8985e9b36c8",
+  "script_sha256": "d12481e34403839ccb57534f75c50e0cac5f9dfd1cff55878b4fefb1121692f1",
+  "source_unchanged": true,
+  "current_load_only_passed": true,
+  "no_refitting": true,
+  "entries": [
+    {
+      "node": "joint_input",
+      "factor": 16,
+      "source_sha256": "5217e160d1eb089ebddd121ed4488f96c6678c07fcfb6abc42794edbf98b0c49",
+      "target_sha256": "9b7ced059469628dd2bf5ad4944d6efb5526a077078664ef9c0fdc0aa65816c3",
+      "tensor_dtype_values_equal": true,
+      "projection_equal": true
+    },
+    {
+      "node": "joint_stem",
+      "factor": 16,
+      "source_sha256": "d77a0d80322d60ac562cbd13362e28d6145c6a3e204757d15eca94aa18273199",
+      "target_sha256": "1ffc51637d7235af4eb83e3943caa036cdf6840c0cd643ad8b51b093d8f5eb66",
+      "tensor_dtype_values_equal": true,
+      "projection_equal": true
+    },
+    {
+      "node": "joint_stage1",
+      "factor": 16,
+      "source_sha256": "5a1f3b02046778c77b10afa23d9eaa9192432fdece8b109c4ed82764f476d00f",
+      "target_sha256": "d886d59cc17287d91498632d0560215f10a3f9d996394a40b3e5779654277982",
+      "tensor_dtype_values_equal": true,
+      "projection_equal": true
+    },
+    {
+      "node": "joint_stage2",
+      "factor": 16,
+      "source_sha256": "3412d6d53b1d9464d4e9294f5ce449983deacaf0162539f029fc6ccf0a0e8cc4",
+      "target_sha256": "5a663ac87e2710c1a41456fde046b37f1e563c75eb01d83b00b0444883fb5a03",
+      "tensor_dtype_values_equal": true,
+      "projection_equal": true
+    },
+    {
+      "node": "joint_stage3",
+      "factor": 16,
+      "source_sha256": "584944b16e2d962c4bbae5257cce2a0eaa1dc42688bdb1ccb3fcc60abe0e86f9",
+      "target_sha256": "3cacfc89f345e32c0177cb0b086170a7c755648c27f6c94b723e73bd7a915c28",
+      "tensor_dtype_values_equal": true,
+      "projection_equal": true
+    },
+    {
+      "node": "joint_stage4",
+      "factor": 16,
+      "source_sha256": "2882345fb2433d6771515005469d65e8779dd53a580ff5ba662b343f36517d03",
+      "target_sha256": "cd51811b4887e65cb89a4ddb4e16cb42a554dccb5cda3c3f44f939181f52d880",
+      "tensor_dtype_values_equal": true,
+      "projection_equal": true
+    },
+    {
+      "node": "fusion_stage4",
+      "factor": 16,
+      "source_sha256": "1f62825b9c1f4adb7f2603024af44dbc067ebf07d7f7fe7abbbab1c432854115",
+      "target_sha256": "aea73720f531a51a4f7ea74419f5c46f9920a56815b322c994dff85dfdb8a3f1",
+      "tensor_dtype_values_equal": true,
+      "projection_equal": true
+    },
+    {
+      "node": "fusion_features",
+      "factor": 1,
+      "source_sha256": "7311ccc11de5c5082ea915627dcef61352d9d3ca073e6696d7e2746db6e1a916",
+      "target_sha256": "05da6edf14047004ea0a264990d878db70eb14e24ff95a09f898cec76c6d4972",
+      "tensor_dtype_values_equal": true,
+      "projection_equal": true
+    },
+    {
+      "node": "fusion_participant_feature",
+      "factor": 1,
+      "source_sha256": "74b16be7c0694513c64c34d1b749813d2d2464a556ef359a00e0e3ac4d35b220",
+      "target_sha256": "6905d71f14a3489a78c3b13d07fe7bb37a8e3034de5f460afd9e2bbb5ecc86f6",
+      "tensor_dtype_values_equal": true,
+      "projection_equal": true
+    }
+  ],
+  "test_access": false,
+  "production_cutover": false,
+  "scope": "one complete nine-site PCA bank; correction artifacts and full project remain pending",
+  "look_commit": "c1235a52b024bff590fcd67fde56ad02273f5eb0",
+  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "feature_replay_counts": {
+    "train": 1264,
+    "development": 296
+  },
+  "feature_replay_sites": 9,
+  "feature_replay_bitwise_equal": true,
+  "initial_attempt": "Validation driver used incorrect factors/max_rank keys; conversion retained, actual factor/rank driver fixed in separate v2 output; no source or numerical tolerance change."
+}

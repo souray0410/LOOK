@@ -59,3 +59,34 @@ def test_tampered_target_not_reused(tmp_path):
     source,out,kw,_=fixture(tmp_path);dest=migrate(source,out,**kw)
     (dest/'x_x1.pt').write_bytes(b'changed')
     with pytest.raises(ValueError,match='converted bank changed'):migrate(source,out,**kw)
+
+
+def test_selected_family_rebinds_without_changing_operator(tmp_path):
+    from dataclasses import asdict
+    from look.methods.operator import LOOKArtifact
+    from look.methods.affine_family import FamilyArtifact, FamilyMap
+    from look.methods.linear_operator import fingerprint
+    from look.studies.family_search_case import load_bank
+    from look.studies.v5_pca_migration import migrate_selected_family
+    source,out,kw,basis=fixture(tmp_path);pca=migrate(source,out,**kw)
+    base=LOOKArtifact('x','oct_missing','zero',1,2,(3,),(3,),basis.mean,basis.std,
+        basis.pca_mean,basis.components,torch.zeros(2,2),torch.zeros(2),.1,0.,1.,
+        pca_source_id=basis.source_id)
+    mapping=FamilyMap(torch.zeros(3),torch.ones(3),torch.eye(3),torch.empty(0),
+                      'pca_free_mean',.1,2,10,{})
+    original=FamilyArtifact(base,mapping);records=[original.record()]
+    bank=tmp_path/'bank.pt'
+    torch.save(dict(identity=dict(identity='case',bases={'x':fingerprint(asdict(basis))}),
+                    bank=records,sha256=fingerprint(records)),bank)
+    target=tmp_path/'selected'/'bank.pt'
+    args=dict(source_sha256=file_sha256(bank),source_pca_manifest=source,
+              converted_pca_directory=pca)
+    migrate_selected_family(bank,target,**args)
+    assert migrate_selected_family(bank,target,**args)==target
+    loaded,=load_bank(target.parent)
+    assert loaded.base.pca_source_id!=original.base.pca_source_id
+    x=torch.randn(8,3)
+    assert torch.equal(original.apply_feature(x),loaded.apply_feature(x))
+    torch.save({},bank)
+    with pytest.raises(ValueError,match='Original selected bank changed'):
+        migrate_selected_family(bank,target,**args)

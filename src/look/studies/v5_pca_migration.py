@@ -3,7 +3,7 @@
 Normal PCA readers retain one framework-independent mathematical format. This
 importer changes dependency identities, never refits or alters numerical state.
 """
-from dataclasses import replace
+from dataclasses import asdict, replace
 import fcntl
 import json
 from pathlib import Path
@@ -114,4 +114,78 @@ def migrate(source_manifest, output_root, *, feature_receipt, feature_receipt_sh
         except BaseException:
             shutil.rmtree(stage)
             raise
+    return destination
+
+
+def migrate_selected_family(source_bank, destination, *, source_sha256, source_pca_manifest,
+                            converted_pca_directory):
+    """Prepare selected inference maps; the archived search tree stays original.
+
+    This does not authorize fitting-cache reuse or claim a new scientific search.
+    Real current-host prediction replay must follow before consumer admission.
+    """
+    from copy import deepcopy
+    from look.methods.affine_family import FamilyArtifact
+    from look.methods.linear_operator import fingerprint
+    from look.runtime.host_checkpoint import atomic_save
+    source_bank = Path(source_bank).resolve(); destination = Path(destination).resolve()
+    pca = Path(converted_pca_directory).resolve()
+    if source_bank == destination or file_sha256(source_bank) != source_sha256:
+        raise ValueError('Original selected bank changed or would be overwritten')
+    receipt = json.loads((pca/'migration.json').read_text())
+    contract = receipt['contract']
+    if (contract.get('schema') != 'look_pca_bank_migration_v1'
+            or contract.get('test_access') is not False
+            or contract.get('source_manifest_sha256') != file_sha256(source_pca_manifest)):
+        raise ValueError('PCA conversion lineage missing')
+    for name, digest in receipt['files'].items():
+        if Path(name).name != name or file_sha256(pca/name) != digest:
+            raise ValueError('Converted PCA bank changed')
+    old_manifest = json.loads(Path(source_pca_manifest).read_text())
+    new_manifest = json.loads((pca/'bank_manifest.json').read_text())
+    old = {}; new = {}; ids = {}
+    for source_row, target_row in zip(old_manifest['entries'],new_manifest['entries'],strict=True):
+        if (source_row['node'],source_row['factor']) != (target_row['node'],target_row['factor']):
+            raise ValueError('PCA entry mapping changed')
+        if file_sha256(source_row['path']) != source_row['sha256']:
+            raise ValueError('Original PCA entry changed')
+        a=FullFeaturePCA.load(source_row['path']);b=FullFeaturePCA.load(target_row['path'])
+        if a.node_name in old:raise ValueError('Selected-family importer requires one basis per site')
+        old[a.node_name]=fingerprint(asdict(a));new[b.node_name]=fingerprint(asdict(b))
+        ids[a.source_id]=b.source_id
+    saved=torch.load(source_bank,map_location='cpu',weights_only=False)
+    if (saved['sha256']!=fingerprint(saved['bank']) or saved['identity']['bases']!=old
+            or saved['identity']['identity']!=old_manifest['identity']['case']):
+        raise ValueError('Selected bank and original PCA dependencies differ')
+    changed=deepcopy(saved)
+    for row in changed['bank']:
+        FamilyArtifact.from_record(row)
+        source_id=row['base']['pca_source_id']
+        if source_id not in ids:raise ValueError('Unknown selected PCA source')
+        row['base']['pca_source_id']=ids[source_id]
+    changed['identity']=dict(saved['identity'],bases=new)
+    changed['sha256']=fingerprint(changed['bank'])
+    # Reversing only the declared metadata change must recover the whole state,
+    # including every tensor, mapping parameter and selection statistic.
+    restored=deepcopy(changed);inverse={v:k for k,v in ids.items()}
+    for row in restored['bank']:row['base']['pca_source_id']=inverse[row['base']['pca_source_id']]
+    restored['identity']=saved['identity'];restored['sha256']=saved['sha256']
+    if fingerprint(restored)!=fingerprint(saved):raise ValueError('Undeclared scientific state change')
+    destination.parent.mkdir(parents=True,exist_ok=True)
+    with destination.with_suffix('.migration.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        if destination.exists():
+            current=torch.load(destination,map_location='cpu',weights_only=False)
+            if fingerprint(current)!=fingerprint(changed):raise ValueError('Converted selected bank changed')
+        else:atomic_save(destination,changed)
+        sidecar=destination.with_suffix('.migration.json')
+        result=dict(schema='look_selected_family_migration_v1',state='awaiting_real_prediction_replay',
+            source_sha256=source_sha256,target_sha256=file_sha256(destination),
+            source_pca_manifest_sha256=file_sha256(source_pca_manifest),
+            target_pca_manifest_sha256=file_sha256(pca/'bank_manifest.json'),
+            pca_source_id_mapping=ids,scientific_state_preserved=True,refitted=False,
+            search_tree_migrated=False,test_access=False,production_dispatch_authorized=False)
+        if sidecar.exists() and json.loads(sidecar.read_text())!=result:
+            raise ValueError('Existing selected migration lineage differs')
+        write_json_atomic(result,sidecar)
     return destination
