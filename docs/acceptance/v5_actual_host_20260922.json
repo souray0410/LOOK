@@ -1,0 +1,57 @@
+{
+  "schema": "v5_actual_look_checkpoint_acceptance_v1",
+  "state": "accepted_bounded_migration",
+  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "companion_commit": "b924a189ceb768310feaa0240adc95b51a33d07e",
+  "look_source_commit": "cc0909fa26ae0defbb448730226666d49346b79c",
+  "architecture": "resnet18_observed_deep",
+  "original_training_framework": "V4",
+  "execution_framework": "V5",
+  "torch": "2.8.0+cu128",
+  "device": "one RTX 5000 Ada 32760 MiB",
+  "original_weights_and_history_unchanged": true,
+  "scientific_run_identity_preserved": true,
+  "test_access": false,
+  "production_cutover": false,
+  "scope": "selected host and complete optimizer-boundary checkpoint; full development and three isolated update replays",
+  "limitations": [
+    "One actual host only, not all LOOK variants or PCA/correction assets",
+    "Completed-run checkpoints replayed diagnostically; original stopped study was not reopened",
+    "No A100 or cross-platform acceptance",
+    "No complete project production cutover"
+  ],
+  "checkpoints": [
+    {
+      "kind": "best",
+      "source_sha256": "f37eacbc49b7dd45797f63b440781de3dbd419b47ffb9f12deb736206cb297c4",
+      "target_sha256": "e4370cd234d100f68997eeabe006053346e3c445bdec1dadd1ea04a11e7b2478",
+      "receipt_sha256": "3783480e2dcb4781587b7b24daa11fc4f8bc96a7b57097034d39853f4c4be77e",
+      "source_reference_receipt_sha256": "826275b9cf227f1b0a4895db7f42d48aa01d6a38a1563cf1c3ba5817e457bfbc",
+      "conversion_receipt_sha256": "01edd66b5822b1660e2074f8292d9b019b437e21df7354bbac67a287e0a4604f",
+      "full_development": 296,
+      "consecutive_updates": 3,
+      "full_checkpoint_state_loaded": false,
+      "microbatch": 16,
+      "effective_batch": 128,
+      "peak_reserved_bytes": 2453667840,
+      "fp32_rtol": 1e-05,
+      "fp32_atol": 1e-06
+    },
+    {
+      "kind": "last",
+      "source_sha256": "ed314e840dfe49a1e3d998920019ef3671ca95de665a4e209ae490159fa6bbae",
+      "target_sha256": "8f66889d80c3e2353ab9ecf7ced00dd3de4e5fcf27067ac4675091b1d91c9262",
+      "receipt_sha256": "6a0e112838d9e19e8827fdad5faabbeecbc83deed23819bb24e5824101ccc955",
+      "source_reference_receipt_sha256": "34db08ab248a3a8a8c82f8fbf438b8949a7b9634960295e8ff7dea5c6c29ea13",
+      "conversion_receipt_sha256": "41246a043589c9e2cc8beccce87b0b58819b5608c89edf1a839c265fba0825fe",
+      "full_development": 296,
+      "consecutive_updates": 3,
+      "full_checkpoint_state_loaded": true,
+      "microbatch": 16,
+      "effective_batch": 128,
+      "peak_reserved_bytes": 2497708032,
+      "fp32_rtol": 1e-05,
+      "fp32_atol": 1e-06
+    }
+  ]
+}
