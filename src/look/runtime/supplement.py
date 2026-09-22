@@ -184,7 +184,8 @@ def run_seed(manifest_path, output, seed, microbatch=8, device='cuda:0', limit=N
     seed_everything(seed);torch.set_num_threads(2);device=torch.device(device)
     if device.type=='cuda':
         if torch.cuda.device_count()!=1:raise ValueError('One assigned GPU per worker required')
-        torch.cuda.set_per_process_memory_fraction(min(11*1024**3/torch.cuda.get_device_properties(0).total_memory,1.),0)
+        from mhd_models.scheduling.gpu_budget import configure_allocator
+        configure_allocator(0)
     original=next(m for m in models if m['policy']=='joint');graph=load_graph(original,device,microbatch)
     before=module_state_sha256(graph);outputs=[]
     try:

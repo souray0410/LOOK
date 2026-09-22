@@ -155,8 +155,8 @@ def run_job(job, output, phase, frozen_record, *, gate=None, device='cuda:0', mi
     torch.set_num_threads(2)
     if device.type=='cuda':
         if torch.cuda.device_count()!=1:raise ValueError('Exactly one assigned GPU must be visible')
-        total=torch.cuda.get_device_properties(0).total_memory
-        torch.cuda.set_per_process_memory_fraction(min(11*1024**3/total,1.),0)
+        from mhd_models.scheduling.gpu_budget import configure_allocator
+        configure_allocator(0)
     loader=make_test_loader(job,phase,microbatch,replay_participants)
     begun=time.time()
     baseline,corrected=infer(job,loader,device,check_reference=phase=='validation_replay')

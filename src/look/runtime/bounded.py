@@ -14,10 +14,9 @@ def microbatch():
 
 
 def install_allocator_limits():
-    # 2 GiB is reserved for contexts and allocations outside the torch allocator.
     for i in range(torch.cuda.device_count()):
-        total = torch.cuda.get_device_properties(i).total_memory
-        torch.cuda.set_per_process_memory_fraction(min(12*1024**3/total, 1.), i)
+        from mhd_models.scheduling.gpu_budget import configure_allocator
+        configure_allocator(i)
     torch.cuda.set_device(0)
 
 
