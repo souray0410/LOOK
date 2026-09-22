@@ -1,0 +1,19 @@
+{
+  "actual_mhd_architecture": "resnet18",
+  "correction_fit": true,
+  "exact_resume": true,
+  "explicit_mhd_backward": true,
+  "host_bn_unchanged": true,
+  "matched_evaluation": true,
+  "report": true,
+  "scope": "real_small_train_development_runtime_not_scientific_results",
+  "selected_bank_reload": true,
+  "status": "accepted",
+  "test_access": false,
+  "views": 48,
+  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "companion_commit": "b924a189ceb768310feaa0240adc95b51a33d07e",
+  "device": "one RTX 5000 Ada 32760 MiB",
+  "source_commit": "cc0909fa26ae0defbb448730226666d49346b79c",
+  "acceptance_limit": "真实 train/dev 各 4 人的有界流程，随机初始化父模型；不是完整研究运行或真实父模型迁移验收"
+}
