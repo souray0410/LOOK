@@ -6,9 +6,12 @@
   "evidence": "docs/handoff/v5_rollout_20260922.md",
   "actual_host_checkpoint_acceptance": "docs/acceptance/v5_actual_host_20260922.json",
   "remaining_contract_audit": [
-    "PCA/correction cache migration",
+    "other hosts and PCA/correction assets",
+    "search and fitting-resume cache migration",
     "remaining training and selected-state contracts",
     "actual production configuration conversion and cutover"
   ],
-  "resource_replay": "docs/acceptance/v5_resource_replay_20260922.json"
+  "resource_replay": "docs/acceptance/v5_resource_replay_20260922.json",
+  "pca_acceptance": "docs/acceptance/v5_pca_20260922.json",
+  "selected_correction_acceptance": "docs/acceptance/v5_selected_families_20260922.json"
 }
