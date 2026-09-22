@@ -1,4 +1,4 @@
-# Model and training-run standard — version 5
+# Model and training-run standard — version 6
 
 This is the common standard for current and future research projects, independent
 of disease, dataset, architecture, framework release, server and scheduler. It
@@ -261,7 +261,7 @@ adapters belong only in explicit one-time migration commands.
 After original completion acceptance, migrate selected complete states into
 `models/artifacts/<artifact_id>/`: `manifest.json`, `configuration.json`, `model.pt`,
 `source_receipt.json`, `migration.json`, `README.md`. All sites use the same
-`mhd_model_artifact_v1` manifest and `mhd_model_state_v1` selected-state envelope.
+`mhd_model_artifact_v2` manifest and `mhd_model_state_v1` selected-state envelope.
 `runs/` continues to hold execution logs and full recovery evidence. New consumers
 load canonical artifacts only. Partial migrations are never accepted. Migrations
 preserve original execution IDs, source checksums, framework versions, architecture,
@@ -281,3 +281,10 @@ Keep one execution identity across allocation expiry, verified recovery and stag
 continuation. Accepted completion, recoverable pause and a technical failure are
 different states. This covers PCA/SVD, correction, evaluation and reporting as well
 as neural training; record each stage's actual recovery granularity and acceptance.
+
+
+Current V5 artifacts distinguish the original training configuration from the
+manifest's execution framework. Derived selected artifacts retain original
+receipts and an explicit execution replay; their new content identity binds every
+required file. V4 conversion is authorized only by the applicable migration plan,
+not implicitly by this standard. Selected replay never certifies full resume state.
