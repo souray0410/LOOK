@@ -49,11 +49,11 @@ python -m look verify-env
 
 上述命令也可统一写为 `python scripts/manage.py <command>`。检查不启动训练、不申请 GPU、不读取研究数据。可复用代码使用项目根目录相对路径；外部影像、CSV、缓存和结果由[路径配置](docs/paths.md)指定。
 
-MHD V4 包版本 `4`，固定提交 `c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0`，API 为 V4。它独立安装，不随 MHD_Framework 的后续修改自动升级。本仓库 wheel 只包含 `look`。
+MHD V5 候选包版本 `5`，固定提交 `c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808`，API 为 V5。它独立安装，不随 MHD_Framework 的后续修改自动升级。本仓库 wheel 只包含 `look`。
 
 新训练需要独立验收数据和协议，不自动继承历史队列或 test 使用权限。受限影像、CSV、参与者预测和检查点保留在授权存储，GitHub 只保存代码与可公开汇总。
 
-The installed MHD release selects the API. Import `mhd_framework` / `mhd_framework.utils`; this application pins the V4 release, never floating main. Packaging paths changed; V4 tensor implementations are preserved.
+The installed MHD release selects the API. Import `mhd_framework` / `mhd_framework.utils`; this candidate pins the exact V5 commit, never floating main. Current runtime loading requires V5 artifacts; old assets need explicit offline migration and numerical acceptance.
 
 模型定义、时间戳训练记录、来源映射和保留规则统一遵循[长期模型与训练规范](workspace/MODEL_RUN_STANDARD.md)，适用于后续所有模型、数据集和研究项目。
 
