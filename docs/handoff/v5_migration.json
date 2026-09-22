@@ -13,5 +13,10 @@
   ],
   "resource_replay": "docs/acceptance/v5_resource_replay_20260922.json",
   "pca_acceptance": "docs/acceptance/v5_pca_20260922.json",
-  "selected_correction_acceptance": "docs/acceptance/v5_selected_families_20260922.json"
+  "selected_correction_acceptance": "docs/acceptance/v5_selected_families_20260922.json",
+  "four_host_postconversion_replay": {
+    "state": "accepted",
+    "evidence": "docs/acceptance/v5_four_hosts_20260922.json",
+    "production_cutover": false
+  }
 }

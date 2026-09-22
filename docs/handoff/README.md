@@ -412,3 +412,6 @@ Normal dispatch and priority qualification share the same weekly/dependency poli
 The approved migration targets direct V5 execution and explicit artifact conversion.
 No V4 runtime fallback will be added. Existing healthy immutable sources remain
 unmodified until completed-step checkpoint handover and numerical acceptance.
+
+
+2026-09-22追加：另外四个真实宿主（ResNet50、MMTM、fusion features/middle）的8份选优/完整断点已离线转换，并通过当前严格V5 reader的296人dev与各3次16/128连续更新。原优化器、scheduler、RNG、progress在last路径恢复；原权重与历史保持。balanced dropout、EmbraceNet、IMD及这些宿主的下游PCA/修正/搜索缓存、当前spec引用仍未完成。 详见../acceptance/v5_four_hosts_20260922.json；生产切换仍未完成。
