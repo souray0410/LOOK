@@ -1,7 +1,7 @@
 {
   "repository": "souray0410/MHD_Models",
   "version": "5",
-  "commit": "b924a189ceb768310feaa0240adc95b51a33d07e",
-  "package_tree_sha256": "8930301e6868d44eabff437342f8bc23caad455198fb2848bfae7cd65815ed77",
+  "commit": "ebd28b5866fc33bff2e5f79f08a871b4f9ef6a06",
+  "package_tree_sha256": "c08580140a1dec2f76de027b6fadc7ef2bfc4d1cd27f4ae4b1c392cf1a3e78c7",
   "purpose": "Current native training and GPU ownership; private authorized installation required"
 }

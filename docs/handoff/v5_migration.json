@@ -1,7 +1,7 @@
 {
   "state": "candidate_partial",
   "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
-  "companion_commit": "b924a189ceb768310feaa0240adc95b51a33d07e",
+  "companion_commit": "ebd28b5866fc33bff2e5f79f08a871b4f9ef6a06",
   "production_cutover": false,
   "evidence": "docs/handoff/v5_rollout_20260922.md",
   "actual_host_checkpoint_acceptance": "docs/acceptance/v5_actual_host_20260922.json",

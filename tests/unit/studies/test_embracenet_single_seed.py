@@ -324,7 +324,9 @@ def test_full_second_crossmoments_and_projected_residual_stats_match_independent
 
 
 def test_work_signal_callback_reaches_stage_and_releases_lock(tmp_path,monkeypatch):
+    from look.runtime import device_budget
     handlers={}
+    monkeypatch.setattr(device_budget,"configure",device_budget.validate)
     monkeypatch.setattr(delivery,"validate",lambda spec:None)
     monkeypatch.setattr(delivery.signal,"signal",lambda sig,handler:handlers.__setitem__(sig,handler))
     monkeypatch.setattr(delivery,"_resource_guard",lambda spec,root,stop_requested=lambda:False:bool(stop_requested()))
@@ -339,7 +341,7 @@ def test_work_signal_callback_reaches_stage_and_releases_lock(tmp_path,monkeypat
     monkeypatch.setattr(delivery,"stage_host",fake_host)
     spec={
         "output":str(tmp_path/"run"),"lock_root":str(tmp_path/"locks"),"seed":3416,
-        "gpu_reserve_bytes":1,"gpu_budget_bytes":1,
+        "gpu_reserve_bytes":0,"gpu_budget_bytes":1,
     }
     assert delivery.work(spec,"host")=="paused"
     assert observed["check"] is True

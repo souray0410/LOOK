@@ -43,6 +43,8 @@ def read(p):return json.loads(Path(p).read_text())
 
 
 def validate(s):
+    from look.runtime.device_budget import validate as validate_gpu_policy
+    validate_gpu_policy(s)
     if s['schema']!='look_fresh_cohort_delivery_v1' or s['test_access'] is not False:
         raise ValueError('Undeclared study')
     if s['seed']!=3416 or s['arms']!=list(ARMS) or s['search']!='positive_forward_tree':raise ValueError('Unregistered package')
@@ -93,8 +95,8 @@ def work(s,root,stage):
         stop=True
     signal.signal(signal.SIGTERM,request);signal.signal(signal.SIGUSR1,request)
     props=torch.cuda.get_device_properties(0)
-    if torch.cuda.mem_get_info()[0]<s['gpu_reserve_bytes']+s['gpu_budget_bytes']:raise MemoryError('Exclusive budget unavailable')
-    torch.cuda.set_per_process_memory_fraction(s['gpu_budget_bytes']/props.total_memory)
+    from look.runtime.device_budget import configure
+    configure(s)
     torch.set_num_threads(2);torch.manual_seed(s['seed']);np.random.seed(s['seed']);random.seed(s['seed'])
     torch.use_deterministic_algorithms(True);torch.backends.cudnn.benchmark=False
     torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
@@ -103,7 +105,6 @@ def work(s,root,stage):
             raise OSError('Artifact volume reserve breached; preserve existing outputs')
         rss=psutil.Process().memory_info().rss;resource_peak['rss']=max(resource_peak['rss'],rss)
         if rss>.85*s['ram_budget_bytes']:raise MemoryError('Host reserve breached')
-        if torch.cuda.mem_get_info()[0]<s['gpu_reserve_bytes']:raise MemoryError('Device reserve breached')
         return stop
     train=ArrayPair(s['data_root'],'train',augment=True,seed=s['seed'])
     fit=ArrayPair(s['data_root'],'train');dev=ArrayPair(s['data_root'],'development')

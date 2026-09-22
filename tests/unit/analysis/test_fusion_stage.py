@@ -24,7 +24,7 @@ def base_spec(tmp_path, position='middle'):
         devices=[0],lock_root=str(tmp_path/'locks'),
         initialization=dict(kind='public_imagenet_fresh_host',path=str(init),sha256=file_sha256(init)),
         training=dict(DEFAULTS),source_pins=[dict(path=str(source),sha256=file_sha256(source))],
-        gpu_budget_bytes=100,gpu_reserve_bytes=100,ram_budget_bytes=1000,workspace_bytes=100,
+        gpu_budget_bytes=100,gpu_reserve_bytes=0,ram_budget_bytes=1000,workspace_bytes=100,
         disk_reserve_bytes=50*1024**3,
     )
 

@@ -150,7 +150,7 @@ def initialize_spec(base_spec, source_root, output, physical_output):
         },
         "bootstrap": {"iterations": 10000, "seed": 3416, "metrics": list(REGISTERED_METRICS)},
         "devices": [0], "lock_root": base["lock_root"],
-        "gpu_budget_bytes": base["gpu_budget_bytes"], "gpu_reserve_bytes": base["gpu_reserve_bytes"],
+        "gpu_budget_bytes": base["gpu_budget_bytes"], "gpu_reserve_bytes": 0,
         "ram_budget_bytes": base["ram_budget_bytes"], "workspace_bytes": base["workspace_bytes"],
         "host_free_fraction_min": 0.15, "disk_reserve_bytes": 10 * 1024**3,
         "storage": {
@@ -167,6 +167,8 @@ def initialize_spec(base_spec, source_root, output, physical_output):
 
 
 def validate(spec):
+    from look.runtime.device_budget import validate as validate_gpu_policy
+    validate_gpu_policy(spec)
     if spec.get("schema") != SCHEMA or spec.get("task_id") != TASK_ID or spec.get("test_access") is not False:
         raise ValueError("Undeclared EmbraceNet single-seed study")
     if spec.get("seed") != 3416 or spec.get("architecture") != "resnet18" or spec.get("embracement_size") != 256:
@@ -308,8 +310,6 @@ def _resource_guard(spec, root, stop_requested=lambda: False):
         raise MemoryError("Host free-memory reserve breached")
     if shutil.disk_usage(Path(root).resolve()).free < spec["disk_reserve_bytes"]:
         raise OSError("Artifact disk reserve breached")
-    if torch.cuda.mem_get_info()[0] < spec["gpu_reserve_bytes"]:
-        raise MemoryError("GPU reserve unavailable")
     return bool(stop_requested())
 
 
@@ -346,8 +346,8 @@ def stage_profile(spec, root, check):
     dev = ArrayPair(spec["data_root"], "development")
     scan = {"train": _scan_dataset(fit), "development": _scan_dataset(dev)}
     torch.cuda.reset_peak_memory_stats()
-    total = torch.cuda.get_device_properties(0).total_memory
-    torch.cuda.set_per_process_memory_fraction(spec["gpu_budget_bytes"] / total)
+    from look.runtime.device_budget import configure
+    configure(spec)
     identity = stable_hash(spec)
 
     template=make_graph(spec,torch.device("cuda:0"))
@@ -937,13 +937,13 @@ def work(spec, stage):
         return _resource_guard(spec,root,lambda:stop)
 
     props=torch.cuda.get_device_properties(0)
-    if torch.cuda.mem_get_info()[0] < spec["gpu_reserve_bytes"]+spec["gpu_budget_bytes"]:
-        raise MemoryError("WS02 GPU0 exclusive budget unavailable before stage")
     locks=Path(spec["lock_root"]);locks.mkdir(parents=True,exist_ok=True)
     uuid=subprocess.check_output(["nvidia-smi","--query-gpu=uuid","--format=csv,noheader","-i","0"],text=True).strip()
     try:
         with (locks/(uuid+".lock")).open("a") as lock:
             fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            from look.runtime.device_budget import configure
+            configure(spec)
             torch.set_num_threads(2);torch.manual_seed(spec["seed"]);np.random.seed(spec["seed"]);random.seed(spec["seed"])
             torch.use_deterministic_algorithms(True);torch.backends.cudnn.benchmark=False
             torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False

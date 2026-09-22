@@ -68,7 +68,8 @@ def run(plan):
         for ref in plan['specs']:
             if file_sha256(ref['path'])!=ref['sha256']:raise ValueError('Spec changed')
             s=json.loads(Path(ref['path']).read_text());validate(s);original=Path(s['output'])
-            torch.cuda.set_per_process_memory_fraction(s['gpu_budget_bytes']/torch.cuda.get_device_properties(0).total_memory)
+            from look.runtime.device_budget import configure
+            configure(s)
             g,host=load_selected(s,original);frozen=cpu_tree(g.state_dict())
             dev=ArrayPair(s['data_root'],'development');assert len(dev)==296
             loader=DataLoader(dev,batch_size=s['training']['microbatch'],shuffle=False,num_workers=0,collate_fn=collate_observed)
