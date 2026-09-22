@@ -12,7 +12,7 @@ from look.data.observed_pair import collate_observed
 from look.evaluation.evaluator import save_prediction_bundle
 from look.evaluation.stability import logit_metrics, probabilities_from_logits
 from look.models.improved_modality_dropout import forward_improved_dropout_host, improved_dropout_parameter_groups
-from look.runtime.host_checkpoint import atomic_save, cpu_tree, save, load
+from look.runtime.host_checkpoint import read_selected, save_selected, save, load
 from look.runtime.state import atomic_write_json, file_sha256
 
 DEFAULTS = dict(
@@ -113,14 +113,16 @@ def train_improved_dropout_host(graph, train, development, config, seed, output,
     def status(state):
         atomic_write_json(dict(state=state,identity=identity,epoch=progress["epoch"],offset=progress["offset"],updates=progress["updates"],updated_at=time.time(),test_access=False), out/"status.json")
     dev_loader = DataLoader(development, batch_size=config["microbatch"], collate_fn=collate_observed, shuffle=False, num_workers=config["num_workers"], generator=torch.Generator().manual_seed(seed))
+    if (out/"best.pt").exists():
+        read_selected(out/"best.pt",identity=identity,node_ids=ids)
     if preflight_updates is not None and progress["updates"] >= preflight_updates:
         checkpoint(); status("paused")
         return dict(state="paused", updates=0, total_updates=progress["updates"], reason="preflight_target_already_reached")
     if not (out/"best.pt").exists():
         result = evaluate_imd_state(graph, dev_loader, device, "complete")
         schedule.step(result["metrics"]["macro_f1"], 0)
-        atomic_save(out/"best.pt", dict(identity=identity, epoch=0, model=cpu_tree(graph.state_dict()), node_ids=ids,
-                                        selection="complete_state_development_macro_f1"))
+        save_selected(out/"best.pt", model=graph, identity=identity, epoch=0, node_ids=ids,
+                                        selection="complete_state_development_macro_f1")
         save_prediction_bundle(result, out/"development_predictions.npz")
         checkpoint()
     launch_updates = 0
@@ -157,8 +159,8 @@ def train_improved_dropout_host(graph, train, development, config, seed, output,
         score=result["metrics"]["macro_f1"]
         improved=schedule.step(score, epoch)
         if improved:
-            atomic_save(out/"best.pt", dict(identity=identity, epoch=epoch, model=cpu_tree(graph.state_dict()), node_ids=ids,
-                                            selection="complete_state_development_macro_f1"))
+            save_selected(out/"best.pt", model=graph, identity=identity, epoch=epoch, node_ids=ids,
+                                            selection="complete_state_development_macro_f1")
             save_prediction_bundle(result, out/"development_predictions.npz")
         counts={int(k): int((states==k).sum()) for k in (0,1,2)}
         progress["history"].append(dict(epoch=epoch, loss=progress["epoch_loss"]/max(1,progress["epoch_seen"]), metrics=result["metrics"], state_counts=counts))
@@ -166,8 +168,7 @@ def train_improved_dropout_host(graph, train, development, config, seed, output,
         atomic_write_json(progress["history"], out/"history.json"); checkpoint()
     if schedule.stall < config["patience"]:
         status("needs_review_epoch_cap"); return dict(state="needs_review_epoch_cap")
-    selected=torch.load(out/"best.pt", map_location="cpu", weights_only=False)
-    if selected["identity"] != identity or selected["node_ids"] != ids: raise ValueError("Selected IMD host identity changed")
+    selected=read_selected(out/"best.pt", identity=identity, node_ids=ids)
     graph.load_state_dict(selected["model"], strict=True); graph.eval()
     replay=evaluate_imd_state(graph, dev_loader, device, "complete")
     saved=np.load(out/"development_predictions.npz", allow_pickle=False)

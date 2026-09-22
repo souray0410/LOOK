@@ -3,6 +3,7 @@ import shutil
 
 import numpy as np
 import torch
+import pytest
 from torch.utils.data import DataLoader, Dataset
 from mhd_framework.models import create_model
 
@@ -81,6 +82,12 @@ def test_imd_training_preflight_resume_matches_uninterrupted(tmp_path):
     _eq(resumed[0][0],resumed[1][0])
     np.testing.assert_array_equal(continuous_dev["logits"],resumed[0][1])
     np.testing.assert_array_equal(resumed[0][1],resumed[1][1])
+    best=torch.load(tmp_path/"base/best.pt",map_location="cpu",weights_only=False)
+    assert best.pop("framework_api")=="V5"
+    assert best["selection"]=="complete_state_development_macro_f1"
+    torch.save(best,tmp_path/"base/best.pt")
+    with pytest.raises(ValueError,match="Current V5 selected host"):
+        train_improved_dropout_host(_graph(),train,dev,config,3416,tmp_path/"base",identity,torch.device("cpu"),preflight_updates=1)
 
 
 def test_imd_evaluation_states_are_deterministic_and_distinct():

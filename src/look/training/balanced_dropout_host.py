@@ -10,7 +10,7 @@ from look.data.observed_pair import collate_observed
 from look.evaluation.evaluator import evaluate_missing, save_prediction_bundle
 from look.models.graph import optimizer_parameter_groups
 from look.models.native_host import forward_host
-from look.runtime.host_checkpoint import atomic_save, cpu_tree, load, save
+from look.runtime.host_checkpoint import read_selected, save_selected, load, save
 from look.runtime.state import atomic_write_json, file_sha256, stable_hash
 from look.training.observed_host import HostSchedule, validate_config
 
@@ -113,13 +113,15 @@ def train_balanced_dropout_host(graph,train,development,config,seed,output,ident
             "updated_at":time.time(),"test_access":False},out/"status.json")
     dev_loader=DataLoader(development,batch_size=config["microbatch"],collate_fn=collate_observed,shuffle=False,num_workers=config["num_workers"],
         generator=torch.Generator().manual_seed(seed))
+    if (out/"best.pt").exists():
+        read_selected(out/"best.pt",identity=identity,node_ids=node_ids)
     if preflight_target_updates is not None and progress["updates"]>=preflight_target_updates:
         checkpoint();status("paused");return {"state":"paused","updates":0,"total_updates":progress["updates"],"reason":"preflight_target_already_reached"}
     if not (out/"best.pt").exists():
         result=evaluate_missing(graph,dev_loader,device,fixed_pattern="complete")
         scheduler.step(result["metrics"]["macro_f1"],0)
-        atomic_save(out/"best.pt",{"identity":identity,"epoch":0,"model":cpu_tree(graph.state_dict()),"node_ids":node_ids,
-            "selection":"complete_development_macro_f1"})
+        save_selected(out/"best.pt",model=graph,identity=identity,epoch=0,node_ids=node_ids,
+            selection="complete_development_macro_f1")
         save_prediction_bundle(result,out/"development_predictions.npz");checkpoint()
     launch_updates=0
     while progress["epoch"]<=config["epochs"]:
@@ -155,8 +157,8 @@ def train_balanced_dropout_host(graph,train,development,config,seed,output,ident
         result=evaluate_missing(graph,dev_loader,device,fixed_pattern="complete");score=result["metrics"]["macro_f1"];improved=scheduler.step(score,epoch)
         counts=_state_counts(states);schedule_sha=progress["mask_schedule_sha256"]
         if improved:
-            atomic_save(out/"best.pt",{"identity":identity,"epoch":epoch,"model":cpu_tree(graph.state_dict()),"node_ids":node_ids,
-                "selection":"complete_development_macro_f1"})
+            save_selected(out/"best.pt",model=graph,identity=identity,epoch=epoch,node_ids=node_ids,
+                selection="complete_development_macro_f1")
             save_prediction_bundle(result,out/"development_predictions.npz")
         progress["history"].append({"epoch":epoch,"loss":progress["epoch_loss"]/max(1,progress["epoch_seen"]),"metrics":result["metrics"],
             "mask_counts":counts,"mask_schedule_sha256":schedule_sha})
@@ -165,8 +167,7 @@ def train_balanced_dropout_host(graph,train,development,config,seed,output,ident
         atomic_write_json(progress["history"],out/"history.json");checkpoint()
     if scheduler.stall<config["patience"]:
         status("needs_review_epoch_cap");return {"state":"needs_review_epoch_cap"}
-    selected=torch.load(out/"best.pt",map_location="cpu",weights_only=False)
-    if selected["identity"]!=identity or selected["node_ids"]!=node_ids: raise ValueError("Selected balanced-dropout host identity changed")
+    selected=read_selected(out/"best.pt",identity=identity,node_ids=node_ids)
     graph.load_state_dict(selected["model"],strict=True);graph.eval();replay=evaluate_missing(graph,dev_loader,device,fixed_pattern="complete")
     saved=np.load(out/"development_predictions.npz",allow_pickle=False)
     if not np.array_equal(saved["participant_ids"].astype(str),replay["participant_ids"].astype(str)) or not np.array_equal(saved["labels"],replay["labels"]):

@@ -169,7 +169,7 @@ def build_improved_dropout_host(first, second, device="cpu", *, hidden_dropout: 
 
     nodes, edges, definitions, groups, levels = [], [], [], [], {}
     def node(name):
-        item = MHD_Node(len(nodes), name, MHD_Node.Message(torch.zeros(1, device=device)), aggregation="replace")
+        item = MHD_Node(len(nodes), name, MHD_Node.Message(torch.zeros(1, device=device)), aggregation="sum", memory=False)
         nodes.append(item); return item.id
     roots = {name: node(name) for name in ("oct_input", "cfp_input", "eye_counts", "imd_state_code", "label_gt")}
     def edge(name, module, inputs, output_name):

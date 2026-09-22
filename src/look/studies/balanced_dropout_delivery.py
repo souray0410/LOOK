@@ -14,6 +14,7 @@ from look.methods.operator import prepare_complete_pca_bank
 from look.methods.family_greedy import fit_family_trajectory
 from look.studies.family_search_case import load_bank
 from look.studies.project_case import CheckedLoader
+from look.runtime.host_checkpoint import read_selected
 from look.runtime.state import atomic_write_json, file_sha256, stable_hash
 from look.training.mechanism_training import state_equal
 from look.training.balanced_dropout_host import train_balanced_dropout_host, profile_resume
@@ -28,11 +29,19 @@ def read(p): return json.loads(Path(p).read_text())
 def init_spec(base_spec_path,source_run,source_root,output,physical_output):
     base_path=Path(base_spec_path);source_run=Path(source_run);source_root=Path(source_root);physical=Path(physical_output);logical=Path(output)
     base=read(base_path);host=read(source_run/"host/accepted.json")
-    if file_sha256(base_path)!="f09a452f8584861ff5291cb262894e16f4ba4c7c962f43f6ba4cfbccb18929e8": raise ValueError("Accepted ordinary base spec changed")
-    if file_sha256(source_run/"host/accepted.json")!="daef1a7f0871ba21f7c97c42c44bf7ecb11614901dc5a56f61d9c4afaf8c9a7d": raise ValueError("Accepted ordinary host receipt changed")
     if host.get("best_epoch")!=35 or host.get("stop_epoch")!=50 or host.get("test_access") is not False: raise ValueError("Accepted ordinary host identity changed")
     best=source_run/"host/best.pt"
-    if file_sha256(best)!="f37eacbc49b7dd45797f63b440781de3dbd419b47ffb9f12deb736206cb297c4": raise ValueError("Accepted ordinary best changed")
+    if host.get("state")!="accepted" or host.get("identity")!=stable_hash(base):
+        raise ValueError("Accepted ordinary source identity changed")
+    for name,digest in host["files"].items():
+        if file_sha256(source_run/"host"/name)!=digest: raise ValueError("Accepted ordinary source artifact changed")
+    # Derived V5 source assets receive new hashes; keep exact source binding in
+    # this spec instead of hardcoding a historical V4 serialization hash.
+    metadata=torch.load(best,map_location="cpu",weights_only=False)
+    current=read_selected(best,identity=host["identity"],node_ids=metadata.get("node_ids"))
+    if current["epoch"]!=35 or not current["node_ids"]: raise ValueError("Accepted ordinary source nodes/epoch changed")
+    from look.studies.cohort_delivery import validate as validate_base
+    validate_base(base)
     if physical.exists() or logical.exists() or logical.is_symlink(): raise FileExistsError("Balanced-dropout output already exists")
     physical.mkdir(parents=True);logical.parent.mkdir(parents=True,exist_ok=True);logical.symlink_to(physical)
     pins=[]
@@ -45,7 +54,7 @@ def init_spec(base_spec_path,source_run,source_root,output,physical_output):
     spec={"schema":"look_fresh_cohort_delivery_v1","study_kind":"balanced_modality_dropout_v1","architecture":"resnet18","position":"deep",
         "factor":16,"rank":32,"seed":3416,"arms":list(ARMS),"search":"positive_forward_tree","test_access":False,
         "data_root":base["data_root"],"data_audit_sha256":base["data_audit_sha256"],"training":base["training"],
-        "workspace_bytes":base["workspace_bytes"],"gpu_budget_bytes":base["gpu_budget_bytes"],"gpu_reserve_bytes":base["gpu_reserve_bytes"],
+        "workspace_bytes":base["workspace_bytes"],"gpu_budget_bytes":base["gpu_budget_bytes"],"gpu_reserve_bytes":0,
         "ram_budget_bytes":base["ram_budget_bytes"],"disk_reserve_bytes":base.get("disk_reserve_bytes"),"devices":[0],
         "lock_root":"/data/mengh/models/locks","output":str(logical),"physical_output":str(physical),
         "initialization":{"kind":"accepted_native_host_checkpoint","path":str(best.resolve()),"sha256":file_sha256(best),
@@ -72,6 +81,8 @@ def _base_spec(s):
 
 
 def validate(s):
+    from look.runtime.device_budget import validate as validate_gpu_policy
+    validate_gpu_policy(s)
     from look.training.observed_host import validate_config
     if s.get("schema")!="look_fresh_cohort_delivery_v1" or s.get("study_kind")!="balanced_modality_dropout_v1" or s.get("test_access") is not False:
         raise ValueError("Undeclared balanced-dropout study")
@@ -102,9 +113,8 @@ def validate(s):
 def make_graph(s):
     from look.studies.cohort_delivery import make_graph as make_fresh
     base=_base_spec(s);g=make_fresh(base)
-    state=torch.load(s["initialization"]["path"],map_location="cpu",weights_only=False)
     ids=[(n.id,n.name) for n in sorted(g.nodes,key=lambda n:n.id)]
-    if state["node_ids"]!=ids: raise ValueError("Accepted ordinary host node IDs changed")
+    state=read_selected(s["initialization"]["path"],identity=s["initialization"]["base_identity"],node_ids=ids)
     g.load_state_dict(state["model"],strict=True)
     g.native_host_provenance=copy.deepcopy(g.native_host_provenance)
     g.native_host_provenance["balanced_dropout_initialization"]={"source_best_sha256":s["initialization"]["sha256"],"source_best_epoch":35}
@@ -116,7 +126,8 @@ def load_selected(s,root):
     if r["identity"]!=stable_hash(s) or r["state"]!="accepted": raise ValueError("Balanced-dropout host unaccepted")
     for name,digest in r["files"].items():
         if file_sha256(root/"host"/name)!=digest: raise ValueError("Balanced-dropout host evidence changed")
-    g=make_graph(s);state=torch.load(root/"host/best.pt",map_location="cpu",weights_only=False)
+    g=make_graph(s);state=read_selected(root/"host/best.pt",identity=stable_hash(s),
+        node_ids=[(n.id,n.name) for n in sorted(g.nodes,key=lambda n:n.id)])
     g.load_state_dict(state["model"],strict=True);g.eval()
     for p in g.parameters():p.requires_grad_(False)
     return g,r
@@ -133,15 +144,13 @@ def work(s,root,stage):
     def request(*_):
         nonlocal stop;stop=True
     signal.signal(signal.SIGTERM,request);signal.signal(signal.SIGUSR1,request)
-    props=torch.cuda.get_device_properties(0)
-    if torch.cuda.mem_get_info()[0]<s["gpu_reserve_bytes"]+s["gpu_budget_bytes"]: raise MemoryError("GPU0 exclusive budget unavailable")
-    torch.cuda.set_per_process_memory_fraction(s["gpu_budget_bytes"]/props.total_memory);torch.set_num_threads(2)
+    from look.runtime.device_budget import configure
+    configure(s);torch.set_num_threads(2)
     torch.manual_seed(s["seed"]);np.random.seed(s["seed"]);random.seed(s["seed"]);torch.use_deterministic_algorithms(True)
     torch.backends.cudnn.benchmark=False;torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
     def check():
         if s.get("disk_reserve_bytes") and shutil.disk_usage(root).free<s["disk_reserve_bytes"]: raise OSError("Disk reserve")
         if psutil.Process().memory_info().rss>.85*s["ram_budget_bytes"]: raise MemoryError("Host reserve")
-        if torch.cuda.mem_get_info()[0]<s["gpu_reserve_bytes"]: raise MemoryError("Device reserve")
         return stop
     train=ArrayPair(s["data_root"],"train",augment=True,seed=s["seed"]);fit=ArrayPair(s["data_root"],"train");dev=ArrayPair(s["data_root"],"development")
     if set(fit.participant_ids)&set(dev.participant_ids): raise ValueError("Train/dev overlap")
