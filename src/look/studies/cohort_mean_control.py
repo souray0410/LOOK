@@ -82,7 +82,7 @@ def run(plan):
                     if len(decisions)!=1 or len(decisions[0]['candidates'])!=9:raise ValueError('Incomplete root candidates')
                     for c in decisions[0]['candidates']:
                         import psutil
-                        if torch.cuda.mem_get_info()[0]<10*1024**3 or psutil.virtual_memory().available<.15*psutil.virtual_memory().total:raise MemoryError('Resource reserve')
+                        if psutil.virtual_memory().available<.15*psutil.virtual_memory().total:raise MemoryError('Resource reserve')
                         path=base/c['artifact'];e=c['evidence']
                         if file_sha256(path)!=c['sha256'] or file_sha256(e['prediction'])!=e['sha256']:raise ValueError('Candidate evidence changed')
                         key=stable_hash(dict(spec=ref['sha256'],artifact=c['sha256'],prediction=e['sha256'],control='project_mean_v1'))

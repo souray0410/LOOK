@@ -33,6 +33,6 @@ def replay_selected(model, root, inputs_factory, collate, device, batch_size=16,
     result=dict(schema='look_native_replay_v1',status='accepted',participants=len(ids),
                 best_sha256=file_sha256(Path(root)/'best.pt'), source_receipt_sha256=file_sha256(Path(root)/'source_accepted.json'),
                 maximum_probability_error=difference, argmax_identical=True, split='development',test_access=False,
-                inference_compatibility=model.inference_compatibility)
+                execution_provenance=model.execution_provenance)
     if output is not None: atomic_write_json(result,Path(output))
     return result

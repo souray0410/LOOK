@@ -15,9 +15,9 @@ from look.runtime.state import atomic_write_json, file_sha256
 
 
 def run(data, output):
-    from expanded.native import ParticipantModel
+    from mhd_models.workflows.native import ParticipantModel
     from mhd_framework.models import create_model
-    from runtime.checkpoint import capture_rng, restore_rng
+    from mhd_models.runtime.checkpoint import capture_rng, restore_rng
     data, output = Path(data), Path(output)
     output.mkdir(parents=True, exist_ok=False)
     receipt = json.loads((data / "accepted.json").read_text())

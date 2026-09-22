@@ -46,7 +46,7 @@ def prepare(feed,base_feed,output):
 
 def evaluate_model(model,manifest,output,device,role="test"):
     """Called only after validate_release; one complete selected model at a time."""
-    from expanded.native import Inputs
+    from mhd_models.workflows.native import Inputs
     from look.studies.mechanism_case import context,loader,verify_case
     from look.data.observed_pair import ObservedPair
     from look.models.observed_participant import verify_pair_rows

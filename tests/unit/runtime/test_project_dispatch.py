@@ -32,9 +32,9 @@ def test_old_claim_cannot_be_stolen_even_when_stale(tmp_path,state):
 
 
 def test_exact_native_source_binding(tmp_path):
-    path=tmp_path/'source'/'expanded'/'native.py';path.parent.mkdir(parents=True);path.write_text('exact')
+    path=tmp_path/'source'/'workflows'/'native.py';path.parent.mkdir(parents=True);path.write_text('exact')
     framework=tmp_path/'framework'/'mhd_framework'/'core.py';framework.parent.mkdir(parents=True);framework.write_text('core')
-    spec={'trainer_source_sha256':{'expanded/native.py':file_sha256(path)},'framework':{'commit':'fixed','source_sha256':{'core.py':file_sha256(framework)}}}
+    spec={'trainer_source_sha256':{'workflows/native.py':file_sha256(path)},'framework':{'api':'V5','commit':'fixed','source_sha256':{'core.py':file_sha256(framework)}}}
     config=dict(native_sources=[str(tmp_path/'source')],dependency_pythonpath='/dependencies',framework_pythonpaths={'fixed':str(tmp_path/'framework')})
     assert source_binding(spec,config)['source']==str(tmp_path/'source')
     path.write_text('changed')

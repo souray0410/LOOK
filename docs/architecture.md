@@ -21,11 +21,11 @@ Internal imports are absolute package paths. `scripts/check_layout.py` verifies 
 
 See [module migration map](module_migration.json) for every previous module path. Python object pickles requiring historical import paths use [archived source](history.md); state_dict compatibility is checked independently.
 
-The installed MHD release selects the API. Import `mhd_framework` / `mhd_framework.utils`; this application pins the V4 release, never floating main. Packaging paths changed; V4 tensor implementations are preserved.
+The installed MHD release selects the API. Import `mhd_framework` / `mhd_framework.utils`; this application pins the V5 release, never floating main. Packaging paths changed; Current code uses V5 directly; old artifacts require independent conversion.
 
 ## Reusable native models
 
-Optional architectures are owned by `mhd_framework.models` in the framework repository. The core does not import this package. Architecture documentation and configuration are under that repository's `models/` directory. The selected V4 source commit is pinned in `framework.lock.json`; installing the historical V4 tag alone does not provide these later optional additions.
+Optional architectures are owned by `mhd_framework.models` in the framework repository. The core does not import this package. Architecture documentation and configuration are under that repository's `models/` directory. The selected V5 source commit is pinned in `framework.lock.json`; installing the historical V4 tag alone does not provide these later optional additions.
 
 The project adapter `models/registry.py` resolves an exact training request, verifies and copies an accepted complete model into a project-owned directory, then loads it strictly. A missing match returns an explicit pending request; it does not silently substitute random weights or start a GPU job. The independent training workflow must satisfy that request before method experiments proceed.
 

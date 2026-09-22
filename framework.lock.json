@@ -2,28 +2,28 @@
   "schema": "mhd_source_lock_v2",
   "project": "LOOK",
   "release": "2026_09_09_10_30_34",
-  "api_version": "V4",
+  "api_version": "V5",
   "upstream_repository": "https://github.com/souray0410/MHD_Framework",
-  "upstream_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0",
+  "upstream_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
   "distribution": "git_submodule",
   "files": [
     {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/core.py",
       "upstream_path": "src/mhd_framework/core.py",
       "module": "mhd_framework.core",
-      "sha256": "6f499046ff3068b76c01a69e25d11398f2d2c0ff3ebb18f2faf825ff0199e6ba"
+      "sha256": "fdaf8764c151f12a434987f6f07e005b0fd88421dc7ebbcedd02096c979cb95a"
     },
     {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/utils.py",
       "upstream_path": "src/mhd_framework/utils.py",
       "module": "mhd_framework.utils",
-      "sha256": "4040d6f836d81b88a812ab8923e915fa7b8a5715d12f2167b21b2251b9747dda"
+      "sha256": "0401df38d9b4cb845987bb15941a8509f5e309f2f7710f106a25b52d61aa0b83"
     },
     {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/__init__.py",
       "upstream_path": "src/mhd_framework/__init__.py",
       "module": "mhd_framework",
-      "sha256": "029dca49b31371f665fc67338197e993b3dd50b24589791fc65a56381c3f12ad"
+      "sha256": "5573f9ed13701a2924d86fddb4a327793030c61cf12a5248bf2dcb6be977d576"
     },
     {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/__init__.py",
@@ -41,7 +41,7 @@
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/artifacts.py",
       "upstream_path": "src/mhd_framework/models/artifacts.py",
       "module": "mhd_framework.models.artifacts",
-      "sha256": "666d3fc2f0bcb3628daa0bb0944c40e42e06d4a709a8651d72424c49e09f3255"
+      "sha256": "cb1284e72eca208a7959fb7cf1f3b8c6590671f52cd6536b80641be59736bad1"
     },
     {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/clip_visual.py",
@@ -65,7 +65,7 @@
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/graph.py",
       "upstream_path": "src/mhd_framework/models/graph.py",
       "module": "mhd_framework.models.graph",
-      "sha256": "d9f4e32de3f9b9dde9d723b3cde2494a31cf4e3c38599d9bdbe0f3e09e114cde"
+      "sha256": "d51a1bdc3f993300d2521824857aff1c795978bf3bba7a5bbf53fd64a21c4e1f"
     },
     {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/modern_cnn.py",
@@ -83,7 +83,7 @@
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/resnet.py",
       "upstream_path": "src/mhd_framework/models/resnet.py",
       "module": "mhd_framework.models.resnet",
-      "sha256": "bc9f8a35f55d5b67c16de1f37d6ee4ac2d54baa1543e3852f49079c4d1c05eba"
+      "sha256": "2ab7a79d1c025f9b14c2ccdbef561aaa6650601b5ca51d2bbbfb5e9e720456a5"
     },
     {
       "local_path": "third_party/MHD_Framework/src/mhd_framework/models/retfound.py",
@@ -118,6 +118,6 @@
   ],
   "submodule_path": "third_party/MHD_Framework",
   "package_distribution": "mhd-framework",
-  "package_version": "4",
+  "package_version": "5",
   "import_package": "mhd_framework"
 }

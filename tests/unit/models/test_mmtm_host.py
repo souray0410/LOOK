@@ -17,7 +17,7 @@ def build():
 def direct(graph,oct,cfp):
     values={graph.get_node_by_name(k).id:v for k,v in [('oct_input',oct),('cfp_input',cfp),('eye_counts',torch.tensor([1,2]))]}
     for level in graph.model_levels:
-        roles=graph.topo.role_matrices[level];order=graph.topo.sort_matrices[level]
+        roles=graph.topo.role_matrices[level].to_dense();order=graph.topo.sort_matrices[level].to_dense()
         for eid in range(roles.shape[0]):
             heads=torch.where(roles[eid]<0)[0].tolist();tails=torch.where(roles[eid]>0)[0].tolist()
             if not tails:continue

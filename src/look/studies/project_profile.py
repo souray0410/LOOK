@@ -16,7 +16,7 @@ from look.studies.project_case import read,validate_spec
 
 
 def profile(spec,output,device):
-    from expanded.native import Inputs
+    from mhd_models.workflows.native import Inputs
     from mhd_framework.models import create_model
     import psutil
     validate_spec(spec);out=Path(output);out.mkdir(parents=True,exist_ok=True)
@@ -26,14 +26,14 @@ def profile(spec,output,device):
     torch.backends.cudnn.benchmark=False;torch.backends.cudnn.deterministic=True
     torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
     total=torch.cuda.get_device_properties(device).total_memory
-    budget=min(.875*total,total-10*1024**3)
-    if total<78*1024**3:raise ValueError('This production profile requires the requested A10080')
-    probe_cap=min((budget-2*1024**3)/1.2,float(os.environ.get('LOOK_PROBE_MAX_BYTES','inf')))
-    torch.cuda.set_per_process_memory_fraction(probe_cap/total,device)
+    budget=total
+    from mhd_models.scheduling.gpu_budget import configure_allocator
+    probe_cap=configure_allocator(device,resident_peak=int(os.environ.get('LOOK_EXISTING_RESERVED_BYTES',0)),
+        cap=int(os.environ['LOOK_PROBE_MAX_BYTES']) if 'LOOK_PROBE_MAX_BYTES' in os.environ else None)
     torch.manual_seed(spec['seed']);np.random.seed(spec['seed'])
     torch.cuda.reset_peak_memory_stats(device)
     specs=[read(Path(spec['parents'][k]['path'])/'spec.json') for k in ('first','second')]
-    parents=[load_selected(spec['parents'][k]['path'],create_model,device='cpu',allow_inference_equivalence=True) for k in ('first','second')]
+    parents=[load_selected(spec['parents'][k]['path'],create_model,device='cpu') for k in ('first','second')]
     graph=build_native_host(*parents,spec['position'],device=device);del parents;gc.collect()
     train=from_parent_specs(*specs,'train',Inputs,augment=True,seed=spec['seed'])
     dev=from_parent_specs(*specs,'development',Inputs)
@@ -73,7 +73,7 @@ def profile(spec,output,device):
         z=forward_host(graph,v['oct'].to(device),v['cfp'].to(device),v['counts'])
         if z.shape!=(len(v['label']),2) or not torch.isfinite(z).all():raise ValueError('Profile development inference failed')
     peak=max(s['device_used'] for s in samples)
-    if peak*1.2+2*1024**3>budget:raise ValueError('Measured peak fails final 10GiB reserve')
+    if peak>budget:raise ValueError('Measured lifecycle peak exceeds device capacity')
     atomic_write_json(samples,out/'samples.json')
     receipt=dict(schema='look_project_resource_v1',status='accepted',case_identity=identity,
         scope='train_development_resource_only',warmups=5,updates=20,max_eyes_per_person=2,

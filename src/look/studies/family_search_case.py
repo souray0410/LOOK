@@ -75,18 +75,18 @@ def run(spec,out,device,pause,profile=False):
         if r.get('identity')!=stable_hash(spec) or r.get('state')!='accepted' or r.get('profile') is not True:
             raise ValueError('Search resource receipt mismatch')
         check_files(p.parent,r['files']);profile_receipt=r
-    props=torch.cuda.get_device_properties(device);budget=min(.875*props.total_memory,props.total_memory-10*1024**3)
+    props=torch.cuda.get_device_properties(device);budget=props.total_memory
     hardware=dict(name=props.name,total_memory=props.total_memory,major=props.major,minor=props.minor,
         worker_threads=ref.get('worker_threads',2),worker_memory_bytes=limit)
     requested_budget=int(os.environ.get('LOOK_FAMILY_SEARCH_GPU_BUDGET_BYTES',str(int(budget))))
-    if requested_budget<=2*1024**3:raise MemoryError('GPU fitting budget must exceed reserve overhead')
+    if requested_budget<=0:raise MemoryError('GPU fitting budget must exceed reserve overhead')
     budget=min(budget,requested_budget)
     hardware['process_gpu_budget_bytes']=int(budget)
     if profile_receipt is not None and profile_receipt.get('hardware')!=hardware:
         raise ValueError('Family resource receipt process GPU budget mismatch')
     free,total=torch.cuda.mem_get_info(device)
-    if free<10*1024**3:raise MemoryError('Whole-device reserve absent')
-    torch.cuda.set_per_process_memory_fraction((budget-2*1024**3)/1.2/total,device);torch.cuda.reset_peak_memory_stats(device)
+    from mhd_models.scheduling.gpu_budget import configure_allocator
+    budget=configure_allocator(device,cap=budget);torch.cuda.reset_peak_memory_stats(device)
     rng=capture_rng();started=time.time();graph=None;frozen=None
     session=out/'sessions'/f'{time.time_ns()}.json'
     atomic_write_json(dict(started_at=started,state='running',profile=profile),session)
@@ -102,7 +102,6 @@ def run(spec,out,device,pause,profile=False):
         if spec['workspace_bytes']>.7*limit:raise MemoryError('Fitting workspace exceeds admitted worker reserve')
         def check():
             if psutil.Process().memory_info().rss>.85*limit:raise MemoryError('Host RAM reserve breached')
-            if torch.cuda.mem_get_info(device)[0]<10*1024**3:raise MemoryError('Whole-device GPU reserve breached')
             return pause()
         def loader(ds):
             return CheckedLoader(DataLoader(ds,batch_size=base['training']['microbatch'],shuffle=False,num_workers=0,
@@ -149,7 +148,7 @@ def run(spec,out,device,pause,profile=False):
             incomplete_previous_sessions=sum('elapsed_seconds' not in p for p in prior_sessions),
             gpu_peak_reserved_bytes=torch.cuda.max_memory_reserved(device),
             rss_bytes=psutil.Process().memory_info().rss,profile=profile,recovery='family_statistics_and_prefix_decisions')
-        if costs['gpu_peak_reserved_bytes']*1.2+2*1024**3>budget:raise MemoryError('Conservative GPU peak exceeds budget')
+        if costs['gpu_peak_reserved_bytes']>budget:raise MemoryError('Conservative GPU peak exceeds budget')
         atomic_write_json(costs,out/'costs.json')
     finally:
         try:

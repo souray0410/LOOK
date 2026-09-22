@@ -31,7 +31,7 @@ def test_pruning_removes_registered_modules_and_rehashes_sets():
     assert len(graph.edge_module_map) == 1
     assert graph.topo.role_matrices[0].shape == (1, 2)
     assert graph.topo.role_matrices[1].shape == (1, 2)
-    assert torch.equal(graph.topo.role_matrices[1], -graph.topo.role_matrices[0])
+    assert torch.equal(graph.topo.role_matrices[1].to_dense(), -graph.topo.role_matrices[0].to_dense())
     assert all(node in graph.nodes for node in list(graph.nodes))
     assert all(edge in graph.edges for edge in list(graph.edges))
 

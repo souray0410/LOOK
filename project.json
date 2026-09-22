@@ -5,7 +5,7 @@
   "release_id": "2026_09_09_10_30_34",
   "repository_role": "research",
   "study_status": "preparing_new_study",
-  "framework_api": "V4",
+  "framework_api": "V5",
   "training_authorized": false,
   "test_authorized": false,
   "archive_branch": "archive/2026_09_09_10_30_34_before_rename",

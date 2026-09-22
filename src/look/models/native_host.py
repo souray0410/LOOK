@@ -89,7 +89,7 @@ def build_native_host(first, second, position, device="cpu", *, mmtm=None):
             raise ValueError('This adapter requires spatial MMTM endpoints')
     nodes, edges, definitions, groups, levels = [], [], [], [], {}
     def node(name):
-        n = MHD_Node(len(nodes), name, MHD_Node.Message(torch.zeros(1)), aggregation="replace")
+        n = MHD_Node(len(nodes), name, MHD_Node.Message(torch.zeros(1)), aggregation="sum", memory=False)
         nodes.append(n); return n.id
     roots = {name: node(name) for name in ("oct_input", "cfp_input", "eye_counts", "label_gt")}
     def edge(name, module, inputs, output_name):

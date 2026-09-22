@@ -11,7 +11,7 @@ from look.models.native_materialization import materialize_selected, verify_sele
 def fixture(tmp_path):
     source = tmp_path / "native"
     source.mkdir()
-    spec = dict(test_used=False, training=dict(seed=3416), model=dict(name="fixture"))
+    spec = dict(framework=dict(api="V5"), test_used=False, training=dict(seed=3416), model=dict(name="fixture"))
     (source / "spec.json").write_text(json.dumps(spec))
     for name in ("best.pt", "history.json", "development_predictions.npz", "last.pt"):
         (source / name).write_bytes(name.encode())
@@ -73,7 +73,7 @@ def test_actual_mhd_selected_state_load_and_node_mismatch(tmp_path, monkeypatch)
     from look.models.native_materialization import load_selected
     torch.set_num_threads(1)
     source, spec, _ = fixture(tmp_path)
-    spec.update(model=dict(name="resnet18", spatial_dims=2, views=1), framework={"fixture": True})
+    spec.update(model=dict(name="resnet18", spatial_dims=2, views=1), framework={"api":"V5", "fixture": True})
     # This test checks real MHD state loading; runtime-source audit is separately
     # tested by the framework and deliberately replaced by a checked fixture.
     seen = []

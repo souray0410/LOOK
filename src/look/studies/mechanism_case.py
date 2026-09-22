@@ -59,11 +59,11 @@ def context(spec,device):
 
 def load_original(base,run,device):
     from mhd_framework.models import create_model
-    from expanded.native import Inputs
+    from mhd_models.workflows.native import Inputs
     models=[];parents=[]
     for role in ('first','second'):
         path=base['parents'][role]['path']
-        models.append(load_selected(path,create_model,device='cpu',allow_inference_equivalence=True))
+        models.append(load_selected(path,create_model,device='cpu'))
         parents.append(read(Path(path)/'spec.json'))
     graph=build_native_host(*models,base['position'],device=device)
     state=torch.load(Path(run)/'host/best.pt',map_location='cpu',weights_only=False)
@@ -249,7 +249,8 @@ def execute(spec,out,device=None):
         torch.backends.cudnn.benchmark=False;torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
         if device.type=='cuda':
             total=torch.cuda.get_device_properties(device).total_memory
-            torch.cuda.set_per_process_memory_fraction((min(.875*total,total-10*1024**3)-2*1024**3)/total)
+            from mhd_models.scheduling.gpu_budget import configure_allocator
+            configure_allocator()
         started=time.time();atomic_write_json(dict(state='running',pid=os.getpid(),time=started),out/'status.json')
         try:result=execute_task(spec,out,device,pause)
         except FitPaused:result=dict(state='paused')

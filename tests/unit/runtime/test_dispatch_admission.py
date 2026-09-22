@@ -10,17 +10,17 @@ from look.runtime.state import file_sha256
 @pytest.fixture(autouse=True)
 def scheduler_boundary(monkeypatch):
     # Application tests do not depend on a sibling training checkout.
-    package=types.ModuleType('scheduling');package.__path__=[]
-    quota=types.ModuleType('scheduling.quota_guard');quota.snapshot=lambda:None
-    policy=types.ModuleType('scheduling.policy');policy.Claims=lambda path:object()
-    renewal=types.ModuleType('scheduling.renewal');renewal.job_from_log=lambda text:None
-    for name,module in [('scheduling',package),('scheduling.quota_guard',quota),
-                        ('scheduling.policy',policy),('scheduling.renewal',renewal)]:
+    package=types.ModuleType('mhd_models.scheduling');package.__path__=[]
+    quota=types.ModuleType('mhd_models.scheduling.quota_guard');quota.snapshot=lambda:None
+    policy=types.ModuleType('mhd_models.scheduling.policy');policy.Claims=lambda path:object()
+    renewal=types.ModuleType('mhd_models.scheduling.renewal');renewal.job_from_log=lambda text:None
+    for name,module in [('mhd_models.scheduling',package),('mhd_models.scheduling.quota_guard',quota),
+                        ('mhd_models.scheduling.policy',policy),('mhd_models.scheduling.renewal',renewal)]:
         monkeypatch.setitem(sys.modules,name,module)
 
 
 def test_busy_account_lock_waits_without_submission(tmp_path, monkeypatch):
-    import scheduling.quota_guard as q
+    q=sys.modules['mhd_models.scheduling.quota_guard']
     monkeypatch.setattr(m,'work',lambda c:[{'id':'ready'}])
     monkeypatch.setattr(m,'eligible',lambda *a:True)
     monkeypatch.setattr(q,'snapshot',lambda:pytest.fail('Lock not acquired'))
@@ -32,7 +32,7 @@ def test_busy_account_lock_waits_without_submission(tmp_path, monkeypatch):
 
 
 def test_nonlock_resource_error_is_not_hidden(tmp_path,monkeypatch):
-    import scheduling.quota_guard as q
+    q=sys.modules['mhd_models.scheduling.quota_guard']
     monkeypatch.setattr(m,'work',lambda c:[{'id':'ready'}])
     monkeypatch.setattr(m,'eligible',lambda *a:True)
     def fail():raise BlockingIOError(11,'fork unavailable')

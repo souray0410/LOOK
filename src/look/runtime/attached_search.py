@@ -57,8 +57,8 @@ def main():
     try:os.kill(int(launch['pid']),0)
     except ProcessLookupError:pass
     else:raise RuntimeError('Original manager PID still exists; reconcile before attachment')
-    from scheduling.policy import Claims
-    from scheduling.slurm_liveness import step_presence
+    from mhd_models.scheduling.policy import Claims
+    from mhd_models.scheduling.slurm_liveness import step_presence
     from look.studies.search_case import verify_case
     from look.studies.search_delivery_queue import refresh
     info=subprocess.check_output(['scontrol','show','job',str(c['job']),'-o'],text=True,timeout=20)

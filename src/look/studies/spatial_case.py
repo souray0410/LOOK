@@ -68,9 +68,10 @@ def run(spec,out,device,paused,profile=False):
     torch.backends.cudnn.benchmark=False;torch.backends.cudnn.deterministic=True
     torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
     total=torch.cuda.get_device_properties(device).total_memory
-    budget=min(.875*total,total-10*1024**3)
-    if budget<=2*1024**3:raise ValueError('Insufficient GPU reserve')
-    torch.cuda.set_per_process_memory_fraction((budget-2*1024**3)/1.2/total,device)
+    budget=total
+    if budget<=0:raise ValueError('Insufficient GPU reserve')
+    from mhd_models.scheduling.gpu_budget import configure_allocator
+    budget=configure_allocator(device,cap=budget)
     torch.cuda.reset_peak_memory_stats(device)
     rng=capture_rng();start=time.time();p=spec['protocol'];costs={};records=[]
     _,models,graph,data=load_original(base,host,device)

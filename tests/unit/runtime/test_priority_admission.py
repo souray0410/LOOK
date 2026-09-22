@@ -18,15 +18,15 @@ def test_priority_and_normal_dispatch_share_weekly_gate(tmp_path,monkeypatch):
 
 def test_exclusive_claim_precedes_pause_and_failure_rolls_back(tmp_path,monkeypatch):
     events=[]
-    package=types.ModuleType('scheduling');package.__path__=[]
-    priority=types.ModuleType('scheduling.project_priority')
+    package=types.ModuleType('mhd_models.scheduling');package.__path__=[]
+    priority=types.ModuleType('mhd_models.scheduling.project_priority')
     priority.sha=lambda p:'digest'
     def pause(*args):
         events.append('pause')
         raise ValueError('parent completed before handover')
     priority.request_pause=pause
-    monkeypatch.setitem(sys.modules,'scheduling',package)
-    monkeypatch.setitem(sys.modules,'scheduling.project_priority',priority)
+    monkeypatch.setitem(sys.modules,'mhd_models.scheduling',package)
+    monkeypatch.setitem(sys.modules,'mhd_models.scheduling.project_priority',priority)
     class Claims:
         def acquire(self,*args):events.append('claim');return {'generation':1}
         def release(self,*args,**kwargs):events.append('release');assert kwargs['step_dead']
@@ -38,14 +38,26 @@ def test_exclusive_claim_precedes_pause_and_failure_rolls_back(tmp_path,monkeypa
 
 
 def test_lost_claim_does_not_pause_parent(tmp_path,monkeypatch):
-    package=types.ModuleType('scheduling');package.__path__=[]
-    priority=types.ModuleType('scheduling.project_priority')
+    package=types.ModuleType('mhd_models.scheduling');package.__path__=[]
+    priority=types.ModuleType('mhd_models.scheduling.project_priority')
     priority.sha=lambda p:'digest'
     priority.request_pause=lambda *args:pytest.fail('Claim not owned')
-    monkeypatch.setitem(sys.modules,'scheduling',package)
-    monkeypatch.setitem(sys.modules,'scheduling.project_priority',priority)
+    monkeypatch.setitem(sys.modules,'mhd_models.scheduling',package)
+    monkeypatch.setitem(sys.modules,'mhd_models.scheduling.project_priority',priority)
     class Claims:
         def acquire(self,*args):raise RuntimeError('already claimed')
     with pytest.raises(RuntimeError,match='already claimed'):
         m.reserve_priority((dict(run_dir='target',spec_sha256='x'),None,None,None),
                            Claims(),'owner','job',dict(run_dir='native'))
+
+
+@pytest.mark.parametrize('status',['needs_review','failed','completed'])
+def test_reserved_task_rechecks_status_before_execution(tmp_path,monkeypatch,status):
+    run=tmp_path/'run';run.mkdir();(run/'status.json').write_text(json.dumps({'state':status}))
+    token=dict(state='claimed',owner='same',generation=2,spec_sha256='abc',job_id='job')
+    claim=tmp_path/'claim.json';claim.write_text(json.dumps(token))
+    class Claims:
+        def path(self,run):return claim
+    task=dict(run_dir=str(run),execution='look',spec_sha256='abc')
+    monkeypatch.setattr(m,'work',lambda _: [task])
+    assert m.admissible_work({},Claims(),reservation=(task,token,{}))==[]

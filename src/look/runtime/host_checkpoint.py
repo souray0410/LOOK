@@ -48,7 +48,7 @@ def save(path, *, model, optimizer, scheduler, identity, progress, node_ids=None
     # Caller must finish optimizer.step and clear gradients; no partial accumulation.
     if any(p.grad is not None for p in model.parameters()):
         raise ValueError('Checkpoint requires cleared gradients at an optimizer boundary')
-    state={'schema':'optimizer_boundary_v1','identity':identity,'model':cpu_tree(model.state_dict()),
+    state={'schema':'optimizer_boundary_v2','framework_api':'V5','identity':identity,'model':cpu_tree(model.state_dict()),
            'optimizer':cpu_tree(optimizer.state_dict()),'scheduler':cpu_tree(scheduler.state_dict()),
            'progress':cpu_tree(progress),'rng':capture_rng(),'node_ids':node_ids,'world_size':1}
     atomic_save(path,state)
@@ -58,8 +58,9 @@ def save(path, *, model, optimizer, scheduler, identity, progress, node_ids=None
 def load(path, *, model, optimizer, scheduler, identity, node_ids=None):
     # Only trusted, task-owned checkpoints are accepted; pickle is not an interchange API.
     state=torch.load(path,map_location='cpu',weights_only=False)
-    if state['schema']!='optimizer_boundary_v1' or state['identity']!=identity or state['world_size']!=1:
-        raise ValueError('Checkpoint identity/world-size mismatch')
+    if (state.get('schema')!='optimizer_boundary_v2' or state.get('framework_api')!='V5'
+            or state['identity']!=identity or state['world_size']!=1):
+        raise ValueError('Current V5 checkpoint identity/world-size mismatch; explicitly migrate old checkpoints')
     if state['node_ids']!=node_ids:raise ValueError('MHD Node IDs changed')
     model.load_state_dict(state['model'],strict=True);optimizer.load_state_dict(state['optimizer'])
     scheduler.load_state_dict(state['scheduler']);restore_rng(state['rng'])

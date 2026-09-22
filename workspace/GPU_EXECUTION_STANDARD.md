@@ -1,12 +1,13 @@
-# GPU execution standard — version 5
+# GPU execution standard — version 6
 
 ## Capacity is a whole-device budget
 
-For the current80GiB A100 allocation, keep approximately10GiB physically free after
-all admitted workloads, i.e. total work may consume approximately70GiB. This is
-neither a10GiB per-model limit nor a minimum memory-utilization target. On another
-device/allocation recalculate the available budget, CPU and host-memory capacity;
-never assume the same concurrent model count or ignore unrelated GPU users.
+The 2026-09-22 instruction removes the fixed 10 GiB whole-device reserve and
+its derived percentage caps. Admit against physical device capacity, actual
+co-resident consumption, complete lifecycle peaks and explicitly evidenced
+profile-specific transient overhead. Do not replace the removed rule with a new
+fixed reserve or utilization ratio. The same policy applies to 32 GiB single-GPU
+routes and larger devices; CPU, host RAM and ownership limits remain mandatory.
 
 Use measured complete-workload peaks plus safety margin to admit concurrency.
 Include initialization, optimizer state, forward/backward, evaluation, temporary
@@ -79,11 +80,15 @@ compare the resumed next update exactly with uninterrupted execution. Profiles
 key architecture, input/max eyes, micro/effective batch, precision, optimizer,
 framework/trainer and hardware; LR-only variants may share a mapped profile.
 
-Use B=min(0.875*T,T-10GiB). Require conservative existing resident peaks plus
-1.2 times incoming measured peak plus2GiB to fit B. Include unknown physical GPU
-load once. Preserve original two threads/worker, allocated CPU, and15% host working
-memory headroom. Record full cgroup charge separately; only clean inactive file
-cache may be discounted as reclaimable, never dirty/writeback/anonymous memory.
+Require max(current physical use, aggregate resident lifecycle peaks), the
+owner's next resource-class growth, incoming lifecycle peak and its explicitly
+measured additional overhead to fit physical capacity. Count each resident load
+once. Allocator caps subtract actual non-allocator/device occupancy and declared
+future resident demand; they are not total physical memory accounting. Unprofiled
+resource classes require bounded isolated qualification before formal admission.
+Preserve original two threads/worker, allocated CPU, and 15% host working-memory
+headroom. Record full cgroup charge separately; only clean inactive file cache
+may be discounted as reclaimable, never dirty/writeback/anonymous memory.
 
 Add one execution at a time. Compare three120-second stable training windows before
 and after addition using aggregate committed participant progress divided by each

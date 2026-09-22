@@ -79,9 +79,10 @@ def run(spec,out,device,pause,profile=False):
     limit=int(os.environ.get('LOOK_WORKER_MEMORY_BYTES','0'))
     if limit<=0:raise ValueError('Explicit admitted worker RAM required')
     props=torch.cuda.get_device_properties(device);total=props.total_memory
-    gpu_budget=min(.875*total,total-10*1024**3)
-    if gpu_budget<=2*1024**3:raise MemoryError('Insufficient GPU reserve')
-    torch.cuda.set_per_process_memory_fraction((gpu_budget-2*1024**3)/1.2/total,device)
+    gpu_budget=total
+    if gpu_budget<=0:raise MemoryError('Insufficient GPU reserve')
+    from mhd_models.scheduling.gpu_budget import configure_allocator
+    gpu_budget=configure_allocator(device,cap=gpu_budget)
     torch.cuda.reset_peak_memory_stats(device)
     rng=capture_rng();records=[];costs={};start=time.time()
     _,parents,graph,data=load_original(base,source,device);del parents

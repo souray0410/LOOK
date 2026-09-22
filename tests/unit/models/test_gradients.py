@@ -11,7 +11,7 @@ def _node(node_id: int, name: str, state: torch.Tensor) -> MHD_Node:
         node_id,
         name,
         MHD_Node.Message(state),
-        aggregation="replace",
+        aggregation="sum", memory=False,
     )
 
 

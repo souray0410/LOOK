@@ -3,7 +3,7 @@ Read workspace/REPOSITORY_STANDARD.md and docs/development.md before changes. Th
 
 Read docs/architecture.md. src and tests/unit use data, models, methods, training, evaluation, analysis, runtime, studies. Preserve these roles and canonical modules in scripts/check_layout.py. Never put implementation modules at the package root. main holds the accepted unified layout; retire only explicitly superseded transition branches, retain historical reproduction references. Update the pinned MHD release only after strict application output/gradient/state_dict acceptance; never follow floating main.
 
-The installed MHD release selects the API. Import `mhd_framework` / `mhd_framework.utils`; this application pins the V4 release, never floating main. Packaging paths changed; V4 tensor implementations are preserved.
+The installed MHD release selects the API. Import `mhd_framework` / `mhd_framework.utils`; this application pins the V5 release, never floating main. Packaging paths changed; Current code uses V5 directly; old artifacts require independent conversion.
 
 Read workspace/MODEL_RUN_STANDARD.md for model/run identity, timestamps, provenance, reuse and retention. Apply it to all new model families and studies, not only current UKB work. Copying accepted parents is distinct from creating a new training execution. Preserve pinned scientific entrypoints and historical artifacts.
 

@@ -249,8 +249,8 @@ def main():
         raise ValueError("Avoid frequent full artifact hashing")
     # Model_Training is an explicitly supplied runtime dependency, not bundled
     # into the model framework or the independent scientific model itself.
-    from runtime.training_state import verify_completion
-    from runtime.run_registry import reserve
+    from mhd_models.runtime.training_state import verify_completion
+    from mhd_models.runtime.run_registry import reserve
     controller = Controller(read(args.config), verify_completion, reserve)
     daemon_lock = (controller.root / "daemon.lock").open("a")
     try:

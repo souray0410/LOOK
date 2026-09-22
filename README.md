@@ -1,5 +1,7 @@
 # LOOK
 
+[V5 候选迁移状态与安装要求](docs/handoff/v5_rollout_20260922.md)（尚未生产切换）。
+
 > **开发中研究项目 / Research software under active development**
 >
 > 本仓库用于方法研究和可追溯实验记录，尚非稳定发布的软件，也未获临床验证，不可用于临床诊断、治疗决策或生产部署。接口、配置和结论可能随研究更新；历史报告保留当时的证据范围，不代表当前全部实验已完成。请以具体报告的样本、数据划分、随机种子、验收状态和限制为准，不将探索性结果视为已确立的普遍结论。
@@ -10,7 +12,7 @@
 
 [维护与交接 / Handoff](docs/handoff/README.md) — 当前版本、部署状态、验收证据与跨项目调用；读取后请刷新实时状态。
 
-LOOK（linear one-one korrektur）：基于固定 MHD V4 的研究项目。`main` 是与 Radon_Bridge 统一的当前开发结构；`2026_09_09_10_30_34` 是初始统一结构批次标识；当前实验以交接记录和锁定配置为准。修改前的完整代码、配置和报告见[历史复现](docs/history.md)。
+LOOK（linear one-one korrektur）：基于固定 MHD V5 候选版本的研究项目。`main` 是与 Radon_Bridge 统一的当前开发结构；`2026_09_09_10_30_34` 是初始统一结构批次标识；当前实验以交接记录和锁定配置为准。修改前的完整代码、配置和报告见[历史复现](docs/history.md)。
 
 ```text
 src/look/

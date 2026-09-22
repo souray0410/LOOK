@@ -88,7 +88,7 @@ def validate_spec(spec):
 
 def _execute(spec,out,device,should_pause):
     from mhd_framework.models import create_model
-    from expanded.native import Inputs,collate
+    from mhd_models.workflows.native import Inputs,collate
     validate_spec(spec);identity=stable_hash(spec)
     torch.set_num_threads(2);torch.use_deterministic_algorithms(True)
     torch.backends.cudnn.benchmark=False;torch.backends.cudnn.deterministic=True
@@ -101,14 +101,14 @@ def _execute(spec,out,device,should_pause):
     models=[];parent_specs=[]
     for role in ('first','second'):
         status('parent_replay_'+role);root=Path(spec['parents'][role]['path'])
-        model=load_selected(root,create_model,device="cpu",allow_inference_equivalence=True);models.append(model)
+        model=load_selected(root,create_model,device="cpu");models.append(model)
         parent_specs.append(read(root/'spec.json'))
         replay_path=out/'parents'/role/'replay.json'
         if replay_path.exists():
             r=read(replay_path)
             if (r['best_sha256']!=file_sha256(root/'best.pt') or r['status']!='accepted' or
                 r.get('source_receipt_sha256')!=file_sha256(root/'source_accepted.json') or
-                r.get('inference_compatibility')!=model.inference_compatibility):raise ValueError('Parent replay receipt changed')
+                r.get('execution_provenance')!=model.execution_provenance):raise ValueError('Parent replay receipt changed')
         else:
             model.to(device)
             try:replay_selected(model,root,Inputs,collate,device,spec['training']['microbatch'],replay_path)

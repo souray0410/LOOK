@@ -21,7 +21,7 @@ def read(path):
 def verify_selected(root, expected_spec=None):
     root = Path(root).resolve()
     manifest = read(root / "selected_artifact.json")
-    if (manifest.get("schema") != "look_selected_native_v1" or
+    if (manifest.get("schema") != "look_selected_native_v2" or
             manifest.get("test_access") is not False or
             manifest.get("complete_training_resume") is not False):
         raise ValueError("Unknown selected-artifact contract")
@@ -35,6 +35,8 @@ def verify_selected(root, expected_spec=None):
             raise ValueError("Selected model artifact changed")
     spec = read(root / "spec.json")
     receipt = read(root / "source_accepted.json")
+    if spec.get("framework", {}).get("api") != "V5":
+        raise ValueError("Current V5 selected artifact required; run the independent converter")
     import hashlib
     identity = hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()
     if (spec.get("test_used") is not False or receipt.get("test_used") is not False or
@@ -49,6 +51,8 @@ def verify_selected(root, expected_spec=None):
 
 
 def materialize_selected(source, destination_root, expected_spec, verify_completion):
+    if expected_spec.get("framework", {}).get("api") != "V5":
+        raise ValueError("Materialization requires a current V5 source artifact")
     source = Path(source).resolve()
     verify_completion(source, expected_spec)
     receipt_path = source / "accepted.json"
@@ -95,7 +99,7 @@ def materialize_selected(source, destination_root, expected_spec, verify_complet
             with (temporary / "source_accepted.json").open("rb") as f:
                 os.fsync(f.fileno())
             copied["source_accepted.json"] = receipt_sha
-            manifest = dict(schema="look_selected_native_v1", source=identity, files=copied,
+            manifest = dict(schema="look_selected_native_v2", source=identity, files=copied,
                             test_access=False, complete_task_model=True,
                             complete_training_resume=False, selected_prediction_replay=False,
                             source_acceptance_verification="native_verifier_and_copy_hashes")
@@ -114,26 +118,20 @@ def materialize_selected(source, destination_root, expected_spec, verify_complet
             raise
 
 
-def load_selected(root, graph_factory, expected_spec=None, device="cpu", allow_inference_equivalence=False):
+def load_selected(root, graph_factory, expected_spec=None, device="cpu"):
     """Strict complete state loading; numerical development replay is separate."""
     import torch
     from mhd_framework.models.artifacts import verify_runtime
     from look.models.observed_participant import ObservedParticipantModel
     _, spec, receipt = verify_selected(root, expected_spec)
-    compatibility = dict(scope="exact_original_runtime")
-    try:
-        verify_runtime(spec["framework"])
-    except ValueError:
-        if not allow_inference_equivalence:
-            raise
-        from look.models.parent_compatibility import verify_inference_equivalence
-        compatibility = verify_inference_equivalence(spec)
+    verify_runtime(spec["framework"])
+    execution = dict(scope="current_v5_runtime", framework=spec["framework"])
     graph = graph_factory(spec["model"], device=device)
     actual_nodes = [[node["id"], node["name"]] for node in graph.describe_nodes()]
     if actual_nodes != [list(row) for row in receipt["node_ids"]]:
         raise ValueError("Native MHD node identity mismatch")
     model = ObservedParticipantModel(graph)
-    model.inference_compatibility = compatibility
+    model.execution_provenance = execution
     state = torch.load(Path(root) / "best.pt", map_location="cpu", weights_only=False)
     if state["identity"] != receipt["identity"] or state["epoch"] != receipt["best_epoch"]:
         raise ValueError("Selected checkpoint identity/epoch mismatch")

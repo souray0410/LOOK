@@ -68,8 +68,8 @@ def execute(binding, job, output, observe=False):
     bootstrap = read(config_path)
     import sys
     sys.path[:0] = bootstrap['env']['PYTHONPATH'].split(':')
-    from scheduling.policy import Claims
-    from scheduling.slurm_liveness import step_presence
+    from mhd_models.scheduling.policy import Claims
+    from mhd_models.scheduling.slurm_liveness import step_presence
     from look.runtime.state import atomic_write_json as write, file_sha256
     from look.studies.search_case import dependencies, verify_case
     from look.analysis.search_delivery import report

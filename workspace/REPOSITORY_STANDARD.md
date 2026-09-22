@@ -31,7 +31,7 @@ and an annotated `archive/<timestamp>` tag; never move an existing archive tag.
 Pre-migration branches with an explanatory suffix are special historical snapshots.
 
 MHD has its own release history. Projects independently pin an exact submodule commit,
-explicit installed API version (V4 here), critical-file SHA256, and environment dependency lock.
+explicit installed API version (V5 here), critical-file SHA256, and environment dependency lock.
 No startup `git pull` or floating main dependency is permitted. Install MHD from the
 pinned local checkout; its development package version is not a replacement for Git SHA.
 Each project has a separate environment. Multiple projects may legitimately use different

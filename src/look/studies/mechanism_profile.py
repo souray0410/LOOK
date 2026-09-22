@@ -25,16 +25,17 @@ def profile(spec,out,device):
     torch.backends.cudnn.benchmark=False;torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
     if not torch.cuda.is_available():raise ValueError('Production admission needs an actual GPU')
     props=torch.cuda.get_device_properties(device);total=props.total_memory
-    budget=min(.875*total,total-10*1024**3)
+    budget=total
     free,_=torch.cuda.mem_get_info(device)
     # No optimistic concurrent probe: this workflow owns an otherwise empty card.
     existing=max(0,total-free-torch.cuda.memory_reserved(device))
     declared=int(os.environ.get('LOOK_EXISTING_RESERVED_BYTES',0))
     if existing>2*1024**3 and declared<existing:raise ValueError('Unknown co-resident GPU work; keep old work, defer resource probe')
     existing=max(existing,declared)
-    probe_cap=min(budget-existing-2*1024**3,float(os.environ.get('LOOK_PROBE_MAX_BYTES','inf')))
+    from mhd_models.scheduling.gpu_budget import configure_allocator
+    probe_cap=configure_allocator(device,resident_peak=declared,
+        cap=int(os.environ['LOOK_PROBE_MAX_BYTES']) if 'LOOK_PROBE_MAX_BYTES' in os.environ else None)
     if probe_cap<=0:raise ValueError('No safe coexistence budget')
-    torch.cuda.set_per_process_memory_fraction(probe_cap/total)
     torch.cuda.reset_peak_memory_stats(device)
     base,parents,graph,data=context(spec,device)
     ds=data['train'];counts=ds.counts
@@ -144,7 +145,7 @@ def profile(spec,out,device):
     host_rss=psutil.Process().memory_info().rss
     memory_limit=int(os.environ.get('LOOK_WORKER_MEMORY_BYTES',100*1024**3))
     if host_rss+estimated_latent_bytes>.85*memory_limit:raise ValueError('Projected full-fit host memory exceeds worker budget')
-    if existing+1.2*peak+2*1024**3>budget:raise ValueError('GPU full-peak reserve failed')
+    if existing+peak>budget:raise ValueError('GPU full-peak reserve failed')
     if shutil.disk_usage(out).free<100*1024**3:raise ValueError('Less than 100 GiB storage reserve')
     report.update(status='accepted',case_identity=stable_hash(spec),training_updates=25 if training else 0,
         exact_next_update_reload=training,maximum_observed_eyes_per_batch=max(sum(b['counts']) for b in batches),

@@ -101,9 +101,10 @@ def run(spec,out,device,pause,profile=False):
     torch.use_deterministic_algorithms(True);torch.backends.cudnn.benchmark=False;torch.backends.cudnn.deterministic=True
     torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
     props=torch.cuda.get_device_properties(device);total=props.total_memory
-    budget=min(.875*total,total-10*1024**3,int(os.environ.get('LOOK_AFFINE_GPU_BUDGET_BYTES',str(total))))
-    if budget<=2*1024**3:raise MemoryError('Insufficient admitted GPU budget')
-    torch.cuda.set_per_process_memory_fraction((budget-2*1024**3)/1.2/total,device);torch.cuda.reset_peak_memory_stats(device)
+    budget=min(total,int(os.environ.get('LOOK_AFFINE_GPU_BUDGET_BYTES',str(total))))
+    if budget<=0:raise MemoryError('Insufficient admitted GPU budget')
+    from mhd_models.scheduling.gpu_budget import configure_allocator
+    budget=configure_allocator(device,cap=budget);torch.cuda.reset_peak_memory_stats(device)
     rng=capture_rng();_,parents,graph,data=load_original(base,host_root,device);del parents
     graph.eval()
     for p in graph.parameters():p.requires_grad_(False)
@@ -183,7 +184,7 @@ def run(spec,out,device,pause,profile=False):
         costs.update(seconds=time.time()-start,gpu_peak_reserved_bytes=torch.cuda.max_memory_reserved(device),
             host_peak_rss_bytes=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss*1024,
             allocation=os.environ['SLURM_JOB_ID'],device=props.name,test_access=False)
-        if costs['gpu_peak_reserved_bytes']*1.2+2*1024**3>budget or costs['host_peak_rss_bytes']>.85*limit:
+        if costs['gpu_peak_reserved_bytes']>budget or costs['host_peak_rss_bytes']>.85*limit:
             raise MemoryError('Resource acceptance failed')
         atomic_write_json(costs,out/'costs.json')
     finally:

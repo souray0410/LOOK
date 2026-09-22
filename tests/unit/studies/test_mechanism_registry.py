@@ -11,7 +11,7 @@ def test_one_host_releases_only_its_dependencies_and_is_idempotent(tmp_path,monk
     # this test checks the supplement's dependency/identity contract at that API.
     def reserve(root,namespace,task_id,configuration,**kwargs):
         p=Path(root)/'runs'/task_id;p.mkdir(parents=True,exist_ok=True);return p
-    monkeypatch.setitem(sys.modules,'runtime.run_registry',types.SimpleNamespace(reserve=reserve))
+    monkeypatch.setitem(sys.modules,'mhd_models.runtime.run_registry',types.SimpleNamespace(reserve=reserve))
     from look.studies import project_case
     monkeypatch.setattr(project_case,'verify_case',lambda root,spec:json.loads((Path(root)/'accepted.json').read_text()))
     run=tmp_path/'source';(run/'host').mkdir(parents=True);best=run/'host/best.pt';best.write_bytes(b'fixture')

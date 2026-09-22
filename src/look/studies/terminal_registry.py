@@ -10,7 +10,7 @@ from look.studies.terminal_case import VERSION,protocol,verify_case,dependencies
 
 
 def tick(config):
-    from runtime.run_registry import reserve
+    from mhd_models.runtime.run_registry import reserve
     out=Path(config['output']);out.mkdir(parents=True,exist_ok=True)
     with (out/'registry.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)

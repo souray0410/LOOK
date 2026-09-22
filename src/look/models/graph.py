@@ -154,7 +154,7 @@ def _make_node(node_id: int, name: str, stage: str, batch_size: int, device: tor
         node_id,
         name,
         MHD_Node.Message(state),
-        aggregation="replace",
+        aggregation="sum", memory=False,
     )
 
 
@@ -163,7 +163,7 @@ def _make_tensor_node(node_id: int, name: str, state: torch.Tensor) -> MHD_Node:
         node_id,
         name,
         MHD_Node.Message(state),
-        aggregation="replace",
+        aggregation="sum", memory=False,
     )
 
 
@@ -375,12 +375,10 @@ def build_resnet50_mhd_graph(
 def active_node_levels(graph: MHD_Graph) -> Dict[str, int]:
     levels: Dict[str, int] = {}
     for level in graph.forward_levels:
-        role = graph.topo.role_matrices[level]
-        for edge_id in range(role.shape[0]):
-            tail_ids = torch.where(role[edge_id] > 0)[0].tolist()
-            for node_id in tail_ids:
-                node = graph.get_node_by_id(node_id)
-                levels[node.name] = level
+        role = graph.topo.role_matrices[level].coalesce()
+        tail_ids = role.indices()[1, role.values() > 0].tolist()
+        for node_id in tail_ids:
+            levels[graph.get_node_by_id(node_id).name] = level
     return levels
 
 
@@ -441,7 +439,7 @@ def classification_loss_metadata(graph: MHD_Graph) -> Dict[str, object]:
 
 def graph_summary(graph: MHD_Graph) -> Dict[str, object]:
     return {
-        "framework_version": "MHD V4",
+        "framework_version": "MHD V5",
         "architecture_id": graph.architecture_id,
         "nodes": [node.name for node in sorted(graph.nodes, key=lambda item: item.id)],
         "edges": [edge.name for edge in sorted(graph.edges, key=lambda item: item.id)],

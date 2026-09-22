@@ -12,7 +12,7 @@ def read(path): return json.loads(Path(path).read_text())
 
 
 def tick(config):
-    from runtime.run_registry import reserve
+    from mhd_models.runtime.run_registry import reserve
     from look.studies.project_case import verify_case
     root=Path(config['output']);root.mkdir(parents=True,exist_ok=True)
     with (root/'registry.lock').open('a') as lock:

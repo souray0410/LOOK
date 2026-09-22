@@ -1,3 +1,5 @@
+[2026-09-22 V5 候选迁移与未完成门槛](v5_rollout_20260922.md)
+
 ## 2026-09-19：后继A与远端离线接续准备
 
 下一最小A合同选择ShaSpec shared/specific + missing-feature generation家族作为与EmbraceNet机制不同的任务匹配候选；当前只锁合同，分类配方/许可/2D适配身份未闭环前不训练。后继远端有限包要求protocol/source/config/recovery/result全自包含，已启动包可在网页离线时按receipt接续；当前不声称存在Mac关机后能自行发明新科研包的常驻planner。详见 research_decisions/next_missing_method_A_contract_20260919.md 与 offline_execution_readiness_20260919.md。

@@ -25,6 +25,10 @@ def read(path,default=None):
 
 
 def source_binding(spec,config):
+    if 'workflows/native.py' not in spec.get('trainer_source_sha256',{}):
+        raise ValueError('Current package native source required')
+    if spec.get('framework',{}).get('api')!='V5':
+        raise ValueError('Current V5 specification required; convert historical runs explicitly')
     framework = config['framework_pythonpaths'][spec['framework']['commit']]
     if any(not (Path(framework)/'mhd_framework'/name).is_file() or
            file_sha256(Path(framework)/'mhd_framework'/name)!=digest
@@ -33,7 +37,7 @@ def source_binding(spec,config):
     for source in config['native_sources']:
         if all((Path(source)/name).is_file() and file_sha256(Path(source)/name)==digest
                for name,digest in spec['trainer_source_sha256'].items()):
-            return dict(source=source,pythonpath=source+':'+framework+':'+config['dependency_pythonpath'])
+            return dict(source=source,pythonpath=str(Path(source).parent)+':'+framework+':'+config['dependency_pythonpath'])
     raise ValueError('No immutable source matches the selected native specification')
 
 
@@ -115,14 +119,18 @@ def work(config):
     return list(unique.values())
 
 
-def eligible(task,claims):
+def eligible(task,claims,*,reservation_token=None):
     state=read(claims.path(task['run_dir']));status=read(Path(task['run_dir'])/'status.json')
-    if state.get('state') in ('claimed','running','failed','completed','liveness_needs_review'):return False
-    if status.get('state') in ('needs_review','needs_review_epoch_cap','failed'):return False
+    if reservation_token is not None:
+        if state.get('state')!='claimed' or any(state.get(k)!=reservation_token.get(k)
+                for k in ('owner','generation','spec_sha256','job_id')):
+            raise RuntimeError('Priority reservation ownership changed')
+    elif state.get('state') in ('claimed','running','failed','completed','liveness_needs_review'):return False
+    if status.get('state') in ('needs_review','needs_review_epoch_cap','failed','completed'):return False
     if (Path(task['run_dir'])/'accepted.json').exists():
         spec=read(task['spec'])
         if task['execution']=='native':
-            from runtime.training_state import verify_completion
+            from mhd_models.runtime.training_state import verify_completion
             verify_completion(task['run_dir'],spec)
         else:
             if task['execution'] in ('look_affine_terminal','look_affine_progressive'):
@@ -198,11 +206,8 @@ def admissible_work(config, claims, reservation=None):
             and counts['greedy']>=config.get('search_control_maximum',2)):continue
         reserved = reservation is not None and task['run_dir'] == reservation[0]['run_dir']
         if reserved:
-            current=read(claims.path(task['run_dir']));token=reservation[1]
-            if (current.get('state')!='claimed' or any(current.get(k)!=token.get(k)
-                    for k in ('owner','generation','spec_sha256','job_id'))):
-                raise RuntimeError('Priority reservation ownership changed')
-        elif not eligible(task, claims): continue
+            if not eligible(task,claims,reservation_token=reservation[1]):continue
+        elif not eligible(task,claims):continue
         if task.get('execution') == 'native':
             try: native_api_preflight(task, config)
             except (ValueError, OSError, subprocess.SubprocessError) as exc:
@@ -223,7 +228,7 @@ def priority_work(config, claims):
 
 def reserve_priority(qualified, claims, owner, job, native):
     """Claim before pausing; a failed handover leaves native work untouched."""
-    from scheduling.project_priority import request_pause,sha
+    from mhd_models.scheduling.project_priority import request_pause,sha
     target,profile,identity,root=qualified
     token=claims.acquire(target['run_dir'],target['spec_sha256'],owner,job)
     receipt=None
@@ -248,7 +253,7 @@ def verify_delivery_dependency(entry):
         'look_terminal':'terminal_case','look_linear':'linear_case','look_spatial':'spatial_case',
         'look_mechanism':'mechanism_case','look_affine_terminal':'affine_case','look_affine_progressive':'affine_case'}
     if kind=='native':
-        from runtime.training_state import verify_completion
+        from mhd_models.runtime.training_state import verify_completion
         verify_completion(entry['run_dir'],spec)
     else:
         if kind not in modules:raise ValueError('Unknown dependency verifier')
@@ -288,8 +293,8 @@ def failed_before_submission(record):
 
 
 def reconcile_expired(config):
-    from scheduling.policy import Claims
-    from scheduling.quota_guard import snapshot
+    from mhd_models.scheduling.policy import Claims
+    from mhd_models.scheduling.quota_guard import snapshot
     claims=Claims(config['claims']);snap=snapshot();events=[]
     for task in work(config):
         run=Path(task['run_dir']);record=read(claims.path(run))
@@ -317,9 +322,9 @@ def reconcile_expired(config):
     return events
 
 def submit_one(config,path,journal):
-    from scheduling.quota_guard import snapshot
-    from scheduling.renewal import job_from_log
-    from scheduling.policy import Claims
+    from mhd_models.scheduling.quota_guard import snapshot
+    from mhd_models.scheduling.renewal import job_from_log
+    from mhd_models.scheduling.policy import Claims
     claims=Claims(config['claims'])
     if config.get('output') and (Path(config['output'])/'admission_hold.json').exists():return 'waiting_incident_repair'
     candidates=admissible_work(config,claims)
@@ -342,7 +347,7 @@ def submit_one(config,path,journal):
                 if any(not str(r.get('job_id','')).isdigit() and not failed_before_submission(r) for r in value['requests']):
                     return 'prior_submission_identity_needs_review'
         active=sum(str(e['job_id']) in snap['jobs'] for e in journal['requests'])
-        from scheduling.project_priority import project_limit
+        from mhd_models.scheduling.project_priority import project_limit
         maximum=project_limit(config,config['maximum_workflow_allocations'],'LOOK')
         if active>=maximum:return 'workflow_allocations_active'
         if snap['total_gpus']>=snap['limit']:return 'waiting_account_capacity'
@@ -380,7 +385,7 @@ def daemon(config_path):
                 from look.runtime.mechanism_handover import retire_parent
                 retire_parent(out)
                 if config.get('session_guard_receipts'):
-                    from scheduling.project_priority import verify_session_guards
+                    from mhd_models.scheduling.project_priority import verify_session_guards
                     verify_session_guards(config)
                 reconcile_expired(config)
                 state=submit_one(config,config_path,journal);error=None
@@ -406,8 +411,8 @@ def allocation_owner(config_path):
 
 def gpu_owner(config_path):
     import torch
-    from scheduling.policy import Claims
-    from scheduling.slurm_liveness import step_presence
+    from mhd_models.scheduling.policy import Claims
+    from mhd_models.scheduling.slurm_liveness import step_presence
     config=read(config_path);job=os.environ['SLURM_JOB_ID'];end=float(os.environ['LOOK_ALLOCATION_END'])
     if torch.cuda.device_count()!=1 or torch.cuda.get_device_properties(0).total_memory<78*1024**3:raise ValueError('A10080 single-device binding required')
     root=Path(config['output'])/job;root.mkdir(exist_ok=True);claims=Claims(config['claims']);owner='look-workflow-'+job
@@ -466,7 +471,7 @@ def gpu_owner(config_path):
         step=None
         priority=None
         if config.get('project_priority_enabled'):
-            from scheduling.project_priority import PriorityProbe
+            from mhd_models.scheduling.project_priority import PriorityProbe
             priority=PriorityProbe(config_path,config,job,attempt,task,'look')
         while child.poll() is None:
             r=read(record)
@@ -501,7 +506,7 @@ def gpu_owner(config_path):
         state=read(run/'status.json').get('state')
         if state=='completed' or (state=='infeasible' and task['execution']=='look_mechanism'):
             if task['execution']=='native':
-                from runtime.training_state import verify_completion
+                from mhd_models.runtime.training_state import verify_completion
                 verify_completion(run,spec)
             else:
                 if task['execution'] in ('look_affine_terminal','look_affine_progressive'):
@@ -566,10 +571,6 @@ def execute_work(config_path,spec_path,run,kind,record):
     profile_root=Path(record).parent/'profile'
     environment=os.environ.copy()
     environment['CUBLAS_WORKSPACE_CONFIG']=':4096:8'
-    if kind=='look' and config.get('legacy_project_pythonpath'):
-        environment['PYTHONPATH']=config['legacy_project_pythonpath']
-        os.execvpe(config['python'],[config['python'],'-m','look.runtime.project_dispatch','--config',str(config_path),
-            '--execute',str(spec_path),'--run',str(run),'--kind','look','--record',str(record)],environment)
     if kind=='native':
         binding=source_binding(spec,config)
         environment['PYTHONPATH']=binding['pythonpath']
@@ -578,12 +579,12 @@ def execute_work(config_path,spec_path,run,kind,record):
             '--full-development','--full-train-read','--fresh-train-batches']
         if (run/'last.pt').exists(): command.extend(['--checkpoint',str(run/'last.pt')])
         subprocess.run(command,env=environment,check=True)
-        from scheduling.prepared_owner import complete_profile
+        from mhd_models.scheduling.prepared_owner import complete_profile
         receipt=read(profile_root/'accepted.json')
         if not complete_profile(receipt):raise ValueError('Native full resource profile rejected')
         # A single exclusive workflow worker; the remaining allocation RAM is reserved.
-        if receipt.get('peak_gpu_gib',float('inf'))*1.2+2>70:raise ValueError('Native GPU reserve failed')
-        command=[config['python'],'-m','expanded.native','--spec',str(spec_path),'--output',str(run),'--mode','train']
+        if receipt.get('peak_gpu_gib',float('inf'))>torch.cuda.get_device_properties(0).total_memory/1024**3:raise ValueError('Native GPU reserve failed')
+        command=[config['python'],'-m','mhd_models.workflows.native','--spec',str(spec_path),'--output',str(run),'--mode','train']
         os.execvpe(config['python'],command,environment)
     elif kind in ('look_affine_terminal','look_affine_progressive'):
         environment['LOOK_WORKER_MEMORY_BYTES']=str((384 if kind=='look_affine_progressive' else 100)*1024**3)
@@ -678,7 +679,8 @@ def execute_work(config_path,spec_path,run,kind,record):
         if receipt.get('status')!='accepted' or receipt.get('case_identity')!=stable_hash(spec):raise ValueError('Project resource receipt mismatch')
         from look.studies.project_case import execute
         total=torch.cuda.get_device_properties(0).total_memory
-        torch.cuda.set_per_process_memory_fraction((min(.875*total,total-10*1024**3)-2*1024**3)/total)
+        from mhd_models.scheduling.gpu_budget import configure_allocator
+        configure_allocator()
         execute(spec,run)
 
 
@@ -686,7 +688,7 @@ def standby(config_path):
     config=read(config_path);out=Path(config['output']);out.mkdir(parents=True,exist_ok=True)
     # Verify imports, finite feeds and source pins before the old CPU dispatcher
     # is retired. No allocation or claim is touched in this phase.
-    from scheduling.policy import Claims
+    from mhd_models.scheduling.policy import Claims
     from look.studies.mechanism_case import verify_dependencies
     work(config)
     for row in config['source_pins']:
@@ -697,14 +699,16 @@ def standby(config_path):
 
 
 def configure_control_imports(config):
-    # Add only new management modules; keep expanded.native and scientific data
-    # adapters bound to the existing immutable dependency source.
+    if config.get('legacy_project_pythonpath'):
+        raise ValueError('Historical execution settings require independent migration')
     if config.get('control_source'):
-        import scheduling
-        control=str(Path(config['control_source'])/'scheduling')
-        for row in config.get('control_source_pins',[]):
-            if file_sha256(Path(row['path']))!=row['sha256']:raise ValueError('Management snapshot changed')
-        if control not in scheduling.__path__:scheduling.__path__.append(control)
+        import mhd_models.scheduling as scheduling
+        expected=Path(config['control_source']).resolve()/'scheduling'
+        if Path(scheduling.__file__).resolve().parent!=expected:
+            raise ValueError('Installed current scheduling package differs from control source')
+    for row in config.get('control_source_pins',[]):
+        if file_sha256(Path(row['path']))!=row['sha256']:
+            raise ValueError('Management snapshot changed')
 
 
 def main():

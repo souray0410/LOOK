@@ -92,7 +92,7 @@ def test_registry_first_seed_gate_and_idempotence(tmp_path, monkeypatch):
     import look.studies.suffix_registry as m
     def reserve(out, protocol, identity, spec, **kwargs):
         run=Path(out)/'runs'/identity;run.mkdir(parents=True,exist_ok=True);return str(run)
-    monkeypatch.setitem(sys.modules,'runtime.run_registry',types.SimpleNamespace(reserve=reserve))
+    monkeypatch.setitem(sys.modules,'mhd_models.runtime.run_registry',types.SimpleNamespace(reserve=reserve))
     rows=[]
     for seed in (3416,3417):
         root=tmp_path/str(seed);(root/'host').mkdir(parents=True)

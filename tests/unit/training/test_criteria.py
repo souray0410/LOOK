@@ -37,7 +37,7 @@ def validation_loss(graph: MHD_Graph) -> torch.Tensor:
 
 
 def _node(node_id: int, name: str, state: torch.Tensor) -> MHD_Node:
-    return MHD_Node(node_id, name, MHD_Node.Message(state), aggregation="replace")
+    return MHD_Node(node_id, name, MHD_Node.Message(state), aggregation="sum", memory=False)
 
 
 def _graph() -> MHD_Graph:

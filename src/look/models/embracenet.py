@@ -450,7 +450,7 @@ def build_embracenet_host(
     levels: dict[str, int] = {}
 
     def node(name: str) -> int:
-        item = MHD_Node(len(nodes), name, MHD_Node.Message(torch.zeros(1, device=device)), aggregation="replace")
+        item = MHD_Node(len(nodes), name, MHD_Node.Message(torch.zeros(1, device=device)), aggregation="sum", memory=False)
         nodes.append(item)
         return item.id
 

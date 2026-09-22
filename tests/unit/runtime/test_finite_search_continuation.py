@@ -34,8 +34,8 @@ def test_dead_paused_run_reuses_identity_and_new_attempt(tmp_path,monkeypatch):
     policy=SimpleNamespace(Claims=Claims)
     liveness=SimpleNamespace(step_presence=lambda *a:False)
     monkeypatch.setitem(sys.modules,"scheduling",SimpleNamespace(policy=policy,slurm_liveness=liveness))
-    monkeypatch.setitem(sys.modules,"scheduling.policy",policy)
-    monkeypatch.setitem(sys.modules,"scheduling.slurm_liveness",liveness)
+    monkeypatch.setitem(sys.modules,"mhd_models.scheduling.policy",policy)
+    monkeypatch.setitem(sys.modules,"mhd_models.scheduling.slurm_liveness",liveness)
     from look.runtime.state import file_sha256
     run=tmp_path/'run';run.mkdir();spec=tmp_path/'spec.json';spec.write_text('{}')
     manager=tmp_path/'old';manager.mkdir()
