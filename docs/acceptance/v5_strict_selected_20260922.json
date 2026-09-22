@@ -1,0 +1,36 @@
+{
+  "state": "accepted_actual_host_replay",
+  "look_commit": "28aabd6317f2e9d4d6d3722a35595f65f986dfca",
+  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "companion_commit": "ebd28b5866fc33bff2e5f79f08a871b4f9ef6a06",
+  "checkpoints": [
+    {
+      "checkpoint": "best",
+      "checkpoint_sha256": "f37eacbc49b7dd45797f63b440781de3dbd419b47ffb9f12deb736206cb297c4",
+      "converted_checkpoint_sha256": "e4370cd234d100f68997eeabe006053346e3c445bdec1dadd1ea04a11e7b2478",
+      "script_sha256": "c6f7ac31be6fbc8a1a604543aee6ceb9cadb3ccf2f1e811b7a3777dafee311af",
+      "full_development": 296,
+      "consecutive_updates": 3,
+      "full_checkpoint_state_loaded": false,
+      "peak_reserved": 2453667840,
+      "fp32_rtol": 1e-05,
+      "fp32_atol": 1e-06
+    },
+    {
+      "checkpoint": "last",
+      "checkpoint_sha256": "ed314e840dfe49a1e3d998920019ef3671ca95de665a4e209ae490159fa6bbae",
+      "converted_checkpoint_sha256": "8f66889d80c3e2353ab9ecf7ced00dd3de4e5fcf27067ac4675091b1d91c9262",
+      "script_sha256": "c6f7ac31be6fbc8a1a604543aee6ceb9cadb3ccf2f1e811b7a3777dafee311af",
+      "full_development": 296,
+      "consecutive_updates": 3,
+      "full_checkpoint_state_loaded": true,
+      "peak_reserved": 2497708032,
+      "fp32_rtol": 1e-05,
+      "fp32_atol": 1e-06
+    }
+  ],
+  "current_selected_reader": true,
+  "test_access": false,
+  "production_cutover": false,
+  "scope": "one actual host; not full asset closure or project acceptance"
+}
