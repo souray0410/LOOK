@@ -15,7 +15,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from look.runtime.state import atomic_write_json, file_sha256, stable_hash
-from look.runtime.host_checkpoint import atomic_save
+from look.runtime.host_checkpoint import atomic_save, read_selected
 from look.models.native_materialization import verify_selected, load_selected
 from look.models.native_host import build_native_host
 from look.data.observed_pair import from_parent_specs, collate_observed
@@ -125,7 +125,8 @@ def _execute(spec,out,device,should_pause):
         if host['identity']!=identity:raise ValueError('Host identity changed')
         for name,digest in host['files'].items():
             if file_sha256(out/'host'/name)!=digest:raise ValueError('Host evidence changed')
-        selected=torch.load(out/'host'/'best.pt',map_location='cpu',weights_only=False)
+        selected=read_selected(out/'host'/'best.pt',identity=identity,
+            node_ids=[(n.id,n.name) for n in sorted(graph.nodes,key=lambda n:n.id)])
         graph.load_state_dict(selected['model'],strict=True)
     else:
         status('host_training')

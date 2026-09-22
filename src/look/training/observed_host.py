@@ -9,7 +9,7 @@ from look.data.observed_pair import collate_observed
 from look.models.native_host import forward_host
 from look.models.graph import optimizer_parameter_groups
 from look.evaluation.evaluator import evaluate_missing, save_prediction_bundle
-from look.runtime.host_checkpoint import atomic_save, cpu_tree, save, load
+from look.runtime.host_checkpoint import atomic_save, cpu_tree, save, load, save_selected, read_selected
 from look.runtime.state import atomic_write_json, file_sha256, stable_hash
 
 
@@ -75,7 +75,7 @@ def train_host(graph, train, development, config, seed, output, identity, device
     if not (out/'best.pt').exists():
         result=evaluate_missing(graph,dev_loader,device,fixed_pattern='complete')
         schedule.step(result['metrics']['macro_f1'],0)
-        atomic_save(out/'best.pt',dict(identity=identity,epoch=0,model=cpu_tree(graph.state_dict()),node_ids=ids))
+        save_selected(out/'best.pt',identity=identity,epoch=0,model=graph,node_ids=ids)
         save_prediction_bundle(result,out/'development_predictions.npz')
         checkpoint()
     launch_updates=0
@@ -107,14 +107,14 @@ def train_host(graph, train, development, config, seed, output, identity, device
         result=evaluate_missing(graph,dev_loader,device,fixed_pattern='complete')
         score=result['metrics']['macro_f1']
         if schedule.step(score,epoch):
-            atomic_save(out/'best.pt',dict(identity=identity,epoch=epoch,model=cpu_tree(graph.state_dict()),node_ids=ids))
+            save_selected(out/'best.pt',identity=identity,epoch=epoch,model=graph,node_ids=ids)
             save_prediction_bundle(result,out/'development_predictions.npz')
         progress['history'].append(dict(epoch=epoch,loss=progress['epoch_loss']/progress['epoch_seen'],metrics=result['metrics']))
         progress.update(epoch=epoch+1,offset=0,epoch_loss=0.,epoch_seen=0)
         atomic_write_json(progress['history'],out/'history.json');checkpoint()
     if schedule.stall<config['patience']:
         status('needs_review_epoch_cap');return dict(state='needs_review_epoch_cap')
-    selected=torch.load(out/'best.pt',map_location='cpu',weights_only=False)
+    selected=read_selected(out/'best.pt',identity=identity,node_ids=ids)
     if selected['identity']!=identity or selected['node_ids']!=ids:raise ValueError('Selected host identity changed')
     graph.load_state_dict(selected['model'],strict=True);graph.eval()
     replay=evaluate_missing(graph,dev_loader,device,fixed_pattern='complete')

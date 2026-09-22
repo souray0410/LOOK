@@ -48,7 +48,7 @@ from look.models.embracenet import (
     restore_embracenet_sampling,
 )
 from look.models.observed_participant import ObservedParticipantModel
-from look.runtime.host_checkpoint import atomic_save, capture_rng, cpu_tree, restore_rng
+from look.runtime.host_checkpoint import atomic_save, capture_rng, cpu_tree, restore_rng, read_selected
 from look.runtime.state import atomic_write_json, file_sha256, stable_hash
 from look.studies.project_case import CheckedLoader, Paused as LoaderPaused
 from look.training.embracenet_host import train_embracenet_host
@@ -255,7 +255,8 @@ def _load_selected(spec, root, device):
         if file_sha256(root / "host" / name) != digest:
             raise ValueError("Frozen EmbraceNet A evidence changed")
     graph = make_graph(spec, device)
-    state = torch.load(root / "host/best.pt", map_location="cpu", weights_only=False)
+    state = read_selected(root / "host/best.pt", identity=stable_hash(spec),
+        node_ids=[(n.id,n.name) for n in sorted(graph.nodes,key=lambda n:n.id)])
     ids = [(node.id, node.name) for node in sorted(graph.nodes, key=lambda node: node.id)]
     if state["identity"] != stable_hash(spec) or state["node_ids"] != ids:
         raise ValueError("Frozen EmbraceNet best checkpoint identity changed")

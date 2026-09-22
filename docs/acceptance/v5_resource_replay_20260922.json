@@ -1,0 +1,40 @@
+{
+  "state": "accepted_bounded_workload",
+  "look_commit": "4d25400914231ac29e17588ccb56cfececd82afd",
+  "companion_commit": "ebd28b5866fc33bff2e5f79f08a871b4f9ef6a06",
+  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "fixed_gpu_reserve_bytes": 0,
+  "workload_allocator_cap_bytes": 3221225472,
+  "device": "single RTX 5000 Ada 32760 MiB",
+  "test_access": false,
+  "production_cutover": false,
+  "checkpoints": [
+    {
+      "checkpoint": "best",
+      "checkpoint_sha256": "f37eacbc49b7dd45797f63b440781de3dbd419b47ffb9f12deb736206cb297c4",
+      "converted_checkpoint_sha256": "e4370cd234d100f68997eeabe006053346e3c445bdec1dadd1ea04a11e7b2478",
+      "full_development": 296,
+      "consecutive_updates": 3,
+      "full_checkpoint_state_loaded": false,
+      "microbatch": 16,
+      "effective_batch": 128,
+      "peak_reserved": 2453667840,
+      "fp32_rtol": 1e-05,
+      "fp32_atol": 1e-06
+    },
+    {
+      "checkpoint": "last",
+      "checkpoint_sha256": "ed314e840dfe49a1e3d998920019ef3671ca95de665a4e209ae490159fa6bbae",
+      "converted_checkpoint_sha256": "8f66889d80c3e2353ab9ecf7ced00dd3de4e5fcf27067ac4675091b1d91c9262",
+      "full_development": 296,
+      "consecutive_updates": 3,
+      "full_checkpoint_state_loaded": true,
+      "microbatch": 16,
+      "effective_batch": 128,
+      "peak_reserved": 2497708032,
+      "fp32_rtol": 1e-05,
+      "fp32_atol": 1e-06
+    }
+  ],
+  "limitation": "Measured cap exercises this actual host only; no general 3GiB rule, full fitting or production configuration acceptance."
+}

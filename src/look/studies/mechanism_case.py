@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from look.runtime.state import atomic_write_json, file_sha256, stable_hash
-from look.runtime.host_checkpoint import cpu_tree
+from look.runtime.host_checkpoint import cpu_tree, read_selected
 from look.studies.mechanism_protocol import validate_task, TRAINING, VERSION
 from look.models.native_materialization import load_selected
 from look.models.native_host import build_native_host
@@ -66,7 +66,8 @@ def load_original(base,run,device):
         models.append(load_selected(path,create_model,device='cpu'))
         parents.append(read(Path(path)/'spec.json'))
     graph=build_native_host(*models,base['position'],device=device)
-    state=torch.load(Path(run)/'host/best.pt',map_location='cpu',weights_only=False)
+    state=read_selected(Path(run)/'host/best.pt',identity=stable_hash(base),
+        node_ids=[(n.id,n.name) for n in sorted(graph.nodes,key=lambda n:n.id)])
     ids=[(n.id,n.name) for n in sorted(graph.nodes,key=lambda n:n.id)]
     if state['node_ids']!=ids:raise ValueError('Source MHD Node IDs changed')
     graph.load_state_dict(state['model'],strict=True);graph.eval()

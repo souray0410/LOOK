@@ -21,7 +21,7 @@ from look.runtime.embracenet_sampling import (
     restore_embracenet_sampling_from_progress,
     stash_embracenet_sampling,
 )
-from look.runtime.host_checkpoint import atomic_save, cpu_tree, load, save
+from look.runtime.host_checkpoint import atomic_save, cpu_tree, load, save, save_selected, read_selected
 from look.runtime.state import atomic_write_json, file_sha256, stable_hash
 from look.training.observed_host import HostSchedule, validate_config
 
@@ -177,11 +177,9 @@ def train_embracenet_host(
             checkpoint(); status("paused")
             return {"state": "paused", "updates": 0, "total_updates": progress["updates"]}
         scheduler.step(result["metrics"]["macro_f1"], 0)
-        atomic_save(out / "best.pt", {
-            "identity": identity, "epoch": 0, "model": cpu_tree(graph.state_dict()),
-            "node_ids": node_ids, "sampling_state": capture_embracenet_sampling(graph),
-            "selection": "analytical_integrated_mean_logits_development_macro_f1",
-        })
+        save_selected(out / "best.pt", identity=identity, epoch=0, model=graph,
+                      node_ids=node_ids, sampling_state=capture_embracenet_sampling(graph),
+                      selection="analytical_integrated_mean_logits_development_macro_f1")
         save_prediction_bundle(result, out / "development_predictions.npz")
         checkpoint()
 
@@ -259,11 +257,9 @@ def train_embracenet_host(
         counts = _state_counts(states)
         schedule_sha = progress["mask_schedule_sha256"]
         if improved:
-            atomic_save(out / "best.pt", {
-                "identity": identity, "epoch": epoch, "model": cpu_tree(graph.state_dict()),
-                "node_ids": node_ids, "sampling_state": capture_embracenet_sampling(graph),
-                "selection": "analytical_integrated_mean_logits_development_macro_f1",
-            })
+            save_selected(out / "best.pt", identity=identity, epoch=epoch, model=graph,
+                          node_ids=node_ids, sampling_state=capture_embracenet_sampling(graph),
+                          selection="analytical_integrated_mean_logits_development_macro_f1")
             save_prediction_bundle(result, out / "development_predictions.npz")
         progress["history"].append({
             "epoch": epoch,
@@ -282,7 +278,7 @@ def train_embracenet_host(
         status("needs_review_epoch_cap")
         return {"state": "needs_review_epoch_cap"}
 
-    selected = torch.load(out / "best.pt", map_location="cpu", weights_only=False)
+    selected = read_selected(out / "best.pt", identity=identity, node_ids=node_ids)
     if selected["identity"] != identity or selected["node_ids"] != node_ids:
         raise ValueError("Selected EmbraceNet host identity changed")
     graph.load_state_dict(selected["model"], strict=True)

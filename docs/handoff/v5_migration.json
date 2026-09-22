@@ -6,8 +6,9 @@
   "evidence": "docs/handoff/v5_rollout_20260922.md",
   "actual_host_checkpoint_acceptance": "docs/acceptance/v5_actual_host_20260922.json",
   "remaining_contract_audit": [
-    "cohort selected-state readers",
     "PCA/correction cache migration",
-    "remaining fixed GPU reserve configuration and old packed review entrypoint"
-  ]
+    "remaining training and selected-state contracts",
+    "actual production configuration conversion and cutover"
+  ],
+  "resource_replay": "docs/acceptance/v5_resource_replay_20260922.json"
 }

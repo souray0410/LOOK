@@ -44,6 +44,28 @@ def atomic_save(path, state):
         if os.path.exists(tmp):os.unlink(tmp)
 
 
+def save_selected(path, *, model, identity, epoch, node_ids, **extra):
+    """Write the current selected-host contract, separate from resume state."""
+    if {'framework_api', 'schema', 'optimizer', 'scheduler', 'rng'} & extra.keys():
+        raise ValueError('Selected host metadata cannot override the state contract')
+    state = dict(extra, framework_api='V5', identity=identity, epoch=epoch,
+                 node_ids=node_ids, model=cpu_tree(model.state_dict()))
+    atomic_save(path, state)
+    return state
+
+
+def read_selected(path, *, identity, node_ids):
+    """Reject unconverted V4 or resume files before callers modify a model."""
+    state = torch.load(path, map_location='cpu', weights_only=False)
+    if (not isinstance(state, dict) or state.get('framework_api') != 'V5'
+            or state.get('identity') != identity or state.get('node_ids') != node_ids
+            or type(state.get('epoch')) is not int or state['epoch'] < 0
+            or not isinstance(state.get('model'), dict)
+            or any(key in state for key in ('optimizer', 'scheduler', 'rng', 'schema'))):
+        raise ValueError('Current V5 selected host required; explicitly migrate old weights')
+    return state
+
+
 def save(path, *, model, optimizer, scheduler, identity, progress, node_ids=None):
     # Caller must finish optimizer.step and clear gradients; no partial accumulation.
     if any(p.grad is not None for p in model.parameters()):

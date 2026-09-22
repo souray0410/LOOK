@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader
 from look.data.array_pair import ArrayPair
 from look.data.observed_pair import collate_observed
 from look.runtime.state import atomic_write_json, file_sha256, stable_hash
-from look.runtime.host_checkpoint import cpu_tree
+from look.runtime.host_checkpoint import cpu_tree, read_selected
 from look.models.native_host import build_native_host
 from look.training.observed_host import train_host, validate_config
 from look.methods.operator import prepare_complete_pca_bank
@@ -77,7 +77,8 @@ def load_selected(s,root):
     if r['identity']!=stable_hash(s) or r['state']!='accepted':raise ValueError('Host unaccepted')
     for name,sha in r['files'].items():
         if file_sha256(root/'host'/name)!=sha:raise ValueError('Host evidence changed')
-    g=make_graph(s);state=torch.load(root/'host/best.pt',map_location='cpu',weights_only=False)
+    g=make_graph(s);state=read_selected(root/'host/best.pt',identity=stable_hash(s),
+        node_ids=[(n.id,n.name) for n in sorted(g.nodes,key=lambda n:n.id)])
     if state['node_ids']!=[(n.id,n.name) for n in sorted(g.nodes,key=lambda n:n.id)]:raise ValueError('Node identities differ')
     g.load_state_dict(state['model'],strict=True);g.eval()
     for p in g.parameters():p.requires_grad_(False)
