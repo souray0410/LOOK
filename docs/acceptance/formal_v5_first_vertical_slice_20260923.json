@@ -1,0 +1,51 @@
+{
+  "schema": "look_formal_v5_vertical_slice_gate_v1",
+  "state": "quarantined_requires_formal_upstream_recompute",
+  "arm": "pca_free_mean",
+  "source_run_id": "2026_09_18_07_46_10_688084",
+  "source_spec_sha256": "7ef9c11dfccaea8416f43ec42148104f1cc4fca208a48bbd5c9da7cc03d7e624",
+  "source_accepted_sha256": "0f6fd7ebc05862a159620bf07ff005cf8cee174542a67e11d864e6858c160a3f",
+  "target_framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "target_mhd_models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "saved_state": {
+    "correction_banks": true,
+    "family_moments": true,
+    "prefix_decisions": true,
+    "development_predictions": true,
+    "accepted_file_manifest": true
+  },
+  "implementation_comparison": {
+    "operator_sha_unchanged": true,
+    "family_greedy_changed": true,
+    "family_statistics_changed": true,
+    "family_search_case_changed": true,
+    "material_changes": [
+      "Removal of the fixed 10 GiB GPU reserve and adoption of the current allocator budget contract.",
+      "A resume-statistics fix that initializes dense moments only when no valid saved record exists."
+    ]
+  },
+  "blocking_identity": {
+    "source_host_is_formal_v5": false,
+    "source_pca_is_formal_v5": false,
+    "full_train_cache_available_under_formal_v5_identity_on_ibex": false,
+    "formal_v5_evidence_scope": "Existing accepted formal evidence covers a 296-participant development downstream chain, not the complete train-only fitting inputs used by this family-search run."
+  },
+  "decision": "Do not copy the saved bank or relabel the old spec as formal V5. The saved tensors preserve a historical result, but their training provenance remains the old host/PCA/source chain.",
+  "authorized_recompute_path": [
+    "Materialize the already mapped formal-V5 host and PCA identities on Ibex without opening test.",
+    "Recompute the complete train-only frozen logits/features under the formal framework and companion pins.",
+    "Fit pca_free_mean from those inputs in a new run root, then compare train moments, development predictions and the next deterministic prefix decision against the historical run.",
+    "Create a new explicit dual-pin spec/feed only if the strict comparison passes; otherwise register it as a fresh V5 recomputation rather than an equivalent migration."
+  ],
+  "ledger": {
+    "source_entries": 176,
+    "released_entries": 0,
+    "remaining_quarantined": 176
+  },
+  "safety": {
+    "production_modified": false,
+    "claim_acquired": false,
+    "gpu_requested": false,
+    "test_access": false
+  }
+}
