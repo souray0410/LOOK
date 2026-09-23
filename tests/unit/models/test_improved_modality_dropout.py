@@ -30,7 +30,11 @@ def test_simultaneous_target_loss_is_complete_plus_two_missing_losses():
     model=ImprovedDropoutFusion(4,4,2,dropout=0,classifier_dropout=0)
     oct_feature=torch.randn(4,4);cfp_feature=torch.randn(4,4);labels=torch.tensor([0,1,1,0])
     total,logits=simultaneous_modality_dropout_loss(model,oct_feature,cfp_feature,labels,missing_weight=1.)
-    expected=sum(F.cross_entropy(logits[s],labels) for s in ("complete","oct_missing","cfp_missing"))
+    # Match the registered objective's parenthesization. Floating-point addition
+    # is not associative, so Python's left-to-right sum can differ by one ULP.
+    expected=(F.cross_entropy(logits["complete"],labels)
+              + 1. * (F.cross_entropy(logits["oct_missing"],labels)
+                      + F.cross_entropy(logits["cfp_missing"],labels)))
     torch.testing.assert_close(total,expected,rtol=0,atol=0)
 
 
