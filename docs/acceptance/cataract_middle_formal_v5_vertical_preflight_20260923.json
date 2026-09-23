@@ -1,6 +1,6 @@
 {
   "schema": "look_cataract_middle_formal_v5_vertical_preflight_summary_v1",
-  "state": "source_complete_offline_converter_required",
+  "state": "formal_v5_host_converted_gpu_feature_replay_pending",
   "selected_group": {
     "disease": "cataract",
     "architecture": "resnet50",
@@ -26,15 +26,21 @@
   "private_candidate": {
     "path": "/ibex/project/c2377/souray/home/mengh/operations/2026_09_10_11_11_31/v5_rollout_20260922/look_cataract_middle_v5_vertical_v1",
     "look_source_commit": "46f6213a195540012145e003944a9f7d4abc6948",
-    "failed_converter_sha256": "9c94cb7eed41be7aef8e4ef2e975aa7efeb399755ac7ba9075de7eeae37bf5e5",
-    "failure_receipt_sha256": "1757c9bb3ae30bf8ce265c346e3df52a325d25bd0fdc92f8fa1bc7f8b0abb05e"
+    "preserved_failed_converter_sha256": "9c94cb7eed41be7aef8e4ef2e975aa7efeb399755ac7ba9075de7eeae37bf5e5",
+    "failure_receipt_sha256": "1757c9bb3ae30bf8ce265c346e3df52a325d25bd0fdc92f8fa1bc7f8b0abb05e",
+    "accepted_converter_sha256": "2920e34ffca9f1eae761595964aef55f3f87b3a654402a4a8c6de22e2138a35f",
+    "conversion_receipt_sha256": "c56d7372f5148054b0d86b9bff9bde1a3a59040b292e0f03193e67c5e5b0217f",
+    "target_best_sha256": "f463e5dab7ea39796a77916f24d08aad5295b7c5d516d22737d077f170e95d27",
+    "cpu_slurm_job": "52387168"
   },
   "cpu_preflight": {
     "formal_v5_import_reached": true,
     "strict_source_hashes_checked": true,
-    "conversion_completed": false,
-    "failure": "KeyError: initialization",
-    "cause": "The current cohort-delivery builder expects a newer initialization-based schema. This historical look_project_case_v1 graph must be rebuilt from its two selected parent artifacts through a separate offline converter.",
+    "conversion_completed": true,
+    "first_attempt_failure": "KeyError: initialization",
+    "resolution": "The isolated offline converter strictly verified and loaded both selected parents, rebuilt the middle graph with formal V5 build_native_host, strictly loaded all 470 tensors, and verified every serialized tensor was unchanged.",
+    "target_node_ids": 17,
+    "target_epoch": 9,
     "normal_v5_reader_fallback_added": false
   },
   "minimum_complete_vertical": [
@@ -46,7 +52,7 @@
     "Register a new V5 run/spec; preserve the five historical middle weekly cases."
   ],
   "resource_gate": {
-    "cpu_preflight": "completed without GPU",
+    "cpu_preflight": "accepted in Slurm job 52387168 without GPU",
     "gpu_platform": "Ibex LOOK project rotation only",
     "gpus": 1,
     "device_class": "A100-SXM4-80GB",
@@ -54,12 +60,12 @@
     "fixed_gpu_reserve_bytes": 0,
     "host_ram_gib": 100,
     "walltime_hours_max": 48,
-    "required_before_submission": "A versioned offline parent/host conversion must pass strict CPU loading and source SHA checks, followed by legal exclusive LOOK rotation claim."
+    "required_before_submission": "The historical project-case train/development loader must be bound into the two-phase feature replay without changing cohort identity, followed by a legal exclusive LOOK rotation claim."
   },
   "deployment": {
     "slurm_submitted": false,
     "claim_acquired": false,
-    "reason": "The formal V5 target checkpoint does not yet exist, so GPU replay would have no valid check identity.",
+    "reason": "The formal V5 target checkpoint exists. GPU submission remains closed until the historical project-case train/development loader is explicitly bound to the replay package and the exclusive LOOK rotation claim is available.",
     "healthy_v7_workers_modified": false,
     "production_modified": false,
     "test_access": false
