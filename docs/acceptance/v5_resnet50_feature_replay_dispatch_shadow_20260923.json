@@ -1,0 +1,51 @@
+{
+  "schema": "look_feature_replay_dispatch_shadow_summary_v1",
+  "state": "shadow_registered_waiting_owner_rotation_and_weekly",
+  "dispatch_authorized": false,
+  "candidate_commit": "b03de90",
+  "private_receipt_sha256": "17665643ede134c00c26d7708e8259770bf8ab4d1fa8391cb20ae006e4e10090",
+  "implementation": {
+    "feed_schema": "look_feature_replay_feed_v1",
+    "execution_kind": "look_feature_replay",
+    "phase_order": ["reference", "check"],
+    "whole_weekly_prerequisite_checked_before_launch": true,
+    "exclusive_claim_passed_to_worker": true,
+    "priority_preemption_excluded": true,
+    "completion_verifier_requires_bitwise_site_equality": true,
+    "test_access": false
+  },
+  "private_artifacts": {
+    "run_phase_sha256": "b417fb044fe58c82406dae62d676fe249c8f679f554f4aa688bd9fd5ff9aa528",
+    "dispatch_spec_sha256": "cd7d5d6e8e122a350be273a30db8ad87d3d8830b79ff944792a5b14ce34aba8d",
+    "feed_sha256": "f93e26ff780894183db63db1885214272d1aac5c62cd84272f9bd1c50d70b15a",
+    "prior_delivery_policy_sha256": "0dafc3d1551ce941025f235a916f89087251692148117bba4c67a6e85422baca",
+    "versioned_delivery_policy_sha256": "84bd64cf9548f2c5aa372a1c001a9413e291150d662904cc65af41f280d168b8",
+    "shadow_config_sha256": "1708e4380723dafbec61bed0d0e4364fb9879fedba68a436b78b63c3fbc1d98c"
+  },
+  "shadow_result": {
+    "ready": 0,
+    "rejection": "waiting_whole_weekly_delivery",
+    "seed": 3417,
+    "claim_created": false,
+    "gpu_requested": false
+  },
+  "observed_rotation": {
+    "running_look_allocations": 7,
+    "pending_look_allocations": 1,
+    "old_owner_release_observed": false
+  },
+  "activation_requirements": [
+    "The existing whole-weekly acceptance verifies.",
+    "The healthy current owner releases naturally.",
+    "The versioned dispatcher and policy pins pass standby verification.",
+    "The existing owner handover activates the snapshot.",
+    "An exclusive look-workflow claim is acquired before reference or check starts."
+  ],
+  "preservation": {
+    "historical_policy_modified": false,
+    "healthy_worker_stopped": false,
+    "production_touched": false,
+    "generation5_writer_touched": false,
+    "test_access": false
+  }
+}
