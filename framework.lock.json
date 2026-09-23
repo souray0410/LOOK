@@ -4,7 +4,12 @@
   "release": "2026_09_09_10_30_34",
   "api_version": "V5",
   "upstream_repository": "https://github.com/souray0410/MHD_Framework",
-  "upstream_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "upstream_commit": "1287681c08846e11364c81653048435482e772a7",
+  "release_tag": "V5",
+  "wheel": {
+    "filename": "mhd_framework-5-py3-none-any.whl",
+    "sha256": "c022b4f4b0fa1f29458ad1bf9e0d04f6773e9454ab3bd8c07d416294483aab48"
+  },
   "distribution": "git_submodule",
   "files": [
     {

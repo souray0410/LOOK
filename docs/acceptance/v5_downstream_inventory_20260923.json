@@ -2,7 +2,12 @@
   "schema": "look_v5_downstream_inventory_v1",
   "state": "partial_migration_with_explicit_open_consumers",
   "audited_source_commit": "92c97b8577f49c49d04673dbe5571720d2eb6f5c",
-  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "framework_release": {
+    "tag": "V5",
+    "wheel_sha256": "c022b4f4b0fa1f29458ad1bf9e0d04f6773e9454ab3bd8c07d416294483aab48",
+    "candidate_evidence_framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808"
+  },
   "companion_commit": "228b1254b1be5c1209831b93f7262962fe5222b7",
   "current_contract": {
     "framework_api": "V5",

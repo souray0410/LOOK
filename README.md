@@ -49,7 +49,7 @@ python -m look verify-env
 
 上述命令也可统一写为 `python scripts/manage.py <command>`。检查不启动训练、不申请 GPU、不读取研究数据。可复用代码使用项目根目录相对路径；外部影像、CSV、缓存和结果由[路径配置](docs/paths.md)指定。
 
-MHD V5 候选包版本 `5`，固定提交 `c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808`，API 为 V5。它独立安装，不随 MHD_Framework 的后续修改自动升级。本仓库 wheel 只包含 `look`。
+MHD 正式版 V5 包版本 `5`，固定提交 `1287681c08846e11364c81653048435482e772a7`、tag `V5`，API 为 V5。正式 wheel SHA256 为 `c022b4f4b0fa1f29458ad1bf9e0d04f6773e9454ab3bd8c07d416294483aab48`。它独立安装，不随 MHD_Framework 的后续修改自动升级。本仓库 wheel 只包含 `look`。
 
 新训练需要独立验收数据和协议，不自动继承历史队列或 test 使用权限。受限影像、CSV、参与者预测和检查点保留在授权存储，GitHub 只保存代码与可公开汇总。
 

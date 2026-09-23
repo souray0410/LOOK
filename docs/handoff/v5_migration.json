@@ -1,6 +1,11 @@
 {
   "state": "candidate_partial",
-  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "framework_release": {
+    "tag": "V5",
+    "wheel_sha256": "c022b4f4b0fa1f29458ad1bf9e0d04f6773e9454ab3bd8c07d416294483aab48",
+    "previous_candidate_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808"
+  },
   "companion_commit": "228b1254b1be5c1209831b93f7262962fe5222b7",
   "production_cutover": false,
   "evidence": "docs/handoff/v5_rollout_20260922.md",
@@ -8,7 +13,7 @@
   "remaining_contract_audit": [
     "remaining actual consumer assets and downstream PCA/search/fit-resume caches",
     "Ibex A100 cross-platform continuation and safe production owner handoff",
-    "formal V5 release and postpublication verification"
+    "full-data downstream replay against the formal V5 pin"
   ],
   "resource_replay": "docs/acceptance/v5_resource_replay_20260922.json",
   "pca_acceptance": "docs/acceptance/v5_pca_20260922.json",
