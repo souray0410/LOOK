@@ -1,0 +1,45 @@
+{
+  "schema": "look_feature_replay_weekly_gate_summary_v1",
+  "package_id": "look_resnet50_feature_replay_v1",
+  "state": "registration_blocked_existing_dispatcher_incompatible",
+  "dispatch_authorized": false,
+  "private_audit_sha256": "a1024b929d0674aa53585df332972760b5d77524a8d8446b9e099aa0244c8f64",
+  "weekly_policy": {
+    "package_id": "2026_09_20_LOOK_reference_delivery",
+    "sha256": "db1a5e718effadf52655c9cc6811e4afbfe3f78cecdc4a838c29142d92d2f5a2",
+    "required_cases": 21,
+    "accepted_receipt_exists": false,
+    "unresolved_requirements": [
+      "independent_affine_best_forward_full_pipeline_not_yet_deployed"
+    ],
+    "candidate_listed": false,
+    "test_access": false
+  },
+  "deployed_dispatcher": {
+    "source_sha256": "ed7ecea7b2d6e2cd07df17eec860d6d56a18fe1a2bd9a665121433c4e8c9f538",
+    "owner_config_sha256": "0abdcae66bb5a6c99b63641c7b47a748aba0fee0340314b0221f57c09578a66e",
+    "candidate_execution_kind_supported": false,
+    "reason": "The deployed finite feed parser and execution dispatcher have no feature-replay task kind. Policy-only registration would create an unlaunchable entry."
+  },
+  "observed_rotation": {
+    "running_look_allocations": 7,
+    "pending_look_allocations": 2,
+    "old_owner_release_observed": false,
+    "new_claim_created": false
+  },
+  "required_transition": [
+    "Add and test a strict feature-replay task kind and receipt verifier in a versioned dispatcher snapshot.",
+    "Register the candidate behind the current whole-weekly prerequisite without rewriting the current policy history.",
+    "Wait for a healthy owner to release naturally, then activate the versioned snapshot through the existing owner handover.",
+    "Acquire one exclusive look-workflow claim whose owner and Slurm job agree.",
+    "Run reference and check in order and require all_site_values_bitwise_equal=true before PCA migration."
+  ],
+  "preservation": {
+    "gpu_requested": false,
+    "healthy_worker_stopped": false,
+    "test_access": false,
+    "production_touched": false,
+    "generation5_writer_touched": false,
+    "old_assets_modified": false
+  }
+}
