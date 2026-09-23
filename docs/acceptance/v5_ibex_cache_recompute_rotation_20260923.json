@@ -1,0 +1,44 @@
+{
+  "schema": "look_ibex_rotation_package_v1",
+  "state": "registered_not_claimed",
+  "purpose": "Recompute one audited non-selected search and resume-cache tree whose historical identities are invalid under formal V5 inputs.",
+  "framework": {
+    "commit": "1287681c08846e11364c81653048435482e772a7",
+    "tag": "V5",
+    "wheel_sha256": "c022b4f4b0fa1f29458ad1bf9e0d04f6773e9454ab3bd8c07d416294483aab48"
+  },
+  "mhd_models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "look_base_commit": "8d6d60f36ae6e97c5194a30f1f918e9dcd2e7e52",
+  "inputs": {
+    "host_identity": "583b7902416a7e8bcec39e55655ad09932e77b1fc25119cff6872f59a524c66b",
+    "host_checkpoint_sha256": "e4370cd234d100f68997eeabe006053346e3c445bdec1dadd1ea04a11e7b2478",
+    "formal_v5_pca_sites": 9,
+    "historical_tree_decisions_preserved": 97,
+    "historical_cache_execution_authority": false
+  },
+  "execution": {
+    "project": "LOOK",
+    "platform": "Ibex",
+    "resource_lane": "existing LOOK project rotation",
+    "owner_policy": "existing shared claim and allocation owner",
+    "claim_before_launch": true,
+    "start_only_after_previous_owner_release": true,
+    "no_cross_project_gpu_borrowing": true,
+    "test_access": false,
+    "dispatch_authorized": false
+  },
+  "required_acceptance": [
+    "Exact formal host and nine PCA identities pass before work is claimed.",
+    "A fresh isolated output root is used; historical caches remain immutable.",
+    "Every prediction and decision records its input identity and SHA256.",
+    "Interrupted resume reproduces the uninterrupted prefix and next decision.",
+    "The strict current reader accepts the rebuilt tree without a V4 fallback.",
+    "The project claim is terminal and the allocation is released or rotated after the finite package."
+  ],
+  "coordination": {
+    "gpu_requested_by_registration": false,
+    "production_owner_changed": false,
+    "generation5_writer_touched": false,
+    "historical_result_relabelled": false
+  }
+}

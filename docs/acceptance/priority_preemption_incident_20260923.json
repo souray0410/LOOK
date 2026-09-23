@@ -1,0 +1,52 @@
+{
+  "schema": "look_priority_preemption_incident_v1",
+  "state": "contained_downstream_progress_verified_fix_not_deployed",
+  "observed_at": "2026-09-23T10:56:23+03:00",
+  "fault": {
+    "deferred_task": "cataract/resnet50/seed3417/features",
+    "task_spec_sha256": "ec499d82ca5f8b0808f88ba33da70676da3eb0ea24570aa5899cb103ed4c8565",
+    "normal_admission": "waiting_whole_weekly_delivery",
+    "faulty_priority_behavior": "The deployed priority probe enumerated raw work and bypassed the weekly-delivery filter before requesting a parent pause."
+  },
+  "containment": {
+    "deferred_claim_state": "failed",
+    "operational_hold": "weekly_deferred_priority_cycle",
+    "deferred_task_running": false,
+    "production_owner_or_allocation_changed_by_this_audit": false
+  },
+  "recovered_progress": {
+    "eligible_task": "macular_degeneration/resnet50/seed3416/middle",
+    "task_spec_sha256": "d209205cca1f5030fe5623f690bd67f2340a63a8aceb79089b10ca5e798735ed",
+    "claim_state": "running",
+    "claim_generation": 3,
+    "previous_step": "13",
+    "observed_step": "124",
+    "fresh_worker_log_observed": true,
+    "fresh_decisions_after_resume": 5,
+    "latest_visible_decision": "07_fusion_stage4",
+    "actual_downstream_progress": true
+  },
+  "source_gate": {
+    "deployed_project_dispatch_sha256": "ed7ecea7b2d6e2cd07df17eec860d6d56a18fe1a2bd9a665121433c4e8c9f538",
+    "deployed_has_shared_priority_admission": false,
+    "candidate_project_dispatch_sha256": "6eb7dba240f0cb73b6fe4436941a07a672de431112849c918afca53f6c9a0ee4",
+    "candidate_has_shared_priority_admission": true,
+    "candidate_claims_before_parent_pause": true,
+    "candidate_rechecks_reserved_owner_generation_spec_job": true,
+    "candidate_rolls_back_failed_handover": true,
+    "real_snapshot_overlay_tests": "6 passed",
+    "deployed": false
+  },
+  "closure": {
+    "incident_closed": false,
+    "reason": "Containment and real downstream progress are verified, but healthy owners still use the immutable old source. Closure requires a normal owner rotation to the repaired snapshot and one observed eligible handover without a deferred-task pause cycle.",
+    "next_action": "Deploy only through the existing LOOK owner/allocation rotation after the current owner releases; do not hot-patch or cancel it."
+  },
+  "boundaries": {
+    "new_gpu_started": false,
+    "allocation_cancelled": false,
+    "healthy_worker_modified": false,
+    "generation5_writer_touched": false,
+    "test_access": false
+  }
+}
