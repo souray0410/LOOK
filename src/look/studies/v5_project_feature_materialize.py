@@ -32,7 +32,7 @@ def materialize(*,source_run,checkpoint,output,inputs_factory,device,gpu_budget_
  if ip.exists() and read(ip)!=identity: raise ValueError('Feature cache identity changed')
  write_json_atomic(identity,ip);records=output/'records';records.mkdir(exist_ok=True)
  loader=DataLoader(data['train'],batch_size=spec['training']['microbatch'],shuffle=False,num_workers=spec['training']['num_workers'],collate_fn=collate_observed,generator=torch.Generator().manual_seed(spec['seed']))
- completed=0;started=time.time()
+ completed=0;processed_this_run=0;started=time.time()
  with torch.no_grad():
   for index,batch in enumerate(loader):
    path=records/f'{index:06d}.pt';meta=path.with_suffix('.json')
@@ -45,9 +45,9 @@ def materialize(*,source_run,checkpoint,output,inputs_factory,device,gpu_budget_
    tmp=path.with_suffix('.tmp');torch.save(payload,tmp);tmp.replace(path)
    row={'batch':index,'participants_sha256':participant_sha(batch['participant_id']),'sha256':file_sha256(path),'bytes':path.stat().st_size,'sites':sites,'test_access':False};write_json_atomic(row,meta);completed=index+1
    write_json_atomic({'state':'running','completed_batches':completed,'participants_consumed':min(completed*spec['training']['microbatch'],len(data['train'])),'elapsed_seconds':time.time()-started,'test_access':False},output/'status.json')
-   if max_batches is not None and completed>=max_batches: break
+   if max_batches is not None and processed_this_run>=max_batches: break
  total_batches=(len(data['train'])+spec['training']['microbatch']-1)//spec['training']['microbatch'];complete=completed==total_batches
- receipt={'schema':'look_formal_v5_train_feature_materialization_v1','state':'accepted_complete' if complete else 'accepted_partial','identity_sha256':stable_hash(identity),'completed_batches':completed,'total_batches':total_batches,'participants_total':len(data['train']),'bytes':sum(p.stat().st_size for p in records.glob('*.pt')),'elapsed_seconds':time.time()-started,'test_access':False}
+ receipt={'schema':'look_formal_v5_train_feature_materialization_v1','state':'accepted_complete' if complete else 'accepted_partial','identity_sha256':stable_hash(identity),'completed_batches':completed,'processed_this_run':processed_this_run,'total_batches':total_batches,'participants_total':len(data['train']),'bytes':sum(p.stat().st_size for p in records.glob('*.pt')),'elapsed_seconds':time.time()-started,'test_access':False}
  write_json_atomic(receipt,output/('accepted.json' if complete else 'partial.json'));return receipt
 
 def main(argv=None):
