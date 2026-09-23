@@ -49,6 +49,41 @@ def prerequisite_state(spec):
     return release_state(spec["weekly_delivery_policy"])
 
 
+def _active_slurm_identity(job, step):
+    job_text = subprocess.check_output(["scontrol", "show", "job", job, "-o"], text=True, timeout=20)
+    step_text = subprocess.check_output(["scontrol", "show", "step", f"{job}.{step}", "-o"], text=True, timeout=20)
+    if f"JobId={job}" not in job_text or "JobState=RUNNING" not in job_text:
+        raise ValueError("Feature-replay Slurm allocation is not active")
+    if f"StepId={job}.{step}" not in step_text and f"StepId={step}" not in step_text:
+        raise ValueError("Feature-replay Slurm step identity changed")
+
+
+def validate_claim(spec_path, run, environ=None, active_slurm=_active_slurm_identity):
+    environ = os.environ if environ is None else environ
+    claim_path = environ.get("LOOK_ROTATION_CLAIM")
+    job = environ.get("SLURM_JOB_ID"); step = environ.get("SLURM_STEP_ID")
+    if not claim_path or not job or not step:
+        raise ValueError("Feature replay requires claim, Slurm job and Slurm step identity")
+    claim_file = Path(claim_path)
+    if not claim_file.is_file() or claim_file.is_symlink():
+        raise ValueError("Feature-replay claim path is not an immutable regular file")
+    claim = read(claim_file); expected_spec = file_sha256(spec_path)
+    if (claim.get("state") not in ("claimed", "running")
+            or str(claim.get("run_dir", "")) != str(Path(run).resolve())
+            or claim.get("spec_sha256") != expected_spec
+            or claim.get("owner") != "look-workflow-" + str(job)
+            or str(claim.get("job_id")) != str(job)
+            or not isinstance(claim.get("generation"), int) or claim["generation"] < 1
+            or claim.get("test_access", False) is not False):
+        raise ValueError("Feature-replay claim identity changed")
+    if claim.get("step") is not None and str(claim["step"]) != str(step):
+        raise ValueError("Feature-replay claim step identity changed")
+    active_slurm(str(job), str(step))
+    return {"claim_path": str(claim_file.resolve()), "claim_sha256": file_sha256(claim_file),
+            "owner": claim["owner"], "job_id": str(job), "step_id": str(step),
+            "generation": claim["generation"], "dispatch_spec_sha256": expected_spec}
+
+
 def verify_case(run, spec):
     validate_spec(spec); run = Path(run)
     reference = read(run / "reference_receipt.json")
@@ -76,6 +111,13 @@ def verify_case(run, spec):
             or accepted.get("identity") != stable_hash(spec)
             or accepted.get("reference_receipt_sha256") != file_sha256(run / "reference_receipt.json")
             or accepted.get("check_receipt_sha256") != file_sha256(run / "check_receipt.json")
+            or accepted.get("run_dir") != str(run.resolve())
+            or accepted.get("owner") != "look-workflow-" + str(accepted.get("job_id"))
+            or not str(accepted.get("job_id", "")).isdigit()
+            or not str(accepted.get("step_id", ""))
+            or not isinstance(accepted.get("generation"), int) or accepted["generation"] < 1
+            or len(str(accepted.get("claim_sha256", ""))) != 64
+            or len(str(accepted.get("dispatch_spec_sha256", ""))) != 64
             or accepted.get("test_access") is not False):
         raise ValueError("Feature-replay dispatcher acceptance changed")
     return accepted
@@ -88,19 +130,17 @@ def execute(spec_path, run):
     gate = prerequisite_state(spec)
     if gate.get("released") is not True:
         raise ValueError("Feature replay remains behind the whole-weekly prerequisite")
-    claim = os.environ.get("LOOK_ROTATION_CLAIM")
-    if not claim:
-        raise ValueError("Exclusive LOOK rotation claim is required")
+    claim = validate_claim(spec_path, run)
     for phase in spec["phases"]:
         subprocess.run([spec["run_phase_script"], phase], check=True)
     reference = run / "reference_receipt.json"; check = run / "check_receipt.json"
     provisional = {"schema": "look_feature_replay_dispatch_acceptance_v1", "state": "accepted",
         "identity": stable_hash(spec), "reference_receipt_sha256": file_sha256(reference),
         "check_receipt_sha256": file_sha256(check), "test_access": False,
+        "run_dir": str(run), **claim,
         "production_cutover": False, "completed_at": time.time()}
     atomic_write_json(provisional, run / "accepted.json")
     verify_case(run, spec)
     atomic_write_json({"state": "completed", "identity": stable_hash(spec),
                        "test_access": False, "updated_at": time.time()}, run / "status.json")
     return provisional
-
