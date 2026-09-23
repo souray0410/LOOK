@@ -1,0 +1,37 @@
+{
+  "schema": "look_v5_sharded_downstream_chain_candidate_v1",
+  "state": "armed_behind_complete_cache_gate",
+  "source_commit": "7dc1c8828beb811d1cb1a9242b6f2f5d0c1ed9b0",
+  "framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "immutable_package": "/ibex/project/c2377/souray/home/mengh/operations/2026_09_10_11_11_31/v5_rollout_20260922/look_cataract_middle_v5_feature_chain_sharded_v8",
+  "active_gpu_job": "52388915",
+  "active_replacement_monitor": "52389487",
+  "cancelled_pending_monitors": ["52388916", "52389480"],
+  "cache_gate": {
+    "requires_state": "accepted_complete",
+    "requires_batches": 3651,
+    "checks_contiguous_cursor": true,
+    "checks_participant_order_sha": true,
+    "checks_every_selected_site_shard_sha": true,
+    "checks_formal_double_pin": true
+  },
+  "pca_stage": {
+    "resource": "cpu",
+    "split": "train_only",
+    "sites": 9,
+    "resumable_by_completed_entry": true,
+    "early_dispatch_blocked": true
+  },
+  "downstream_stage": {
+    "resource": "one_LOOK_rotation_A100",
+    "requires_exclusive_claim": true,
+    "requires_shared_account_lock": true,
+    "split": "train_and_development",
+    "sealed_test_access": false,
+    "scope": "registered first deterministic prefix decision; nine-site PCA identity is bound, first site is evaluated"
+  },
+  "cpu_contract_tests": "5 passed in 6.11s",
+  "partial_cache_gate": "failed closed before output creation",
+  "test_access": false
+}
