@@ -1,0 +1,67 @@
+{
+  "schema": "look_cataract_middle_formal_v5_vertical_preflight_summary_v1",
+  "state": "source_complete_offline_converter_required",
+  "selected_group": {
+    "disease": "cataract",
+    "architecture": "resnet50",
+    "position": "middle",
+    "seed": 3416,
+    "reason": "It has a complete optimizer-boundary checkpoint and is the smallest of the three weekly ResNet50 host states."
+  },
+  "source": {
+    "best_sha256": "7b420e3ec4ea57d844ed9f3977f173321d8eb02c70d3632a8692d8a3ed21196e",
+    "last_sha256": "09694378cb95af88dd505937ddbfd4c16a047e43b6fe8458158bcf1e07db3852",
+    "spec_sha256": "4baac84954bdaa7a9dee557592a313e3f7fffb4772051973a1773dde30088d45",
+    "accepted_sha256": "f718d1a681147a24f5c24761d0ed74eecb7fafa6b548d3a102ccc31a8b55386b",
+    "pca_manifest_sha256": "fb4c32a8ed570b4ee176debd9277a83641c701845820b2512fe317b45b4bc7be",
+    "model_entries": 470,
+    "resume_state": ["optimizer", "scheduler", "rng", "progress"],
+    "world_size": 1,
+    "test_access": false
+  },
+  "upstream_parents": [
+    {"role": "first", "selected_manifest_sha256": "af63c400fce3940e3ea7811fc4c8fc565c4059467359427217de8b1a40ced900"},
+    {"role": "second", "selected_manifest_sha256": "f17c62142e23daae23e70a47036b86a071f6949365e0175e9111e0ba1ead2ce6"}
+  ],
+  "private_candidate": {
+    "path": "/ibex/project/c2377/souray/home/mengh/operations/2026_09_10_11_11_31/v5_rollout_20260922/look_cataract_middle_v5_vertical_v1",
+    "look_source_commit": "46f6213a195540012145e003944a9f7d4abc6948",
+    "failed_converter_sha256": "9c94cb7eed41be7aef8e4ef2e975aa7efeb399755ac7ba9075de7eeae37bf5e5",
+    "failure_receipt_sha256": "1757c9bb3ae30bf8ce265c346e3df52a325d25bd0fdc92f8fa1bc7f8b0abb05e"
+  },
+  "cpu_preflight": {
+    "formal_v5_import_reached": true,
+    "strict_source_hashes_checked": true,
+    "conversion_completed": false,
+    "failure": "KeyError: initialization",
+    "cause": "The current cohort-delivery builder expects a newer initialization-based schema. This historical look_project_case_v1 graph must be rebuilt from its two selected parent artifacts through a separate offline converter.",
+    "normal_v5_reader_fallback_added": false
+  },
+  "minimum_complete_vertical": [
+    "Strictly convert both selected parent artifacts to formal V5 in an isolated namespace.",
+    "Rebuild the middle host with build_native_host and strictly load all 470 host tensors.",
+    "Compare V4 and V5 nine-site train/development feature journals batch by batch.",
+    "Rebind or refit train-only PCA with exact source lineage and compare PCA tensors and train moments.",
+    "Replay all 296 development participants and the first deterministic replacement search decision.",
+    "Register a new V5 run/spec; preserve the five historical middle weekly cases."
+  ],
+  "resource_gate": {
+    "cpu_preflight": "completed without GPU",
+    "gpu_platform": "Ibex LOOK project rotation only",
+    "gpus": 1,
+    "device_class": "A100-SXM4-80GB",
+    "gpu_budget_bytes": 12884901888,
+    "fixed_gpu_reserve_bytes": 0,
+    "host_ram_gib": 100,
+    "walltime_hours_max": 48,
+    "required_before_submission": "A versioned offline parent/host conversion must pass strict CPU loading and source SHA checks, followed by legal exclusive LOOK rotation claim."
+  },
+  "deployment": {
+    "slurm_submitted": false,
+    "claim_acquired": false,
+    "reason": "The formal V5 target checkpoint does not yet exist, so GPU replay would have no valid check identity.",
+    "healthy_v7_workers_modified": false,
+    "production_modified": false,
+    "test_access": false
+  }
+}
