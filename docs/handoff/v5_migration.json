@@ -8,7 +8,7 @@
   "remaining_contract_audit": [
     "IMD host and other actual consumer assets",
     "search and fitting-resume cache migration",
-    "actual production configuration and source-pin revision",
+    "production reference cutover for candidate host revisions",
     "cross-platform continuation and production cutover"
   ],
   "resource_replay": "docs/acceptance/v5_resource_replay_20260922.json",
@@ -30,5 +30,16 @@
     "states": 4,
     "production_cutover": false,
     "references_migrated": false
+  },
+  "missing_policy_current_execution_revision": {
+    "state": "normal_v5_build_current_spec_replay_verified",
+    "evidence": "docs/acceptance/v5_missing_hosts_current_revision_20260923.json",
+    "hosts": [
+      "balanced_dropout_20260919_v3",
+      "embracenet_single_seed_20260919_v1"
+    ],
+    "candidate_references_migrated": true,
+    "production_cutover": false,
+    "dispatch_authorized": false
   }
 }
