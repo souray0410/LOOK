@@ -91,7 +91,9 @@
     {
       "name": "full_search_and_resume_trees",
       "scope": "all non-selected candidate, decision and recovery caches",
-      "state": "not_migrated",
+      "state": "one_actual_root_audited_invalid_for_current_reuse_remaining_roots_not_migrated",
+      "evidence": "v5_search_cache_audit_20260923.json",
+      "audited_root_requires_recompute": true,
       "production_cutover": false
     },
     {

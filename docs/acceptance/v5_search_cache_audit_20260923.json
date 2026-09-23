@@ -1,0 +1,67 @@
+{
+  "schema": "look_formal_v5_search_cache_audit_v1",
+  "state": "invalid_for_current_reuse_recompute_required",
+  "audited_run_id": "2026_09_18_11_18_28_650020",
+  "framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "mhd_models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "host_identity": "583b7902416a7e8bcec39e55655ad09932e77b1fc25119cff6872f59a524c66b",
+  "formal_host_checkpoint_sha256": "e4370cd234d100f68997eeabe006053346e3c445bdec1dadd1ea04a11e7b2478",
+  "isolated_receipt_sha256": "d3502d1b53cbd8c3ceec1a93aa548c8e54af7f4eec495506ced19dac2bebfbb5",
+  "historical_cache_manifest_sha256": "c43502a51b49cd71c0a458436b2d928dd792bda7c7003db688069ba81c252552",
+  "historical_integrity": {
+    "decisions": 97,
+    "candidates": 173,
+    "prediction_references": 274,
+    "complete_family_moments": 61,
+    "all_referenced_prediction_sha256_verified": true,
+    "all_candidate_artifact_sha256_verified": true,
+    "all_prefix_and_child_identities_verified": true,
+    "all_moment_payload_fingerprints_verified": true,
+    "all_moments_complete": true,
+    "historical_integrity_is_execution_authority": false
+  },
+  "formal_v5_identity_gate": [
+    {
+      "arm": "pca_free_mean",
+      "pattern": "oct_missing",
+      "historical_identity_sha256": "1d8069e7869d281538984f129109f53717cc0b92b975db065bb917be1cb50102",
+      "formal_v5_identity_sha256": "b3ed663b24f3307e77785086b0e0007ed596077117c59574279622721b680cc0",
+      "accepted": false
+    },
+    {
+      "arm": "pca_free_mean",
+      "pattern": "cfp_missing",
+      "historical_identity_sha256": "2c6b19a81ad12a0ef2c1d1f84fe1f7841b68dd8cf836c659e85e7cacd62017c8",
+      "formal_v5_identity_sha256": "82a741ab22fedd957008a14f4869c9fb475bbae5ffc620c4f20a285cf8952972",
+      "accepted": false
+    },
+    {
+      "arm": "residual_rrr",
+      "pattern": "oct_missing",
+      "historical_identity_sha256": "3b5429f399e95df04f5594b74125bb99d4dd76c105432c760a42a878cccd1266",
+      "formal_v5_identity_sha256": "7e0423cd910099791a351215300f64ab10c31cc0d06fd718a72e6f452e2d429b",
+      "accepted": false
+    },
+    {
+      "arm": "residual_rrr",
+      "pattern": "cfp_missing",
+      "historical_identity_sha256": "e742b36cfec0618fc6a1b67fee57ac3054c33b4c214cdcfb7e93ad557f3b5a60",
+      "formal_v5_identity_sha256": "0e7eb46b5d80b584b47ebf6f2ee3c44d76bdfd4ecb3f9fe6d1680e63eaa94fa0",
+      "accepted": false
+    }
+  ],
+  "identity_break": {
+    "changed_pca_sites": 9,
+    "cause": "The explicit V5 PCA migration changes each PCA source identity. Basis fingerprints include that provenance, so tree contracts, prefix identities, candidate artifacts and family-moment identities no longer match.",
+    "normal_reader_fallback": false,
+    "selected_inference_artifacts_remain_separately_accepted": true
+  },
+  "required_action": "Recompute the non-selected search and resume caches from the formal V5 host and PCA inputs under the LOOK Ibex rotation allocation and existing owner.",
+  "coordination": {
+    "original_modified": false,
+    "production_owner_changed": false,
+    "generation5_writer_touched": false,
+    "gpu_used": false,
+    "test_access": false
+  }
+}
