@@ -4,7 +4,7 @@ This migration entrypoint is deliberately separate from current V5 readers. It
 accepts only the pinned historical project-case contract and never opens test.
 """
 from __future__ import annotations
-import argparse,json,pathlib,time
+import argparse,json,os,pathlib,time
 import torch
 from torch.utils.data import DataLoader
 from mhd_framework.models import create_model
@@ -20,6 +20,16 @@ from look.studies.v5_project_feature_replay import datasets,_selected_parent
 
 FRAMEWORK='1287681c08846e11364c81653048435482e772a7'
 MODELS='cc16e74a8cfc705d69b3d31efe2daeec9404471f'
+
+TASK = "look_cataract_middle_formal_v5_full_replay_v1"
+def validate_claim():
+ path=pathlib.Path(os.environ["LOOK_ROTATION_CLAIM"])
+ claim=read(path)
+ if (claim.get("schema")!="look_rotation_claim_v1" or claim.get("task")!=TASK
+         or claim.get("state")!="submitted" or str(claim.get("job_id"))!=os.environ.get("SLURM_JOB_ID")
+         or claim.get("owner")!=os.environ.get("USER")):
+  raise ValueError("Active exclusive LOOK rotation claim required")
+ return claim
 
 def read(p): return json.loads(pathlib.Path(p).read_text())
 def _parent(root,manifest):
@@ -58,6 +68,7 @@ def execute(*,source_run,checkpoint,output,inputs_factory,device,gpu_budget_byte
 
 def main(argv=None):
  p=argparse.ArgumentParser();p.add_argument('--source-run',required=True);p.add_argument('--checkpoint',required=True);p.add_argument('--output',required=True);p.add_argument('--device',default='cuda:0');p.add_argument('--gpu-budget-bytes',required=True,type=int);a=p.parse_args(argv)
+ validate_claim()
  from expanded.native import Inputs
  print(json.dumps(execute(source_run=a.source_run,checkpoint=a.checkpoint,output=a.output,inputs_factory=Inputs,device=torch.device(a.device),gpu_budget_bytes=a.gpu_budget_bytes)),flush=True)
 if __name__=='__main__':main()

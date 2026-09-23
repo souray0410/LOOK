@@ -8,3 +8,7 @@ def test_rejects_nonpositive_measured_budget(tmp_path):
 def test_contract_pins_formal_sources():
  assert subject.FRAMEWORK=='1287681c08846e11364c81653048435482e772a7'
  assert subject.MODELS=='cc16e74a8cfc705d69b3d31efe2daeec9404471f'
+
+def test_claim_fails_closed_without_scheduler_environment(monkeypatch):
+ monkeypatch.delenv('LOOK_ROTATION_CLAIM',raising=False)
+ with pytest.raises(KeyError): subject.validate_claim()
