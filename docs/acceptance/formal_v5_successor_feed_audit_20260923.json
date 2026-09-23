@@ -1,0 +1,42 @@
+{
+  "schema": "look_formal_v5_successor_feed_audit_v1",
+  "state": "activation_blocked_all_registered_tasks_quarantined",
+  "framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "mhd_models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "source_dispatcher": "owner_v10_core_successor_candidate",
+  "registered_task_count": 176,
+  "admitted_task_count": 0,
+  "quarantined_task_count": 176,
+  "feed_inventory": {
+    "project": 15,
+    "native": 130,
+    "supplement": 0,
+    "spatial": 0,
+    "linear": 0,
+    "terminal": 7,
+    "search_primary": 15,
+    "search_compiled": 2,
+    "family_search": 4,
+    "affine": 3
+  },
+  "reasons": [
+    "All 130 native specifications explicitly bind pre-release framework commits: 32 c0a27abb, 90 3559caa8 and 8 56065555.",
+    "The remaining 46 registered tasks do not carry both the formal framework and companion identities in their immutable specification, so their transitive host/source/weight identity cannot be inferred or relabelled.",
+    "The dispatcher itself retains legacy_project_pythonpath and the owner fallback imports pre-release sources.",
+    "The formal-V5 feature replay package is not in this active feed set and remains gated by whole-weekly acceptance; adding it here would bypass its registered prerequisite."
+  ],
+  "validation": {
+    "formal_v5_model_replay_run": false,
+    "reason": "No registered task passed identity admission; executing one would validate a quarantined legacy path rather than the successor.",
+    "dispatcher_check_run": false,
+    "reason_dispatcher": "A zero-task or silently filtered dispatcher would misrepresent migration completion."
+  },
+  "safety": {
+    "online_stop_written": false,
+    "owner_changed": false,
+    "claim_acquired": false,
+    "gpu_requested": false,
+    "test_access": false
+  },
+  "required_action": "Create explicit one-time V5 conversions for the registered host assets and specs, including strict weight/state mapping and locked-path replay, then generate new feeds whose every task records both formal identities. Preserve this quarantine inventory until each source task has a mapped accepted replacement."
+}
