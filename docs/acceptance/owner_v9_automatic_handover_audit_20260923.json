@@ -1,0 +1,49 @@
+{
+  "schema": "look_owner_successor_handover_audit_v1",
+  "observed_at": "2026-09-23T20:29:15+03:00",
+  "state": "not_automatically_connected",
+  "current_control_plane": {
+    "owner": "owner_v7",
+    "dispatcher_binding_sha256": "d9fcb552b633f53c0319c16be311c5c163545999f5f1df13236c6da06eea567f",
+    "binding_is_immutable_and_owner_v7_specific": true,
+    "persistent_dispatcher_selects_successor": false,
+    "persistent_recovery_selects_successor": false
+  },
+  "successor_package": {
+    "name": "owner_v9_weekly_release",
+    "package_manifest_sha256": "671bf57479e81c1a6c271c4d5b39248caa6040f213919dcaa82adbf21d7947a9",
+    "state": "prepared_not_activated",
+    "dispatcher_binding_exists": false,
+    "standby_process_exists": false,
+    "configured_priority_release_is_core_receipt": false,
+    "configured_dispatcher_sha256": "29f4efd8423329e72435cddac052bba6dac47d7868836253622dec5359b83b34",
+    "core_priority_release_sha256": "869780cab780e612ae1ac1782e6be0bf8c1ca6ec09037c9ba9ce06997f9ff6a2",
+    "core_priority_release_verification_sha256": "f682ceb35e2e7229cdc6d56f1c672c48749f69addb69227703f301b200ff8b0e"
+  },
+  "live_scheduler": {
+    "look_running": 6,
+    "look_pending": 1,
+    "pending_job": "52363455",
+    "pending_job_binding": "owner_v7",
+    "natural_release_observed": false
+  },
+  "safety": {
+    "claim_acquired": false,
+    "dispatch_started": false,
+    "gpu_requested": false,
+    "healthy_owner_modified": false,
+    "test_access": false
+  },
+  "exact_gap": [
+    "The live owner_v7 dispatcher and recovery plan are pinned to owner_v7 and do not read the core priority-release receipt.",
+    "The prepared owner_v9 package has no dispatcher binding or standby process, and its immutable dispatcher configuration references the older manual receipt rather than the accepted core receipt.",
+    "The already queued allocation request is bound to owner_v7; changing its command or pinned files would mutate the active owner instead of performing a release-time handover."
+  ],
+  "deployable_handover": [
+    "After all owner_v7 running and pending allocations have naturally cleared, revalidate the exact Slurm state and shared LOOK claim ledger.",
+    "Build a new immutable successor package from the accepted core receipt and its independent verification; do not edit owner_v9 or owner_v7 in place.",
+    "Generate a pinned dispatcher binding for that package and run its check mode before activation.",
+    "Replace the stopped owner_v7 dispatcher at the original single control-plane entrypoint, then acquire one legal exclusive LOOK claim and record job, step, run and spec identities.",
+    "Accept activation only after the allocation-owner and GPU-owner receipts prove the new package is live; otherwise leave the old assets intact and fail closed."
+  ]
+}
