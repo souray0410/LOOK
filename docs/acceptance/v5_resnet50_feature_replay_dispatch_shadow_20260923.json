@@ -2,25 +2,28 @@
   "schema": "look_feature_replay_dispatch_shadow_summary_v1",
   "state": "shadow_registered_waiting_owner_rotation_and_weekly",
   "dispatch_authorized": false,
-  "candidate_commit": "b03de90",
-  "private_receipt_sha256": "17665643ede134c00c26d7708e8259770bf8ab4d1fa8391cb20ae006e4e10090",
+  "candidate_commit": "b6f7aec",
+  "private_receipt_sha256": "8065a7a5e700d8077ab894bdfb2eb51a86572e0f1d6a45b037d1690a81066daf",
   "implementation": {
     "feed_schema": "look_feature_replay_feed_v1",
     "execution_kind": "look_feature_replay",
     "phase_order": ["reference", "check"],
     "whole_weekly_prerequisite_checked_before_launch": true,
     "exclusive_claim_passed_to_worker": true,
+    "child_revalidates_claim_run_spec_owner_job_step_generation_and_state": true,
+    "child_requires_active_slurm_job_and_step": true,
+    "claim_identity_bound_into_acceptance": true,
     "priority_preemption_excluded": true,
     "completion_verifier_requires_bitwise_site_equality": true,
     "test_access": false
   },
   "private_artifacts": {
-    "run_phase_sha256": "b417fb044fe58c82406dae62d676fe249c8f679f554f4aa688bd9fd5ff9aa528",
-    "dispatch_spec_sha256": "cd7d5d6e8e122a350be273a30db8ad87d3d8830b79ff944792a5b14ce34aba8d",
-    "feed_sha256": "f93e26ff780894183db63db1885214272d1aac5c62cd84272f9bd1c50d70b15a",
+    "run_phase_sha256": "7abd59eb0e734007d348eeea8c0c2f2233dd20f2fc1f5053338a6000a6874d05",
+    "dispatch_spec_sha256": "04051af77488de7398fb4be8d8fce553edcf6ed4c26365b46335da4af46d4f68",
+    "feed_sha256": "ae54812b5a1bf645e6b5c77fbb7497aeab20e8e7768b9ccf91f11f9cfa7593a7",
     "prior_delivery_policy_sha256": "0dafc3d1551ce941025f235a916f89087251692148117bba4c67a6e85422baca",
-    "versioned_delivery_policy_sha256": "84bd64cf9548f2c5aa372a1c001a9413e291150d662904cc65af41f280d168b8",
-    "shadow_config_sha256": "1708e4380723dafbec61bed0d0e4364fb9879fedba68a436b78b63c3fbc1d98c"
+    "versioned_delivery_policy_sha256": "90c147c9fd3c9c997f9c4e764654e05c20a8f7c2d4f6f571c5458e470d9b9d27",
+    "shadow_config_sha256": "95cc1ae49bc1eb63af677890a05981b42eb162dc6391198b5f028c63a653514e"
   },
   "shadow_result": {
     "ready": 0,
