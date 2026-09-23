@@ -15,6 +15,8 @@ def main():
  p.add_argument('--project',choices=['LOOK','Radon_Bridge'],required=True)
  p.add_argument('--data-root',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
  p.add_argument('--manifest-sha',required=True);p.add_argument('--prepare-only',action='store_true')
+ p.add_argument('--gpu-budget-bytes',type=int,
+                help='Accepted complete-lifecycle budget for this exact workload; no fixed reserve is implied')
  args=p.parse_args();root=args.data_root;out=args.output;out.mkdir(parents=True,exist_ok=True)
  assert file_sha(root/'manifest.json')==args.manifest_sha,'Data manifest changed'
  assert json.loads((root/'accepted.json').read_text())['manifest_sha256']==args.manifest_sha
@@ -22,7 +24,7 @@ def main():
  import torch,numpy as np
  from torch.utils.data import DataLoader
  import mhd_framework
- assert mhd_framework.__api_version__=='V4'
+ assert mhd_framework.__api_version__=='V5'
  if args.project=='LOOK':
   from look.data.dataset import UKBBilateralVisitDataset
   train=UKBBilateralVisitDataset(root/'look/reference_labels_train_development.csv',root/'look/raw_not_included','train',augment=False,preprocess_cache_root=root/'look/cache')
@@ -36,10 +38,15 @@ def main():
  if args.prepare_only:
   record['state']='cpu_data_ready';write(out/'prepare.json',record);print(json.dumps(record),flush=True);return
  assert torch.cuda.is_available() and torch.cuda.device_count()==1,'One allocated CUDA device is required'
- device=torch.device('cuda:0');limit=10 if args.project=='Radon_Bridge' else 14
- torch.cuda.set_per_process_memory_fraction((limit-1)*1024**3/torch.cuda.get_device_properties(0).total_memory)
+ device=torch.device('cuda:0');total=torch.cuda.get_device_properties(0).total_memory
+ assert args.gpu_budget_bytes is not None and 0 < args.gpu_budget_bytes <= total, \
+  'Pass the accepted complete-lifecycle --gpu-budget-bytes for this workload/device'
+ torch.cuda.set_per_process_memory_fraction(args.gpu_budget_bytes/total)
  torch.cuda.reset_peak_memory_stats();torch.manual_seed(9181);started=time.monotonic()
- record.update(state='running',gpu=torch.cuda.get_device_name(0),cuda=torch.version.cuda,project_memory_limit_gib=limit,slurm_job_id=os.environ.get('SLURM_JOB_ID'))
+ record.update(state='running',gpu=torch.cuda.get_device_name(0),cuda=torch.version.cuda,
+               gpu_budget_bytes=args.gpu_budget_bytes,gpu_total_bytes=total,
+               gpu_budget_source='explicit_complete_lifecycle_profile',
+               fixed_gpu_reserve_bytes=0,slurm_job_id=os.environ.get('SLURM_JOB_ID'))
  def progress(stage,**kw):
   record.update(stage=stage,elapsed_seconds=time.monotonic()-started,**kw);write(out/'status.json',record);print(json.dumps({'stage':stage,**kw}),flush=True)
  progress('load_reference_model')
@@ -68,10 +75,15 @@ def main():
  else:
   from look.models.graph import build_resnet50_mhd_graph,reset_and_forward,optimizer_parameter_groups
   from mhd_framework.utils import MHD_Trainer,MHD_Monitor,MHD_DistributedContext
-  checkpoint=torch.load(root/'look/parent/best.pt',map_location='cpu',weights_only=False)
-  cfg=checkpoint['config']
+  from look.runtime.host_checkpoint import read_selected
+  selected=json.loads((root/'look/parent/selected.json').read_text())
+  checkpoint_path=root/'look/parent/best.pt'
+  assert file_sha(checkpoint_path)==selected['sha256'],'Selected V5 checkpoint changed'
+  cfg=selected['config']
   graph=build_resnet50_mhd_graph('layer3',batch_size=16,device=device,pretrained=False,classifier_dropout=cfg.get('classifier_dropout',0.),label_smoothing=cfg.get('label_smoothing',0.))
-  graph.load_state_dict(checkpoint['graph_state_dict'],strict=True);del checkpoint
+  ids=[(n.id,n.name) for n in sorted(graph.nodes,key=lambda n:n.id)]
+  checkpoint=read_selected(checkpoint_path,identity=selected['identity'],node_ids=ids)
+  graph.load_state_dict(checkpoint['model'],strict=True);del checkpoint
   optimizer=torch.optim.AdamW(optimizer_parameter_groups(graph,3e-4,.003),weight_decay=.0001)
   trainer=MHD_Trainer(graph,optimizer,MHD_Monitor(['loss']),graph.forward_levels,graph.backward_levels,criteria=lambda g:g.get_node_by_name('loss').feature_message.current_state,save_dir=str(out/'disposable_trainer'),input_nodes=['oct_input','cfp_input','label_gt'],output_nodes=['fusion_logits','loss'],precision='fp32',distributed_context=MHD_DistributedContext(0,0,1,device,'gloo'))
   def predict(batch):return {'fusion':reset_and_forward(graph,batch['oct'].to(device),batch['cfp'].to(device))}

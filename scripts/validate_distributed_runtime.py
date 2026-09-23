@@ -1,4 +1,4 @@
-"""Two-rank real-data MHD V4 DDP acceptance, not a scientific experiment."""
+"""Two-rank real-data MHD V5 DDP acceptance, not a scientific experiment."""
 import argparse
 import gc
 import hashlib
@@ -29,6 +29,8 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--manifest-sha', required=True)
     parser.add_argument('--artifact-root', type=Path, required=True, help='Project-owned verified weights and bases')
+    parser.add_argument('--gpu-budget-bytes', type=int, required=True,
+        help='Accepted complete-lifecycle per-rank budget for this exact workload; no fixed reserve is implied')
     args = parser.parse_args()
     import torch
     import torch.distributed as dist
@@ -38,7 +40,7 @@ def main():
     from mhd_framework.utils import (initialize_mhd_distributed, destroy_mhd_distributed,
         MHD_Trainer, MHD_Monitor, MHD_ParallelConfig)
 
-    assert mhd_framework.__api_version__ == 'V4'
+    assert mhd_framework.__api_version__ == 'V5'
     assert torch.cuda.is_available() and torch.cuda.device_count() == 2
     assert int(os.environ.get('WORLD_SIZE', '1')) == 2
     context = initialize_mhd_distributed('nccl')
@@ -58,14 +60,17 @@ def main():
     assert file_sha(root / 'manifest.json') == args.manifest_sha
     assert json.loads((root / 'accepted.json').read_text())['manifest_sha256'] == args.manifest_sha
     os.environ['TORCH_HOME'] = str(artifacts / 'weights')
-    limit = 10 if args.project == 'Radon_Bridge' else 14
-    torch.cuda.set_per_process_memory_fraction((limit - 1) * 1024**3 / torch.cuda.get_device_properties(device).total_memory, device)
+    total = torch.cuda.get_device_properties(device).total_memory
+    assert 0 < args.gpu_budget_bytes <= total
+    torch.cuda.set_per_process_memory_fraction(args.gpu_budget_bytes / total, device)
     torch.manual_seed(9181)
     started = time.monotonic()
     record = dict(project=args.project, framework=mhd_framework.__version__, rank=rank,
         world_size=2, global_batch=16, local_batch=8, backend=dist.get_backend(),
         test_used=False, scientific_training_result=False, state='running',
-        project_memory_limit_gib=limit, manifest_sha256=args.manifest_sha,
+        gpu_budget_bytes=args.gpu_budget_bytes, gpu_total_bytes=total,
+        gpu_budget_source='explicit_complete_lifecycle_profile', fixed_gpu_reserve_bytes=0,
+        manifest_sha256=args.manifest_sha,
         artifact_manifest_sha256=file_sha(artifacts/'artifacts_manifest.json'), pid=os.getpid(), device=str(device), gpu=torch.cuda.get_device_name(device),
         batchnorm='ordinary per-rank BN; rank0 buffers define the checkpoint',
         scope='four disposable DDP updates and finite sharded inference')
@@ -147,11 +152,16 @@ def main():
             clip_task_gradients(model, 5.)
     else:
         from look.models.graph import build_resnet50_mhd_graph, optimizer_parameter_groups, reset_and_forward
-        checkpoint = torch.load(artifacts/'look/parent/best.pt',map_location='cpu',weights_only=False)
-        config = checkpoint['config']
+        from look.runtime.host_checkpoint import read_selected
+        selected = json.loads((artifacts/'look/parent/selected.json').read_text())
+        checkpoint_path = artifacts/'look/parent/best.pt'
+        assert file_sha(checkpoint_path) == selected['sha256']
+        config = selected['config']
         graph = build_resnet50_mhd_graph('layer3', batch_size=8, device=device, pretrained=False,
             classifier_dropout=config.get('classifier_dropout',0.), label_smoothing=config.get('label_smoothing',0.))
-        graph.load_state_dict(checkpoint['graph_state_dict'], strict=True)
+        ids = [(node.id,node.name) for node in sorted(graph.nodes,key=lambda node:node.id)]
+        checkpoint = read_selected(checkpoint_path,identity=selected['identity'],node_ids=ids)
+        graph.load_state_dict(checkpoint['model'], strict=True)
         del checkpoint
         optimizer = torch.optim.AdamW(optimizer_parameter_groups(graph,3e-4,.003),weight_decay=.0001)
         input_names, output_names = ('oct_input','cfp_input','label_gt'), ('fusion_logits',)
