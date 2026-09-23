@@ -1,0 +1,78 @@
+{
+  "schema": "look_weekly_required_search_release_shadow_v1",
+  "state": "successor_prepared_waiting_natural_owner_release",
+  "test_access": false,
+  "source_commit": "a786adc6e37d9a31bb438e98a60c9e1459802476",
+  "framework_contract": {
+    "api": "V5",
+    "formal_release_commit": "1287681c08846e11364c81653048435482e772a7",
+    "companion_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f"
+  },
+  "weekly_policy": {
+    "package_id": "2026_09_20_LOOK_reference_delivery",
+    "sha256": "db1a5e718effadf52655c9cc6811e4afbfe3f78cecdc4a838c29142d92d2f5a2",
+    "required": 21,
+    "accepted": 6,
+    "paused": 1,
+    "not_started": 14,
+    "release_receipt_exists": false,
+    "historical_policy_modified": false,
+    "unresolved": [
+      "independent_affine_best_forward_full_pipeline_not_yet_deployed"
+    ],
+    "failed": 0,
+    "pending": 15
+  },
+  "priority_prerequisite": {
+    "required_arms": [
+      "residual_rrr",
+      "pca_free_mean"
+    ],
+    "strict_verifier": "look.studies.family_search_case.verify_case",
+    "accepted": 2,
+    "release_guard": "Receipt, spec, accepted receipt, and complete scientific evidence are verified before the deferral can be lifted; per-process caching retains quick receipt/spec/accepted identity checks."
+  },
+  "successor": {
+    "name": "owner_v9_weekly_release",
+    "predecessor": "owner_v7",
+    "released_search_modes": [
+      "best_forward",
+      "greedy"
+    ],
+    "historical_owner_modified": false,
+    "dispatch_authorized": false,
+    "production_cutover": false,
+    "source_package_manifest_sha256": "671bf57479e81c1a6c271c4d5b39248caa6040f213919dcaa82adbf21d7947a9",
+    "priority_release_receipt_sha256": "c1834072692a5d6adaf891a9171fde11936ba9ebe1f14f4d36a26662f31530fa"
+  },
+  "shadow": {
+    "predecessor_weekly_ready": 0,
+    "successor_weekly_ready": 15,
+    "successor_seed": 3416,
+    "successor_modes": {
+      "best_forward": 3,
+      "greedy": 12
+    },
+    "strict_shadow_receipt_sha256": "d9f5624008342f87eef422997c39b17faddfe10504a80247082896c469762b0b",
+    "final_seed_bound_receipt_sha256": "72cb3f334afd773b3979ec5db6cdad9d63b6e0ca5f4548aa10527877636c0c1f",
+    "observed_rotation": {
+      "running_look_allocations": 7,
+      "pending_look_allocations": 1
+    }
+  },
+  "safety": {
+    "gpu_requested": false,
+    "claim_acquired": false,
+    "owner_changed": false,
+    "healthy_worker_stopped": false,
+    "generation5_writer_touched": false,
+    "sealed_test_access": false
+  },
+  "remaining_gates": [
+    "Wait for a healthy owner to release naturally.",
+    "Revalidate the exact successor package, current LOOK rotation owner and legal claim before activation.",
+    "Execute and strictly accept all 15 first-seed weekly search cases.",
+    "Build matched results, diagnostics, statistics, figures and report, then issue a new versioned release policy/receipt; keep the historical policy unchanged.",
+    "Only after that release repeat seeds and the queued feature replay."
+  ]
+}
