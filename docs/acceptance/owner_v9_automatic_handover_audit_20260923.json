@@ -28,7 +28,9 @@
     "owner_sha256": "5cc6a086925b226ab6cbbc00fd1fc39fc4200278c212840e9ca746ab29e34dd7",
     "check_only_log_sha256": "c12c843b78cdb0249e9f20ef0a091a1964eed2e68db803d99e69e0b6269d877a",
     "check_only_exit_code": 0,
-    "state": "checked_not_activated"
+    "state": "dispatcher_structure_checked_but_not_formal_v5_eligible",
+    "formal_v5_identity_gate": false,
+    "formal_v5_blocker": "The inherited dispatcher still registers framework commits 3559caa8, 56065555 and c0a27abb and retains legacy_project_pythonpath plus an owner fallback path containing framework_c0a27ab. Check-only therefore proves dispatcher structure, not a direct formal-V5 execution contract."
   },
   "live_scheduler": {
     "look_running": 6,
@@ -60,7 +62,7 @@
     "cancels_existing_allocations": false,
     "signals_existing_gpu_steps": false,
     "native_terminal_receipt": false,
-    "action_taken": "versioned drain receipt implementation prepared and tested; stop marker not written",
+    "action_taken": "versioned drain receipt implementation prepared and tested; stop marker not written because the successor failed the formal-V5 identity gate",
     "prepared_module": "src/look/runtime/successor_drain.py"
   },
   "deployable_handover": [
