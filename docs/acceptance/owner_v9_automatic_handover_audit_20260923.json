@@ -54,6 +54,15 @@
     "reason": "A Slurm afterany dependency orders only the seven snapshotted allocation jobs. The long-lived owner_v7 CPU dispatcher is outside those dependencies and can submit replacement allocations after the snapshot, so the dependency cannot prove natural control-plane release or exclusive successor ownership.",
     "required_additional_gate": "The original owner_v7 dispatcher must first have a durable terminal receipt and no later owner_v7 submissions; only then may a zero-GPU one-shot job revalidate scheduler state, take the original control-plane lock and start the checked successor."
   },
+  "drain_contract_audit": {
+    "native_stop_marker": "dispatcher output/stop.json",
+    "stops_new_dispatch_cycles": true,
+    "cancels_existing_allocations": false,
+    "signals_existing_gpu_steps": false,
+    "native_terminal_receipt": false,
+    "action_taken": "versioned drain receipt implementation prepared and tested; stop marker not written",
+    "prepared_module": "src/look/runtime/successor_drain.py"
+  },
   "deployable_handover": [
     "After all owner_v7 running and pending allocations have naturally cleared, revalidate the exact Slurm state and shared LOOK claim ledger.",
     "Build a new immutable successor package from the accepted core receipt and its independent verification; do not edit owner_v9 or owner_v7 in place.",
