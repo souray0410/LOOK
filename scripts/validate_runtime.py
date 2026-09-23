@@ -12,7 +12,8 @@ def write(path,value):
 
 def main():
  p=argparse.ArgumentParser(description=__doc__)
- p.add_argument('--project',choices=['LOOK','Radon_Bridge'],required=True)
+ p.add_argument('--project',choices=['LOOK'],required=True,
+                help='This repository validates LOOK only; Radon_Bridge owns its independent V5 artifact contract')
  p.add_argument('--data-root',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
  p.add_argument('--manifest-sha',required=True);p.add_argument('--prepare-only',action='store_true')
  p.add_argument('--gpu-budget-bytes',type=int,
@@ -25,13 +26,9 @@ def main():
  from torch.utils.data import DataLoader
  import mhd_framework
  assert mhd_framework.__api_version__=='V5'
- if args.project=='LOOK':
-  from look.data.dataset import UKBBilateralVisitDataset
-  train=UKBBilateralVisitDataset(root/'look/reference_labels_train_development.csv',root/'look/raw_not_included','train',augment=False,preprocess_cache_root=root/'look/cache')
-  dev=UKBBilateralVisitDataset(root/'look/reference_labels_train_development.csv',root/'look/raw_not_included','validation',augment=False,preprocess_cache_root=root/'look/cache')
- else:
-  from radon_bridge.data.dataset import PairedDataset
-  train=PairedDataset(root/'radon/cache','train',cfp_size=224);dev=PairedDataset(root/'radon/cache','validation',cfp_size=224)
+ from look.data.dataset import UKBBilateralVisitDataset
+ train=UKBBilateralVisitDataset(root/'look/reference_labels_train_development.csv',root/'look/raw_not_included','train',augment=False,preprocess_cache_root=root/'look/cache')
+ dev=UKBBilateralVisitDataset(root/'look/reference_labels_train_development.csv',root/'look/raw_not_included','validation',augment=False,preprocess_cache_root=root/'look/cache')
  assert (len(train),len(dev))==(1264,296)
  first=next(iter(DataLoader(train,batch_size=16,shuffle=False,num_workers=0)))
  record=dict(project=args.project,scope='disposable infrastructure acceptance only',test_used=False,scientific_training_result=False,participants={'train':len(train),'development':len(dev)},batch=16,manifest_sha256=args.manifest_sha,framework=mhd_framework.__version__,torch=torch.__version__,source_data_readonly=True)
@@ -50,46 +47,28 @@ def main():
  def progress(stage,**kw):
   record.update(stage=stage,elapsed_seconds=time.monotonic()-started,**kw);write(out/'status.json',record);print(json.dumps({'stage':stage,**kw}),flush=True)
  progress('load_reference_model')
- if args.project=='Radon_Bridge':
-  from radon_bridge.models.model import PilotGraph
-  from radon_bridge.training.optimization import configure_optimizer,clip_task_gradients
-  dep=json.loads((root/'radon/dependencies_relative.json').read_text())
-  def load_parents(model):
-   for branch,ref in dep['parents']['3416'].items():
-    path=root/ref['path'];assert file_sha(path)==ref['sha256'];model.load_native_state(torch.load(path,map_location='cpu',weights_only=False)['model'],branch=branch)
-  def inputs(batch):return [v.to(device) for v in batch[:3]]
-  values=inputs(first);plain=PilotGraph(seed=3416,device=device);load_parents(plain);plain.graph.eval()
-  with torch.no_grad():expected={k:v.detach().cpu().clone() for k,v in plain.forward(*values)[0].items()}
-  del plain;gc.collect();torch.cuda.empty_cache()
-  refs={k:{'path':str(root/v['path']),'sha256':v['sha256']} for k,v in dep['bases']['3416'].items()}
-  config={'nodes':['cfp_stage3','oct_stage3'],'M':32,'S':64,'rho':.125,'mode':'radon','kernel_size':3,'compression':'fixed_svd_channel','basis_files':refs}
-  model=PilotGraph(seed=3416,device=device,bridge_configs=[config]);load_parents(model);graph=model.graph;graph.eval()
-  with torch.no_grad():actual=model.forward(*values)[0]
-  for k in expected:torch.testing.assert_close(actual[k].cpu(),expected[k],rtol=1e-6,atol=1e-6)
-  record['zero_initialization_matches_parent']=True
-  policy={'adapt_stages':[1,2,3,4],'training_regime':'full_finetune','backbone_lr':6e-5,'head_lr':1e-4,'bridge_lr':1e-4,'weight_decay':.01}
-  optimizer=configure_optimizer(model,policy)
-  def predict(batch):return model.forward(*inputs(batch))[0]
-  def step(batch):
-   optimizer.zero_grad(set_to_none=True);outputs,loss=model.forward(*inputs(batch));assert torch.isfinite(loss);model.backward();clip_task_gradients(model,5.);optimizer.step();return float(loss.detach())
- else:
-  from look.models.graph import build_resnet50_mhd_graph,reset_and_forward,optimizer_parameter_groups
-  from mhd_framework.utils import MHD_Trainer,MHD_Monitor,MHD_DistributedContext
-  from look.runtime.host_checkpoint import read_selected
-  selected=json.loads((root/'look/parent/selected.json').read_text())
-  checkpoint_path=root/'look/parent/best.pt'
-  assert file_sha(checkpoint_path)==selected['sha256'],'Selected V5 checkpoint changed'
-  cfg=selected['config']
-  graph=build_resnet50_mhd_graph('layer3',batch_size=16,device=device,pretrained=False,classifier_dropout=cfg.get('classifier_dropout',0.),label_smoothing=cfg.get('label_smoothing',0.))
-  ids=[(n.id,n.name) for n in sorted(graph.nodes,key=lambda n:n.id)]
-  checkpoint=read_selected(checkpoint_path,identity=selected['identity'],node_ids=ids)
-  graph.load_state_dict(checkpoint['model'],strict=True);del checkpoint
-  optimizer=torch.optim.AdamW(optimizer_parameter_groups(graph,3e-4,.003),weight_decay=.0001)
-  trainer=MHD_Trainer(graph,optimizer,MHD_Monitor(['loss']),graph.forward_levels,graph.backward_levels,criteria=lambda g:g.get_node_by_name('loss').feature_message.current_state,save_dir=str(out/'disposable_trainer'),input_nodes=['oct_input','cfp_input','label_gt'],output_nodes=['fusion_logits','loss'],precision='fp32',distributed_context=MHD_DistributedContext(0,0,1,device,'gloo'))
-  def predict(batch):return {'fusion':reset_and_forward(graph,batch['oct'].to(device),batch['cfp'].to(device))}
-  def step(batch):
-   metrics=trainer.train_step({'oct_input':batch['oct'].to(device),'cfp_input':batch['cfp'].to(device),'label_gt':batch['label'].to(device)})
-   assert np.isfinite(metrics['loss']);return float(metrics['loss'])
+ from look.models.graph import build_resnet50_mhd_graph,reset_and_forward,optimizer_parameter_groups
+ from mhd_framework.utils import MHD_Trainer,MHD_Monitor,MHD_DistributedContext
+ from look.runtime.host_checkpoint import read_selected
+ selected=json.loads((root/'look/parent/selected.json').read_text())
+ assert (selected.get('schema')=='look_v5_selected_reference_v1'
+         and selected.get('framework_api')=='V5'
+         and isinstance(selected.get('identity'),str)
+         and isinstance(selected.get('sha256'),str)
+         and isinstance(selected.get('config'),dict)), 'Current LOOK V5 selected reference required'
+ checkpoint_path=root/'look/parent/best.pt'
+ assert file_sha(checkpoint_path)==selected['sha256'],'Selected V5 checkpoint changed'
+ cfg=selected['config']
+ graph=build_resnet50_mhd_graph('layer3',batch_size=16,device=device,pretrained=False,classifier_dropout=cfg.get('classifier_dropout',0.),label_smoothing=cfg.get('label_smoothing',0.))
+ ids=[(n.id,n.name) for n in sorted(graph.nodes,key=lambda n:n.id)]
+ checkpoint=read_selected(checkpoint_path,identity=selected['identity'],node_ids=ids)
+ graph.load_state_dict(checkpoint['model'],strict=True);del checkpoint
+ optimizer=torch.optim.AdamW(optimizer_parameter_groups(graph,3e-4,.003),weight_decay=.0001)
+ trainer=MHD_Trainer(graph,optimizer,MHD_Monitor(['loss']),graph.forward_levels,graph.backward_levels,criteria=lambda g:g.get_node_by_name('loss').feature_message.current_state,save_dir=str(out/'disposable_trainer'),input_nodes=['oct_input','cfp_input','label_gt'],output_nodes=['fusion_logits','loss'],precision='fp32',distributed_context=MHD_DistributedContext(0,0,1,device,'gloo'))
+ def predict(batch):return {'fusion':reset_and_forward(graph,batch['oct'].to(device),batch['cfp'].to(device))}
+ def step(batch):
+  metrics=trainer.train_step({'oct_input':batch['oct'].to(device),'cfp_input':batch['cfp'].to(device),'label_gt':batch['label'].to(device)})
+  assert np.isfinite(metrics['loss']);return float(metrics['loss'])
  record['strict_reference_checkpoint_loaded']=True
  node_ids=sorted((n.id,n.name) for n in graph.nodes)
  tracked=next(p for p in graph.parameters() if p.requires_grad);before=tracked.detach().clone()
@@ -100,9 +79,6 @@ def main():
  assert not torch.equal(before,tracked.detach()),'Native parameters did not update'
  del before
  assert node_ids==sorted((n.id,n.name) for n in graph.nodes)
- if args.project=='Radon_Bridge':
-  communication=[p for n,m in model.modules_by_name().items() if n.startswith('bridge_') for p in m.parameters()]
-  assert any(p.grad is not None and torch.count_nonzero(p.grad) for p in communication),'No bridge gradient'
  record.update(optimizer_updates=4,native_parameters_updated=True,node_ids_preserved=True)
  graph.eval()
  with torch.no_grad():reference={k:v.detach().cpu().clone() for k,v in predict(first).items()}

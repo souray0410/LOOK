@@ -24,7 +24,8 @@ def tensor_digest(items):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--project', choices=['LOOK', 'Radon_Bridge'], required=True)
+    parser.add_argument('--project', choices=['LOOK'], required=True,
+        help='This repository validates LOOK only; Radon_Bridge owns its independent V5 artifact contract')
     parser.add_argument('--data-root', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--manifest-sha', required=True)
@@ -87,16 +88,11 @@ def main():
         return value
 
     progress('load_data')
-    if args.project == 'LOOK':
-        from look.data.dataset import UKBBilateralVisitDataset
-        def dataset(split):
-            return UKBBilateralVisitDataset(root/'look/reference_labels_train_development.csv',
-                root/'look/raw_not_included', split, augment=False,
-                preprocess_cache_root=root/'look/cache')
-    else:
-        from radon_bridge.data.dataset import PairedDataset
-        def dataset(split):
-            return PairedDataset(root/'radon/cache', split, cfp_size=224)
+    from look.data.dataset import UKBBilateralVisitDataset
+    def dataset(split):
+        return UKBBilateralVisitDataset(root/'look/reference_labels_train_development.csv',
+            root/'look/raw_not_included', split, augment=False,
+            preprocess_cache_root=root/'look/cache')
     train, dev = dataset('train'), dataset('validation')
     assert (len(train), len(dev)) == (1264, 296)
 
@@ -109,70 +105,33 @@ def main():
         return DataLoader(Subset(data, indices), batch_size=8, shuffle=False, num_workers=0)
     first = next(iter(loader(train)))
     progress('load_reference_model')
-    if args.project == 'Radon_Bridge':
-        from radon_bridge.models.model import PilotGraph
-        from radon_bridge.training.optimization import configure_optimizer, clip_task_gradients
-        dep = json.loads((root/'radon/dependencies_relative.json').read_text())
-        def parents(model):
-            for branch, ref in dep['parents']['3416'].items():
-                path = artifacts/ref['path']
-                assert file_sha(path) == ref['sha256']
-                model.load_native_state(torch.load(path, map_location='cpu', weights_only=False)['model'], branch=branch)
-        def inputs(batch):
-            return {name: value.to(device) for name, value in zip(('cfp', 'oct', 'target'), batch[:3])}
-        plain = PilotGraph(seed=3416, device=device)
-        parents(plain)
-        plain.graph.eval()
-        with torch.no_grad():
-            expected = {key:value.cpu().clone() for key,value in plain.forward_inputs(inputs(first))[0].items()}
-        del plain
-        gc.collect()
-        torch.cuda.empty_cache()
-        refs = {key:dict(path=str(artifacts/ref['path']), sha256=ref['sha256']) for key,ref in dep['bases']['3416'].items()}
-        model = PilotGraph(seed=3416, device=device, bridge_configs=[dict(nodes=['cfp_stage3','oct_stage3'],
-            M=32, S=64, rho=.125, mode='radon', kernel_size=3,
-            compression='fixed_svd_channel', basis_files=refs)])
-        parents(model)
-        graph = model.graph
-        graph.eval()
-        with torch.no_grad():
-            actual = model.forward_inputs(inputs(first))[0]
-        for key in expected:
-            torch.testing.assert_close(actual[key].cpu(), expected[key], rtol=1e-6, atol=1e-6)
-        del expected, actual
-        record['zero_initialization_matches_parent'] = True
-        optimizer = configure_optimizer(model, dict(adapt_stages=[1,2,3,4],training_regime='full_finetune',
-            backbone_lr=6e-5,head_lr=1e-4,bridge_lr=1e-4,weight_decay=.01))
-        input_names = tuple(model.definition.input_names)
-        output_names = tuple(model.definition.prediction_nodes.values())
-        forward_levels, backward_levels = model.forward_levels, model.backward_levels
-        def predict(batch):
-            return model.forward_inputs(inputs(batch))[0]
-        def clip():
-            clip_task_gradients(model, 5.)
-    else:
-        from look.models.graph import build_resnet50_mhd_graph, optimizer_parameter_groups, reset_and_forward
-        from look.runtime.host_checkpoint import read_selected
-        selected = json.loads((artifacts/'look/parent/selected.json').read_text())
-        checkpoint_path = artifacts/'look/parent/best.pt'
-        assert file_sha(checkpoint_path) == selected['sha256']
-        config = selected['config']
-        graph = build_resnet50_mhd_graph('layer3', batch_size=8, device=device, pretrained=False,
-            classifier_dropout=config.get('classifier_dropout',0.), label_smoothing=config.get('label_smoothing',0.))
-        ids = [(node.id,node.name) for node in sorted(graph.nodes,key=lambda node:node.id)]
-        checkpoint = read_selected(checkpoint_path,identity=selected['identity'],node_ids=ids)
-        graph.load_state_dict(checkpoint['model'], strict=True)
-        del checkpoint
-        optimizer = torch.optim.AdamW(optimizer_parameter_groups(graph,3e-4,.003),weight_decay=.0001)
-        input_names, output_names = ('oct_input','cfp_input','label_gt'), ('fusion_logits',)
-        forward_levels, backward_levels = graph.forward_levels, graph.backward_levels
-        def inputs(batch):
-            return dict(oct_input=batch['oct'].to(device),cfp_input=batch['cfp'].to(device),label_gt=batch['label'].to(device))
-        def predict(batch):
-            values=inputs(batch)
-            return {'fusion':reset_and_forward(graph,values['oct_input'],values['cfp_input'])}
-        def clip():
-            pass  # Preserve the original LOOK acceptance optimizer policy.
+    from look.models.graph import build_resnet50_mhd_graph, optimizer_parameter_groups, reset_and_forward
+    from look.runtime.host_checkpoint import read_selected
+    selected = json.loads((artifacts/'look/parent/selected.json').read_text())
+    assert (selected.get('schema') == 'look_v5_selected_reference_v1'
+        and selected.get('framework_api') == 'V5'
+        and isinstance(selected.get('identity'), str)
+        and isinstance(selected.get('sha256'), str)
+        and isinstance(selected.get('config'), dict)), 'Current LOOK V5 selected reference required'
+    checkpoint_path = artifacts/'look/parent/best.pt'
+    assert file_sha(checkpoint_path) == selected['sha256']
+    config = selected['config']
+    graph = build_resnet50_mhd_graph('layer3', batch_size=8, device=device, pretrained=False,
+        classifier_dropout=config.get('classifier_dropout',0.), label_smoothing=config.get('label_smoothing',0.))
+    ids = [(node.id,node.name) for node in sorted(graph.nodes,key=lambda node:node.id)]
+    checkpoint = read_selected(checkpoint_path,identity=selected['identity'],node_ids=ids)
+    graph.load_state_dict(checkpoint['model'], strict=True)
+    del checkpoint
+    optimizer = torch.optim.AdamW(optimizer_parameter_groups(graph,3e-4,.003),weight_decay=.0001)
+    input_names, output_names = ('oct_input','cfp_input','label_gt'), ('fusion_logits',)
+    forward_levels, backward_levels = graph.forward_levels, graph.backward_levels
+    def inputs(batch):
+        return dict(oct_input=batch['oct'].to(device),cfp_input=batch['cfp'].to(device),label_gt=batch['label'].to(device))
+    def predict(batch):
+        values=inputs(batch)
+        return {'fusion':reset_and_forward(graph,values['oct_input'],values['cfp_input'])}
+    def clip():
+        pass  # Preserve the original LOOK acceptance optimizer policy.
     trainer = MHD_Trainer(graph,optimizer,MHD_Monitor(['loss']),forward_levels,backward_levels,
         criteria=lambda g: g.get_node_by_name('loss').feature_message.current_state,
         save_dir=str(output/'trainer'),input_nodes=input_names,output_nodes=output_names,
@@ -202,9 +161,6 @@ def main():
     hook.remove()
     assert len(gradient_checks)==4 and not torch.equal(before,tracked.detach().cpu())
     assert node_ids == sorted((node.id,node.name) for node in graph.nodes)
-    if args.project=='Radon_Bridge':
-        bridge = [p for name,module in model.modules_by_name().items() if name.startswith('bridge_') for p in module.parameters()]
-        assert any(p.grad is not None and torch.count_nonzero(p.grad) for p in bridge)
     record.update(gradient_sha256_per_step=gradient_checks, native_parameters_updated=True,
         node_ids_preserved=True, strict_reference_checkpoint_loaded=True, ddp_wrapper_verified=True)
     # Ordinary DDP BN is rank-local. Select rank0 buffers explicitly before evaluation.
