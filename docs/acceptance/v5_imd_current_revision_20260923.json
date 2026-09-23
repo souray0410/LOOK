@@ -1,0 +1,47 @@
+{
+  "schema": "look_imd_current_revision_acceptance_v1",
+  "state": "normal_v5_imd_current_spec_replay_verified",
+  "states": 2,
+  "rows": [
+    {
+      "checkpoint": "best",
+      "source_state_sha256": "12f4674cfde32eb5c99f3dc6ece2468151e4cbc5e4a80d6f3aa5552ef82304b9",
+      "current_state_sha256": "3184085c1d65159c450d1f0776b300e44100b39e8dba118d6c75fe1823abf36c",
+      "current_replay_receipt_sha256": "06ad69485fb45d84fee2d39f6d380377de443c21bf2f9f4c8f4d65f791803c55",
+      "peak_reserved_bytes": 4936695808
+    },
+    {
+      "checkpoint": "last",
+      "source_state_sha256": "9b2978ba486542e2c6c73d2634dff6c828349a8fa1e2d173f28d914d54dd90f3",
+      "current_state_sha256": "a026431cebc22e7a332eba7f5da7afe28c9c946de3d2597ddc68f507311f7505",
+      "current_replay_receipt_sha256": "1ed300f53766240340fd7cce7c2055e20fdc0e226cf841feacc1fc5191dc95f2",
+      "peak_reserved_bytes": 4942987264
+    }
+  ],
+  "full_development": 296,
+  "consecutive_updates": 3,
+  "dev_states": [
+    "complete",
+    "oct_missing",
+    "cfp_missing"
+  ],
+  "loss": "complete_plus_two_missing_ce",
+  "rtol": 1e-05,
+  "atol": 1e-06,
+  "source_commit": "24cf1d63b0e30939355df8b92e8415ef3530e9a7",
+  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "companion_commit": "228b1254b1be5c1209831b93f7262962fe5222b7",
+  "original_training_framework": "V4",
+  "runtime_framework": "V5",
+  "current_spec_sha256": "cf6b5e5acdba9132232275c1ab85223b7951678ca68c93127cfc21c685436e94",
+  "revision_sha256": "2d05841a47e439f37af8b38c57609d0ed1f72c1e4b98a5679e4178d7bd5d9b5f",
+  "source_acceptance_sha256": "97e39a11df0e65e21641edae63a7681ee2df59b669d21a464c666d567b8e9f88",
+  "postconversion_acceptance_sha256": "0542fb35a9494077679cf2ef00211d29875b0a6dfce41b382bff73955192df83",
+  "manifest_sha256": "ec2a20eecb248b19e734c59559edc757d9417f471f96fbf09069627e00774c94",
+  "audit_script_sha256": "5457c3bb7281fcf129b5ee054e7cf52bb5452c57fefc8206c8749da44a16b4ac",
+  "profile_cap_bytes": 6442450944,
+  "test_access": false,
+  "dispatch_authorized": false,
+  "production_cutover": false,
+  "verified_at": 1790142928.984729
+}

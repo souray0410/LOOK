@@ -1,0 +1,44 @@
+{
+  "schema": "look_imd_actual_objective_acceptance_v1",
+  "state": "actual_imd_objective_v5_replay_verified",
+  "original_training_framework": "V4",
+  "current_runtime_framework": "V5",
+  "source_commit": "77f94be3ecc3a7632bf34aad5fc288d542036ad6",
+  "current_commit": "4a58aa5828e3266795686607584960221c7abdfe",
+  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "states": 2,
+  "rows": [
+    {
+      "checkpoint": "best",
+      "source_sha256": "edc6f5f26befdda3c742a2683b77aa9f629e7cfcdde60c198b83e7c70c534530",
+      "reference_receipt_sha256": "c97c7a81a3aa9579719c1ed3b08870224d4eebde108d9479acedc436c9150882",
+      "current_receipt_sha256": "e408808e1481eb9e84f79e6ff97527d13ccbba4667064c757d1bf92b983d9e7b",
+      "peak_reserved_bytes": 4936695808
+    },
+    {
+      "checkpoint": "last",
+      "source_sha256": "3400da3e346b9fbd347c3b52d93b6b2e9d2862d011b1e65a2be03d8b5dd89df5",
+      "reference_receipt_sha256": "aed65b196dba8f2d10da2868df529d82085747eff5b1a482de1096fd6b345c94",
+      "current_receipt_sha256": "a0cad42909e707ec4ed906207b36cf30ddc4e9403217f1a45426bf2efff36cb3",
+      "peak_reserved_bytes": 4942987264
+    }
+  ],
+  "full_development": 296,
+  "consecutive_updates": 3,
+  "dev_states": [
+    "complete",
+    "oct_missing",
+    "cfp_missing"
+  ],
+  "loss": "complete_plus_two_missing_ce",
+  "rtol": 1e-05,
+  "atol": 1e-06,
+  "source_audit_sha256": "4c484d229e750a1764f4ce9d0a31efbb7b20a9c01e7955e4853b317933a5df4c",
+  "manifest_sha256": "1699a73c5c86be97dca6652f41604a3fa4d4d45a8caa9b203ef4365b5e445857",
+  "audit_script_sha256": "fe7ab26437aeb8881189b5ffae9ac7704c0720b06a618a723fdc9f2f57d8e9d7",
+  "test_access": false,
+  "production_cutover": false,
+  "converted_checkpoints": false,
+  "current_execution_revision": false,
+  "verified_at": 1790142225.944812
+}

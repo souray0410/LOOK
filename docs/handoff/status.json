@@ -2,21 +2,21 @@
   "schema": "research_project_status_v1",
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
-  "phase": "embracenet_single_seed_scientifically_accepted_integration_release_candidate",
-  "next_acceptance": "EmbraceNet已完成首个真实缺失方法A vs同一A+LOOK单seed development独立科学验收；当前发布纠错/后验机制解释集成收口。下一最小A合同为ShaSpec，但实现来源/许可/2D分类adaptation/core机制/缺失协议/合法LOOK节点/远端离线准入六门槛未闭环前不训练；test继续封存。",
+  "phase": "historical_single_seed_science_accepted_v5_candidate_migration_partial",
+  "next_acceptance": "EmbraceNet已完成首个真实缺失方法A vs同一A+LOOK单seed development独立科学验收；当前发布纠错/后验机制解释集成收口。下一最小A合同为ShaSpec，但实现来源/许可/2D分类adaptation/core机制/缺失协议/合法LOOK节点/远端离线准入六门槛未闭环前不训练；test继续封存。 V5工程迁移下一门槛：下游拟合/搜索缓存与生产引用、Ibex A100跨平台续训、当前owner安全交接；候选宿主通过不代表全项目生产切换。",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "45955c3236dfb537754caa1b2496fa4bd0fa6656",
-  "evidence_cutoff": "2026-09-19T13:00:13.614454+00:00",
-  "verified_at": "2026-09-19T16:44:23.454878+00:00",
+  "source_commit": "24cf1d63b0e30939355df8b92e8415ef3530e9a7",
+  "evidence_cutoff": "2026-09-23T05:55:28.984729+00:00",
+  "verified_at": "2026-09-23T05:58:25.033741+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
     "implemented": "verified",
-    "deployed": "verified",
-    "running": "verified",
+    "deployed": "not_rechecked",
+    "running": "not_rechecked",
     "accepted": "partial"
   },
   "results": [
@@ -93,11 +93,13 @@
     "2026-09-19 fusion-stage结果仅限WS02青光眼小队列、R18、seed3416、同一dev选模；participant bootstrap不含训练随机性/test泛化，test继续封存。",
     "middle/deep/features同时改变宿主拓扑、参数量、训练权重和融合算子；middle仅11.89M且未修正基线远低于deep，跨宿主LOOK增益差不能解释成单一融合层因果效应。",
     "fusion-stage机制不替代老师外部方法A/B/C及A/B/C+LOOK匹配缺口；这些外部比较仍保持未完成。",
-    "V5 rollout candidate repairs are not deployed; framework/asset migration is in progress."
+    "V5 rollout candidate repairs are not deployed; framework/asset migration is in progress.",
+    "2026-09-23 V5工程证据仅覆盖三条真实宿主的候选best/last与296人development/连续更新；原V4科学结果不改写，本次未重新核查历史科研运行层。"
   ],
   "blockers": [
     "独立仿射家族完整主搜索与代表起点并行对照仍有验收缺口，整周重复种子门槛保持关闭。",
-    "真实跨租期到期恢复尚未发生；已绑定自动接续并通过锁、状态、资源和两层owner测试，但不等于实际到期恢复完成。"
+    "真实跨租期到期恢复尚未发生；已绑定自动接续并通过锁、状态、资源和两层owner测试，但不等于实际到期恢复完成。",
+    "V5正式发布、下游拟合/搜索缓存和Ibex A100跨平台续训未完成；LOOK生产dispatch仍使用原owner，候选修订dispatch_authorized=false。"
   ],
   "actions": [
     "新q32正式步骤因全量dev RSS增长失败，已确认旧step死亡；原run/spec恢复至51909172.10。allocator环境调整后通过782批完整dev，自动进入train joint_input×16拟合。不是科学完成，拟合验收仍待完成。",
@@ -139,7 +141,8 @@
     "2026-09-19 EmbraceNet single-seed真实包：WS02 GPU0完成1个seed3416 EmbraceNet A（best11/stop26）+ PCA/RRR×双缺失4个主对比、9节点PCA、fit-profile恢复/solver门槛、10k配对统计与中文累计候选；test封存。远端finite pipeline依receipt连续完成residual→report→verify。当前self_checked_pending_independent_review。",
     "2026-09-19 integration continuation：下一A有限合同锁定ShaSpec机制家族但训练前有实现/许可/2D分类身份等硬门槛；PCA/RRR不预设赢家。离线执行要求已记录为design_ready_not_deployed_for_next_A；不宣称常驻planner。",
     "Normal dispatch and priority qualification share the same weekly/dependency policy; qualification is followed by an exclusive target claim before parent pause. Late probes cannot pause a finished parent. Failed workers are quarantined per claim. Runtime suite 96 passed against the original pinned V4. Candidate only; no live owner changed.",
-    "V5候选新增四宿主八状态：原16/128批量，当前严格reader、296dev、各3连续更新独立接受；spec及下游引用尚未切换。"
+    "V5候选新增四宿主八状态：原16/128批量，当前严格reader、296dev、各3连续更新独立接受；spec及下游引用尚未切换。",
+    "2026-09-23：balanced dropout、EmbraceNet、IMD候选当前spec/receipt和严格V5 best/last在ws02单卡独立回放通过；原源码/资产保留，生产交接尚未执行。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
@@ -295,6 +298,10 @@
     {
       "label": "V5候选新增四宿主八状态：原16/128批量，当前严格reader、296dev、各3连续更新独立接受；spec及下游引用尚未切换。",
       "url": "https://github.com/souray0410/LOOK/blob/codex/v5-rollout/docs/acceptance/v5_four_hosts_20260922.json"
+    },
+    {
+      "label": "V5候选IMD三状态目标、严格断点及当前spec单卡回放；生产派发关闭",
+      "url": "https://github.com/souray0410/LOOK/blob/codex/v5-rollout/docs/acceptance/v5_imd_current_revision_20260923.json"
     }
   ]
 }

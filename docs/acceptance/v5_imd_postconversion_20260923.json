@@ -1,0 +1,46 @@
+{
+  "schema": "look_imd_postconversion_acceptance_v1",
+  "state": "strict_v5_imd_checkpoint_replay_verified",
+  "original_training_framework": "V4",
+  "runtime_framework": "V5",
+  "states": 2,
+  "rows": [
+    {
+      "checkpoint": "best",
+      "source_sha256": "edc6f5f26befdda3c742a2683b77aa9f629e7cfcdde60c198b83e7c70c534530",
+      "target_sha256": "12f4674cfde32eb5c99f3dc6ece2468151e4cbc5e4a80d6f3aa5552ef82304b9",
+      "conversion_sha256": "1a8703c5b9a39a703b4bc255c580c5b05ad825ef465bcd00ef2e6ef05e70e335",
+      "postconversion_receipt_sha256": "fad2cb27002434a255297fcc15f919c22fdc7f826986f225121165eea4b014e9",
+      "peak_reserved_bytes": 4936695808
+    },
+    {
+      "checkpoint": "last",
+      "source_sha256": "3400da3e346b9fbd347c3b52d93b6b2e9d2862d011b1e65a2be03d8b5dd89df5",
+      "target_sha256": "9b2978ba486542e2c6c73d2634dff6c828349a8fa1e2d173f28d914d54dd90f3",
+      "conversion_sha256": "100aae7fa5e2ac786bb7123cc336446121667525a7f81b499644c6309d7fe6cb",
+      "postconversion_receipt_sha256": "c6c81809cba2beb48c1b84c7079bf3cd5de191c643524763f15d427ca26e8f94",
+      "peak_reserved_bytes": 4942987264
+    }
+  ],
+  "full_development": 296,
+  "dev_states": [
+    "complete",
+    "oct_missing",
+    "cfp_missing"
+  ],
+  "consecutive_updates": 3,
+  "rtol": 1e-05,
+  "atol": 1e-06,
+  "source_commit": "77f94be3ecc3a7632bf34aad5fc288d542036ad6",
+  "current_commit": "4a58aa5828e3266795686607584960221c7abdfe",
+  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "source_acceptance_sha256": "97e39a11df0e65e21641edae63a7681ee2df59b669d21a464c666d567b8e9f88",
+  "conversion_summary_sha256": "cefe438b7944953f31770b9e3f4900a4f3b1b5d45c31462ccd0a3c20fff6d8f0",
+  "manifest_sha256": "89ce5f022ff2d5e48cf2f3fa5b399270a058a051c4eb9ff1f0b7e88240041c2e",
+  "audit_script_sha256": "b2ccfb78d8ff267adc020c821a47c31b94298f31e5a496ce3637c0d9baf15d3e",
+  "test_access": false,
+  "current_execution_revision": false,
+  "dispatch_authorized": false,
+  "production_cutover": false,
+  "verified_at": 1790142470.3858292
+}

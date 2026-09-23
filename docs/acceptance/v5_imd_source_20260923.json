@@ -1,0 +1,130 @@
+{
+  "schema": "look_imd_source_audit_v1",
+  "state": "exact_source_and_artifacts_audited",
+  "source_commit": "77f94be3ecc3a7632bf34aad5fc288d542036ad6",
+  "framework_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0",
+  "original_training_framework": "V4",
+  "run": "improved_dropout_20260920_v1",
+  "spec_sha256": "f875c65baaac3808d08d61942fa4ab42ce34b987af984b1311331bc6965a401b",
+  "receipt_sha256": "47dcc6a8276332e06003228e894aff61a17d392f6187ff06f1c1d555f409d1da",
+  "admission_sha256": "2a65842fac10e3e1a6c7ef9d9983024102aa338caf177e558ac0bd9d188c859f",
+  "freeze_sha256": "1f2fd7b0e81f6ed4ab0140da316832926eb0ad373bae1b179adfbaa9c050a268",
+  "original_training_script_sha256": "97ec26af0f6a9b0cf01ba42f6d2f86d15c3a5236b6f377023754ce17b70a406f",
+  "source_model_sha256": "85b27397890b6323755ccf880f11b0355e516128a27860654184cd45f0e602f0",
+  "source_training_sha256": "3e4d6401d1b9a1dbad7a262e1369509bb1bcc98d0a966953f310fe4b015b2a58",
+  "host_states": {
+    "best": {
+      "sha256": "edc6f5f26befdda3c742a2683b77aa9f629e7cfcdde60c198b83e7c70c534530",
+      "schema": null,
+      "epoch": 13,
+      "node_ids": [
+        [
+          0,
+          "oct_input"
+        ],
+        [
+          1,
+          "cfp_input"
+        ],
+        [
+          2,
+          "eye_counts"
+        ],
+        [
+          3,
+          "imd_state_code"
+        ],
+        [
+          4,
+          "label_gt"
+        ],
+        [
+          5,
+          "oct_features"
+        ],
+        [
+          6,
+          "oct_participant_feature"
+        ],
+        [
+          7,
+          "cfp_features"
+        ],
+        [
+          8,
+          "cfp_participant_feature"
+        ],
+        [
+          9,
+          "fusion_logits"
+        ],
+        [
+          10,
+          "loss"
+        ]
+      ],
+      "model_tensors": 254
+    },
+    "last": {
+      "sha256": "3400da3e346b9fbd347c3b52d93b6b2e9d2862d011b1e65a2be03d8b5dd89df5",
+      "schema": "optimizer_boundary_v1",
+      "epoch": null,
+      "node_ids": [
+        [
+          0,
+          "oct_input"
+        ],
+        [
+          1,
+          "cfp_input"
+        ],
+        [
+          2,
+          "eye_counts"
+        ],
+        [
+          3,
+          "imd_state_code"
+        ],
+        [
+          4,
+          "label_gt"
+        ],
+        [
+          5,
+          "oct_features"
+        ],
+        [
+          6,
+          "oct_participant_feature"
+        ],
+        [
+          7,
+          "cfp_features"
+        ],
+        [
+          8,
+          "cfp_participant_feature"
+        ],
+        [
+          9,
+          "fusion_logits"
+        ],
+        [
+          10,
+          "loss"
+        ]
+      ],
+      "model_tensors": 254
+    }
+  },
+  "participants": {
+    "development": 296,
+    "train": 1264
+  },
+  "test_access": false,
+  "production_cutover": false,
+  "numerical_v5_replay": false,
+  "audit_script_sha256": "26b05ab037f77943b5694710435771159e78fe60a719be993f5e6fac94ccf200",
+  "verified_at": 1790142000.645531
+}

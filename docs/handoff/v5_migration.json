@@ -6,10 +6,9 @@
   "evidence": "docs/handoff/v5_rollout_20260922.md",
   "actual_host_checkpoint_acceptance": "docs/acceptance/v5_actual_host_20260922.json",
   "remaining_contract_audit": [
-    "IMD host and other actual consumer assets",
-    "search and fitting-resume cache migration",
-    "production reference cutover for candidate host revisions",
-    "cross-platform continuation and production cutover"
+    "remaining actual consumer assets and downstream PCA/search/fit-resume caches",
+    "Ibex A100 cross-platform continuation and safe production owner handoff",
+    "formal V5 release and postpublication verification"
   ],
   "resource_replay": "docs/acceptance/v5_resource_replay_20260922.json",
   "pca_acceptance": "docs/acceptance/v5_pca_20260922.json",
@@ -37,6 +36,21 @@
     "hosts": [
       "balanced_dropout_20260919_v3",
       "embracenet_single_seed_20260919_v1"
+    ],
+    "candidate_references_migrated": true,
+    "production_cutover": false,
+    "dispatch_authorized": false
+  },
+  "imd_actual_objective": {
+    "state": "normal_v5_current_spec_replay_verified",
+    "source": "docs/acceptance/v5_imd_source_20260923.json",
+    "raw_replay": "docs/acceptance/v5_imd_raw_20260923.json",
+    "postconversion_replay": "docs/acceptance/v5_imd_postconversion_20260923.json",
+    "current_revision_replay": "docs/acceptance/v5_imd_current_revision_20260923.json",
+    "development_participants": 296,
+    "checkpoints": [
+      "best",
+      "last"
     ],
     "candidate_references_migrated": true,
     "production_cutover": false,
