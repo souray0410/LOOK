@@ -1,0 +1,22 @@
+{
+  "schema": "look_v5_rotation_gate_acceptance_v1",
+  "state": "failed_closed_on_external_ownership_gap",
+  "source_commit": "079f43f1e1d3ac6492658eefe4e0f9ad517b06c7",
+  "source_ci": {"run": 35912132518, "conclusion": "success"},
+  "immutable_package": "look_cataract_middle_v5_feature_chain_sharded_v10",
+  "monitor_job": "52389857",
+  "monitor_terminal": {"state": "FAILED", "exit_code": "1:0"},
+  "preserved_cache_batches": 520,
+  "hardening": {
+    "lock": "existing regular file only; O_NOFOLLOW and no O_CREAT; descriptor/path inode rechecked",
+    "gpu_accounting": "GRES cardinality, including multi-GPU jobs",
+    "ownership": "exactly one registered project journal per live GPU job",
+    "claim": "submitted state plus exact job, task, owner and cursor",
+    "pca_gate": "accepted_complete, exact total cursor and cache identity SHA"
+  },
+  "unregistered_live_gpu_jobs": ["52292334", "52288428", "52362656", "52362425"],
+  "observed_job_name": "ukb_cap128_01_48h",
+  "next_gate": "The owning control plane must bind every live job to exactly one journal included by research_gpu_roles.json; LOOK must then rerun the same finalizer without changing the preserved cache or predecessor claim.",
+  "new_gpu_submitted": false,
+  "test_access": false
+}
