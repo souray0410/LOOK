@@ -54,3 +54,30 @@ def test_deferred_search_does_not_remove_fitting_task(tmp_path,monkeypatch):
     cfg=dict(deferred_search_modes=['best_forward'],output=str(tmp_path))
     assert m.admissible_work(cfg,object())==tasks[1:]
     assert json.loads((tmp_path/'api_admission.json').read_text())['rejected'][0]['reason']=='explicit_scientific_priority_amendment'
+
+
+def test_priority_release_requires_exact_accepted_dependencies(tmp_path,monkeypatch):
+    spec=tmp_path/'spec.json';spec.write_text('{}')
+    run=tmp_path/'run';run.mkdir();accepted=run/'accepted.json';accepted.write_text('{"state":"accepted"}')
+    receipt=tmp_path/'release.json'
+    requirement=dict(execution='look_family_search',run_dir=str(run),spec=str(spec),
+        spec_sha256=file_sha256(spec),accepted_sha256=file_sha256(accepted))
+    receipt.write_text(json.dumps(dict(schema='look_priority_release_v1',state='accepted',test_access=False,
+        released_search_modes=['best_forward','greedy'],requirements=[requirement])))
+    calls=[];monkeypatch.setattr(m,'verify_delivery_dependency',lambda row:calls.append(row))
+    cfg=dict(priority_release_receipt=str(receipt),priority_released_search_modes=['best_forward','greedy'])
+    m.verify_priority_release(cfg)
+    assert calls==[requirement]
+    accepted.write_text('{"state":"changed"}')
+    with pytest.raises(ValueError,match='acceptance changed'):
+        m.verify_priority_release(cfg)
+
+
+def test_priority_release_is_fail_closed_for_partial_or_conflicting_config(tmp_path):
+    with pytest.raises(ValueError,match='configured together'):
+        m.verify_priority_release(dict(priority_released_search_modes=['best_forward']))
+    receipt=tmp_path/'release.json';receipt.write_text(json.dumps(dict(schema='look_priority_release_v1',
+        state='accepted',test_access=False,released_search_modes=['best_forward'],requirements=[{}])))
+    with pytest.raises(ValueError,match='remains deferred'):
+        m.verify_priority_release(dict(priority_release_receipt=str(receipt),
+            priority_released_search_modes=['best_forward'],deferred_search_modes=['best_forward']))

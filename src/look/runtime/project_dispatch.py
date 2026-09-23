@@ -194,8 +194,39 @@ def active_search_modes(config, claims):
     return counts
 
 
+def verify_priority_release(config):
+    """Verify immutable evidence before lifting a scientific dispatch deferral."""
+    path = config.get('priority_release_receipt')
+    released = config.get('priority_released_search_modes', [])
+    if not path and not released:
+        return
+    if not path or not released:
+        raise ValueError('Priority release receipt and released modes must be configured together')
+    receipt = read(path)
+    if (receipt.get('schema') != 'look_priority_release_v1'
+            or receipt.get('state') != 'accepted'
+            or receipt.get('test_access') is not False
+            or receipt.get('released_search_modes') != released):
+        raise ValueError('Invalid priority release receipt')
+    if set(released) & set(config.get('deferred_search_modes', [])):
+        raise ValueError('Released search mode remains deferred')
+    requirements = receipt.get('requirements', [])
+    if not requirements:
+        raise ValueError('Priority release requires accepted dependencies')
+    for row in requirements:
+        if row.get('execution') != 'look_family_search':
+            raise ValueError('Unsupported priority release dependency')
+        if file_sha256(row['spec']) != row['spec_sha256']:
+            raise ValueError('Priority release specification changed')
+        accepted = Path(row['run_dir'])/'accepted.json'
+        if file_sha256(accepted) != row['accepted_sha256']:
+            raise ValueError('Priority release acceptance changed')
+        verify_delivery_dependency(row)
+
+
 def admissible_work(config, claims, reservation=None):
     result = []; rejected = []
+    verify_priority_release(config)
     counts=active_search_modes(config,claims)
     candidates = work(config)
     if config.get('delivery_policy'):
