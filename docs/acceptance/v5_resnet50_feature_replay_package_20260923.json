@@ -1,0 +1,85 @@
+{
+  "schema": "look_ibex_feature_replay_package_summary_v1",
+  "state": "staged_waiting_weekly_registration",
+  "dispatch_authorized": false,
+  "package_id": "look_resnet50_feature_replay_v1",
+  "private_package_sha256": "b3971b4843851051657e9758e6844a533b1508364a285f74a364e75bdd059d40",
+  "identity": {
+    "host": "aec06fceafde5ac3706e37d71572f15a20a76b9158de635ffb448f2621fe5c4c",
+    "source_best_sha256": "48a211ce9eff6679d1adbcc489ce9c843b5665921363ae750f7d0e7a98060fac",
+    "target_best_sha256": "6da938921acd9ad69d51964e9774853915c0c380634a82238d5198b869b16995",
+    "pca_manifest_sha256": "fb703c5f8d65323c89a12cc6263d297059848e8f3fea212639528eb003f956b0",
+    "data_audit_sha256": "9472aaaff1d8cd32ad80c9c2342a1d2258f98b5c0631b8629c81c10809a585ec",
+    "sites": 9,
+    "train_participants": 1264,
+    "development_participants": 296
+  },
+  "source": {
+    "look_v4_commit": "b64ea90",
+    "framework_v4_commit": "c0a27abb3e0f2153bfd273b1d05d5b7dae9784f0",
+    "look_v5_runner_commit": "4b6340143f2d35b08f50872c2e9556831c9b269a",
+    "framework_v5_commit": "1287681c08846e11364c81653048435482e772a7",
+    "mhd_models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+    "runner_sha256": "6427bae9668e3b0daa0eee4891197a3122e596146fe370ff41517992e0a66f3a",
+    "v4_reference_uses_same_runner_as_additive_audit_module": true
+  },
+  "implementation": {
+    "entrypoint": "python -m look.studies.v5_feature_replay",
+    "phases": ["reference", "check"],
+    "batch_journal": "one immutable JSON record per role and batch",
+    "resume_rule": "Only an identical existing record resumes; any participant, site, shape, dtype or value digest change fails closed.",
+    "cross_platform_relocation": "Data and PCA entry roots may relocate only when their pinned content SHA remains unchanged.",
+    "reference_framework_api": "V4",
+    "check_framework_api": "V5",
+    "test_access": false
+  },
+  "staging": {
+    "restricted_data_copied_between_authorized_hosts": true,
+    "restricted_paths_committed_publicly": false,
+    "data_audit_verified": true,
+    "source_host_verified": true,
+    "target_host_verified": true,
+    "pca_manifest_and_nine_entries_verified": true,
+    "v4_reference_import_preflight": true,
+    "v5_check_import_preflight": true,
+    "gpu_used": false
+  },
+  "resources": {
+    "platform": "Ibex",
+    "allocation": "existing LOOK project rotation only",
+    "gpus": 1,
+    "device_class": "A100-SXM4-80GB",
+    "gpu_budget_bytes": 12884901888,
+    "fixed_gpu_reserve_bytes": 0,
+    "measured_prior_peak_reserved_bytes": 7681867776,
+    "cpus": 2,
+    "host_ram_gib": 100,
+    "walltime_hours_max": 48
+  },
+  "ownership": {
+    "existing_rotation_claim_required": true,
+    "claim_owner_and_slurm_job_must_match": true,
+    "previous_owner_release_required": true,
+    "new_dispatcher_created": false,
+    "current_owner_or_claim_modified": false
+  },
+  "weekly_gate": {
+    "observed_policy_package": "2026_09_20_LOOK_reference_delivery",
+    "candidate_currently_listed": false,
+    "qualification": "waiting_policy_registration",
+    "dispatch_before_registration": false
+  },
+  "acceptance_after_execution": [
+    "Reference and check cover every train and development batch.",
+    "The V5 receipt states all_site_values_bitwise_equal=true.",
+    "The PCA importer accepts the pinned V5 receipt.",
+    "Selected banks remain blocked until PCA migration and 296-development prediction replay complete.",
+    "Historical non-selected caches remain invalid and are recomputed separately."
+  ],
+  "preservation": {
+    "old_assets_modified": false,
+    "generation5_writer_touched": false,
+    "production_cutover": false,
+    "test_access": false
+  }
+}
