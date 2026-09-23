@@ -1,0 +1,32 @@
+{
+  "schema": "look_pca_free_mean_v5_execution_gate_summary_v1",
+  "state": "executable_package_waiting_whole_weekly_acceptance",
+  "private_package": "/ibex/project/c2377/souray/home/mengh/operations/2026_09_10_11_11_31/v5_rollout_20260922/look_pca_free_mean_v5_gate_6cf857b",
+  "package_sha256": "f4533104fd2373fa522a80ba6007684fd4edc4ecb8149f48c53a51ba34bb5026",
+  "preflight_sha256": "27e9238cca7a2a6c4a0ad925d2974bf7571136a6af4bd41f44dc6ce5518ebb46",
+  "preflight_receipt_sha256": "6db686bbb920e1f7caeda4d1f8fdae270e6d2b035c8ae242aaea77a1fb562d29",
+  "preflight_exit_code": 75,
+  "framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "mhd_models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "feature_replay_package_sha256": "b3971b4843851051657e9758e6844a533b1508364a285f74a364e75bdd059d40",
+  "execution_scope": {
+    "train_participants": 1264,
+    "development_participants": 296,
+    "sites": 9,
+    "phases": ["V4 reference", "formal V5 check"],
+    "required_result": "all_site_values_bitwise_equal=true"
+  },
+  "live_rotation": {
+    "running_v7_allocations": 6,
+    "pending_v7_allocations": 0,
+    "healthy_workers_stopped": false
+  },
+  "blocking_gate": "The registered whole-weekly acceptance receipt does not exist. The executable preflight therefore returned 75 before claim or GPU allocation.",
+  "automatic_next_step": "Rerun the same immutable preflight when the whole-weekly receipt appears; only exit 0 may proceed to the existing exclusive LOOK rotation claim and feature-replay worker.",
+  "safety": {
+    "gpu_requested": false,
+    "claim_acquired": false,
+    "production_modified": false,
+    "test_access": false
+  }
+}
