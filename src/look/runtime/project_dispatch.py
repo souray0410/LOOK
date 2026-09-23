@@ -83,6 +83,12 @@ def work(config):
         if stage.get('schema')!='look_family_search_feed_v1' or stage.get('test_access') is not False:
             raise ValueError('Unsealed family search feed')
         result.extend(dict(t,execution='look_family_search') for t in stage['tasks'])
+    for path in config.get('feature_replay_feeds',[]):
+        stage=read(path)
+        if not stage:continue
+        if stage.get('schema')!='look_feature_replay_feed_v1' or stage.get('test_access') is not False:
+            raise ValueError('Unsealed feature-replay feed')
+        result.extend(dict(t,execution='look_feature_replay') for t in stage['tasks'])
     for path in config.get('suffix_feeds',[]):
         stage=read(path)
         if not stage:continue
@@ -137,6 +143,8 @@ def eligible(task,claims,*,reservation_token=None):
                 from look.studies.affine_case import verify_case
             elif task['execution']=='look_family_search':
                 from look.studies.family_search_case import verify_case
+            elif task['execution']=='look_feature_replay':
+                from look.runtime.feature_replay_dispatch import verify_case
             elif task['execution']=='look_search':
                 from look.studies.search_case import verify_case
             elif task['execution']=='look_suffix':
@@ -222,7 +230,7 @@ def admissible_work(config, claims, reservation=None):
 def priority_work(config, claims):
     """Preemption uses exactly the dispatch policy and dependency filters."""
     excluded={'native','look_spatial','look_linear','look_suffix','look_search',
-              'look_family_search','look_affine_terminal','look_affine_progressive'}
+              'look_family_search','look_feature_replay','look_affine_terminal','look_affine_progressive'}
     return [task for task in admissible_work(config,claims) if task['execution'] not in excluded]
 
 
@@ -255,6 +263,9 @@ def verify_delivery_dependency(entry):
     if kind=='native':
         from mhd_models.runtime.training_state import verify_completion
         verify_completion(entry['run_dir'],spec)
+    elif kind=='look_feature_replay':
+        from look.runtime.feature_replay_dispatch import verify_case
+        verify_case(entry['run_dir'],spec)
     else:
         if kind not in modules:raise ValueError('Unknown dependency verifier')
         importlib.import_module('look.studies.'+modules[kind]).verify_case(entry['run_dir'],spec)
@@ -310,7 +321,7 @@ def reconcile_expired(config):
         if state not in ('TIMEOUT','PREEMPTED','NODE_FAIL'):continue
         checkpoint=run/('last.pt' if task['execution']=='native' else 'training/last.pt' if task['execution']=='look_mechanism' else 'host/last.pt')
         if not checkpoint.is_file():
-            if task['execution'] not in ('look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_family_search','look_affine_terminal','look_affine_progressive'):continue
+            if task['execution'] not in ('look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_family_search','look_feature_replay','look_affine_terminal','look_affine_progressive'):continue
             # Fitting can restart at its last accepted site; prior process death
             # has been established above, never inferred from heartbeat age.
             checkpoint=Path(task['spec'])
@@ -455,6 +466,8 @@ def gpu_owner(config_path):
         except RuntimeError:continue
         attempt=root/(run.name+'_'+str(token['generation']));attempt.mkdir()
         record=attempt/'step.json';environment=worker_environment(os.environ)
+        if task['execution']=='look_feature_replay':
+            environment['LOOK_ROTATION_CLAIM']=str(claims.path(run))
         command=['srun','--jobid='+job,'--overlap','--exact','--nodes=1','--ntasks=1','--gpus=1',
             '--cpus-per-task=14','--mem='+('384G' if task['execution'] in ('look_spatial','look_linear','look_affine_progressive') else '100G'),'--unbuffered',config['python'],'-m','look.runtime.project_dispatch',
             '--config',str(config_path),'--execute',task['spec'],'--run',str(run),
@@ -513,6 +526,8 @@ def gpu_owner(config_path):
                     from look.studies.affine_case import verify_case
                 elif task['execution']=='look_family_search':
                     from look.studies.family_search_case import verify_case
+                elif task['execution']=='look_feature_replay':
+                    from look.runtime.feature_replay_dispatch import verify_case
                 elif task['execution']=='look_search':
                     from look.studies.search_case import verify_case
                 elif task['execution']=='look_suffix':
@@ -596,6 +611,9 @@ def execute_work(config_path,spec_path,run,kind,record):
         environment['LOOK_AFFINE_PROFILE_RECEIPT']=str(receipt_path)
         os.execvpe(config['python'],[config['python'],'-m','look.studies.affine_case',
             '--spec',str(spec_path),'--output',str(run)],environment)
+    elif kind=='look_feature_replay':
+        from look.runtime.feature_replay_dispatch import execute
+        execute(spec_path,run)
     elif kind in ('look_search','look_family_search'):
         from look.runtime.profile_lifecycle import run_profile, profile_pause_state
         case_module='look.studies.family_search_case' if kind=='look_family_search' else 'look.studies.search_case'
@@ -714,7 +732,7 @@ def configure_control_imports(config):
 def main():
     p=argparse.ArgumentParser();p.add_argument('--config',required=True)
     p.add_argument('--standby',action='store_true');p.add_argument('--allocation-owner',action='store_true');p.add_argument('--gpu-owner',action='store_true')
-    p.add_argument('--execute');p.add_argument('--kind',choices=['native','look','look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_family_search','look_affine_terminal','look_affine_progressive']);p.add_argument('--record');p.add_argument('--run');p.add_argument('--profile-project');p.add_argument('--profile-mechanism')
+    p.add_argument('--execute');p.add_argument('--kind',choices=['native','look','look_mechanism','look_spatial','look_linear','look_terminal','look_suffix','look_search','look_family_search','look_feature_replay','look_affine_terminal','look_affine_progressive']);p.add_argument('--record');p.add_argument('--run');p.add_argument('--profile-project');p.add_argument('--profile-mechanism')
     a=p.parse_args()
     configure_control_imports(read(a.config))
     if a.standby:standby(a.config)
