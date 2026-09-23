@@ -99,7 +99,8 @@
     {
       "name": "remaining_host_specific_pca_and_correction_banks",
       "scope": "balanced dropout, EmbraceNet, IMD and other accepted hosts",
-      "state": "not_migrated",
+      "state": "one_additional_host_formalized_downstream_blocked_remaining_not_migrated",
+      "evidence": "v5_resnet50_downstream_gate_20260923.json",
       "production_cutover": false
     },
     {

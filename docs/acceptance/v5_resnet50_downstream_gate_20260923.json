@@ -1,0 +1,85 @@
+{
+  "schema": "look_formal_v5_host_binding_v1",
+  "state": "host_accepted_downstream_fail_closed",
+  "run_id": "2026_09_18_09_35_40",
+  "framework": {
+    "commit": "1287681c08846e11364c81653048435482e772a7",
+    "tag": "V5",
+    "wheel_sha256": "c022b4f4b0fa1f29458ad1bf9e0d04f6773e9454ab3bd8c07d416294483aab48",
+    "core_sha256": "fdaf8764c151f12a434987f6f07e005b0fd88421dc7ebbcedd02096c979cb95a",
+    "utils_sha256": "0401df38d9b4cb845987bb15941a8509f5e309f2f7710f106a25b52d61aa0b83"
+  },
+  "mhd_models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "look_commit": "df43c37290cbe809a3eeb004b14773508bf6dca6",
+  "host_identity": "aec06fceafde5ac3706e37d71572f15a20a76b9158de635ffb448f2621fe5c4c",
+  "pca": {
+    "source_manifest_sha256": "fb703c5f8d65323c89a12cc6263d297059848e8f3fea212639528eb003f956b0",
+    "sites": 9,
+    "source_host_sha256": "48a211ce9eff6679d1adbcc489ce9c843b5665921363ae750f7d0e7a98060fac",
+    "formal_host_sha256": "6da938921acd9ad69d51964e9774853915c0c380634a82238d5198b869b16995",
+    "exact_feature_receipt_found": false,
+    "state": "blocked_no_exact_site_replay_receipt"
+  },
+  "conclusion": "Formal V5 host equivalence is accepted from exact code hashes and matching 296-development evidence; exact continuation is accepted only for last, whose complete state reproduced three updates. PCA and selected corrections remain unbound because the strict importer requires an exact nine-site feature replay receipt for this bank. Historical search caches are rejected for current reuse.",
+  "test_access": false,
+  "gpu_used": false,
+  "production_cutover": false,
+  "host_states": [
+    {
+      "checkpoint": "best",
+      "source_sha256": "48a211ce9eff6679d1adbcc489ce9c843b5665921363ae750f7d0e7a98060fac",
+      "target_sha256": "6da938921acd9ad69d51964e9774853915c0c380634a82238d5198b869b16995",
+      "strict_state": true,
+      "development_participants": 296,
+      "consecutive_updates": 3,
+      "full_checkpoint_state_loaded": false,
+      "postconversion_receipt_sha256": "d675d64d31dc3fc950d88f30070683a34c639aebbfe153ba73f9d0b3b1086732",
+      "exact_resume_update_accepted": false
+    },
+    {
+      "checkpoint": "last",
+      "source_sha256": "4543f7a126162bd8c6ad42f42e7e2dd0dd9130c9945e53cbae56d890e99447c0",
+      "target_sha256": "58d21d1086ee7f2e80275d6ce52ef45e70be05a8e293efabd6fc14a6f762551e",
+      "strict_state": true,
+      "development_participants": 296,
+      "consecutive_updates": 3,
+      "full_checkpoint_state_loaded": true,
+      "postconversion_receipt_sha256": "60c67f5c4948fb41f6fb7490c1fb3cdfb502f2a8ac2acac4d3f7c1541d07b357",
+      "exact_resume_update_accepted": true
+    }
+  ],
+  "search_cache_gates": [
+    {
+      "arm": "pca_free_mean",
+      "pattern": "cfp_missing",
+      "selected_bank_sha256": "db0d1a76c61107e43ecc2d611684d7472f55d228810769f272945d8615637b82",
+      "search_contract_sha256": "d73b46895c799d0650d83719bc828a4d8bb1c8a591c5fc541b9b11263914dc2a",
+      "current_cache_gate": "rejected_current_identity",
+      "selected_rebinding_state": "blocked_with_pca"
+    },
+    {
+      "arm": "pca_free_mean",
+      "pattern": "oct_missing",
+      "selected_bank_sha256": "d71f1e0a17e52501f956c0f1eb84d12f9831e91dea599b8d7100c76ba727c10c",
+      "search_contract_sha256": "e7699bc9e00d388c4cedc8ee737e270b4423ae05f33418dfb8934ce79e2bbeed",
+      "current_cache_gate": "rejected_current_identity",
+      "selected_rebinding_state": "blocked_with_pca"
+    },
+    {
+      "arm": "residual_rrr",
+      "pattern": "cfp_missing",
+      "selected_bank_sha256": "d21291543731b9e643a4bd42a70bad652ae770096a489b71e7b21fbfb78eb47b",
+      "search_contract_sha256": "76dd41bb47518cd51b54d79ca207cee569df765fff2eaa332c2501dc94c7c15d",
+      "current_cache_gate": "rejected_current_identity",
+      "selected_rebinding_state": "blocked_with_pca"
+    },
+    {
+      "arm": "residual_rrr",
+      "pattern": "oct_missing",
+      "selected_bank_sha256": "91c52195de3c70c8ed5c388930f7dd6272d0f3875545632c0352adba2a1ec3ed",
+      "search_contract_sha256": "d328c7afc110e0982184fb70f205af79f64580cd2ad3f466809ccd8d5b403a35",
+      "current_cache_gate": "rejected_current_identity",
+      "selected_rebinding_state": "blocked_with_pca"
+    }
+  ]
+}
