@@ -13,6 +13,7 @@ from look.runtime.provenance import write_json_atomic
 from look.runtime.state import file_sha256, stable_hash
 from look.studies.v5_project_full_replay import FRAMEWORK, MODELS, _parent, read
 from look.studies.v5_project_feature_replay import datasets
+from look.studies.v5_project_feature_materialize_sharded import participant_sha
 
 SCHEMA = "look_formal_v5_train_feature_materialization_v2_site_sharded"
 
@@ -50,7 +51,10 @@ def validate_complete_cache(cache: pathlib.Path, expected_identity: dict | None 
             raise ValueError("Chunk receipt identity mismatch")
         if set(receipt.get("files", {})) != set(sites):
             raise ValueError("Chunk does not contain every site")
-        participant_count += len(receipt.get("participant_ids", []))
+        participant_ids = receipt.get("participant_ids", [])
+        if receipt.get("participants_sha256") != participant_sha(participant_ids):
+            raise ValueError("Chunk participant identity mismatch")
+        participant_count += len(participant_ids)
     if participant_count != accepted.get("participants_total"):
         raise ValueError("Participant cursor mismatch")
     return identity, accepted, rows
