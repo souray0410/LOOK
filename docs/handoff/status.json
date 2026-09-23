@@ -8,7 +8,7 @@
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "1f22fedab0b51e1ad7ed21c76aea737f3df88715",
+  "source_commit": "92c97b8577f49c49d04673dbe5571720d2eb6f5c",
   "evidence_cutoff": "2026-09-23T05:55:28.984729+00:00",
   "verified_at": "2026-09-23T05:58:25.033741+00:00",
   "verification_scope": "runtime_and_evidence",
