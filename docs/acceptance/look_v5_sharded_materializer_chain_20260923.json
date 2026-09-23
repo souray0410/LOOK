@@ -1,0 +1,53 @@
+{
+  "schema": "look_v5_sharded_materializer_chain_acceptance_v1",
+  "state": "materialization_chain_running",
+  "scope": "train-only nine-site feature materialization; PCA, development prediction, and first decision remain gated",
+  "formal_framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "formal_models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "test_access": false,
+  "source_job": {
+    "job_id": "52388638",
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "completed_batches": 8,
+    "total_batches": 3651,
+    "bytes": 3847115008,
+    "compute_elapsed_seconds": 8.852999448776245,
+    "partial_receipt_sha256": "373c188fa82e1c2995cc5731c9f091e84e66e0d1a7fef56a6fd270d4b5609bf3"
+  },
+  "failed_monitor": {
+    "job_id": "52388641",
+    "state": "FAILED",
+    "exit_code": "2:0",
+    "reason": "immutable v1 monitor omitted predecessor and claim positional arguments",
+    "preserved": true
+  },
+  "recovery": {
+    "package": "look_cataract_middle_v5_feature_chain_sharded_v3",
+    "recovery_monitor_job": "52388913",
+    "recovery_monitor_state": "COMPLETED",
+    "successor_job": "52388915",
+    "successor_monitor_job": "52388916",
+    "successor_batch_budget": 512,
+    "transition_sha256": "0f15a5b3e3069fe9cf194c39a925bcda44b5b143530431ac484514f9290ae60c",
+    "claim_sha256": "ad6f9f62c4a4f4400e7f1a5292287539d72242c62b4fec16a77aac0173284cf0",
+    "chain_manager_sha256": "671e0934edcbc25eda2b2dd7016c8369358f3aa9e2f0d46e376a2bfe9a63aa71",
+    "gpu_entrypoint_sha256": "c49cfd86e9ab08d0a142c5542e5f3d29543339f17166c4222deea91a0ea39e8f",
+    "monitor_entrypoint_sha256": "850629e988a528a411e8a21fceb447b5dd0714998e6ac230c498bd83a4818050"
+  },
+  "automation_boundary": {
+    "only_one_successor_per_transition": true,
+    "shared_account_lock": true,
+    "exclusive_claim": true,
+    "original_request_journal": true,
+    "capacity_retry_is_zero_gpu": true,
+    "gpu_failure_is_fail_closed": true,
+    "materialization_recurses_to_batches": 3651,
+    "pca_auto_submit_implemented": false
+  },
+  "protected": {
+    "old_owner_workers_modified": false,
+    "sealed_test_accessed": false,
+    "legacy_monolithic_cache_reused": false
+  }
+}
