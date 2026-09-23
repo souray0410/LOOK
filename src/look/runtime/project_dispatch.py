@@ -213,6 +213,10 @@ def verify_priority_release(config):
     requirements = receipt.get('requirements', [])
     if not requirements:
         raise ValueError('Priority release requires accepted dependencies')
+    key = (file_sha256(path), tuple((file_sha256(row['spec']),
+        file_sha256(Path(row['run_dir'])/'accepted.json')) for row in requirements))
+    if config.get('_priority_release_verified') == key:
+        return
     for row in requirements:
         if row.get('execution') != 'look_family_search':
             raise ValueError('Unsupported priority release dependency')
@@ -222,6 +226,7 @@ def verify_priority_release(config):
         if file_sha256(accepted) != row['accepted_sha256']:
             raise ValueError('Priority release acceptance changed')
         verify_delivery_dependency(row)
+    config['_priority_release_verified'] = key
 
 
 def admissible_work(config, claims, reservation=None):
