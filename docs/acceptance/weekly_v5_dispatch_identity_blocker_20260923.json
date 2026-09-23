@@ -1,0 +1,72 @@
+{
+  "schema": "look_weekly_v5_dispatch_identity_blocker_v1",
+  "state": "dispatch_rejected_no_formal_v5_replacement_identity",
+  "observed_at": "2026-09-23T21:16:36+03:00",
+  "formal_framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "formal_mhd_models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "weekly_policy": {
+    "path": "/ibex/project/c2377/souray/home/mengh/operations/2026_09_10_11_11_31/look_forward_20260916/weekly_delivery_20260916/policy.json",
+    "sha256": "db1a5e718effadf52655c9cc6811e4afbfe3f78cecdc4a838c29142d92d2f5a2",
+    "required": 21,
+    "accepted": 6,
+    "pending": 15
+  },
+  "pending_identity_groups": [
+    {
+      "disease": "cataract",
+      "architecture": "resnet50",
+      "position": "deep",
+      "seed": 3416,
+      "cases": 5,
+      "source_best_sha256": "18d404794bde895eb70301551b1e103fef43b239e8b85eaf6c8764c20ccc92c9",
+      "pca_manifest_sha256": "1a496dd7e524a5aa4399f9e0267e1513794807e8d86000d514762f2477fe7336"
+    },
+    {
+      "disease": "cataract",
+      "architecture": "resnet50",
+      "position": "features",
+      "seed": 3416,
+      "cases": 5,
+      "source_best_sha256": "8fc5cbc8d06779bf240d6bff26a1b9c7d6fab6497a3af1341b3a15a809f48375",
+      "pca_manifest_sha256": "00ae19511e9612f5ac5004494046db08c72bf11b9e1c447db8ad0796b5eddb7b"
+    },
+    {
+      "disease": "cataract",
+      "architecture": "resnet50",
+      "position": "middle",
+      "seed": 3416,
+      "cases": 5,
+      "source_best_sha256": "7b420e3ec4ea57d844ed9f3977f173321d8eb02c70d3632a8692d8a3ed21196e",
+      "pca_manifest_sha256": "fb4c32a8ed570b4ee176debd9277a83641c701845820b2512fe317b45b4bc7be"
+    }
+  ],
+  "available_formal_v5_replay": {
+    "package_sha256": "b3971b4843851051657e9758e6844a533b1508364a285f74a364e75bdd059d40",
+    "source_best_sha256": "48a211ce9eff6679d1adbcc489ce9c843b5665921363ae750f7d0e7a98060fac",
+    "matches_any_pending_source": false,
+    "weekly_candidate_listed": false,
+    "dispatch_authorized": false
+  },
+  "priority_release": {
+    "core_receipt_sha256": "869780cab780e612ae1ac1782e6be0bf8c1ca6ec09037c9ba9ce06997f9ff6a2",
+    "verification_sha256": "f682ceb35e2e7229cdc6d56f1c672c48749f69addb69227703f301b200ff8b0e",
+    "meaning": "The core receipt releases best-forward and greedy scheduling modes; it does not convert the three weekly host checkpoints or PCA banks to formal V5 identities."
+  },
+  "live_rotation": {
+    "owner": "owner_v7",
+    "running_jobs": ["52288974", "52288821", "52288650", "52288493", "52207179", "52200246"],
+    "pending_jobs": [],
+    "healthy_jobs_interrupted": false
+  },
+  "decision": {
+    "slurm_submitted": false,
+    "reason": "Every pending weekly case would consume an old host checkpoint and old PCA bank. Submitting one under the formal V5 successor would falsify dependency identity and violate the direct-V5 migration boundary.",
+    "required_next_action": "Create and accept one-time formal-V5 host plus nine-site PCA replay for one exact pending identity group, then create a new run/spec bound to those new assets and submit only that replacement through the exclusive LOOK rotation claim. Preserve all fifteen historical cases and their six accepted prerequisites."
+  },
+  "safety": {
+    "claim_acquired": false,
+    "gpu_requested": false,
+    "test_access": false,
+    "production_modified": false
+  }
+}
