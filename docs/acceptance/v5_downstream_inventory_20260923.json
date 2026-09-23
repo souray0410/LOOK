@@ -1,0 +1,104 @@
+{
+  "schema": "look_v5_downstream_inventory_v1",
+  "state": "partial_migration_with_explicit_open_consumers",
+  "audited_source_commit": "1f22fedab0b51e1ad7ed21c76aea737f3df88715",
+  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "companion_commit": "228b1254b1be5c1209831b93f7262962fe5222b7",
+  "current_contract": {
+    "framework_api": "V5",
+    "normal_checkpoint_reader": "look.runtime.host_checkpoint.read_selected/load",
+    "legacy_fallback": false,
+    "offline_conversion_only": true
+  },
+  "consumers": [
+    {
+      "name": "observed_resnet18_selected_and_resume",
+      "scope": "one actual stopped host",
+      "state": "accepted_isolated_replay",
+      "evidence": "v5_actual_host_20260922.json",
+      "production_cutover": false
+    },
+    {
+      "name": "resnet50_mmtm_fusion_features_fusion_middle",
+      "scope": "four actual hosts, best and last",
+      "state": "accepted_isolated_replay",
+      "evidence": "v5_four_hosts_20260922.json",
+      "production_cutover": false
+    },
+    {
+      "name": "balanced_dropout_and_embracenet",
+      "scope": "two missing-modality hosts, best and last",
+      "state": "current_spec_candidate_replay_accepted",
+      "evidence": "v5_missing_hosts_current_revision_20260923.json",
+      "dispatch_authorized": false,
+      "production_cutover": false
+    },
+    {
+      "name": "improved_modality_dropout",
+      "scope": "one complete-plus-two-missing objective, best and last",
+      "state": "current_spec_candidate_replay_accepted",
+      "evidence": "v5_imd_current_revision_20260923.json",
+      "dispatch_authorized": false,
+      "production_cutover": false
+    },
+    {
+      "name": "complete_feature_pca",
+      "scope": "one nine-site bank for one observed host",
+      "state": "accepted_load_only_migration",
+      "evidence": "v5_pca_20260922.json",
+      "refitted": false,
+      "production_cutover": false
+    },
+    {
+      "name": "selected_correction_families",
+      "scope": "two fitting families by two missing directions for the same observed host",
+      "state": "accepted_inference_rebinding",
+      "evidence": "v5_selected_families_20260922.json",
+      "search_tree_migrated": false,
+      "production_cutover": false
+    },
+    {
+      "name": "runtime_acceptance_entrypoints",
+      "scope": "single-device and two-rank engineering checks",
+      "state": "implemented_cpu_static_validated_gpu_pending",
+      "source_commit": "1f22fedab0b51e1ad7ed21c76aea737f3df88715",
+      "framework_api": "V5",
+      "requires_strict_selected_sidecar": true,
+      "requires_explicit_profiled_gpu_budget": true,
+      "fixed_gpu_reserve_bytes": 0
+    },
+    {
+      "name": "full_search_and_resume_trees",
+      "scope": "all non-selected candidate, decision and recovery caches",
+      "state": "not_migrated",
+      "production_cutover": false
+    },
+    {
+      "name": "remaining_host_specific_pca_and_correction_banks",
+      "scope": "balanced dropout, EmbraceNet, IMD and other accepted hosts",
+      "state": "not_migrated",
+      "production_cutover": false
+    },
+    {
+      "name": "production_dispatch_and_owner_bindings",
+      "scope": "ws02 and Ibex live owners/spec references",
+      "state": "not_switched",
+      "production_cutover": false
+    }
+  ],
+  "coordination": {
+    "generation5_research_cache_and_selection_writer": "existing_webcodex_owner",
+    "this_rollout_started_duplicate_writer": false,
+    "this_rollout_started_research_training": false,
+    "this_rollout_requested_new_ibex_gpu": false,
+    "test_access": false
+  },
+  "validation": {
+    "manage_check": true,
+    "runtime_scripts_python_compile": true,
+    "fixed_v4_runtime_assertions_removed": true,
+    "gpu_execution_on_current_entrypoint": false,
+    "reason_gpu_pending": "No accepted current artifact package and released owned GPU lane were claimed by this repository-only change."
+  },
+  "conclusion": "LOOK is not fully migrated. Current host candidates and one selected downstream chain have accepted isolated V5 evidence; full search/cache coverage, remaining host-specific banks, A100 continuation and production ownership cutover stay open."
+}

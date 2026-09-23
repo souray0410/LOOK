@@ -8,7 +8,7 @@
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "24cf1d63b0e30939355df8b92e8415ef3530e9a7",
+  "source_commit": "1f22fedab0b51e1ad7ed21c76aea737f3df88715",
   "evidence_cutoff": "2026-09-23T05:55:28.984729+00:00",
   "verified_at": "2026-09-23T05:58:25.033741+00:00",
   "verification_scope": "runtime_and_evidence",
@@ -94,7 +94,8 @@
     "middle/deep/features同时改变宿主拓扑、参数量、训练权重和融合算子；middle仅11.89M且未修正基线远低于deep，跨宿主LOOK增益差不能解释成单一融合层因果效应。",
     "fusion-stage机制不替代老师外部方法A/B/C及A/B/C+LOOK匹配缺口；这些外部比较仍保持未完成。",
     "V5 rollout candidate repairs are not deployed; framework/asset migration is in progress.",
-    "2026-09-23 V5工程证据仅覆盖三条真实宿主的候选best/last与296人development/连续更新；原V4科学结果不改写，本次未重新核查历史科研运行层。"
+    "2026-09-23 V5工程证据仅覆盖已登记真实宿主的候选best/last与296人development/连续更新；原V4科学结果不改写，本次未重新核查历史科研运行层。",
+    "仓库运行验收入口已改为严格V5选优权重及显式完整生命周期GPU预算，但当前提交只通过结构检查和脚本编译；尚无当前入口的真实GPU执行凭证。完整搜索/恢复缓存、其他宿主PCA/修正链、Ibex A100和生产owner/spec仍未切换。"
   ],
   "blockers": [
     "独立仿射家族完整主搜索与代表起点并行对照仍有验收缺口，整周重复种子门槛保持关闭。",
@@ -302,6 +303,10 @@
     {
       "label": "V5候选IMD三状态目标、严格断点及当前spec单卡回放；生产派发关闭",
       "url": "https://github.com/souray0410/LOOK/blob/codex/v5-rollout/docs/acceptance/v5_imd_current_revision_20260923.json"
+    },
+    {
+      "label": "V5下游消费者清点、generation5单写入边界与当前未完成项",
+      "url": "https://github.com/souray0410/LOOK/blob/codex/v5-rollout/docs/acceptance/v5_downstream_inventory_20260923.json"
     }
   ]
 }
