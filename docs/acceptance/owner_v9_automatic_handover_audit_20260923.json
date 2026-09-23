@@ -20,6 +20,16 @@
     "core_priority_release_sha256": "869780cab780e612ae1ac1782e6be0bf8c1ca6ec09037c9ba9ce06997f9ff6a2",
     "core_priority_release_verification_sha256": "f682ceb35e2e7229cdc6d56f1c672c48749f69addb69227703f301b200ff8b0e"
   },
+  "new_immutable_candidate": {
+    "private_path": "/ibex/project/c2377/souray/home/mengh/operations/2026_09_10_11_11_31/look_fitting_priority_20260918/owner_v10_core_successor_candidate",
+    "package_manifest_sha256": "3252057a6d0cbe72c2832be186e69007f13af6bf4bea17c1bb0b616a9f78228f",
+    "dispatcher_sha256": "c7f71a8a3c5468f16853cf15af0c5c9a0f69aa0beba47b90c20634d9f9ca0027",
+    "dispatcher_binding_sha256": "e39bcf59fbfe8d8a6754c2f55d15a2fb0309d8177ce0a138f98119024b2f0639",
+    "owner_sha256": "5cc6a086925b226ab6cbbc00fd1fc39fc4200278c212840e9ca746ab29e34dd7",
+    "check_only_log_sha256": "c12c843b78cdb0249e9f20ef0a091a1964eed2e68db803d99e69e0b6269d877a",
+    "check_only_exit_code": 0,
+    "state": "checked_not_activated"
+  },
   "live_scheduler": {
     "look_running": 6,
     "look_pending": 1,
@@ -39,6 +49,11 @@
     "The prepared owner_v9 package has no dispatcher binding or standby process, and its immutable dispatcher configuration references the older manual receipt rather than the accepted core receipt.",
     "The already queued allocation request is bound to owner_v7; changing its command or pinned files would mutate the active owner instead of performing a release-time handover."
   ],
+  "afterany_assessment": {
+    "safe_to_submit": false,
+    "reason": "A Slurm afterany dependency orders only the seven snapshotted allocation jobs. The long-lived owner_v7 CPU dispatcher is outside those dependencies and can submit replacement allocations after the snapshot, so the dependency cannot prove natural control-plane release or exclusive successor ownership.",
+    "required_additional_gate": "The original owner_v7 dispatcher must first have a durable terminal receipt and no later owner_v7 submissions; only then may a zero-GPU one-shot job revalidate scheduler state, take the original control-plane lock and start the checked successor."
+  },
   "deployable_handover": [
     "After all owner_v7 running and pending allocations have naturally cleared, revalidate the exact Slurm state and shared LOOK claim ledger.",
     "Build a new immutable successor package from the accepted core receipt and its independent verification; do not edit owner_v9 or owner_v7 in place.",
