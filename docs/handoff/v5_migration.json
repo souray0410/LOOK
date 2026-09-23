@@ -6,7 +6,8 @@
     "wheel_sha256": "c022b4f4b0fa1f29458ad1bf9e0d04f6773e9454ab3bd8c07d416294483aab48",
     "previous_candidate_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808"
   },
-  "companion_commit": "228b1254b1be5c1209831b93f7262962fe5222b7",
+  "companion_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "previous_candidate_companion_commit": "228b1254b1be5c1209831b93f7262962fe5222b7",
   "production_cutover": false,
   "evidence": "docs/handoff/v5_rollout_20260922.md",
   "actual_host_checkpoint_acceptance": "docs/acceptance/v5_actual_host_20260922.json",
