@@ -1,0 +1,71 @@
+{
+  "schema": "look_formal_v5_middle_full_replay_contract_v1",
+  "state": "resource_admitted_implementation_pending",
+  "run_identity": "new_formal_v5_cataract_resnet50_middle_seed3416",
+  "pins": {
+    "framework": "1287681c08846e11364c81653048435482e772a7",
+    "models": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+    "host_checkpoint_sha256": "f463e5dab7ea39796a77916f24d08aad5295b7c5d516d22737d077f170e95d27"
+  },
+  "inputs": {
+    "train": {
+      "participants": 58403,
+      "eyes": 115787,
+      "ordered_sha256": "7388705764cea76b91e06b3a4de4879fbdd26750b39a93940769dfd7fcef7179"
+    },
+    "development": {
+      "participants": 12510,
+      "eyes": 24814,
+      "ordered_sha256": "b040463d7bca2871e5f964ad2202232a845a94eddef707d7c80374a37a8c6019"
+    },
+    "test_access": false
+  },
+  "ordered_stages": [
+    "strict load formal V5 host and exact one-time historical train/development loader",
+    "materialize all nine ordered train feature sites without augmentation",
+    "fit train-only PCA and record basis, mean, moment and source hashes",
+    "materialize all nine ordered development sites",
+    "compare formal V5 feature/PCA outputs to the independently pinned migration reference",
+    "evaluate the first deterministic replacement search decision and commit prediction/decision hashes"
+  ],
+  "resource": {
+    "gpus": 1,
+    "device": "Ibex A100 80GB",
+    "walltime_hours_max": 48,
+    "measured_lifecycle_peak_device_bytes": 7245922304,
+    "fixed_reserve_bytes": 0,
+    "role": "LOOK seventh reserved slot",
+    "claim": "shared account lock plus original request journal plus exclusive immutable task claim"
+  },
+  "resume_contract": {
+    "atomic_stage_receipts": true,
+    "cache_identity_must_include": [
+      "framework commit",
+      "models commit",
+      "host checkpoint SHA",
+      "source spec SHA",
+      "ordered cohort SHA",
+      "site order",
+      "PCA protocol"
+    ],
+    "legacy_reader_fallback": false,
+    "failed_cache_relabel": false
+  },
+  "dispatch": {
+    "automatic_submission_ready": false,
+    "reason": "The resource and claim gate is accepted, but the full nine-site materializer/PCA/development replay entrypoint and its isolated CPU contract test have not yet been implemented. Submitting the lifecycle probe again would not advance this gate.",
+    "automatic_trigger_after": [
+      "versioned full replay entrypoint exists",
+      "CPU contract test verifies site order, train-only fit and fail-closed identities",
+      "check-only validates immutable package and seventh-slot claim availability"
+    ]
+  },
+  "acceptance": [
+    "all 58,403 train participants consumed for each required train-only feature/PCA stage",
+    "all 12,510 development participants predicted in the locked order",
+    "nine-site artifact and prediction SHA manifest verifies",
+    "first decision recomputes identically",
+    "no test access",
+    "terminal Slurm and exclusive claim receipts"
+  ]
+}

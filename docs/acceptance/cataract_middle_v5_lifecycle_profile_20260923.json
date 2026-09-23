@@ -1,0 +1,54 @@
+{
+  "schema": "look_formal_v5_full_cohort_lifecycle_profile_public_acceptance_v1",
+  "state": "accepted_resource_lifecycle_only",
+  "slurm_job": "52387700",
+  "device": "A100-SXM4-80GB",
+  "elapsed_seconds": 48,
+  "pins": {
+    "framework": "1287681c08846e11364c81653048435482e772a7",
+    "models": "cc16e74a8cfc705d69b3d31efe2daeec9404471f"
+  },
+  "target_sha256": "f463e5dab7ea39796a77916f24d08aad5295b7c5d516d22737d077f170e95d27",
+  "source_spec_sha256": "4baac84954bdaa7a9dee557592a313e3f7fffb4772051973a1773dde30088d45",
+  "cohort_identity": {
+    "train": {
+      "participants": 58403,
+      "eyes": 115787,
+      "ordered_sha256": "7388705764cea76b91e06b3a4de4879fbdd26750b39a93940769dfd7fcef7179"
+    },
+    "development": {
+      "participants": 12510,
+      "eyes": 24814,
+      "ordered_sha256": "b040463d7bca2871e5f964ad2202232a845a94eddef707d7c80374a37a8c6019"
+    }
+  },
+  "checks": {
+    "real_backward_optimizer_updates": 3,
+    "checkpoint_save_reload": true,
+    "development_forward": true,
+    "test_access": false
+  },
+  "peaks_bytes": {
+    "device_used": 7245922304,
+    "allocated": 6078870016,
+    "reserved": 6645874688,
+    "host_rss": 1979064320
+  },
+  "receipt_sha256": "837b63c4e89327c6d83067c186a80ef0ed8f16d4515a0b282f0a27c2f8ba0fc0",
+  "resume_sha256": "8ec54ce4ffba6efd2703c9b04ef72829efc03ac3c9930392140650a0aab25888",
+  "samples_sha256": "4289f31d0f63de298b43ec2a8f75c154bc246cae203e7d32b556cbac81fed52b",
+  "preserved_failures": [
+    {
+      "attempt": "v2",
+      "job": "52387278",
+      "reason": "entrypoint name shadowed the Python stdlib profile module"
+    },
+    {
+      "attempt": "v3",
+      "job": "52387287",
+      "reason": "deterministic CuBLAS workspace environment was absent before Python startup"
+    }
+  ],
+  "scope_limit": "The full train/development cohort identity is bound, but this is a maximum-eye resource lifecycle probe using three optimizer updates and one development forward. It is not the full nine-site train-only PCA sweep, full development prediction replay, or first search decision acceptance.",
+  "next_gate": "Run the full train-only nine-site feature/PCA materialization and all-development prediction plus first deterministic search decision in a new run identity under the same exclusive seventh LOOK role claim."
+}

@@ -9,8 +9,8 @@
     "当前算法与匹配对照的实际执行证据"
   ],
   "source_commit": "92c97b8577f49c49d04673dbe5571720d2eb6f5c",
-  "evidence_cutoff": "2026-09-23T05:55:28.984729+00:00",
-  "verified_at": "2026-09-23T05:58:25.033741+00:00",
+  "evidence_cutoff": "2026-09-23T19:01:00+00:00",
+  "verified_at": "2026-09-23T19:01:24+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -95,12 +95,13 @@
     "fusion-stage机制不替代老师外部方法A/B/C及A/B/C+LOOK匹配缺口；这些外部比较仍保持未完成。",
     "V5 rollout candidate repairs are not deployed; framework/asset migration is in progress.",
     "2026-09-23 V5工程证据仅覆盖已登记真实宿主的候选best/last与296人development/连续更新；原V4科学结果不改写，本次未重新核查历史科研运行层。",
-    "仓库运行验收入口已改为严格V5选优权重及显式完整生命周期GPU预算，但当前提交只通过结构检查和脚本编译；尚无当前入口的真实GPU执行凭证。完整搜索/恢复缓存、其他宿主PCA/修正链、Ibex A100和生产owner/spec仍未切换。"
+    "仓库运行验收入口已改为严格V5选优权重及显式完整生命周期GPU预算；Ibex A100资源生命周期已由52387700接受，但完整搜索/恢复缓存、其他宿主PCA/修正链和生产owner/spec仍未切换。",
+    "52387700已验正式V5全量cohort身份绑定的最大眼数资源生命周期：3次更新、断点保存恢复和development forward；这不是58,403 train/12,510 dev的九站点全量回放，PCA/全dev预测/首搜索决策仍未接受。"
   ],
   "blockers": [
     "独立仿射家族完整主搜索与代表起点并行对照仍有验收缺口，整周重复种子门槛保持关闭。",
     "真实跨租期到期恢复尚未发生；已绑定自动接续并通过锁、状态、资源和两层owner测试，但不等于实际到期恢复完成。",
-    "V5正式发布、下游拟合/搜索缓存和Ibex A100跨平台续训未完成；LOOK生产dispatch仍使用原owner，候选修订dispatch_authorized=false。"
+    "正式V5 middle宿主仅完成资源生命周期准入；全量train-only九站点特征/PCA、12,510人development预测和首个确定性搜索决策尚未执行，不能声明该宿主迁移完成。"
   ],
   "actions": [
     "新q32正式步骤因全量dev RSS增长失败，已确认旧step死亡；原run/spec恢复至51909172.10。allocator环境调整后通过782批完整dev，自动进入train joint_input×16拟合。不是科学完成，拟合验收仍待完成。",
@@ -143,7 +144,8 @@
     "2026-09-19 integration continuation：下一A有限合同锁定ShaSpec机制家族但训练前有实现/许可/2D分类身份等硬门槛；PCA/RRR不预设赢家。离线执行要求已记录为design_ready_not_deployed_for_next_A；不宣称常驻planner。",
     "Normal dispatch and priority qualification share the same weekly/dependency policy; qualification is followed by an exclusive target claim before parent pause. Late probes cannot pause a finished parent. Failed workers are quarantined per claim. Runtime suite 96 passed against the original pinned V4. Candidate only; no live owner changed.",
     "V5候选新增四宿主八状态：原16/128批量，当前严格reader、296dev、各3连续更新独立接受；spec及下游引用尚未切换。",
-    "2026-09-23：balanced dropout、EmbraceNet、IMD候选当前spec/receipt和严格V5 best/last在ws02单卡独立回放通过；原源码/资产保留，生产交接尚未执行。"
+    "2026-09-23：balanced dropout、EmbraceNet、IMD候选当前spec/receipt和严格V5 best/last在ws02单卡独立回放通过；原源码/资产保留，生产交接尚未执行。",
+    "Ibex LOOK第7保留槽按共享account lock、原request journal和排他claim合法领取；v2/v3启动失败均保留，修复后的52387700在A100完成，峰值device_used 7.246GB、allocated 6.079GB、reserved 6.646GB、host RSS 1.979GB，test未访问。下一任务复用该资源门执行全量train-only九站点PCA与全dev预测/首决策。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
