@@ -1,0 +1,49 @@
+{
+  "schema": "look_cataract_middle_v5_project_loader_summary_v1",
+  "state": "cpu_loader_accepted_gpu_rotation_blocked",
+  "source_commit": "b67d7dc",
+  "implementation": "look.studies.v5_project_feature_replay.datasets",
+  "normal_v5_reader_changed": false,
+  "private_package": "/ibex/project/c2377/souray/home/mengh/operations/2026_09_10_11_11_31/v5_rollout_20260922/look_cataract_middle_v5_vertical_v3",
+  "cpu_jobs": {
+    "52387232": "failed_before_python_output_because_the_first_immutable_directory_was_not_writable_for_the_slurm_log",
+    "52387236": "failed_closed_missing_expanded_native_on_pythonpath",
+    "52387242": "accepted"
+  },
+  "loader_receipt_sha256": "8844b4e32c4d12ec227d6b342cfecd5d22cb627ba7631d8b98002e6abc77e80c",
+  "validator_sha256": "207b062722d8fcca9e6ab6c9ffced11027a0f3fb6ff13075fda7b2bb508c15de",
+  "parent_manifests": [
+    "af63c400fce3940e3ea7811fc4c8fc565c4059467359427217de8b1a40ced900",
+    "f17c62142e23daae23e70a47036b86a071f6949365e0175e9111e0ba1ead2ce6"
+  ],
+  "data_identity": {
+    "train": {
+      "participants": 58403,
+      "eyes": 115787,
+      "ordered_identity_sha256": "7388705764cea76b91e06b3a4de4879fbdd26750b39a93940769dfd7fcef7179"
+    },
+    "development": {
+      "participants": 12510,
+      "eyes": 24814,
+      "ordered_identity_sha256": "b040463d7bca2871e5f964ad2202232a845a94eddef707d7c80374a37a8c6019"
+    },
+    "first_and_last_samples_loaded": true,
+    "paired_cfp_oct_shapes": [2, 3, 224, 224],
+    "test_access": false
+  },
+  "resource_conclusion": {
+    "previous_small_cohort_assumption_invalid_for_this_weekly_host": true,
+    "previous_counts": {"train": 1264, "development": 296},
+    "actual_counts": {"train": 58403, "development": 12510},
+    "gpu_submission_authorized": false,
+    "reason": "Six owner_v7 LOOK allocations retain the active rotation claims, and the full-cohort workload has not been profiled under the proposed 12 GiB and 48-hour envelope. Submitting a seventh job or reusing the small-cohort resource receipt would violate rotation and resource identity.",
+    "next_gate": "When one existing LOOK allocation and its claim release naturally, run a claim-bound finite profiling step on the exact middle checkpoint and loader; only its measured lifecycle peak and throughput may set the full replay request."
+  },
+  "preservation": {
+    "healthy_v7_workers_modified": false,
+    "new_gpu_job_submitted": false,
+    "claim_acquired": false,
+    "production_modified": false,
+    "test_access": false
+  }
+}
