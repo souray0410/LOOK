@@ -1,0 +1,58 @@
+{
+  "schema": "look_missing_postconversion_acceptance_v1",
+  "state": "current_missing_policy_checkpoint_replay_verified",
+  "hosts": 2,
+  "states": 4,
+  "rows": [
+    {
+      "run": "balanced_dropout_20260919_v3",
+      "checkpoint": "best",
+      "source_sha256": "d5400d958b7d65d6d07973580a5aac2a22aa64087aec30a314f51d71f11ad511",
+      "target_sha256": "23dea48bf85b101659f44c19e173c4a41bab8267b545fd3d0d8faf91e5479eac",
+      "conversion_sha256": "ea2c95df41747723a803af0fdc9765fa68e32de02a016cd0597339d8e32d1766",
+      "postconversion_receipt_sha256": "bd038f390eaeefc9751d8160a612ce7792230dececf48e75bd7bb8fc16cd5326",
+      "peak_reserved_bytes": 2462056448
+    },
+    {
+      "run": "balanced_dropout_20260919_v3",
+      "checkpoint": "last",
+      "source_sha256": "a6199f51083c5497e8909700a9f969aa61f913d49bdf3b57268ae09bdf648c0d",
+      "target_sha256": "e608ab60da1c6466e1fcb74481d7cb467c4a552d41f42775c54a8524b51b6285",
+      "conversion_sha256": "ef351b69178ffed4d82ebb453eb5fa46be54a8fb8ed8b39429befc3e7d31f00e",
+      "postconversion_receipt_sha256": "df51d9678e333bfe62853a5cf416fe126c2a540ec1a5cc2d55a75afcc1bc29cd",
+      "peak_reserved_bytes": 2512388096
+    },
+    {
+      "run": "embracenet_single_seed_20260919_v1",
+      "checkpoint": "best",
+      "source_sha256": "a1aae68ac950aba9aa50f790a7be96747cb5e36bbbaae7c2d34c5b486507b7a3",
+      "target_sha256": "4abd7b92568d5d71d81c15635e8665982a4c1ae7042018ab7a07b3619127f322",
+      "conversion_sha256": "dda7a06854286cdd8d9217c585f947a2521d7c38712ddff198d1d35c80c96de7",
+      "postconversion_receipt_sha256": "bcd4319062102518ef65790bb26039a093aa56bed7f1267566668940f035f3d2",
+      "peak_reserved_bytes": 2478833664
+    },
+    {
+      "run": "embracenet_single_seed_20260919_v1",
+      "checkpoint": "last",
+      "source_sha256": "829b1681b339987ce86c5cfab959a3b2012f39398f3717bea1e8424e453588ec",
+      "target_sha256": "ccbb27a75c595a0ad567dafd9a4615941609ce1af136cba1ffc62b106af4be5b",
+      "conversion_sha256": "69812c88104a983604b8ec0ff501199c632d40a96016f48a6449d5a48b6bb28b",
+      "postconversion_receipt_sha256": "f275efdfabdc75e2f9a586c06ac902e779bb468901aca5a26dcba6a8635ff328",
+      "peak_reserved_bytes": 2531262464
+    }
+  ],
+  "full_development": 296,
+  "consecutive_updates": 3,
+  "source_commit": "a3f234d96a12ff3922f21bdd413446d7f4c594c7",
+  "framework_commit": "c78cfbdc9ec01e4dc1dc8ee04d04b2e6a8446808",
+  "companion_commit": "228b1254b1be5c1209831b93f7262962fe5222b7",
+  "rtol": 1e-05,
+  "atol": 1e-06,
+  "test_access": false,
+  "production_cutover": false,
+  "references_migrated": false,
+  "preparation_sha256": "09360b64775a7ef879ef0bb8f337eefcea5e13c195f2f57220d24cf60d9e244c",
+  "raw_replay_acceptance_sha256": "94307917806213d14d0b56b431682491eb812a5e72d17319a6458ccc8db76d81",
+  "audit_script_sha256": "309aa7eab3c3335d29712e8145e52df8edead840e994b55681399bd0b0bf2ba5",
+  "verified_at": 1790141070.109169
+}

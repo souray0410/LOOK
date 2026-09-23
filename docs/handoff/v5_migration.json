@@ -6,10 +6,10 @@
   "evidence": "docs/handoff/v5_rollout_20260922.md",
   "actual_host_checkpoint_acceptance": "docs/acceptance/v5_actual_host_20260922.json",
   "remaining_contract_audit": [
-    "other hosts and PCA/correction assets",
+    "IMD host and other actual consumer assets",
     "search and fitting-resume cache migration",
-    "remaining training and selected-state contracts",
-    "actual production configuration conversion and cutover"
+    "actual production configuration and source-pin revision",
+    "cross-platform continuation and production cutover"
   ],
   "resource_replay": "docs/acceptance/v5_resource_replay_20260922.json",
   "pca_acceptance": "docs/acceptance/v5_pca_20260922.json",
@@ -18,5 +18,17 @@
     "state": "accepted",
     "evidence": "docs/acceptance/v5_four_hosts_20260922.json",
     "production_cutover": false
+  },
+  "missing_policy_host_replay": {
+    "state": "accepted_bounded_migration",
+    "raw_evidence": "docs/acceptance/v5_missing_hosts_raw_20260923.json",
+    "postconversion_evidence": "docs/acceptance/v5_missing_hosts_postconversion_20260923.json",
+    "hosts": [
+      "balanced_dropout_20260919_v3",
+      "embracenet_single_seed_20260919_v1"
+    ],
+    "states": 4,
+    "production_cutover": false,
+    "references_migrated": false
   }
 }
