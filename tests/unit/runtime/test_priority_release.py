@@ -1,4 +1,5 @@
 import json
+import fcntl
 from pathlib import Path
 
 import pytest
@@ -35,8 +36,10 @@ def test_builds_deterministic_core_release(tmp_path, monkeypatch):
     output = tmp_path / "release.json"
     first = module.build(feed, output)
     before = output.read_bytes()
+    before_mtime = output.stat().st_mtime_ns
     second = module.build(feed, output)
     assert first == second and output.read_bytes() == before
+    assert output.stat().st_mtime_ns == before_mtime
     assert checked == ["residual_rrr", "pca_free_mean"] * 2
     assert [row["arm"] for row in first["requirements"]] == ["residual_rrr", "pca_free_mean"]
     assert first["released_search_modes"] == ["best_forward", "greedy"]
@@ -68,3 +71,15 @@ def test_requires_all_four_registered_arms_and_refuses_overwrite(tmp_path, monke
     output.write_text('{}')
     with pytest.raises(ValueError, match="different identity"):
         module.build(feed, output)
+
+
+def test_refuses_concurrent_output_owner(tmp_path, monkeypatch):
+    feed = _feed(tmp_path)
+    monkeypatch.setattr(module, "validate", lambda spec: spec)
+    monkeypatch.setattr(module, "verify_case", lambda run, spec: None)
+    output = tmp_path / "release.json"
+    with (tmp_path / "release.json.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        with pytest.raises(RuntimeError, match="owned by another builder"):
+            module.build(feed, output)
+    assert not output.exists()

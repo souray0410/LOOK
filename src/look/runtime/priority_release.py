@@ -5,6 +5,7 @@ turns already accepted, strictly verified family-search cases into the evidence
 object consumed by :func:`look.runtime.project_dispatch.verify_priority_release`.
 """
 import argparse
+import fcntl
 from pathlib import Path
 
 from look.runtime.state import atomic_write_json, file_sha256
@@ -72,10 +73,19 @@ def build(feed_path, output, *, required_arms=CORE_ARMS):
         "required_arms": list(required_arms),
         "requirements": requirements,
     }
-    if output.exists() and read(output) != receipt:
-        raise ValueError("Existing priority release has a different identity")
-    atomic_write_json(receipt, output)
-    return receipt
+    output.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = output.with_name(output.name + ".lock")
+    with lock_path.open("a") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise RuntimeError("Priority release output is owned by another builder") from exc
+        if output.exists():
+            if read(output) != receipt:
+                raise ValueError("Existing priority release has a different identity")
+            return receipt
+        atomic_write_json(receipt, output)
+        return receipt
 
 
 def main():
