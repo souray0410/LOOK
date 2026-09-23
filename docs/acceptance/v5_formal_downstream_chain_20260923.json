@@ -1,0 +1,60 @@
+{
+  "schema": "look_v5_formal_downstream_chain_v1",
+  "state": "accepted_isolated_candidate",
+  "look_commit": "10fb9988fdee538e63fbc5de1701b4e314fa39bd",
+  "framework": {
+    "commit": "1287681c08846e11364c81653048435482e772a7",
+    "tag": "V5",
+    "wheel_sha256": "c022b4f4b0fa1f29458ad1bf9e0d04f6773e9454ab3bd8c07d416294483aab48",
+    "core_sha256": "fdaf8764c151f12a434987f6f07e005b0fd88421dc7ebbcedd02096c979cb95a",
+    "utils_sha256": "0401df38d9b4cb845987bb15941a8509f5e309f2f7710f106a25b52d61aa0b83"
+  },
+  "mhd_models_commit": "cc16e74a8cfc705d69b3d31efe2daeec9404471f",
+  "representative_chain": {
+    "host_identity": "583b7902416a7e8bcec39e55655ad09932e77b1fc25119cff6872f59a524c66b",
+    "host_checkpoint_sha256": "e4370cd234d100f68997eeabe006053346e3c445bdec1dadd1ea04a11e7b2478",
+    "host_epoch": 35,
+    "node_count": 19,
+    "pca_site_count": 9,
+    "selected_family_mapping_count": 4,
+    "selected_family_artifact_counts": {
+      "pca_free_mean/cfp_missing": 2,
+      "pca_free_mean/oct_missing": 2,
+      "residual_rrr/cfp_missing": 4,
+      "residual_rrr/oct_missing": 2
+    },
+    "development_participants": 296,
+    "binding_sha256": "f9cbb332f926ef708909fdf21f84b1521728a1cf82575d126fd46c04c25744a5",
+    "validation_sha256": "0513d4df1bc5f4def13c5af2b40cc2d5def1c19b4c6f10aac9a37662f35e0010"
+  },
+  "validation": {
+    "all_bound_files_byte_identical": true,
+    "strict_current_host_reader": true,
+    "current_pca_reader": true,
+    "current_family_reader": true,
+    "development_prediction_sha256_equal_to_prior_accepted_migration": true,
+    "refitted": false,
+    "search_rerun": false,
+    "gpu_used": false,
+    "test_access": false,
+    "production_cutover": false
+  },
+  "host_inventory": {
+    "run_roots_with_downstream_state": 8,
+    "pca_tensor_files": 65,
+    "selected_family_banks": 20,
+    "development_prediction_bundles": 64,
+    "search_cached_prediction_bundles": 2505,
+    "family_moment_tensors": 864,
+    "prefix_artifact_tensors": 2464,
+    "search_state_files": 187,
+    "accepted_receipts": 63,
+    "interpretation": "The representative selected inference chain is rebound. Host-specific PCA banks and non-selected search/resume caches remain separate migration work."
+  },
+  "coordination": {
+    "generation5_cache_and_selection_writer_untouched": true,
+    "duplicate_writer_started": false,
+    "new_ibex_gpu_requested": false,
+    "production_owner_changed": false
+  }
+}

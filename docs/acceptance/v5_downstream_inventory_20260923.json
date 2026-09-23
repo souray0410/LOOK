@@ -1,7 +1,7 @@
 {
   "schema": "look_v5_downstream_inventory_v1",
   "state": "partial_migration_with_explicit_open_consumers",
-  "audited_source_commit": "92c97b8577f49c49d04673dbe5571720d2eb6f5c",
+  "audited_source_commit": "10fb9988fdee538e63fbc5de1701b4e314fa39bd",
   "framework_commit": "1287681c08846e11364c81653048435482e772a7",
   "framework_release": {
     "tag": "V5",
@@ -64,6 +64,18 @@
       "production_cutover": false
     },
     {
+      "name": "formal_release_representative_downstream_chain",
+      "scope": "one strict V5 host, one nine-site PCA bank and four selected correction mappings",
+      "state": "accepted_isolated_candidate",
+      "evidence": "v5_formal_downstream_chain_20260923.json",
+      "all_bound_files_byte_identical": true,
+      "current_readers_passed": true,
+      "refitted": false,
+      "search_rerun": false,
+      "gpu_used": false,
+      "production_cutover": false
+    },
+    {
       "name": "runtime_acceptance_entrypoints",
       "scope": "single-device and two-rank engineering checks",
       "state": "implemented_cpu_static_validated_gpu_pending",
@@ -107,7 +119,15 @@
     "runtime_scripts_python_compile": true,
     "fixed_v4_runtime_assertions_removed": true,
     "gpu_execution_on_current_entrypoint": false,
-    "reason_gpu_pending": "No accepted current artifact package and released owned GPU lane were claimed by this repository-only change."
+    "reason_gpu_pending": "The isolated selected chain required only strict deserialization and SHA verification. Full participant inference, non-selected search caches and platform continuation remain separate GPU or writer-owned gates.",
+    "host_inventory": {
+      "run_roots": 8,
+      "pca_tensor_files": 65,
+      "selected_family_banks": 20,
+      "search_cached_prediction_bundles": 2505,
+      "family_moment_tensors": 864,
+      "prefix_artifact_tensors": 2464
+    }
   },
   "conclusion": "LOOK is not fully migrated. Current host candidates and one selected downstream chain have accepted isolated V5 evidence; full search/cache coverage, remaining host-specific banks, A100 continuation and production ownership cutover stay open."
 }
