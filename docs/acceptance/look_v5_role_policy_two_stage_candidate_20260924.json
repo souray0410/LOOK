@@ -1,0 +1,30 @@
+{
+  "schema": "look_v5_role_policy_two_stage_candidate_v1",
+  "state": "implemented_not_deployed",
+  "scope": "control-plane identity only; no Slurm or production-policy mutation",
+  "stage_1": {
+    "base_policy_sha256": "afde7998b16d39332818f2b1f6ad87401b7ff42f653666f85a922065cc1b3b72",
+    "only_change": "append one immutable LOOK V5 request journal",
+    "existing_gpu_job_preserved": "52429877",
+    "existing_pending_finalizer": "52430491",
+    "monitor_action": "replace the pending finalizer one-for-one with an immutable monitor allowing exactly the base and generated LOOK-only policy SHAs before installing the LOOK-only policy"
+  },
+  "stage_2": {
+    "required_previous": "generated LOOK-only policy SHA",
+    "only_change": "Models control plane appends its Uncertainty_Lab journal",
+    "monitor_action": "if still pending, replace the stage-1 monitor one-for-one with an immutable monitor that also allows the exact newly frozen Models policy SHA before installing that policy"
+  },
+  "safety": {
+    "shared_legacy_look_journal_modified": false,
+    "gpu_job_resubmitted": false,
+    "healthy_owner_modified": false,
+    "hot_edit_pending_job_source": false,
+    "sealed_test_access": false
+  },
+  "validation": {
+    "focused_tests": "5 passed",
+    "layout_check": "passed",
+    "terminology_check": "passed"
+  },
+  "open_gate": "Independent review and account-lock deployment of the generated content-addressed artifacts are required; the current v20 finalizer does not authorize either generated policy SHA."
+}
