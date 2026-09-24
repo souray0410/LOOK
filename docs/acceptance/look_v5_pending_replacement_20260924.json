@@ -1,0 +1,26 @@
+{
+  "schema": "look_v5_pending_allocation_replacement_v1",
+  "state": "successor_pending_scheduler_priority",
+  "cache_batches": 520,
+  "old_pending_job": "52422962",
+  "old_had_gpu_step": false,
+  "old_terminal": "CANCELLED",
+  "cancelled_retry": "52429606",
+  "successor_job": "52429877",
+  "successor_state": "PENDING",
+  "successor_reason": "Priority",
+  "scheduler_estimated_start_local": "2026-09-24T22:16:00+03:00",
+  "finalizer_job": "52430491",
+  "finalizer_package": "look_cataract_middle_v5_feature_chain_sharded_v20",
+  "claim_sha256": "2de7231a596483bae9b9382859347fd89c1b39321cd19d1e380c04923741b28d",
+  "replacement_receipt_sha256": "8c5f0b5b57b63025bb31a997f23e41bc9ba3f63f82f0dd417d714072eda00130",
+  "chain_manager_sha256": "4d0e0933533d4820856bcaa9ff50eee2a3a724905f4b7edaf7ceaab3e58181d2",
+  "monitor_sha256": "e717d053d214050695d05a52d5f585ea66d3644df1041f0373b2a0efad3858ba",
+  "run_gpu_sha256": "7048984b685dc00c9dd2219cb7339e5b80def705a7d8365d2e220017862a7cec",
+  "allowed_role_policy_sha256": [
+    "afde7998b16d39332818f2b1f6ad87401b7ff42f653666f85a922065cc1b3b72",
+    "efc451893fbeedf4fb2e22aa07a090910e3530e8e8595e33fb3aebc5e791ec02"
+  ],
+  "healthy_running_owner_stopped": false,
+  "test_access": false
+}
