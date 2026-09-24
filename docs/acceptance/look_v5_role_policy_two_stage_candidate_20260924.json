@@ -22,7 +22,8 @@
     "sealed_test_access": false
   },
   "validation": {
-    "focused_tests": "5 passed",
+    "new_transition_module_tests": "5 passed",
+    "broader_transition_rotation_successor_tests": "13 passed total, including the 5 new-module tests",
     "layout_check": "passed",
     "terminology_check": "passed"
   },
