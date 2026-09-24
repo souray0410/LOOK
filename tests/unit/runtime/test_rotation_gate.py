@@ -33,3 +33,8 @@ def test_completed_claim_binds_receipt_and_terminal():
  validate_completed_claim(c,job="7",task="t",owner="u",start_batch=3,receipt_sha256="abc")
  c["receipt_sha256"]="changed"
  with pytest.raises(ValueError,match="receipt"):validate_completed_claim(c,job="7",task="t",owner="u",start_batch=3,receipt_sha256="abc")
+
+
+def test_signed_non_project_counts_global_not_project():
+ total,counts=account_usage(["9|gpu:a100:2"],{},["LOOK"],non_project={"9"})
+ assert total==2 and counts["LOOK"]==0

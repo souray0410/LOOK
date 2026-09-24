@@ -26,12 +26,15 @@ def existing_lock(path):
         yield fd
     finally: os.close(fd)
 
-def account_usage(lines, ownership, projects):
+def account_usage(lines, ownership, projects, non_project=()):
     total=0;counts={p:0 for p in projects}
     for line in lines:
         job,gres=line.split('|',1);n=gpu_count(gres)
         if not n: continue
         owners=ownership.get(job,set())
+        if not owners and job in set(non_project):
+            total += n
+            continue
         if len(owners)!=1: raise ValueError(f'GPU job {job} has ambiguous or absent journal ownership')
         owner=next(iter(owners))
         if owner not in counts: raise ValueError(f'Unknown project owner: {owner}')
