@@ -90,7 +90,7 @@ def prepare(args: argparse.Namespace) -> dict:
 
     output.mkdir(parents=True)
     states = []
-    for lane, terminal in zip(lanes, terminal_rows, strict=True):
+    for lane, terminal in zip(lanes, terminal_rows):
         lane_root = output / lane["name"]
         evidence = lane_root / "predecessor_terminal.json"
         write_exclusive(evidence, build_failed_terminal_evidence(terminal))

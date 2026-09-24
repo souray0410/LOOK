@@ -94,7 +94,7 @@ def main() -> None:
         source = root / "source.tar"; write_exclusive_bytes(source, b"shadow-source")
         states, candidate_values = [], []
         previous = active_value
-        for lane, failed_row in zip(("even", "odd"), terminal, strict=True):
+        for lane, failed_row in zip(("even", "odd"), terminal):
             lane_root = root / lane; lane_root.mkdir()
             packet = lane_root / "packet.json"
             _write(packet, {"lane_id": lane, "pins": {str(source): sha256(source)}, "test_access": False})
