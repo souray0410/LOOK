@@ -1,5 +1,5 @@
 import os,pathlib,pytest
-from look.runtime.rotation_gate import gpu_count,account_usage,existing_lock,validate_claim
+from look.runtime.rotation_gate import gpu_count,account_usage,existing_lock,validate_claim,validate_completed_claim
 
 def test_counts_multigpu_and_rejects_unknown_gres():
  assert gpu_count('gpu:a100:4')==4
@@ -26,3 +26,10 @@ def test_claim_binds_job_task_owner_and_cursor():
  for key,value in [('job','8'),('task','x'),('owner','v'),('start_batch',4)]:
   args={'job':'7','task':'t','owner':'u','start_batch':3};args[key]=value
   with pytest.raises(ValueError):validate_claim(c,**args)
+
+
+def test_completed_claim_binds_receipt_and_terminal():
+ c={"schema":"look_rotation_claim_v1","state":"completed","job_id":"7","task":"t","owner":"u","start_batch":3,"terminal":{"state":"COMPLETED","exit_code":"0:0"},"receipt_sha256":"abc"}
+ validate_completed_claim(c,job="7",task="t",owner="u",start_batch=3,receipt_sha256="abc")
+ c["receipt_sha256"]="changed"
+ with pytest.raises(ValueError,match="receipt"):validate_completed_claim(c,job="7",task="t",owner="u",start_batch=3,receipt_sha256="abc")

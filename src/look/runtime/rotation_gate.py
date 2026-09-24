@@ -42,3 +42,12 @@ def validate_claim(claim,*,job,task,owner,start_batch=None):
     if claim.get('schema')!='look_rotation_claim_v1' or claim.get('state')!='submitted': raise ValueError('Submitted LOOK claim required')
     if str(claim.get('job_id'))!=str(job) or claim.get('task')!=task or claim.get('owner')!=owner: raise ValueError('Claim/job identity mismatch')
     if start_batch is not None and int(claim.get('start_batch',0))!=int(start_batch): raise ValueError('Claim cursor mismatch')
+
+
+def validate_completed_claim(claim,*,job,task,owner,start_batch,receipt_sha256):
+    if claim.get("schema")!="look_rotation_claim_v1" or claim.get("state")!="completed": raise ValueError("Completed LOOK claim required")
+    if str(claim.get("job_id"))!=str(job) or claim.get("task")!=task or claim.get("owner")!=owner: raise ValueError("Completed claim/job identity mismatch")
+    if int(claim.get("start_batch",0))!=int(start_batch): raise ValueError("Completed claim cursor mismatch")
+    terminal=claim.get("terminal",{})
+    if terminal.get("state")!="COMPLETED" or terminal.get("exit_code")!="0:0": raise ValueError("Completed claim terminal mismatch")
+    if claim.get("receipt_sha256")!=receipt_sha256: raise ValueError("Completed claim receipt changed")
