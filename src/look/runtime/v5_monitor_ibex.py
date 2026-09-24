@@ -124,7 +124,10 @@ class SlurmAdapter:
 
     @staticmethod
     def job_name(spec: dict[str, Any]) -> str:
-        prefix = "lookv22_" if spec.get("mode") == "production_v22" else "lookv21_"
+        prefix = {
+            "production_v22": "lookv22_",
+            "production_v23": "lookv23_",
+        }.get(spec.get("mode"), "lookv21_")
         return prefix + spec_sha256(spec)[:14]
 
     def find_held(self, spec: dict[str, Any]) -> list[str]:
@@ -354,10 +357,11 @@ def build_handover_spec(
     if not replacement.is_file() or not binding.is_file():
         raise ValueError("Replacement command and binding must exist")
     dependency = old_job.get("dependency")
+    version = {"production_v22": "v22", "production_v23": "v23"}.get(mode, "v21")
     result = {
         "schema": "look_v5_monitor_handover_spec_v2",
         "mode": mode,
-        "transaction_id": f"look-v5-{'v22' if mode == 'production_v22' else 'v21'}-{gpu_job['job_id']}-{sha256(binding)[:12]}",
+        "transaction_id": f"look-v5-{version}-{gpu_job['job_id']}-{sha256(binding)[:12]}",
         "old_job_id": str(old_job["job_id"]),
         "gpu_job_id": str(gpu_job["job_id"]),
         "dependency": dependency,

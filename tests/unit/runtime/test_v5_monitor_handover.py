@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from look.runtime.v5_monitor_handover import PHASES, run_handover, stage2_action
+from look.runtime.v5_monitor_handover import PHASES, run_handover, stage2_action, validate_spec
 
 
 def spec(tmp_path):
@@ -117,6 +117,20 @@ def test_single_lock_handover_is_durable_and_idempotent(tmp_path):
     ]
     assert run_handover(**kwargs)["phase"] == "release_verified"
     assert events == ["submit-held", "cancel-old", "commit:600", "release"]
+
+
+def test_v23_production_identity_is_exact(tmp_path):
+    value = spec(tmp_path)
+    value.update(
+        mode="production_v23",
+        old_job_id="52462712",
+        old_command="/immutable/v22/monitor.sh",
+        replacement_command="/immutable/v23/monitor.sh",
+    )
+    validate_spec(value)
+    value["old_job_id"] = "52455266"
+    with pytest.raises(ValueError, match="V23 production chain identity"):
+        validate_spec(value)
 
 
 def test_recovery_discovers_one_held_job_without_duplicate_submit(tmp_path):
