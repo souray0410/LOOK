@@ -50,6 +50,11 @@ def prepare(args: argparse.Namespace) -> dict:
         args.runner_independent_review_sha256,
         "R&B independent code review",
     )
+    bundle_review = _exact(
+        args.bundle_independent_review,
+        args.bundle_independent_review_sha256,
+        "R&B cap-10 bundle independent review",
+    )
     proposal = _exact(args.policy_proposal, args.policy_proposal_sha256, "R&B policy proposal")
 
     slurm = SlurmAdapter(user=PRODUCTION_USER, account=PRODUCTION_ACCOUNT)
@@ -74,6 +79,7 @@ def prepare(args: argparse.Namespace) -> dict:
             runner_archive=archive,
             runner_acceptance=acceptance,
             runner_independent_review=independent_review,
+            bundle_independent_review=bundle_review,
             policy_proposal=proposal,
         ),
     )
@@ -157,7 +163,8 @@ def parser() -> argparse.ArgumentParser:
         "candidate-policy-sha256", "runner-archive", "runner-archive-sha256",
         "runner-acceptance", "runner-acceptance-sha256", "policy-proposal",
         "policy-proposal-sha256", "runner-independent-review",
-        "runner-independent-review-sha256",
+        "runner-independent-review-sha256", "bundle-independent-review",
+        "bundle-independent-review-sha256",
     ):
         prep.add_argument(f"--{field}", required=True)
     prep.add_argument("--v22-allowed-policy-sha256", action="append", required=True)

@@ -38,6 +38,7 @@ OWNER_FIELDS = {
     "candidate_policy_sha256", "runner_commit", "runner_archive",
     "runner_archive_sha256", "runner_acceptance", "runner_acceptance_sha256",
     "runner_independent_review", "runner_independent_review_sha256",
+    "bundle_independent_review", "bundle_independent_review_sha256",
     "policy_proposal", "policy_proposal_sha256", "test_access",
 }
 
@@ -56,6 +57,7 @@ def build_radon_owner_contract(
     runner_archive: str | Path,
     runner_acceptance: str | Path,
     runner_independent_review: str | Path,
+    bundle_independent_review: str | Path,
     policy_proposal: str | Path,
 ) -> dict[str, Any]:
     values = {
@@ -64,6 +66,7 @@ def build_radon_owner_contract(
         "runner_archive": Path(runner_archive).resolve(),
         "runner_acceptance": Path(runner_acceptance).resolve(),
         "runner_independent_review": Path(runner_independent_review).resolve(),
+        "bundle_independent_review": Path(bundle_independent_review).resolve(),
         "policy_proposal": Path(policy_proposal).resolve(),
     }
     for path in values.values():
@@ -83,6 +86,8 @@ def build_radon_owner_contract(
         "runner_acceptance_sha256": sha256(values["runner_acceptance"]),
         "runner_independent_review": str(values["runner_independent_review"]),
         "runner_independent_review_sha256": sha256(values["runner_independent_review"]),
+        "bundle_independent_review": str(values["bundle_independent_review"]),
+        "bundle_independent_review_sha256": sha256(values["bundle_independent_review"]),
         "policy_proposal": str(values["policy_proposal"]),
         "policy_proposal_sha256": sha256(values["policy_proposal"]),
         "test_access": False,
@@ -169,12 +174,17 @@ def verify_radon_policy_plan(
     )
     before, candidate = read_json(active), read_json(candidate_path)
     expected = copy.deepcopy(before)
-    journals = expected["projects"]["Radon_Bridge"]["request_journals"]
+    radon_before = before["projects"]["Radon_Bridge"]
+    radon_expected = expected["projects"]["Radon_Bridge"]
+    if radon_before.get("reserved_gpus") != 9:
+        raise ValueError("Accepted UL policy no longer has the reviewed R&B cap 9")
+    radon_expected["reserved_gpus"] = 10
+    journals = radon_expected["request_journals"]
     if str(journal) in journals:
         raise ValueError("R&B journal is already registered")
     journals.append(str(journal))
     if candidate != expected:
-        raise ValueError("Candidate policy changes more than one R&B journal append")
+        raise ValueError("Candidate policy is not the exact temporary R&B cap-10 plus one-journal state")
     journal_value = read_json(journal)
     if (
         journal_value.get("schema") != "radon_paused_sixth_v5_requests_v2"
@@ -228,19 +238,119 @@ def verify_radon_policy_plan(
     proposal = read_json(_require_sha(
         contract["policy_proposal"], contract["policy_proposal_sha256"], "R&B policy proposal"
     ))
+    bundle_review = read_json(_require_sha(
+        contract["bundle_independent_review"],
+        contract["bundle_independent_review_sha256"],
+        "R&B cap-10 bundle independent review",
+    ))
+    reviewed = bundle_review.get("reviewed_bundle", {})
+    verdict = bundle_review.get("verdict", {})
+    compatibility = bundle_review.get("look_policy_compatibility", {})
+    if (
+        bundle_review.get("schema")
+            != "radon_paused_sixth_v5_cap10_bundle_independent_review_v1"
+        or bundle_review.get("conclusion")
+            != "GO_FOR_LOOK_V23_PREBINDING_ONLY_PRODUCTION_NO_GO"
+        or reviewed.get("bundle_commit") != "eb11632f24c5e58cb8ca08570b25bf6e255b2302"
+        or reviewed.get("runner_source_commit") != RUNNER_COMMIT
+        or reviewed.get("policy_proposal_sha256") != contract["policy_proposal_sha256"]
+        or reviewed.get("slot_transition_contract_sha256")
+            != proposal.get("slot_transition_contract_sha256")
+        or reviewed.get("source_archive_sha256") != contract["runner_archive_sha256"]
+        or reviewed.get("journal_initial_sha256") != plan["appended_journal_initial_sha256"]
+        or verdict.get("look_v23_prebinding") != "GO"
+        or verdict.get("production_policy_install") != "NO_GO"
+        or verdict.get("radon_gpu_submission") != "NO_GO"
+        or verdict.get("rollback_policy_install") != "NO_GO"
+        or verdict.get("source_claim_reservation") != "NO_GO"
+        or compatibility.get("v23_prebinding_allowed_policy_sha256s")
+            != [expected_initial_policy_sha256, plan["candidate_policy_sha256"]]
+        or compatibility.get("v23_accepts_rollback_policy") is not False
+        or compatibility.get("rollback_requires_new_held_first_look_successor_stage2") is not True
+    ):
+        raise ValueError("R&B cap-10 bundle review does not authorize the exact v23 prebinding")
     if (
         proposal.get("schema") != "radon_paused_sixth_v5_policy_proposal_v1"
         or proposal.get("state") != "accepted"
+        or proposal.get("previous_role_policy_sha256") != expected_initial_policy_sha256
         or proposal.get("role_policy_sha256") != plan["candidate_policy_sha256"]
+        or Path(proposal.get("role_policy", "")).resolve() != candidate_path
         or proposal.get("journal") != str(journal)
         or proposal.get("journal_initial_sha256") != plan["appended_journal_initial_sha256"]
         or proposal.get("runner_commit") != RUNNER_COMMIT
+        or Path(proposal.get("runner_archive", "")).resolve()
+            != Path(contract["runner_archive"]).resolve()
+        or proposal.get("runner_archive_sha256") != contract["runner_archive_sha256"]
+        or proposal.get("temporary_reserved_gpus") != 10
+        or proposal.get("steady_state_reserved_gpus") != 9
+        or proposal.get("production_dispatch_authorized") is not False
+        or proposal.get("production_policy_installed") is not False
         or proposal.get("test_access") is not False
     ):
         raise ValueError("R&B policy proposal is not independently accepted")
+
+    rollback = read_json(_require_sha(
+        proposal["rollback_role_policy"],
+        proposal["rollback_role_policy_sha256"],
+        "R&B rollback policy",
+    ))
+    expected_rollback = copy.deepcopy(candidate)
+    expected_rollback["projects"]["Radon_Bridge"]["reserved_gpus"] = 9
+    if rollback != expected_rollback:
+        raise ValueError("R&B rollback is not the exact cap-9 state retaining the new journal")
+
+    slot = read_json(_require_sha(
+        proposal["slot_transition_contract"],
+        proposal["slot_transition_contract_sha256"],
+        "R&B slot transition contract",
+    ))
+    if (
+        slot.get("schema") != "radon_paused_sixth_v5_slot_transition_contract_v1"
+        or slot.get("state") != "prepared_read_only_no_production_mutation"
+        or slot.get("transition") != "temporary_radon_role_9_to_10_for_one_formal_v5_request"
+        or slot.get("production_mutated") is not False
+        or slot.get("gpu_requested") is not False
+        or slot.get("test_access") is not False
+        or slot.get("initial_role_policy_sha256") != expected_initial_policy_sha256
+        or slot.get("proposed_role_policy_sha256") != plan["candidate_policy_sha256"]
+        or slot.get("rollback_role_policy_sha256") != proposal["rollback_role_policy_sha256"]
+        or slot.get("v4_preemption", {}).get("authorized_by_this_contract") is not False
+        or slot.get("legacy_dispatcher", {}).get("must_remain_unchanged_until_coupled_handover") is not True
+        or "install rollback only after the current LOOK successor accepts the rollback SHA or a new held-first LOOK monitor publishes matching stage2 acceptance"
+            not in slot.get("rollback_rules", [])
+        or slot.get("capacity_at_snapshot", {}).get("account_ceiling") != 24
+        or slot.get("capacity_at_snapshot", {}).get("account_running_pending") != 22
+        or slot.get("capacity_at_snapshot", {}).get("post_request_upper_bound") != 23
+        or slot.get("capacity_at_snapshot", {}).get("remaining_account_slots") != 1
+        or slot.get("capacity_at_snapshot", {}).get("radon_initial_cap") != 9
+        or slot.get("capacity_at_snapshot", {}).get("radon_proposed_cap") != 10
+        or slot.get("capacity_at_snapshot", {}).get("radon_running_pending") != 9
+    ):
+        raise ValueError("R&B slot transition contract changed the reviewed capacity boundary")
+    snapshot = read_json(_require_sha(
+        slot["live_capacity_snapshot"],
+        slot["live_capacity_snapshot_sha256"],
+        "R&B live-capacity snapshot",
+    ))
+    if (
+        proposal.get("live_capacity_snapshot") != slot["live_capacity_snapshot"]
+        or proposal.get("live_capacity_snapshot_sha256") != slot["live_capacity_snapshot_sha256"]
+        or snapshot.get("schema") != "radon_v5_live_capacity_snapshot_v1"
+        or snapshot.get("policy_sha256") != expected_initial_policy_sha256
+        or snapshot.get("account_ceiling") != 24
+        or snapshot.get("account_running_pending") != 22
+        or snapshot.get("role_live_gpus")
+            != {"LOOK": 7, "Radon_Bridge": 9, "Uncertainty_Lab": 2, "legacy_native_unregistered": 4}
+        or snapshot.get("unresolved_gpu_intents")
+            != {"LOOK": 0, "Radon_Bridge": 0, "Uncertainty_Lab": 0}
+        or snapshot.get("test_access") is not False
+    ):
+        raise ValueError("R&B capacity snapshot does not prove the reviewed spare slot")
     return {
         "plan": plan,
         "plan_path": path,
+        # Rollback is deliberately excluded. Its installation requires a
+        # later held-first LOOK successor and its own stage-2 acceptance.
         "allowed_policy_sha256": [expected_initial_policy_sha256, plan["candidate_policy_sha256"]],
     }
 
