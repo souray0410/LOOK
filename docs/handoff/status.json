@@ -2,21 +2,21 @@
   "schema": "research_project_status_v1",
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
-  "phase": "historical_single_seed_science_accepted_v5_candidate_migration_partial",
-  "next_acceptance": "EmbraceNet已完成首个真实缺失方法A vs同一A+LOOK单seed development独立科学验收；当前发布纠错/后验机制解释集成收口。下一最小A合同为ShaSpec，但实现来源/许可/2D分类adaptation/core机制/缺失协议/合法LOOK节点/远端离线准入六门槛未闭环前不训练；test继续封存。 V5工程迁移下一门槛：下游拟合/搜索缓存与生产引用、Ibex A100跨平台续训、当前owner安全交接；候选宿主通过不代表全项目生产切换。",
+  "phase": "formal_v5_ws02_full_host_running_ibex_full_matched_chain_queued",
+  "next_acceptance": "核验 WS02 宿主完整训练与选优产物，并把其独立运行接入完整匹配修正链；Ibex 获卡后验证九站点实际特征、PCA、匹配修正及最终报告。",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "92c97b8577f49c49d04673dbe5571720d2eb6f5c",
-  "evidence_cutoff": "2026-09-23T19:01:00+00:00",
-  "verified_at": "2026-09-23T19:01:24+00:00",
+  "source_commit": "459e8a3dd699091475d9272f1a92d84884a5f08b",
+  "evidence_cutoff": "2026-09-24T19:58:39.859208+00:00",
+  "verified_at": "2026-09-24T19:58:39.859208+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
     "implemented": "verified",
-    "deployed": "not_rechecked",
-    "running": "not_rechecked",
+    "deployed": "partial",
+    "running": "partial",
     "accepted": "partial"
   },
   "results": [
@@ -82,6 +82,7 @@
     }
   ],
   "limitations": [
+    "2026-09-24：本次刷新仅更新运行与交接证据；下方原科研结果仍以各自报告日期和协议为准。当前状态以本文件 phase/next_acceptance/blockers 和本次 acceptance 为准，旧候选说明仅属历史。",
     "当前搜索上线使用原PCA/GCV算子；不能代替其他线性修正方法独立搜索。",
     "首种子五路线统计为dev探索结果，不代表多种子重复或独立test。",
     "预检和任务登记不等于正式研究完成。",
@@ -99,9 +100,9 @@
     "52387700已验正式V5全量cohort身份绑定的最大眼数资源生命周期：3次更新、断点保存恢复和development forward；这不是58,403 train/12,510 dev的九站点全量回放，PCA/全dev预测/首搜索决策仍未接受。"
   ],
   "blockers": [
-    "独立仿射家族完整主搜索与代表起点并行对照仍有验收缺口，整周重复种子门槛保持关闭。",
-    "真实跨租期到期恢复尚未发生；已绑定自动接续并通过锁、状态、资源和两层owner测试，但不等于实际到期恢复完成。",
-    "正式V5 middle宿主仅完成资源生命周期准入；全量train-only九站点特征/PCA、12,510人development预测和首个确定性搜索决策尚未执行，不能声明该宿主迁移完成。"
+    "Ibex GPU 52429877 尚未获批；后继链的部署和 33 项测试不能冒充实际全量计算。",
+    "WS02 宿主后继匹配研究链尚未部署，当前仅宿主训练及干净租期接续自动运行。",
+    "完整原研究矩阵尚未全部迁移；既往 V4 结果不改写为 V5。"
   ],
   "actions": [
     "新q32正式步骤因全量dev RSS增长失败，已确认旧step死亡；原run/spec恢复至51909172.10。allocator环境调整后通过782批完整dev，自动进入train joint_input×16拟合。不是科学完成，拟合验收仍待完成。",
@@ -145,7 +146,8 @@
     "Normal dispatch and priority qualification share the same weekly/dependency policy; qualification is followed by an exclusive target claim before parent pause. Late probes cannot pause a finished parent. Failed workers are quarantined per claim. Runtime suite 96 passed against the original pinned V4. Candidate only; no live owner changed.",
     "V5候选新增四宿主八状态：原16/128批量，当前严格reader、296dev、各3连续更新独立接受；spec及下游引用尚未切换。",
     "2026-09-23：balanced dropout、EmbraceNet、IMD候选当前spec/receipt和严格V5 best/last在ws02单卡独立回放通过；原源码/资产保留，生产交接尚未执行。",
-    "Ibex LOOK第7保留槽按共享account lock、原request journal和排他claim合法领取；v2/v3启动失败均保留，修复后的52387700在A100完成，峰值device_used 7.246GB、allocated 6.079GB、reserved 6.646GB、host RSS 1.979GB，test未访问。下一任务复用该资源门执行全量train-only九站点PCA与全dev预测/首决策。"
+    "Ibex LOOK第7保留槽按共享account lock、原request journal和排他claim合法领取；v2/v3启动失败均保留，修复后的52387700在A100完成，峰值device_used 7.246GB、allocated 6.079GB、reserved 6.646GB、host RSS 1.979GB，test未访问。下一任务复用该资源门执行全量train-only九站点PCA与全dev预测/首决策。",
+    "2026-09-24 主窗口现场核验：WS02 完整白内障数据 58,403 train / 12,510 development 已逐数组 SHA 验收；正式 V5 宿主在 GPU1 已完成 536 次更新并进入第 2 epoch。独立宿主监督进程在干净租期暂停后自动恢复。Ibex 全量特征、train-only PCA、九站点匹配修正与开发集报告链已经部署，GPU 52429877 排队，后继监控 52511764 等待依赖。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",
@@ -309,6 +311,10 @@
     {
       "label": "V5下游消费者清点、generation5单写入边界与当前未完成项",
       "url": "https://github.com/souray0410/LOOK/blob/codex/v5-rollout/docs/acceptance/v5_downstream_inventory_20260923.json"
+    },
+    {
+      "label": "2026-09-24 主窗口实际部署与运行范围",
+      "url": "https://github.com/souray0410/LOOK/blob/codex/look-v24-runtime-pin/docs/acceptance/main_window_runtime_20260924.json"
     }
   ]
 }

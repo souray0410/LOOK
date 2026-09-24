@@ -1,0 +1,34 @@
+{
+  "schema": "project_main_window_runtime_snapshot_v1",
+  "project": "LOOK",
+  "verified_at": "2026-09-24T19:58:39.859208+00:00",
+  "framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "source_commit": "459e8a3dd699091475d9272f1a92d84884a5f08b",
+  "summary": "WS02 完整白内障数据 58,403 train / 12,510 development 已逐数组 SHA 验收；正式 V5 宿主在 GPU1 已完成 536 次更新并进入第 2 epoch。独立宿主监督进程在干净租期暂停后自动恢复。Ibex 全量特征、train-only PCA、九站点匹配修正与开发集报告链已经部署，GPU 52429877 排队，后继监控 52511764 等待依赖。",
+  "details": {
+    "ws02": {
+      "train": 58403,
+      "development": 12510,
+      "arrays_accepted": 141826,
+      "optimizer_updates_observed": 536,
+      "epoch": 2,
+      "gpu": 1,
+      "supervisor_pid": 1298153
+    },
+    "ibex": {
+      "gpu_job": 52429877,
+      "monitor_job": 52511764,
+      "state": "pending",
+      "targeted_tests_passed": 33
+    }
+  },
+  "next_acceptance": "核验 WS02 宿主完整训练与选优产物，并把其独立运行接入完整匹配修正链；Ibex 获卡后验证九站点实际特征、PCA、匹配修正及最终报告。",
+  "limitations": [
+    "Ibex GPU 52429877 尚未获批；后继链的部署和 33 项测试不能冒充实际全量计算。",
+    "WS02 宿主后继匹配研究链尚未部署，当前仅宿主训练及干净租期接续自动运行。",
+    "完整原研究矩阵尚未全部迁移；既往 V4 结果不改写为 V5。"
+  ],
+  "test_access": false,
+  "hosted_ci": "not_run_actions_quota_exhausted",
+  "evidence_type": "runtime_snapshot_not_new_scientific_acceptance"
+}

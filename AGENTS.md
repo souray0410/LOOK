@@ -1,3 +1,7 @@
+# 2026-09-24 当前主窗口执行约束
+
+用户当前禁止使用子智能体；由唯一 PHD 主窗口直接执行与验收，不派发其他 agent。以下历史分工条款不再用于当前执行。最新状态读 docs/handoff/status.json 与 docs/acceptance/main_window_runtime_20260924.json。Liu 只在 Ibex 两个 A100 项目位，MHD_Models 另两个目标位；ws02 GPU1 属 LOOK、GPU0 属 Radon_Bridge。历史 ws02 Liu、低优先级或禁止 Ibex 的规则已经被用户新授权取代，不能重启历史已完成实验。额度需真实部署和账本确认。
+
 # Repository instructions
 Read workspace/REPOSITORY_STANDARD.md and docs/development.md before changes. This is a new research preparation branch, not a continuation of archived queues. Do not restore legacy folder layouts or copy historical reports into this branch. Preserve scientific operators and MHD Node semantics. Install the fixed third_party/MHD_Framework as its own package; do not embed it in this project wheel. New training or test access requires the applicable data and study protocol. Shared management files and scripts must match the peer research project. Validate installation, structure, imports, tests and source digests before deployment.
 

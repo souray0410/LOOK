@@ -1,3 +1,15 @@
+# 当前执行交接（2026-09-24T19:58:39.859208+00:00）
+
+WS02 完整白内障数据 58,403 train / 12,510 development 已逐数组 SHA 验收；正式 V5 宿主在 GPU1 已完成 536 次更新并进入第 2 epoch。独立宿主监督进程在干净租期暂停后自动恢复。Ibex 全量特征、train-only PCA、九站点匹配修正与开发集报告链已经部署，GPU 52429877 排队，后继监控 52511764 等待依赖。
+
+下一项：核验 WS02 宿主完整训练与选优产物，并把其独立运行接入完整匹配修正链；Ibex 获卡后验证九站点实际特征、PCA、匹配修正及最终报告。
+
+主窗口直接执行，用户已禁止子智能体。Liu 仅 Ibex 两张 A100，Models 另两张目标；ws02 GPU1 LOOK / GPU0 R&B。配额、唯一 claim 和释放后逐张申请继续生效；不新增竞争调度器。
+
+[当前状态](status.json) · [本次公开汇总回执](../acceptance/main_window_runtime_20260924.json)。以下为按日期保留的历史交接，旧“未启动”或资源分工不能覆盖本节。
+
+---
+
 [2026-09-22 V5 候选迁移与未完成门槛](v5_rollout_20260922.md)
 
 2026-09-23 工程迁移更新：balanced dropout、EmbraceNet、IMD 三条真实宿主的原始 best/last，已分别按实际缺失模态目标完成严格 V5 转换、当前 spec/receipt 身份修订与单张32 GiB Ada 正常建图回放；完整296人 development 与各3次原16/128连续更新通过独立复核。IMD 同时检查完整、缺 OCT、缺 CFP 三种状态。证据及限度见 [V5 候选迁移交接](v5_rollout_20260922.md)；历史训练来源仍是 V4，所有候选 `dispatch_authorized=false`、`production_cutover=false`。原科研结果和本页下方历史截点不因工程迁移被改写。下游拟合/搜索缓存、Ibex A100 续训、正式框架发布及全项目交接仍开放。
