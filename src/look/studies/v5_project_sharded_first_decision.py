@@ -59,7 +59,15 @@ def execute(*,source_run,checkpoint,cache,pca,output,inputs_factory,device,gpu_b
  write_json_atomic(identity,output/'identity.json');write_json_atomic(receipt,output/'accepted.json');return receipt
 
 def main(argv=None):
- p=argparse.ArgumentParser();p.add_argument('--source-run',required=True);p.add_argument('--checkpoint',required=True);p.add_argument('--cache',required=True);p.add_argument('--pca',required=True);p.add_argument('--output',required=True);p.add_argument('--device',default='cuda:0');p.add_argument('--gpu-budget-bytes',required=True,type=int);a=p.parse_args(argv)
+ p=argparse.ArgumentParser();p.add_argument('--source-run',required=True);p.add_argument('--checkpoint',required=True);p.add_argument('--cache',required=True);p.add_argument('--pca',required=True);p.add_argument('--output',required=True);p.add_argument('--device',default='cuda:0');p.add_argument('--gpu-budget-bytes',required=True,type=int)
+ p.add_argument('--comparison-contract');p.add_argument('--comparison-output');a=p.parse_args(argv)
+ if bool(a.comparison_contract)!=bool(a.comparison_output): raise ValueError('Comparison contract and output must be configured together')
  validate_claim();from expanded.native import Inputs
- print(json.dumps(execute(source_run=a.source_run,checkpoint=a.checkpoint,cache=a.cache,pca=a.pca,output=a.output,inputs_factory=Inputs,device=torch.device(a.device),gpu_budget_bytes=a.gpu_budget_bytes)),flush=True)
+ receipt=execute(source_run=a.source_run,checkpoint=a.checkpoint,cache=a.cache,pca=a.pca,output=a.output,inputs_factory=Inputs,device=torch.device(a.device),gpu_budget_bytes=a.gpu_budget_bytes)
+ if a.comparison_contract:
+  from look.studies.v5_full_cohort_first_decision_gate import execute as compare
+  comparison=compare(first_prefix=pathlib.Path(a.output),contract_path=pathlib.Path(a.comparison_contract),output=pathlib.Path(a.comparison_output))
+  print(json.dumps({'first_prefix':receipt,'comparison':comparison}),flush=True)
+  if comparison['state']!='eligible_handoff': raise SystemExit(75)
+ else: print(json.dumps(receipt),flush=True)
 if __name__=='__main__':main()
