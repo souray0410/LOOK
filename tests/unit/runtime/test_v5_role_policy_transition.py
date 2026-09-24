@@ -9,6 +9,7 @@ from look.runtime.v5_role_policy_transition import (
     build_pending_monitor_replacement,
     build_v21_chain_manager,
     build_look_only_policy,
+    prepare_v21_package,
     prepare,
     verify_monitor_policy,
     verify_look_only_delta,
@@ -102,12 +103,45 @@ def test_pending_monitor_accepts_intermediate_look_policy_only(tmp_path):
 
 
 def test_v21_redirects_successors_to_dedicated_journal(tmp_path):
-    old = tmp_path/'v20.py'
-    old.write_text("import pathlib\nJOURNAL=ROOT/'look_forward_20260916/lease_recovery_20260917/dispatcher/requests.json'\n"
+    package = tmp_path/'v5_rollout_20260922'/'v20'
+    package.mkdir(parents=True)
+    old = package/'chain_manager.py'
+    old.write_text("import pathlib\nPKG=ROOT/'v5_rollout_20260922/v20'\nJOURNAL=ROOT/'look_forward_20260916/lease_recovery_20260917/dispatcher/requests.json'\n"
                    "if policy_sha not in {'afde7998b16d39332818f2b1f6ad87401b7ff42f653666f85a922065cc1b3b72','efc451893fbeedf4fb2e22aa07a090910e3530e8e8595e33fb3aebc5e791ec02'}:raise ValueError\n")
     digest=hashlib.sha256(old.read_bytes()).hexdigest()
+    new_package=tmp_path/'v5_rollout_20260922'/'v21'
     result=build_v21_chain_manager(v20_source=old,expected_sha256=digest,
+                                   v20_package=package,v21_package=new_package,
                                    dedicated_journal=tmp_path/'dedicated.json',allowed_policy_sha256=['old','look'])
     assert str((tmp_path/'dedicated.json').resolve()) in result
     assert "lease_recovery_20260917" not in result
     assert "'old','look'" in result
+    assert str(new_package.resolve()) in result
+    assert str(package.resolve()) not in result
+
+
+def test_v21_package_owns_all_future_stage_paths(tmp_path):
+    old=tmp_path/'v5_rollout_20260922'/'v20'; old.mkdir(parents=True)
+    new=tmp_path/'v5_rollout_20260922'/'v21'; journal=tmp_path/'look_v5_requests.json'
+    (old/'source/pkg').mkdir(parents=True); (old/'source/pkg/module.py').write_text('VALUE=1\n')
+    (old/'chain_manager.py').write_text(
+        "import pathlib\nROOT=pathlib.Path('/root')\nPKG=ROOT/'v5_rollout_20260922/v20';JOURNAL=ROOT/'look_forward_20260916/lease_recovery_20260917/dispatcher/requests.json'\n"
+        "if policy_sha not in {'afde7998b16d39332818f2b1f6ad87401b7ff42f653666f85a922065cc1b3b72','efc451893fbeedf4fb2e22aa07a090910e3530e8e8595e33fb3aebc5e791ec02'}:raise ValueError\n"
+    )
+    (old/'stage_manager.py').write_text(
+        "import pathlib\nROOT=pathlib.Path('/root')\nPKG=ROOT/'v5_rollout_20260922/v20';J=ROOT/'look_forward_20260916/lease_recovery_20260917/dispatcher/requests.json'\n"
+    )
+    for name in ('monitor.sh','stage_monitor.sh','run_gpu.sbatch','run_pca.sbatch','run_decision.sbatch'):
+        (old/name).write_text(f'#!/bin/bash\nB={old.resolve()}\n')
+    result=prepare_v21_package(
+        v20_package=old,v21_package=new,
+        v20_chain_sha256=hashlib.sha256((old/'chain_manager.py').read_bytes()).hexdigest(),
+        v20_monitor_sha256=hashlib.sha256((old/'monitor.sh').read_bytes()).hexdigest(),
+        dedicated_journal=journal,allowed_policy_sha256=['base','look'],
+    )
+    assert result['v21_package']==str(new.resolve())
+    for path in new.rglob('*'):
+        if path.is_file() and path.name!='package_manifest.json':
+            assert str(old.resolve()) not in path.read_text(errors='ignore')
+    assert str(journal.resolve()) in (new/'chain_manager.py').read_text()
+    assert str(journal.resolve()) in (new/'stage_manager.py').read_text()
