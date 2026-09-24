@@ -417,3 +417,20 @@ unmodified until completed-step checkpoint handover and numerical acceptance.
 
 
 2026-09-22追加：另外四个真实宿主（ResNet50、MMTM、fusion features/middle）的8份选优/完整断点已离线转换，并通过当前严格V5 reader的296人dev与各3次16/128连续更新。原优化器、scheduler、RNG、progress在last路径恢复；原权重与历史保持。balanced dropout、EmbraceNet、IMD及这些宿主的下游PCA/修正/搜索缓存、当前spec引用仍未完成。 详见../acceptance/v5_four_hosts_20260922.json；生产切换仍未完成。
+
+## 2026-09-24 Complete V5 matched continuation
+
+The main task now owns execution without subagents. The existing middle-host
+cache/PCA chain is extended to the original full matched protocol: all nine
+sites, both missing patterns, original factors/latent dimensions and LOOK,
+single-final, all-on, bias, affine and available-parent controls. The selected
+V5 host stays frozen. This is V5 recomputation, not asserted V4 numerical parity.
+The full cohort and sealed test remain unchanged. Lease pauses resume saved
+per-site decisions; cache continuation is bounded by measured time/storage,
+not an arbitrary 512-batch cap. The stage submitter shares the existing account
+lock, registered LOOK journal and signed legacy ownership accounting.
+
+Local targeted verification: 33 tests passed, including full-scope/resume,
+modified evidence rejection, incomplete cache rejection, terminal-versus-live
+ownership, monitor handover and runtime pinning. Deployment/job evidence belongs
+in the private PHD rollout receipt; this source change alone is not GPU acceptance.
