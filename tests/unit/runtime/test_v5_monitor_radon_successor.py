@@ -97,6 +97,7 @@ def fixture(tmp_path: Path):
         "production_policy_mutated": False,
     })
     bundle_review = tmp_path / "bundle-review.json"
+    transaction_review = tmp_path / "transaction-review.json"
     proposal = tmp_path / "proposal.json"
     write(proposal, {
         "schema": "radon_paused_sixth_v5_policy_proposal_v1", "state": "accepted",
@@ -138,11 +139,48 @@ def fixture(tmp_path: Path):
             "rollback_requires_new_held_first_look_successor_stage2": True,
         },
     })
+    write(transaction_review, {
+        "schema": "radon_paused_sixth_v5_production_transaction_independent_review_v1",
+        "conclusion": "TRANSACTION_DESIGN_GO_PRODUCTION_EXECUTION_NO_GO",
+        "candidate": {
+            "transaction_commit": "5ba82e5ea7f44237aafac158ac2b7ec0e1e9de06",
+            "production_transaction_sha256": "491675054f5f831fd3c0effa62067136bc8e74bf13dd6ba7816891423ced5383",
+            "manifest_sha256": "67e25eb587dc6c8a05be252422d4a6d24cb5c6cdb028490c8d7459fa189e2ab7",
+            "runner_source_commit": RUNNER_COMMIT,
+            "policy_proposal_sha256": hashlib.sha256(proposal.read_bytes()).hexdigest(),
+            "source_archive_sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
+            "journal_initial_sha256": journal_sha,
+            "temporary_policy_sha256": candidate_sha,
+            "steady_policy_sha256": rollback_sha,
+        },
+        "dependencies": {
+            "bundle_review_receipt_sha256": hashlib.sha256(bundle_review.read_bytes()).hexdigest(),
+            "code_review_receipt_sha256": hashlib.sha256(review.read_bytes()).hexdigest(),
+        },
+        "look_stage2_contract": {
+            "required_schema": "look_v5_monitor_stage2_acceptance_v1",
+            "required_status": "accepted", "required_policy_sha256": candidate_sha,
+            "successor_monitor_job_id_must_be_real_numeric_v23_job": True,
+            "successor_monitor_identity_verified": True,
+            "predecessor_release_verified": True, "test_access": False,
+        },
+        "validation": {"gpu_requested": False, "production_mutated": False,
+                       "remote_hashes_match_candidate": True},
+        "verdict": {"look_v23_prebinding_may_bind_this_review": "GO",
+                    "production_transaction_design": "GO",
+                    "temporary_policy_install_now": "NO_GO",
+                    "radon_gpu_submission_now": "NO_GO"},
+        "rollback_review": {
+            "requires_later_held_first_look_successor_stage2_for_ff390318": True,
+            "installation_verdict": "NO_GO",
+        },
+    })
     contract = tmp_path / "owner.json"
     write(contract, build_radon_owner_contract(
         journal=journal, candidate_policy=candidate, runner_archive=archive,
         runner_acceptance=acceptance, runner_independent_review=review,
         bundle_independent_review=bundle_review,
+        transaction_independent_review=transaction_review,
         policy_proposal=proposal,
     ))
     plan = tmp_path / "plan.json"

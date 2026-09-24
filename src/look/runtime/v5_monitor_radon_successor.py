@@ -39,6 +39,7 @@ OWNER_FIELDS = {
     "runner_archive_sha256", "runner_acceptance", "runner_acceptance_sha256",
     "runner_independent_review", "runner_independent_review_sha256",
     "bundle_independent_review", "bundle_independent_review_sha256",
+    "transaction_independent_review", "transaction_independent_review_sha256",
     "policy_proposal", "policy_proposal_sha256", "test_access",
 }
 
@@ -58,6 +59,7 @@ def build_radon_owner_contract(
     runner_acceptance: str | Path,
     runner_independent_review: str | Path,
     bundle_independent_review: str | Path,
+    transaction_independent_review: str | Path,
     policy_proposal: str | Path,
 ) -> dict[str, Any]:
     values = {
@@ -67,6 +69,7 @@ def build_radon_owner_contract(
         "runner_acceptance": Path(runner_acceptance).resolve(),
         "runner_independent_review": Path(runner_independent_review).resolve(),
         "bundle_independent_review": Path(bundle_independent_review).resolve(),
+        "transaction_independent_review": Path(transaction_independent_review).resolve(),
         "policy_proposal": Path(policy_proposal).resolve(),
     }
     for path in values.values():
@@ -88,6 +91,8 @@ def build_radon_owner_contract(
         "runner_independent_review_sha256": sha256(values["runner_independent_review"]),
         "bundle_independent_review": str(values["bundle_independent_review"]),
         "bundle_independent_review_sha256": sha256(values["bundle_independent_review"]),
+        "transaction_independent_review": str(values["transaction_independent_review"]),
+        "transaction_independent_review_sha256": sha256(values["transaction_independent_review"]),
         "policy_proposal": str(values["policy_proposal"]),
         "policy_proposal_sha256": sha256(values["policy_proposal"]),
         "test_access": False,
@@ -269,6 +274,56 @@ def verify_radon_policy_plan(
         or compatibility.get("rollback_requires_new_held_first_look_successor_stage2") is not True
     ):
         raise ValueError("R&B cap-10 bundle review does not authorize the exact v23 prebinding")
+    transaction_review = read_json(_require_sha(
+        contract["transaction_independent_review"],
+        contract["transaction_independent_review_sha256"],
+        "R&B production-transaction independent review",
+    ))
+    transaction_candidate = transaction_review.get("candidate", {})
+    transaction_dependencies = transaction_review.get("dependencies", {})
+    stage2_contract = transaction_review.get("look_stage2_contract", {})
+    transaction_validation = transaction_review.get("validation", {})
+    transaction_verdict = transaction_review.get("verdict", {})
+    rollback_review = transaction_review.get("rollback_review", {})
+    if (
+        transaction_review.get("schema")
+            != "radon_paused_sixth_v5_production_transaction_independent_review_v1"
+        or transaction_review.get("conclusion")
+            != "TRANSACTION_DESIGN_GO_PRODUCTION_EXECUTION_NO_GO"
+        or transaction_candidate.get("transaction_commit")
+            != "5ba82e5ea7f44237aafac158ac2b7ec0e1e9de06"
+        or transaction_candidate.get("production_transaction_sha256")
+            != "491675054f5f831fd3c0effa62067136bc8e74bf13dd6ba7816891423ced5383"
+        or transaction_candidate.get("manifest_sha256")
+            != "67e25eb587dc6c8a05be252422d4a6d24cb5c6cdb028490c8d7459fa189e2ab7"
+        or transaction_candidate.get("runner_source_commit") != RUNNER_COMMIT
+        or transaction_candidate.get("policy_proposal_sha256") != contract["policy_proposal_sha256"]
+        or transaction_candidate.get("source_archive_sha256") != contract["runner_archive_sha256"]
+        or transaction_candidate.get("journal_initial_sha256") != plan["appended_journal_initial_sha256"]
+        or transaction_candidate.get("temporary_policy_sha256") != plan["candidate_policy_sha256"]
+        or transaction_candidate.get("steady_policy_sha256") != proposal["rollback_role_policy_sha256"]
+        or transaction_dependencies.get("bundle_review_receipt_sha256")
+            != contract["bundle_independent_review_sha256"]
+        or transaction_dependencies.get("code_review_receipt_sha256")
+            != contract["runner_independent_review_sha256"]
+        or stage2_contract.get("required_schema") != "look_v5_monitor_stage2_acceptance_v1"
+        or stage2_contract.get("required_status") != "accepted"
+        or stage2_contract.get("required_policy_sha256") != plan["candidate_policy_sha256"]
+        or stage2_contract.get("successor_monitor_job_id_must_be_real_numeric_v23_job") is not True
+        or stage2_contract.get("successor_monitor_identity_verified") is not True
+        or stage2_contract.get("predecessor_release_verified") is not True
+        or stage2_contract.get("test_access") is not False
+        or transaction_validation.get("gpu_requested") is not False
+        or transaction_validation.get("production_mutated") is not False
+        or transaction_validation.get("remote_hashes_match_candidate") is not True
+        or transaction_verdict.get("look_v23_prebinding_may_bind_this_review") != "GO"
+        or transaction_verdict.get("production_transaction_design") != "GO"
+        or transaction_verdict.get("temporary_policy_install_now") != "NO_GO"
+        or transaction_verdict.get("radon_gpu_submission_now") != "NO_GO"
+        or rollback_review.get("requires_later_held_first_look_successor_stage2_for_ff390318") is not True
+        or rollback_review.get("installation_verdict") != "NO_GO"
+    ):
+        raise ValueError("R&B transaction review does not authorize only the exact v23 binding")
     if (
         proposal.get("schema") != "radon_paused_sixth_v5_policy_proposal_v1"
         or proposal.get("state") != "accepted"
