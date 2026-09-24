@@ -3,14 +3,14 @@
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
   "phase": "formal_v5_ws02_full_host_running_ibex_full_matched_chain_queued",
-  "next_acceptance": "核验 WS02 宿主完整训练与选优产物，并把其独立运行接入完整匹配修正链；Ibex 获卡后验证九站点实际特征、PCA、匹配修正及最终报告。",
+  "next_acceptance": "继续核验WS02原宿主完整训练、选优与已部署全量匹配后继；Ibex获卡后核验九站点特征、PCA、匹配修正和报告。",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
   "source_commit": "459e8a3dd699091475d9272f1a92d84884a5f08b",
-  "evidence_cutoff": "2026-09-24T19:58:39.859208+00:00",
-  "verified_at": "2026-09-24T19:58:39.859208+00:00",
+  "evidence_cutoff": "2026-09-24T20:15:45.812428+00:00",
+  "verified_at": "2026-09-24T20:15:45.812428+00:00",
   "verification_scope": "runtime_and_evidence",
   "layers": {
     "planned": "documented",
@@ -101,7 +101,7 @@
   ],
   "blockers": [
     "Ibex GPU 52429877 尚未获批；后继链的部署和 33 项测试不能冒充实际全量计算。",
-    "WS02 宿主后继匹配研究链尚未部署，当前仅宿主训练及干净租期接续自动运行。",
+    "ws02宿主后继已部署且处于等待原宿主；其全量PCA/修正/报告实际运行验收仍未完成。",
     "完整原研究矩阵尚未全部迁移；既往 V4 结果不改写为 V5。"
   ],
   "actions": [
@@ -147,7 +147,8 @@
     "V5候选新增四宿主八状态：原16/128批量，当前严格reader、296dev、各3连续更新独立接受；spec及下游引用尚未切换。",
     "2026-09-23：balanced dropout、EmbraceNet、IMD候选当前spec/receipt和严格V5 best/last在ws02单卡独立回放通过；原源码/资产保留，生产交接尚未执行。",
     "Ibex LOOK第7保留槽按共享account lock、原request journal和排他claim合法领取；v2/v3启动失败均保留，修复后的52387700在A100完成，峰值device_used 7.246GB、allocated 6.079GB、reserved 6.646GB、host RSS 1.979GB，test未访问。下一任务复用该资源门执行全量train-only九站点PCA与全dev预测/首决策。",
-    "2026-09-24 主窗口现场核验：WS02 完整白内障数据 58,403 train / 12,510 development 已逐数组 SHA 验收；正式 V5 宿主在 GPU1 已完成 536 次更新并进入第 2 epoch。独立宿主监督进程在干净租期暂停后自动恢复。Ibex 全量特征、train-only PCA、九站点匹配修正与开发集报告链已经部署，GPU 52429877 排队，后继监控 52511764 等待依赖。"
+    "2026-09-24 主窗口现场核验：WS02 完整白内障数据 58,403 train / 12,510 development 已逐数组 SHA 验收；正式 V5 宿主在 GPU1 已完成 536 次更新并进入第 2 epoch。独立宿主监督进程在干净租期暂停后自动恢复。Ibex 全量特征、train-only PCA、九站点匹配修正与开发集报告链已经部署，GPU 52429877 排队，后继监控 52511764 等待依赖。",
+    "2026-09-24 20:15UTC：WS02完整白内障宿主已到第3epoch、1029次V5更新。两个父模型和真实输入的CPU接口检查通过，17节点/9站点当前V5宿主严格加载及前向通过；GPU1宿主结束后，PID1305893按原全量协议自动接特征缓存、train-only PCA、完整匹配修正和开发集报告。Ibex完整匹配链继续等待52429877获卡。"
   ],
   "decisions": [
     "2026-09-17 用户授权更换主搜索策略；这是见过首轮dev之后的探索性修订。所有正位置分支保留，不全局只取最佳、不探索负收益前缀补救；新run独立身份，旧结果不改写。",

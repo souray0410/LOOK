@@ -30,5 +30,8 @@
   ],
   "test_access": false,
   "hosted_ci": "not_run_actions_quota_exhausted",
-  "evidence_type": "runtime_snapshot_not_new_scientific_acceptance"
+  "evidence_type": "runtime_snapshot_not_new_scientific_acceptance",
+  "followup_verified_at": "2026-09-24T20:15:45.812428+00:00",
+  "followup": "WS02完整白内障宿主已到第3epoch、1029次V5更新。两个父模型和真实输入的CPU接口检查通过，17节点/9站点当前V5宿主严格加载及前向通过；GPU1宿主结束后，PID1305893按原全量协议自动接特征缓存、train-only PCA、完整匹配修正和开发集报告。Ibex完整匹配链继续等待52429877获卡。",
+  "remaining": "ws02宿主后继已部署且处于等待原宿主；其全量PCA/修正/报告实际运行验收仍未完成。"
 }
