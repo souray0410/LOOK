@@ -127,3 +127,23 @@ def test_slurm_adapter_parses_live_scontrol_and_counts_gpu_requests():
     assert observed["state"] == "PENDING" and observed["has_step"] is False
     assert slurm.account_gpu_count() == 1
     assert timeouts and set(timeouts) == {20.0}
+
+
+def test_slurm_adapter_preserves_terminal_job_name_for_failed_evidence():
+    def runner(args, **_):
+        if args[:4] == ["scontrol", "show", "job", "-o"]:
+            return Result("", returncode=1)
+        if args[0] == "sacct":
+            return Result(
+                "52447420|ulv5_old_a0|FAILED|1:0|mengh|pi-mengy|"
+                "cpu=8,gres/gpu:a100=1,gres/gpu=1,mem=64G,node=1\n"
+            )
+        if args[0] == "sstat":
+            return Result("", returncode=1)
+        raise AssertionError(args)
+
+    observed = SlurmAdapter(
+        user="mengh", account="pi-mengy", runner=runner
+    ).observe("52447420")
+    assert observed["name"] == "ulv5_old_a0"
+    assert observed["state"] == "FAILED" and observed["exit_code"] == "1:0"

@@ -103,7 +103,7 @@ class SlurmAdapter:
         accounting = self._run(
             [
                 "sacct", "-X", "-nP", "-j", str(job_id),
-                "--format=JobIDRaw,State,ExitCode,User,Account,ReqTRES",
+                "--format=JobIDRaw,JobName,State,ExitCode,User,Account,ReqTRES",
             ],
             check=False,
         )
@@ -113,17 +113,19 @@ class SlurmAdapter:
         row = rows[0]
         return {
             "job_id": str(job_id),
-            "state": _base_state(row[1]),
-            "exit_code": row[2],
-            "user": row[3],
-            "account": row[4],
-            "req_tres": row[5],
+            "name": row[1],
+            "state": _base_state(row[2]),
+            "exit_code": row[3],
+            "user": row[4],
+            "account": row[5],
+            "req_tres": row[6],
             "has_step": self._has_step(str(job_id)),
         }
 
     @staticmethod
     def job_name(spec: dict[str, Any]) -> str:
-        return "lookv21_" + spec_sha256(spec)[:14]
+        prefix = "lookv22_" if spec.get("mode") == "production_v22" else "lookv21_"
+        return prefix + spec_sha256(spec)[:14]
 
     def find_held(self, spec: dict[str, Any]) -> list[str]:
         proc = self._run(
@@ -355,7 +357,7 @@ def build_handover_spec(
     result = {
         "schema": "look_v5_monitor_handover_spec_v2",
         "mode": mode,
-        "transaction_id": f"look-v5-v21-{gpu_job['job_id']}-{sha256(binding)[:12]}",
+        "transaction_id": f"look-v5-{'v22' if mode == 'production_v22' else 'v21'}-{gpu_job['job_id']}-{sha256(binding)[:12]}",
         "old_job_id": str(old_job["job_id"]),
         "gpu_job_id": str(gpu_job["job_id"]),
         "dependency": dependency,

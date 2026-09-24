@@ -118,7 +118,7 @@ def validate_spec(spec: dict[str, Any]) -> None:
     }
     if set(spec) != required or spec.get("schema") != "look_v5_monitor_handover_spec_v2":
         raise ValueError(f"Transaction spec fields must be exactly {sorted(required)}")
-    if spec["mode"] not in {"production", "shadow"}:
+    if spec["mode"] not in {"production", "production_v22", "shadow"}:
         raise ValueError("Unknown handover mode")
     if spec["test_access"] is not False or spec["max_account_gpus"] != 24:
         raise ValueError("Safety envelope changed")
@@ -127,6 +127,11 @@ def validate_spec(spec: dict[str, Any]) -> None:
             raise ValueError("Production chain identity changed")
         if spec["dependency"] != "afterany:52429877(unfulfilled)":
             raise ValueError("Production dependency changed")
+    elif spec["mode"] == "production_v22":
+        if str(spec["old_job_id"]) != "52455266" or str(spec["gpu_job_id"]) != "52429877":
+            raise ValueError("V22 production chain identity changed")
+        if spec["dependency"] != "afterany:52429877(unfulfilled)":
+            raise ValueError("V22 production dependency changed")
     elif spec["dependency"] != f"afterany:{spec['gpu_job_id']}(unfulfilled)":
         raise ValueError("Shadow dependency does not bind its predecessor")
     for field in ("replacement_source_sha256", "binding_sha256"):
