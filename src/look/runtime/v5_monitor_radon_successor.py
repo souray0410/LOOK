@@ -37,6 +37,7 @@ OWNER_FIELDS = {
     "schema", "project", "journal", "journal_initial_sha256", "candidate_policy",
     "candidate_policy_sha256", "runner_commit", "runner_archive",
     "runner_archive_sha256", "runner_acceptance", "runner_acceptance_sha256",
+    "runner_independent_review", "runner_independent_review_sha256",
     "policy_proposal", "policy_proposal_sha256", "test_access",
 }
 
@@ -54,6 +55,7 @@ def build_radon_owner_contract(
     candidate_policy: str | Path,
     runner_archive: str | Path,
     runner_acceptance: str | Path,
+    runner_independent_review: str | Path,
     policy_proposal: str | Path,
 ) -> dict[str, Any]:
     values = {
@@ -61,6 +63,7 @@ def build_radon_owner_contract(
         "candidate_policy": Path(candidate_policy).resolve(),
         "runner_archive": Path(runner_archive).resolve(),
         "runner_acceptance": Path(runner_acceptance).resolve(),
+        "runner_independent_review": Path(runner_independent_review).resolve(),
         "policy_proposal": Path(policy_proposal).resolve(),
     }
     for path in values.values():
@@ -78,6 +81,8 @@ def build_radon_owner_contract(
         "runner_archive_sha256": sha256(values["runner_archive"]),
         "runner_acceptance": str(values["runner_acceptance"]),
         "runner_acceptance_sha256": sha256(values["runner_acceptance"]),
+        "runner_independent_review": str(values["runner_independent_review"]),
+        "runner_independent_review_sha256": sha256(values["runner_independent_review"]),
         "policy_proposal": str(values["policy_proposal"]),
         "policy_proposal_sha256": sha256(values["policy_proposal"]),
         "test_access": False,
@@ -206,6 +211,20 @@ def verify_radon_policy_plan(
         or acceptance.get("test_access") is not False
     ):
         raise ValueError("R&B v3 runner acceptance is not exact")
+    review = read_json(_require_sha(
+        contract["runner_independent_review"],
+        contract["runner_independent_review_sha256"],
+        "R&B independent code review",
+    ))
+    if (
+        review.get("schema") != "radon_paused_sixth_v5_v3_independent_code_review_v1"
+        or review.get("candidate", {}).get("implementation_commit") != RUNNER_COMMIT
+        or review.get("code_verdict") != "GO"
+        or review.get("production_verdict") != "NO_GO"
+        or review.get("test_access") is not False
+        or review.get("production_policy_mutated") is not False
+    ):
+        raise ValueError("R&B independent review does not preserve the production gate")
     proposal = read_json(_require_sha(
         contract["policy_proposal"], contract["policy_proposal_sha256"], "R&B policy proposal"
     ))

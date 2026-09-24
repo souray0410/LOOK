@@ -49,6 +49,14 @@ def fixture(tmp_path: Path):
         "production": {"policy_mutated": False},
         "test_access": False,
     })
+    review = tmp_path / "independent-review.json"
+    write(review, {
+        "schema": "radon_paused_sixth_v5_v3_independent_code_review_v1",
+        "candidate": {"implementation_commit": RUNNER_COMMIT},
+        "code_verdict": "GO",
+        "production_verdict": "NO_GO", "test_access": False,
+        "production_policy_mutated": False,
+    })
     proposal = tmp_path / "proposal.json"
     write(proposal, {
         "schema": "radon_paused_sixth_v5_policy_proposal_v1", "state": "accepted",
@@ -59,7 +67,8 @@ def fixture(tmp_path: Path):
     contract = tmp_path / "owner.json"
     write(contract, build_radon_owner_contract(
         journal=journal, candidate_policy=candidate, runner_archive=archive,
-        runner_acceptance=acceptance, policy_proposal=proposal,
+        runner_acceptance=acceptance, runner_independent_review=review,
+        policy_proposal=proposal,
     ))
     plan = tmp_path / "plan.json"
     write(plan, build_radon_policy_plan(
