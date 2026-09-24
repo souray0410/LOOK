@@ -1,0 +1,82 @@
+{
+  "schema": "look_v5_monitor_policy_repair_acceptance_v1",
+  "state": "control_plane_accepted_gpu_work_still_pending",
+  "observed_at_utc": "2026-09-24T09:54:36Z",
+  "implementation": {
+    "commit": "5f5cc44596c8b3c98961d95a6f431a2ecd0ed913",
+    "branch": "codex/look-policy-repair-20260924",
+    "framework_commit": "1287681c08846e11364c81653048435482e772a7",
+    "archive_sha256": "61ebf675c2d259f3f6e508649f5f21ced0866e7de97c21d2a6e4eb9929f845bb",
+    "remote_source": "/ibex/user/mengh/LOOK/look_v5_monitor_repair_shadow_5f5cc44_20260924"
+  },
+  "validation": {
+    "targeted_tests": "23 passed",
+    "full_tests": "609 passed, 63 warnings",
+    "repository_check": "passed",
+    "ibex_zero_gpu_shadow_receipt": "/ibex/user/mengh/LOOK/look_v5_monitor_handover_zero_gpu_5f5cc44_run1/shadow_recovery_receipt.json",
+    "ibex_zero_gpu_shadow_receipt_sha256": "a2c961d5fbab7c6b03228f23a8a5ac7a3de86245b0d6d2b6a41497da9ae21af9",
+    "shadow_evidence": {
+      "requested_gpus": 0,
+      "policy_install_ack_loss_recovered": true,
+      "release_ack_loss_recovered": true,
+      "bounded_scontrol_timeout_recovered": true,
+      "pre_cancel_artifact_preflight_receipted": true,
+      "replacement_job": "52454761",
+      "replacement_terminal": "COMPLETED 0:0"
+    }
+  },
+  "production": {
+    "receipt_directory": "/ibex/user/mengh/LOOK/look_v5_monitor_handover_production_5f5cc44_20260924",
+    "receipt_sha256": {
+      "00-prepared.json": "32815c001de010c90e57cb7128f7a54061d88034950c3a43adf8bf2733094cd6",
+      "01-held_submitted.json": "57475adf05c3d57f5a620b45902defb677f9c3146906e0bbb607470e302aa159",
+      "02-held_verified.json": "25026be00831847c149ae45b3ba9f9258cbec68a1b249b3281c37dc0190718aa",
+      "03-cancel_requested.json": "3799ebdfd6f9e158c793402c89ca289c1374b90b46fc83d50887920a2cbaee10",
+      "04-old_cancelled.json": "6a8167667eacd291dad8c2397f25805b7eb6b80adbd01382fce3d3b27b8b28eb",
+      "05-artifacts_committed.json": "f582c5bb7955a37d258ce467c5f4ace86d15711896358fee54a6b10b4933b2d1",
+      "06-release_requested.json": "1ce2c1ec9cc798bd4590c512a41ae3b025a17cf93fa597aebbaac931d0c74615",
+      "07-release_verified.json": "ad5a21ce120f2a9f624d652e4b8aa1c4adad114569d18b09c6c8a37e0cd560d9"
+    },
+    "handover_spec_sha256": "38cfe393c5424b4ead93f81f962e3118c9ce253f5639455f425f974d74a64baa",
+    "old_monitor": {
+      "job_id": "52430491",
+      "state": "CANCELLED",
+      "command": "/ibex/project/c2377/souray/home/mengh/operations/2026_09_10_11_11_31/v5_rollout_20260922/look_cataract_middle_v5_feature_chain_sharded_v20/monitor.sh"
+    },
+    "new_monitor": {
+      "job_id": "52455266",
+      "state": "PENDING",
+      "reason": "Dependency",
+      "dependency": "afterany:52429877(unfulfilled)",
+      "req_tres": "cpu=2,mem=4G,node=1,billing=2",
+      "command": "/ibex/user/mengh/LOOK/look_v5_monitor_policy_candidate_06117d9_b89feee_20260924/look_cataract_middle_v5_feature_chain_sharded_v21/monitor.sh"
+    },
+    "gpu_job": {
+      "job_id": "52429877",
+      "state": "PENDING",
+      "reason": "Priority",
+      "req_tres": "cpu=16,mem=128G,node=1,billing=16,gres/gpu=1,gres/gpu:a100=1",
+      "command": "/ibex/project/c2377/souray/home/mengh/operations/2026_09_10_11_11_31/v5_rollout_20260922/look_cataract_middle_v5_feature_chain_sharded_v13/run_gpu.sbatch",
+      "interrupted_or_resubmitted": false
+    },
+    "role_policy": {
+      "previous_sha256": "b89feee039183ce6d7fa709b6c38a26c62c2e0e944d807ab0a90969731003a88",
+      "installed_sha256": "f07a65fc5d0e5f55be5626e1e231264bb271b3647c84f2dcad4bce92b7e4c3df",
+      "only_change": "append one LOOK V5 dedicated request journal",
+      "dedicated_journal_sha256": "6c8f47c606d30ddfff098da50358adb34bf197f5f5a46335f9742e44023299b1",
+      "v21_package_manifest_sha256": "179f2dd147b2100587a0c12b96b4a7ec93ebdd5d89daf27f83d7754ec87388d2"
+    }
+  },
+  "accepted_scope": [
+    "The current LOOK V5 GPU allocation is now uniquely represented by a dedicated request journal.",
+    "The incompatible v20 dependency monitor was replaced held-first by one immutable v21 monitor under the existing shared account lock.",
+    "The role-policy transition and monitor release have a contiguous durable receipt chain."
+  ],
+  "limits": [
+    "GPU job 52429877 is still pending scheduler priority and has performed no new optimizer or cache update in this acceptance.",
+    "Monitor 52455266 has not run; its successful continuation can only be assessed after GPU job 52429877 reaches a terminal state.",
+    "This control-plane acceptance does not accept the full 3651-batch cache, PCA, prefix search, scientific results, test access, or the complete LOOK V5 migration.",
+    "A later role-policy change requires a newly frozen monitor policy identity or the documented stage-two replacement procedure; this receipt does not authorize a silent policy change."
+  ],
+  "test_access": false
+}
