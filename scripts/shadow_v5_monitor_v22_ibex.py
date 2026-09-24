@@ -48,12 +48,75 @@ def wait(slurm: SlurmAdapter, job: str, states: set[str], seconds: float = 60) -
     raise TimeoutError(f"Shadow job did not reach {states}: {latest}")
 
 
+def recover(root: Path) -> None:
+    prepared = json.loads((root / "receipts/00-prepared.json").read_text())
+    spec = prepared["spec"]
+    last_phase = sorted((root / "receipts").glob("*.json"))[-1].stem.split("-", 1)[1]
+    plan = json.loads((root / "policy-plan.json").read_text())
+    slurm = SlurmAdapter(
+        user=spec["expected_user"], account=spec["expected_account"], wait_seconds=30
+    )
+    installer = PolicyPlanMonitorInstaller(
+        root / "binding.json",
+        expected_sha256=spec["binding_sha256"],
+        expected_active_policy=plan["active_policy"],
+        expected_account_lock=spec["shared_lock"],
+        expected_look_gpu_job_id=spec["gpu_job_id"],
+        expected_user=spec["expected_user"],
+        expected_account=spec["expected_account"],
+        required_ul_gres_token=None,
+    )
+    result = run_handover(
+        root / "receipts",
+        lock_path=spec["shared_lock"],
+        spec=spec,
+        observe=slurm.observe,
+        find_held=slurm.find_held,
+        submit_held=lambda value: slurm.submit_held(value, installer.look_claim(), root),
+        cancel=slurm.cancel,
+        preflight_artifacts=installer.preflight,
+        commit_artifacts=installer.commit,
+        release=slurm.release,
+        account_gpu_count=slurm.account_gpu_count,
+    )
+    parent = slurm.observe(str(spec["gpu_job_id"]))
+    if parent.get("state") == "PENDING":
+        slurm.cancel(str(spec["gpu_job_id"]))
+    replacement = result["new_job_id"]
+    done = wait(slurm, replacement, {"COMPLETED", "FAILED", "CANCELLED", "TIMEOUT"})
+    if done.get("state") != "COMPLETED" or not (root / "v22/replacement_ran.txt").is_file():
+        raise RuntimeError(f"Recovered V22 replacement did not execute successfully: {done}")
+    final = {
+        "schema": "look_v5_monitor_v22_zero_gpu_shadow_v1",
+        "state": "accepted",
+        "recovered_from_phase": last_phase,
+        "parent_job": str(spec["gpu_job_id"]),
+        "old_monitor_job": str(spec["old_job_id"]),
+        "replacement_monitor_job": replacement,
+        "replacement_terminal": done,
+        "requested_gpus": 0,
+        "phase": result["phase"],
+        "policy_plan_sha256": sha256(root / "policy-plan.json"),
+        "test_access": False,
+    }
+    _write(root / "shadow_receipt.json", final)
+    print(json.dumps(final, sort_keys=True))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", required=True)
+    parser.add_argument("--recover", action="store_true")
     args = parser.parse_args()
     root = Path(args.root).resolve()
-    if root.exists() or root == PRODUCTION_ROOT or PRODUCTION_ROOT in root.parents:
+    if root == PRODUCTION_ROOT or PRODUCTION_ROOT in root.parents:
+        raise ValueError("Shadow root must be outside the production operation root")
+    if args.recover:
+        if not root.is_dir():
+            raise ValueError("Recovery root does not exist")
+        recover(root)
+        return
+    if root.exists():
         raise ValueError("Shadow root must be new and outside the production operation root")
     root.mkdir(parents=True)
     lock = root / "account.lock"; lock.touch(mode=0o600)
@@ -191,7 +254,19 @@ def main() -> None:
         }
         _write(root / "shadow_receipt.json", final)
         print(json.dumps(final, sort_keys=True))
-    except BaseException:
+    except BaseException as error:
+        failure = root / "shadow_failure.json"
+        if not failure.exists():
+            phases = [path.stem.split("-", 1)[1] for path in sorted((root / "receipts").glob("*.json"))]
+            _write(failure, {
+                "schema": "look_v5_monitor_v22_zero_gpu_shadow_failure_v1",
+                "state": "failed_recoverable",
+                "error_type": type(error).__name__,
+                "error": str(error),
+                "completed_phases": phases,
+                "requested_gpus": 0,
+                "test_access": False,
+            })
         for job in (old, parent):
             subprocess.run(["scancel", str(job)], check=False)
         raise
