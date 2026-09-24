@@ -48,7 +48,7 @@ def wait(slurm: SlurmAdapter, job: str, states: set[str], seconds: float = 60) -
     raise TimeoutError(f"Shadow job did not reach {states}: {latest}")
 
 
-def recover(root: Path) -> None:
+def recover(root: Path, source_commit: str) -> None:
     prepared = json.loads((root / "receipts/00-prepared.json").read_text())
     spec = prepared["spec"]
     last_phase = sorted((root / "receipts").glob("*.json"))[-1].stem.split("-", 1)[1]
@@ -97,6 +97,7 @@ def recover(root: Path) -> None:
         "requested_gpus": 0,
         "phase": result["phase"],
         "policy_plan_sha256": sha256(root / "policy-plan.json"),
+        "recovery_source_commit": source_commit,
         "test_access": False,
     }
     _write(root / "shadow_receipt.json", final)
@@ -106,15 +107,18 @@ def recover(root: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", required=True)
+    parser.add_argument("--source-commit", required=True)
     parser.add_argument("--recover", action="store_true")
     args = parser.parse_args()
+    if len(args.source_commit) != 40:
+        raise ValueError("Shadow source commit must be full length")
     root = Path(args.root).resolve()
     if root == PRODUCTION_ROOT or PRODUCTION_ROOT in root.parents:
         raise ValueError("Shadow root must be outside the production operation root")
     if args.recover:
         if not root.is_dir():
             raise ValueError("Recovery root does not exist")
-        recover(root)
+        recover(root, args.source_commit)
         return
     if root.exists():
         raise ValueError("Shadow root must be new and outside the production operation root")
@@ -251,6 +255,7 @@ def main() -> None:
             "requested_gpus": 0, "phase": result["phase"],
             "allowed_policy_sha256": package["allowed_policy_sha256"],
             "policy_plan_sha256": sha256(plan), "test_access": False,
+            "source_commit": args.source_commit,
         }
         _write(root / "shadow_receipt.json", final)
         print(json.dumps(final, sort_keys=True))
