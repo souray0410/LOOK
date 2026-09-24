@@ -46,7 +46,9 @@ def write_exclusive_json(path: str | Path, value: dict[str, Any]) -> None:
 def build_dedicated_journal(
     *, job: dict[str, Any], claim_path: str | Path, expected_claim_sha256: str
 ) -> dict[str, Any]:
-    required = {"job_id", "name", "command", "submit_time", "state"}
+    required = {"job_id", "name", "command", "submit_time", "state", "user", "account",
+                "req_tres", "replaces_job_id", "cancelled_retry_job_id",
+                "replacement_receipt", "replacement_receipt_sha256"}
     if set(job) != required:
         raise ValueError(f"Job identity fields must be exactly {sorted(required)}")
     if not str(job["job_id"]).isdigit() or job["state"] not in {"PENDING", "RUNNING"}:
@@ -54,6 +56,11 @@ def build_dedicated_journal(
     claim = Path(claim_path).resolve()
     if sha256(claim) != expected_claim_sha256:
         raise ValueError("Claim identity changed")
+    replacement = Path(job["replacement_receipt"]).resolve()
+    if sha256(replacement) != job["replacement_receipt_sha256"]:
+        raise ValueError("Replacement receipt identity changed")
+    if not all(str(job[k]).isdigit() for k in ("replaces_job_id", "cancelled_retry_job_id")):
+        raise ValueError("Replacement lineage is incomplete")
     return {
         "schema": "look_workflow_requests_v1",
         "requests": [
@@ -65,6 +72,12 @@ def build_dedicated_journal(
                 "state": "submitted",
                 "v5_claim": str(claim),
                 "v5_claim_sha256": expected_claim_sha256,
+                "slurm_user": job["user"], "slurm_account": job["account"],
+                "slurm_req_tres": job["req_tres"],
+                "replaces_job_id": str(job["replaces_job_id"]),
+                "cancelled_retry_job_id": str(job["cancelled_retry_job_id"]),
+                "replacement_receipt": str(replacement),
+                "replacement_receipt_sha256": job["replacement_receipt_sha256"],
             }
         ],
     }
@@ -106,10 +119,11 @@ def build_pending_monitor_replacement(
     script must never be edited in place.  A later Models transition requires a
     newly frozen replacement that adds the exact Models policy SHA.
     """
-    required = {"job_id", "state", "dependency", "command"}
+    required = {"job_id", "state", "dependency", "command", "source_sha256"}
     if set(finalizer) != required or finalizer["state"] != "PENDING":
         raise ValueError("The old finalizer must have one exact PENDING identity")
-    if not str(finalizer["job_id"]).isdigit() or not str(finalizer["dependency"]).startswith("afterany:"):
+    if (str(finalizer["job_id"]) != "52430491" or
+            finalizer["dependency"] != "afterany:52429877(unfulfilled)"):
         raise ValueError("Malformed finalizer identity")
     if current_policy_sha256 == look_policy_sha256:
         raise ValueError("LOOK transition must change the policy identity")
@@ -121,6 +135,10 @@ def build_pending_monitor_replacement(
         "models_policy_sha256": None,
         "models_transition_gate": "replace_pending_monitor_again_with_exact_models_sha_before_models_policy_install",
         "hot_edit_allowed": False,
+        "old_source_sha256": finalizer["source_sha256"],
+        "transaction": ["submit_replacement_held", "verify_exact_held_identity",
+                        "cancel_old_pending", "verify_old_terminal", "release_replacement"],
+        "stage2_running_rule": "wait_for_stage1_monitor_terminal_before_policy_install",
         "test_access": False,
     }
 
@@ -133,6 +151,25 @@ def verify_monitor_policy(policy_path: str | Path, binding: dict[str, Any]) -> s
     if digest not in allowed:
         raise ValueError("Role policy is not authorized for this immutable monitor")
     return digest
+
+
+def build_v21_chain_manager(*, v20_source: str | Path, expected_sha256: str,
+                            dedicated_journal: str | Path, allowed_policy_sha256: list[str]) -> str:
+    """Derive v21 while preserving v20 science and redirecting all successors."""
+    source = Path(v20_source)
+    if sha256(source) != expected_sha256:
+        raise ValueError("v20 chain manager identity changed")
+    text = source.read_text()
+    old_journal = "JOURNAL=ROOT/'look_forward_20260916/lease_recovery_20260917/dispatcher/requests.json'"
+    old_allow = "{'afde7998b16d39332818f2b1f6ad87401b7ff42f653666f85a922065cc1b3b72','efc451893fbeedf4fb2e22aa07a090910e3530e8e8595e33fb3aebc5e791ec02'}"
+    if text.count(old_journal) != 1 or text.count(old_allow) != 1:
+        raise ValueError("v20 replacement anchors changed")
+    absolute = str(Path(dedicated_journal).resolve())
+    allowed = "{" + ",".join(repr(x) for x in allowed_policy_sha256) + "}"
+    result = text.replace(old_journal, f"JOURNAL=pathlib.Path({absolute!r})").replace(old_allow, allowed)
+    if "lease_recovery_20260917/dispatcher/requests.json" in result:
+        raise ValueError("Legacy journal remains in v21")
+    return result
 
 
 def prepare(args: argparse.Namespace) -> dict[str, Any]:

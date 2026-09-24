@@ -23,9 +23,16 @@
   },
   "validation": {
     "new_transition_module_tests": "5 passed",
-    "broader_transition_rotation_successor_tests": "13 passed total, including the 5 new-module tests",
+    "broader_transition_rotation_successor_tests": "16 passed total",
     "layout_check": "passed",
     "terminology_check": "passed"
   },
-  "open_gate": "Independent review and account-lock deployment of the generated content-addressed artifacts are required; the current v20 finalizer does not authorize either generated policy SHA."
+  "v21": {
+    "source_derivation": "requires the exact v20 source SHA, replaces exactly the legacy journal anchor and policy allowlist, and rejects changed anchors",
+    "successor_journal": "all later GPU successor appends use the dedicated V5 journal registered by stage 1",
+    "handover": "submit replacement held, verify exact afterany identity, cancel old pending monitor, verify terminal, then release; every boundary is durably receipted",
+    "crash_recovery": "an exact held replacement is rediscovered by the immutable spec before any new submission",
+    "stage2_running_rule": "wait for a running stage-1 monitor to become terminal before installing a Models policy that it does not accept"
+  },
+  "open_gate": "Independent review, an Ibex CPU shadow using fresh scontrol identities, and account-lock deployment are required; production remains unchanged."
 }

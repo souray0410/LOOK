@@ -7,6 +7,7 @@ import pytest
 
 from look.runtime.v5_role_policy_transition import (
     build_pending_monitor_replacement,
+    build_v21_chain_manager,
     build_look_only_policy,
     prepare,
     verify_monitor_policy,
@@ -50,10 +51,13 @@ def test_delta_rejects_premature_models_journal(tmp_path):
 def test_prepare_is_exclusive_and_binds_claim(tmp_path):
     current = tmp_path / "current.json"; current_sha = write(current, policy())
     claim = tmp_path / "claim.json"; claim_sha = write(claim, {"job_id": "52429877"})
+    replacement = tmp_path / "replacement.json"; replacement_sha = write(replacement, {"replacement": True})
     job = tmp_path / "job.json"
     write(job, {"job_id": "52429877", "name": "look_v5_mid_sharded",
                 "command": "/immutable/run_gpu.sbatch", "submit_time": "2026-09-24T09:33:10",
-                "state": "PENDING"})
+                "state": "PENDING", "user": "mengh", "account": "pi-mengy", "req_tres": "gres/gpu:a100:1",
+                "replaces_job_id": "52422962", "cancelled_retry_job_id": "52429606",
+                "replacement_receipt": str(replacement), "replacement_receipt_sha256": replacement_sha})
     args = Namespace(current_policy=str(current), expected_current_sha256=current_sha,
                      job_identity=str(job), claim=str(claim), expected_claim_sha256=claim_sha,
                      output=str(tmp_path / "out"), finalizer_identity=None)
@@ -68,8 +72,11 @@ def test_prepare_rejects_nonlive_or_changed_claim(tmp_path):
     current = tmp_path / "current.json"; current_sha = write(current, policy())
     claim = tmp_path / "claim.json"; write(claim, {"job_id": "52429877"})
     job = tmp_path / "job.json"
+    replacement = tmp_path / "replacement.json"; replacement_sha = write(replacement,{})
     write(job, {"job_id": "52429877", "name": "x", "command": "/x",
-                "submit_time": "t", "state": "COMPLETED"})
+                "submit_time": "t", "state": "COMPLETED", "user":"mengh", "account":"pi-mengy",
+                "req_tres":"gpu:1", "replaces_job_id":"52422962", "cancelled_retry_job_id":"52429606",
+                "replacement_receipt":str(replacement), "replacement_receipt_sha256":replacement_sha})
     args = Namespace(current_policy=str(current), expected_current_sha256=current_sha,
                      job_identity=str(job), claim=str(claim), expected_claim_sha256="0" * 64,
                      output=str(tmp_path / "out"), finalizer_identity=None)
@@ -83,7 +90,8 @@ def test_pending_monitor_accepts_intermediate_look_policy_only(tmp_path):
     models = tmp_path / "models.json"; write(models, {"policy": "models"})
     binding = build_pending_monitor_replacement(
         finalizer={"job_id": "52430491", "state": "PENDING",
-                   "dependency": "afterany:52429877(unfulfilled)", "command": "/immutable/v20/monitor.sh"},
+                   "dependency": "afterany:52429877(unfulfilled)", "command": "/immutable/v20/monitor.sh",
+                   "source_sha256":"e717d053"},
         current_policy_sha256=old_sha, look_policy_sha256=look_sha,
     )
     assert verify_monitor_policy(old, binding) == old_sha
@@ -91,3 +99,15 @@ def test_pending_monitor_accepts_intermediate_look_policy_only(tmp_path):
     with pytest.raises(ValueError, match="not authorized"):
         verify_monitor_policy(models, binding)
     assert binding["hot_edit_allowed"] is False
+
+
+def test_v21_redirects_successors_to_dedicated_journal(tmp_path):
+    old = tmp_path/'v20.py'
+    old.write_text("import pathlib\nJOURNAL=ROOT/'look_forward_20260916/lease_recovery_20260917/dispatcher/requests.json'\n"
+                   "if policy_sha not in {'afde7998b16d39332818f2b1f6ad87401b7ff42f653666f85a922065cc1b3b72','efc451893fbeedf4fb2e22aa07a090910e3530e8e8595e33fb3aebc5e791ec02'}:raise ValueError\n")
+    digest=hashlib.sha256(old.read_bytes()).hexdigest()
+    result=build_v21_chain_manager(v20_source=old,expected_sha256=digest,
+                                   dedicated_journal=tmp_path/'dedicated.json',allowed_policy_sha256=['old','look'])
+    assert str((tmp_path/'dedicated.json').resolve()) in result
+    assert "lease_recovery_20260917" not in result
+    assert "'old','look'" in result
