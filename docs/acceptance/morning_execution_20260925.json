@@ -1,0 +1,20 @@
+{
+  "schema": "phd_project_morning_execution_evidence_v1",
+  "project": "LOOK",
+  "observed_at": "2026-09-25T07:04:23.404062+00:00",
+  "framework_commit": "1287681c08846e11364c81653048435482e772a7",
+  "implementation_commit": "767d68e9741693c194ab57a668bebcd7bfb449a9",
+  "summary": "WS02完整宿主30 epochs/13253 updates已接受，完整九站点无损特征生成中。Ibex3651批/58403人全量特征实际完成，原后继误读旧partial游标而失败；已修复accepted优先读取及历史已结束GPU的overlay顺序，有限测试与真实现役overlay通过，CPU52559390正在核验剩余SHA后自动提交PCA及完整匹配链。未减少样本、站点或精度。",
+  "validation": [
+    "CPU Slurm52557651: combined33 passed,1 skipped",
+    "Actual nine-site tensors bitwise equal",
+    "52559198: stale-partial/full-accepted transition regression passed",
+    "52559390: CPU remaining-hash verification and PCA continuation running"
+  ],
+  "open_items": [
+    "两平台完整匹配修正/PCA与开发集报告尚未完成。"
+  ],
+  "test_access": false,
+  "hosted_ci": "not_run_quota_exhausted",
+  "all_consumers_migrated": false
+}
