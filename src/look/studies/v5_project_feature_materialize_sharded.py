@@ -1,6 +1,6 @@
 """Site-sharded formal-V5 train feature cache with atomic batch commits."""
 from __future__ import annotations
-import argparse,hashlib,json,pathlib,time
+import argparse,gzip,hashlib,io,json,pathlib,shutil,time
 import torch
 from torch.utils.data import DataLoader
 from look.data.observed_pair import collate_observed
@@ -10,6 +10,18 @@ from look.runtime.provenance import write_json_atomic
 from look.runtime.state import file_sha256,stable_hash
 from look.studies.v5_project_feature_replay import datasets
 from look.studies.v5_project_full_replay import _parent,read,validate_claim,FRAMEWORK,MODELS
+
+def save_lossless_tensor(tensor, path):
+ # One current cache format. Compression changes bytes, never Tensor precision.
+ with open(path, 'xb') as raw:
+  with gzip.GzipFile(filename='', mode='wb', fileobj=raw, compresslevel=1, mtime=0) as stream:
+   torch.save(tensor, stream)
+
+def load_lossless_tensor(path):
+ # A seekable buffer avoids repeated decompression by PyTorch's zip reader.
+ with gzip.open(path, 'rb') as stream:
+  payload = io.BytesIO(stream.read())
+ return torch.load(payload, map_location='cpu', weights_only=True)
 
 def participant_sha(ids): return hashlib.sha256(json.dumps(list(ids),separators=(',',':')).encode()).hexdigest()
 def materialize(*,source_run,checkpoint,output,inputs_factory,device,gpu_budget_bytes,max_batches=None):
@@ -27,7 +39,7 @@ def materialize(*,source_run,checkpoint,output,inputs_factory,device,gpu_budget_
  ids=[(n.id,n.name) for n in sorted(graph.nodes,key=lambda n:n.id)];state=read_selected(checkpoint,identity=accepted['identity'],node_ids=ids)
  graph.load_state_dict(state['model'],strict=True);graph.eval();data,cohort=datasets(source_run,inputs_factory,seed=spec['seed']);sites=correction_sites(graph)
  if len(sites)!=9: raise ValueError('Exact nine-site host required')
- identity={'schema':'look_formal_v5_train_feature_cache_v2_site_sharded','framework_commit':FRAMEWORK,'models_commit':MODELS,'source_spec_sha256':file_sha256(source_run/'spec.json'),'target_checkpoint_sha256':file_sha256(checkpoint),'train':cohort['roles']['train'],'sites':sites,'test_access':False}
+ identity={'schema':'look_formal_v5_train_feature_cache_v3_lossless_site_sharded','framework_commit':FRAMEWORK,'models_commit':MODELS,'source_spec_sha256':file_sha256(source_run/'spec.json'),'target_checkpoint_sha256':file_sha256(checkpoint),'train':cohort['roles']['train'],'sites':sites,'test_access':False}
  output.mkdir(parents=True,exist_ok=True);ip=output/'identity.json'
  if ip.exists() and read(ip)!=identity: raise ValueError('Feature cache identity changed')
  write_json_atomic(identity,ip);chunks=output/'chunks';chunks.mkdir(exist_ok=True)
@@ -42,19 +54,22 @@ def materialize(*,source_run,checkpoint,output,inputs_factory,device,gpu_budget_
     for site,item in row['files'].items():
      path=final/item['path']
      if file_sha256(path)!=item['sha256']: raise ValueError('Existing site shard changed')
-    completed=index+1;continue
+    last_batch_uncompressed_bytes=sum(item['tensor_bytes'] for item in row['files'].values());completed=index+1;continue
    if partial.exists():
     quarantine=chunks/f'{index:06d}.incomplete.{int(time.time())}';partial.rename(quarantine)
+   # Need room for one uncompressed batch even if compression is ineffective.
+   if completed and shutil.disk_usage(output).free < max(1, last_batch_uncompressed_bytes): raise RuntimeError('Insufficient disk space for next feature batch')
    partial.mkdir();forward_with_look(graph,batch['oct'].to(device),batch['cfp'].to(device),counts=batch['counts'])
    files={}
    for ordinal,site in enumerate(sites):
-    path=partial/f'{ordinal:02d}_{site}.pt';torch.save(read_site(graph,site).detach().cpu(),path)
-    files[site]={'path':path.name,'sha256':file_sha256(path),'bytes':path.stat().st_size}
+    path=partial/f'{ordinal:02d}_{site}.pt.gz';tensor=read_site(graph,site).detach().cpu();save_lossless_tensor(tensor,path)
+    files[site]={'path':path.name,'sha256':file_sha256(path),'bytes':path.stat().st_size,'tensor_bytes':tensor.numel()*tensor.element_size()}
+   last_batch_uncompressed_bytes=sum(item['tensor_bytes'] for item in files.values())
    row={'batch':index,'participant_ids':list(batch['participant_id']),'participants_sha256':participant_sha(batch['participant_id']),'files':files,'sites':sites,'test_access':False};write_json_atomic(row,partial/'receipt.json');partial.rename(final);completed=index+1;processed_this_run+=1
    write_json_atomic({'state':'running','completed_batches':completed,'participants_consumed':min(completed*spec['training']['microbatch'],len(data['train'])),'elapsed_seconds':time.time()-started,'test_access':False},output/'status.json')
    if max_batches is not None and processed_this_run>=max_batches: break
  total_batches=(len(data['train'])+spec['training']['microbatch']-1)//spec['training']['microbatch'];complete=completed==total_batches
- receipt={'schema':'look_formal_v5_train_feature_materialization_v2_site_sharded','state':'accepted_complete' if complete else 'accepted_partial','identity_sha256':stable_hash(identity),'completed_batches':completed,'processed_this_run':processed_this_run,'total_batches':total_batches,'participants_total':len(data['train']),'bytes':sum(p.stat().st_size for p in chunks.glob('*/*.pt')),'elapsed_seconds':time.time()-started,'test_access':False}
+ receipt={'schema':'look_formal_v5_train_feature_materialization_v3_lossless_site_sharded','state':'accepted_complete' if complete else 'accepted_partial','identity_sha256':stable_hash(identity),'completed_batches':completed,'processed_this_run':processed_this_run,'total_batches':total_batches,'participants_total':len(data['train']),'bytes':sum(p.stat().st_size for p in chunks.glob('*/*.pt.gz')),'elapsed_seconds':time.time()-started,'test_access':False}
  write_json_atomic(receipt,output/('accepted.json' if complete else 'partial.json'));return receipt
 
 def main(argv=None):

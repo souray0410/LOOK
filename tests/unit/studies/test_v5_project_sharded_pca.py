@@ -3,14 +3,15 @@ import torch
 import pytest
 from look.runtime.state import file_sha256,stable_hash
 from look.studies import v5_project_sharded_pca as subject
+from look.studies.v5_project_feature_materialize_sharded import save_lossless_tensor
 
 def write(p,x): p.write_text(json.dumps(x))
 def cache(tmp_path,complete=True):
  root=tmp_path/'cache';(root/'chunks'/'000000').mkdir(parents=True)
  identity={'framework_commit':subject.FRAMEWORK,'models_commit':subject.MODELS,'test_access':False,'sites':['s']}
  write(root/'identity.json',identity)
- shard=root/'chunks'/'000000'/'00_s.pt';torch.save(torch.ones(2,3,2,2),shard)
- write(root/'chunks'/'000000'/'receipt.json',{'batch':0,'sites':['s'],'test_access':False,'participant_ids':['a','b'],'participants_sha256':subject.participant_sha(['a','b']),'files':{'s':{'path':'00_s.pt','sha256':file_sha256(shard)}}})
+ shard=root/'chunks'/'000000'/'00_s.pt.gz';save_lossless_tensor(torch.ones(2,3,2,2),shard)
+ write(root/'chunks'/'000000'/'receipt.json',{'batch':0,'sites':['s'],'test_access':False,'participant_ids':['a','b'],'participants_sha256':subject.participant_sha(['a','b']),'files':{'s':{'path':'00_s.pt.gz','sha256':file_sha256(shard)}}})
  write(root/'accepted.json',{'schema':subject.SCHEMA,'state':'accepted_complete' if complete else 'accepted_partial','completed_batches':1,'total_batches':1,'participants_total':2,'identity_sha256':stable_hash(identity),'test_access':False})
  return root
 
@@ -24,7 +25,7 @@ def test_partial_cache_fails_closed(tmp_path):
 
 def test_modified_shard_fails_closed(tmp_path):
  root=cache(tmp_path);_,_,rows=subject.validate_complete_cache(root)
- torch.save(torch.zeros(2,3,2,2),rows[0]/'00_s.pt')
+ torch.save(torch.zeros(2,3,2,2),rows[0]/'00_s.pt.gz')
  with pytest.raises(ValueError,match='hash'): next(subject.cached_feature_factory(rows,'s',1)())
 
 

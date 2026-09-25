@@ -13,9 +13,9 @@ from look.runtime.provenance import write_json_atomic
 from look.runtime.state import file_sha256, stable_hash
 from look.studies.v5_project_full_replay import FRAMEWORK, MODELS, _parent, read
 from look.studies.v5_project_feature_replay import datasets
-from look.studies.v5_project_feature_materialize_sharded import participant_sha
+from look.studies.v5_project_feature_materialize_sharded import participant_sha,load_lossless_tensor
 
-SCHEMA = "look_formal_v5_train_feature_materialization_v2_site_sharded"
+SCHEMA = "look_formal_v5_train_feature_materialization_v3_lossless_site_sharded"
 
 def _chunks(cache: pathlib.Path, total: int) -> list[pathlib.Path]:
     chunks = cache / "chunks"
@@ -67,7 +67,7 @@ def cached_feature_factory(rows: list[pathlib.Path], site: str, factor: int) -> 
             shard = path / item["path"]
             if shard.parent != path or shard.is_symlink() or file_sha256(shard) != item["sha256"]:
                 raise ValueError("Site shard hash mismatch")
-            feature = torch.load(shard, map_location="cpu", weights_only=True)
+            feature = load_lossless_tensor(shard)
             flat, down_shape = downsample_flatten(feature, factor)
             yield flat, tuple(feature.shape[1:]), down_shape
     return features
@@ -77,7 +77,7 @@ def execute(*, source_run, checkpoint, cache, output, inputs_factory):
     cache = pathlib.Path(cache).resolve(); output = pathlib.Path(output).resolve()
     spec = read(source_run / "spec.json"); source_accepted = read(source_run / "host/accepted.json")
     expected = {
-        "schema": "look_formal_v5_train_feature_cache_v2_site_sharded",
+        "schema": "look_formal_v5_train_feature_cache_v3_lossless_site_sharded",
         "framework_commit": FRAMEWORK, "models_commit": MODELS,
         "source_spec_sha256": file_sha256(source_run / "spec.json"),
         "target_checkpoint_sha256": file_sha256(checkpoint),
@@ -112,7 +112,7 @@ def execute(*, source_run, checkpoint, cache, output, inputs_factory):
     if identity_path.exists() and read(identity_path)!=stage_identity: raise ValueError("PCA stage identity changed")
     write_json_atomic(stage_identity,identity_path)
     for site in sites:
-        sample=torch.load(rows[0]/read(rows[0]/"receipt.json")["files"][site]["path"],map_location="cpu",weights_only=True)
+        sample=load_lossless_tensor(rows[0]/read(rows[0]/"receipt.json")["files"][site]["path"])
         factors=[1] if sample.ndim==2 else list(dict.fromkeys(cfg["factors"]))
         for factor in factors:
             path=bank_root/f"{site}_x{factor}.pt"; meta=path.with_suffix(".json")
