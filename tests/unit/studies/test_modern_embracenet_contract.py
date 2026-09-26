@@ -60,7 +60,8 @@ def test_slurm_device_uuid_uses_visible_cuda_properties(monkeypatch):
     monkeypatch.setenv('SLURM_JOB_ID','123')
     monkeypatch.setenv('CUDA_VISIBLE_DEVICES','4')
     monkeypatch.setattr(torch.cuda,'device_count',lambda:1)
-    assert delivery._visible_gpu_uuid(SimpleNamespace(uuid='GPU-allocated-four'))=='GPU-allocated-four'
+    assert delivery._visible_gpu_uuid(SimpleNamespace(uuid='GPU-22222222-2222-2222-2222-222222222222'))=='GPU-22222222-2222-2222-2222-222222222222'
+    assert delivery._visible_gpu_uuid(SimpleNamespace(uuid='22222222-2222-2222-2222-222222222222'))=='GPU-22222222-2222-2222-2222-222222222222'
     with pytest.raises(ValueError,match='UUID'):delivery._visible_gpu_uuid(SimpleNamespace())
     monkeypatch.setattr(torch.cuda,'device_count',lambda:2)
-    with pytest.raises(ValueError,match='exactly one'):delivery._visible_gpu_uuid(SimpleNamespace(uuid='GPU-four'))
+    with pytest.raises(ValueError,match='exactly one'):delivery._visible_gpu_uuid(SimpleNamespace(uuid='GPU-22222222-2222-2222-2222-222222222222'))

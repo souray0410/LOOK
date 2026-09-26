@@ -963,8 +963,10 @@ def pipeline(spec_path):
 def _visible_gpu_uuid(props):
     # CUDA ordinal0 is local to the Slurm visibility mask, not physical GPU0.
     value=getattr(props,"uuid",None)
-    if not value or not str(value).startswith(("GPU-","MIG-")):
+    if not value:
         raise ValueError("Actual visible CUDA device UUID required")
+    from mhd_models.scheduling.standalone import nvml_uuid
+    value=nvml_uuid(value)
     if os.environ.get("SLURM_JOB_ID") and torch.cuda.device_count()!=1:
         raise ValueError("This method requires exactly one allocated visible GPU")
     return str(value)
