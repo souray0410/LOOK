@@ -1,4 +1,4 @@
-"""Exact EmbraceNet complete-reference PCA and positive-forward LOOK fitting."""
+"""Exact EmbraceNet complete-reference PCA and explicitly selected LOOK trajectories."""
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -376,8 +376,10 @@ class EmbraceNetFamilyStatistics:
 def fit_embracenet_family_trajectory(
     graph, train_loader, dev_loader, *, arm, pattern, sites, factor, candidates,
     pca_bank, identity, output, device, workspace_bytes, should_pause=lambda: False,
-    penalty_policy="prefix_train_pca_gcv",
+    penalty_policy="prefix_train_pca_gcv", search="positive_forward_tree",
 ):
+    if search not in ("positive_forward_tree", "best_forward"):
+        raise ValueError("Explicit registered trajectory required")
     validate_candidates(arm, candidates, penalty_policy)
     if graph.training or any(parameter.requires_grad for parameter in graph.parameters()):
         raise ValueError("Frozen eval EmbraceNet graph required")
@@ -391,7 +393,7 @@ def fit_embracenet_family_trajectory(
             raise ValueError("Every EmbraceNet site requires one complete-reference PCA basis")
         bases[site] = matches[0]
     scientific_identity = {
-        "identity": identity, "arm": arm, "pattern": pattern, "factor": factor,
+        "identity": identity, "arm": arm, "pattern": pattern, "factor": factor, "search": search,
         "candidates": candidates, "penalty_policy": penalty_policy,
         "data_role": dev_loader.dataset.split,
         "bases": {name: fingerprint(asdict(basis)) for name, basis in bases.items()},
@@ -433,7 +435,7 @@ def fit_embracenet_family_trajectory(
             )
             mapping = fit_map(stats, q, ridge, arm=arm, basis=basis.components[:q])
             mapping.diagnostics.update(
-                selection="positive_forward_tree", penalty_policy=penalty_policy,
+                selection=search, penalty_policy=penalty_policy,
                 complete_reference="author_stochastic_analytic_second_moment",
                 conditional_variance_in_syy=True,
             )
@@ -470,7 +472,7 @@ def fit_embracenet_family_trajectory(
         return FamilyArtifact.from_record(torch.load(path, map_location="cpu", weights_only=False))
 
     bank, result = fit_trajectory(
-        identity=scientific_identity, sites=sites, mode="positive_forward_tree",
+        identity=scientific_identity, sites=sites, mode=search,
         output=root, fit_candidates=fit, evaluate=evaluate,
         save_artifact=save_artifact, load_artifact=load_artifact,
         should_pause=should_pause,
@@ -493,3 +495,47 @@ def load_embracenet_bank(path):
     if fingerprint(record["bank"]) != record["sha256"]:
         raise ValueError("EmbraceNet family bank changed")
     return [FamilyArtifact.from_record(value) for value in record["bank"]]
+
+
+def fit_embracenet_search_suite(
+    graph, train_loader, dev_loader, *, sites, candidates_by_arm, output, identity,
+    **kwargs,
+):
+    """Run each approved fit family independently on the same frozen host.
+
+    Enumerate single sites, then best-forward and the positive-forward tree.
+    Single-site outcomes never filter another search. Callers bind data, host,
+    source, seed and resource qualification into identity before GPU dispatch.
+    Each trajectory retains its own resumable contract and prediction evidence.
+    """
+    arms = ('shared_pca_ridge', 'pca_free_mean', 'rrr_shared_intercept', 'residual_rrr')
+    if set(candidates_by_arm) != set(arms):
+        raise ValueError('All four registered fit families required')
+    if not sites or len(set(sites)) != len(sites):
+        raise ValueError('Ordered unique sites required')
+    root = Path(output)
+    records = []
+    for arm in arms:
+        for pattern in ('oct_missing', 'cfp_missing'):
+            configurations = [('single_site', [site], f'single_{i:03d}')
+                              for i, site in enumerate(sites)]
+            configurations += [(mode, list(sites), mode)
+                               for mode in ('best_forward', 'positive_forward_tree')]
+            for mode, selected_sites, directory in configurations:
+                run_identity = dict(parent=identity, coverage='full_fit_search_suite_v1',
+                                    search=mode, sites=selected_sites)
+                target = root / arm / pattern / directory
+                _, result = fit_embracenet_family_trajectory(
+                    graph, train_loader, dev_loader, arm=arm, pattern=pattern,
+                    sites=selected_sites, candidates=candidates_by_arm[arm],
+                    identity=run_identity, output=target,
+                    search='positive_forward_tree' if mode == 'single_site' else mode,
+                    **kwargs,
+                )
+                records.append(dict(arm=arm, pattern=pattern, search=mode,
+                                    sites=selected_sites, output=str(target),
+                                    selection_sha256=file_sha256(target / 'selection.json'),
+                                    final=result['final']))
+    write_json_atomic(dict(identity=identity, records=records, test_access=False,
+                           scientific_acceptance=False), root / 'coverage.json')
+    return records

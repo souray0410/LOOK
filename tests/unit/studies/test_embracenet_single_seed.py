@@ -200,8 +200,9 @@ def test_registered_bootstrap_returns_four_contrasts_for_each_metric():
     assert all(len(value["rows"])==4 and value["iterations"]==64 for value in result.values())
 
 
-@pytest.mark.parametrize("arm", ["pca_free_mean", "residual_rrr"])
-def test_small_real_mhd_positive_tree_uses_analytic_reference_and_replays(tmp_path, arm):
+@pytest.mark.parametrize("arm", ["shared_pca_ridge", "pca_free_mean", "rrr_shared_intercept", "residual_rrr"])
+@pytest.mark.parametrize("search", ["positive_forward_tree", "best_forward"])
+def test_small_real_mhd_positive_tree_uses_analytic_reference_and_replays(tmp_path, arm, search):
     torch.set_num_threads(2)
     graph=_graph(embracement=8).eval()
     for parameter in graph.parameters(): parameter.requires_grad_(False)
@@ -217,10 +218,10 @@ def test_small_real_mhd_positive_tree_uses_analytic_reference_and_replays(tmp_pa
     artifacts,result=fit_embracenet_family_trajectory(
         graph,train_loader,dev_loader,arm=arm,pattern="oct_missing",sites=sites,
         factor=16,candidates=[{"rank":2,"ridge_lambda":None}],pca_bank=bank,
-        identity="tiny-family",output=tmp_path/arm,device=torch.device("cpu"),
+        identity="tiny-family",output=tmp_path/arm,device=torch.device("cpu"),search=search,
         workspace_bytes=256*1024**2,should_pause=lambda:False,
     )
-    assert result["mode"]=="positive_forward_tree"
+    assert result["mode"]==search
     assert result["test_access"] is False
     assert (tmp_path/arm/"bank.pt").exists()
     replay=evaluate_single_missing(graph,dev_loader,torch.device("cpu"),"oct_missing",artifacts)

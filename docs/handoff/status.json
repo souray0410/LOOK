@@ -320,5 +320,18 @@
       "label": "现代完整数据方法已部署，等待GPU验收",
       "url": "https://github.com/souray0410/LOOK/blob/codex/modern-host-20260926/docs/handoff/modern_full_method_deployed_20260926.md"
     }
-  ]
+  ],
+  "full_coverage_extension": {
+    "protocol": "docs/protocols/full_modern_coverage_20260926.md",
+    "state": "four_families_two_searches_and_single_site_suite_cpu_verified",
+    "tests": 17,
+    "deployed": false,
+    "existing_pending_source": "673844b",
+    "open": [
+      "full_IMD",
+      "remaining_modern_parent_pairs",
+      "new_suite_gpu_lifecycle_and_dispatch",
+      "whole_matrix_independent_acceptance"
+    ]
+  }
 }
