@@ -167,6 +167,9 @@ def initialize_spec(base_spec, source_root, output, physical_output):
 
 
 def validate(spec):
+    from look.studies.modern_embracenet import SCHEMA as MODERN_SCHEMA, validate as validate_modern
+    if spec.get("schema") == MODERN_SCHEMA:
+        return validate_modern(spec)
     from look.runtime.device_budget import validate as validate_gpu_policy
     validate_gpu_policy(spec)
     if spec.get("schema") != SCHEMA or spec.get("task_id") != TASK_ID or spec.get("test_access") is not False:
@@ -218,6 +221,9 @@ def validate(spec):
 
 
 def make_graph(spec, device):
+    from look.studies.modern_embracenet import SCHEMA as MODERN_SCHEMA, make_graph as make_modern
+    if spec.get("schema") == MODERN_SCHEMA:
+        return make_modern(spec, device)
     from mhd_framework.models import create_model
     torch.hub.set_dir(str(Path(spec["initialization"]["path"]).parent.parent))
     config = dict(name="resnet18", spatial_dims=2, in_channels=3, num_classes=2, views=1, granularity="block")
@@ -229,6 +235,13 @@ def make_graph(spec, device):
     )
     graph.to(device)
     return graph
+
+
+def make_dataset(spec, role, *, augment=False):
+    from look.studies.modern_embracenet import SCHEMA as MODERN_SCHEMA, dataset
+    if spec.get("schema") == MODERN_SCHEMA:
+        return dataset(spec, role, augment)
+    return ArrayPair(spec["data_root"], role, augment=augment, seed=spec["seed"])
 
 
 def _loader(dataset, spec, check=None):
@@ -311,6 +324,12 @@ def _resource_guard(spec, root, stop_requested=lambda: False):
         raise MemoryError("Host free-memory reserve breached")
     if shutil.disk_usage(Path(root).resolve()).free < spec["disk_reserve_bytes"]:
         raise OSError("Artifact disk reserve breached")
+    if spec.get("lease_safety_seconds") is not None:
+        end = float(os.environ["MHD_EXECUTION_LEASE_END"])
+        if not np.isfinite(end) or end <= 0:
+            raise ValueError("Valid allocation end time required")
+        if time.time() >= end - spec["lease_safety_seconds"]:
+            return True
     return bool(stop_requested())
 
 
@@ -342,9 +361,9 @@ def stage_profile(spec, root, check):
         return receipt
     import psutil
     target.mkdir(parents=True,exist_ok=True)
-    train = ArrayPair(spec["data_root"], "train", augment=True, seed=spec["seed"])
-    fit = ArrayPair(spec["data_root"], "train")
-    dev = ArrayPair(spec["data_root"], "development")
+    train = make_dataset(spec, "train", augment=True)
+    fit = make_dataset(spec, "train")
+    dev = make_dataset(spec, "development")
     scan = {"train": _scan_dataset(fit), "development": _scan_dataset(dev)}
     torch.cuda.reset_peak_memory_stats()
     from look.runtime.device_budget import configure
@@ -451,11 +470,15 @@ def stage_profile(spec, root, check):
     return receipt
 
 def stage_host(spec, root, check):
+    if spec.get("schema")=="look_modern_embracenet_20260926_v1":
+        recovery=read(root/"modern_resume/accepted.json")
+        if recovery.get("state")!="accepted" or recovery.get("identity")!=stable_hash(spec):
+            raise ValueError("Modern host requires fresh-process recovery qualification")
     target = root / "host"
     if (target / "accepted.json").exists():
         return read(target / "accepted.json")
-    train = ArrayPair(spec["data_root"], "train", augment=True, seed=spec["seed"])
-    dev = ArrayPair(spec["data_root"], "development")
+    train = make_dataset(spec, "train", augment=True)
+    dev = make_dataset(spec, "development")
     graph = make_graph(spec, torch.device("cuda:0"))
     receipt = train_embracenet_host(
         graph, train, dev, spec["training"], spec["seed"], target, stable_hash(spec),
@@ -482,7 +505,7 @@ def stage_pca(spec, root, check):
     if (target / "accepted.json").exists():
         return read(target / "accepted.json")
     graph, host = _load_selected(spec, root, torch.device("cuda:0"))
-    fit = ArrayPair(spec["data_root"], "train")
+    fit = make_dataset(spec, "train")
     bank = _pca_bank(spec, root, graph, fit, check)
     entries = []
     for (node, factor), basis in bank.items():
@@ -509,8 +532,8 @@ def stage_fit_profile(spec, root, check):
         return read(target / "accepted.json")
     target.mkdir(parents=True,exist_ok=True)
     graph, _ = _load_selected(spec, root, torch.device("cuda:0"))
-    fit = ArrayPair(spec["data_root"], "train")
-    dev = ArrayPair(spec["data_root"], "development")
+    fit = make_dataset(spec, "train")
+    dev = make_dataset(spec, "development")
     bank = _pca_bank(spec, root, graph, fit, check)
     sites = correction_sites(graph)
     bases = {site: next(basis for (name, _), basis in bank.items() if name == site) for site in sites}
@@ -641,8 +664,8 @@ def stage_arm(spec, root, arm, check):
     if (target / "accepted.json").exists():
         return read(target / "accepted.json")
     graph, host = _load_selected(spec, root, torch.device("cuda:0"))
-    fit = ArrayPair(spec["data_root"], "train")
-    dev = ArrayPair(spec["data_root"], "development")
+    fit = make_dataset(spec, "train")
+    dev = make_dataset(spec, "development")
     train_loader = _loader(fit, spec, check)
     dev_loader = _loader(dev, spec, check)
     pca = _pca_bank(spec, root, graph, fit, check)
@@ -829,12 +852,12 @@ def stage_report(spec, root):
         "schema":"look_embracenet_single_seed_results_v1","state":"self_checked_pending_independent_review",
         "identity":stable_hash(spec),"test_access":False,"host_complete_metrics":host["metrics"],
         "development_results":rows,"paired_statistics":stats,"tree_costs":costs,
-        "selection_bias":"same 296-person development set selects tree/checkpoint and estimates effects; intervals are conditional/exploratory",
+        "selection_bias":f"same {len(reference['labels'])}-person development set selects tree/checkpoint and estimates effects; intervals are conditional/exploratory",
         "uncertainty_limit":"single seed; no train-seed variation represented",
     },delivery/"results.json")
     lines=[
         "# EmbraceNet + LOOK 单种子累计候选报告","",
-        "状态：self_checked_pending_independent_review。仅1264 train / 296 development；test封存。",
+        f"状态：self_checked_pending_independent_review。{spec.get('cohort', {}).get('train', 1264)} train / {len(reference['labels'])} development；test封存。",
         "问题：同一个冻结EmbraceNet A在整模态缺失时，加LOOK是否改善？负结果和分支损伤均保留。","",
         f"冻结A：seed3416；best epoch {host['best_epoch']}；complete-dev解析平均logits Macro-F1 {100*host['metrics']['macro_f1']:.3f}%。",
         "训练缺失：complete / missing OCT / missing CFP 各1/3；双眼同步缺失。完整态分类选优用解析E[logits]；single-missing每状态一次作者forward。",
@@ -872,6 +895,13 @@ def verify_case(run, spec):
         record=read(path)
         if record.get("identity")!=identity and path.name=="accepted.json":
             raise ValueError("EmbraceNet delivery receipt identity changed")
+    if spec.get("schema")=="look_modern_embracenet_20260926_v1":
+        recovery=read(root/"modern_resume/accepted.json")
+        if recovery.get("state")!="accepted" or recovery.get("identity")!=identity or recovery.get("test_access") is not False:
+            raise ValueError("Modern fresh-process acceptance missing or changed")
+        for relative,key in (("modern_resume/run/last.pt","checkpoint_sha256"),("profile/continuous_two_updates/last.pt","reference_sha256")):
+            if file_sha256(root/relative)!=recovery.get(key):
+                raise ValueError("Modern recovery checkpoint changed")
     delivery=read(root/"delivery/accepted.json")
     if delivery.get("state")!="self_checked_pending_independent_review" or delivery.get("test_access") is not False:
         raise ValueError("EmbraceNet delivery is not a review candidate")
@@ -885,7 +915,7 @@ def _stage_receipt(root, stage):
     paths={
         "profile":root/"profile/accepted.json","host":root/"host/accepted.json","pca":root/"pca/accepted.json",
         "fit_profile":root/"fit_profile/accepted.json","pca_free_mean":root/"pca_free_mean/accepted.json",
-        "residual_rrr":root/"residual_rrr/accepted.json","report":root/"delivery/accepted.json",
+        "residual_rrr":root/"residual_rrr/accepted.json","report":root/"delivery/accepted.json", "modern_resume":root/"modern_resume/accepted.json",
     }
     return paths[stage]
 
@@ -896,7 +926,9 @@ def pipeline(spec_path):
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         atomic_write_json({"state":"running","identity":stable_hash(spec),"time":time.time(),"test_access":False},root/"status.json")
         try:
-            for stage in ("profile","host","pca","fit_profile","pca_free_mean","residual_rrr"):
+            for stage in (("profile","modern_resume","host","pca","fit_profile","pca_free_mean","residual_rrr")
+                          if spec.get("schema")=="look_modern_embracenet_20260926_v1"
+                          else ("profile","host","pca","fit_profile","pca_free_mean","residual_rrr")):
                 receipt_path=_stage_receipt(root,stage)
                 if receipt_path.exists():
                     record=read(receipt_path)
@@ -950,6 +982,10 @@ def work(spec, stage):
             torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
             if check(): raise StagePaused()
             if stage=="profile": stage_profile(spec,root,check)
+            elif stage=="modern_resume":
+                from look.studies.modern_embracenet import SCHEMA as MODERN_SCHEMA, fresh_process_resume
+                if spec.get("schema")!=MODERN_SCHEMA: raise ValueError("Undeclared modern recovery stage")
+                fresh_process_resume(spec,root,check)
             elif stage=="host": stage_host(spec,root,check)
             elif stage=="pca": stage_pca(spec,root,check)
             elif stage=="fit_profile": stage_fit_profile(spec,root,check)
@@ -971,7 +1007,7 @@ def work(spec, stage):
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument("--spec");parser.add_argument("--stage",choices=["init","pipeline","profile","host","pca","fit_profile",*ARMS,"report"])
+    parser.add_argument("--spec");parser.add_argument("--stage",choices=["init","pipeline","profile","modern_resume","host","pca","fit_profile",*ARMS,"report"])
     parser.add_argument("--init-from");parser.add_argument("--source-root");parser.add_argument("--output");parser.add_argument("--physical-output")
     args=parser.parse_args()
     if args.stage=="init":
