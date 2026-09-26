@@ -9,6 +9,7 @@ SCHEMA='look_modern_embracenet_20260926_v1'
 TRAINING={'epochs':100,'patience':15,'minimum_epochs':8,'warmup_epochs':5,'microbatch':16,'effective_batch':128,
           'pretrained_lr':1e-4,'new_layer_lr':1e-3,'weight_decay':1e-4,'clip':5.0,'precision':'fp32','num_workers':0,
           'loss':'unweighted_cross_entropy','primary_metric':'macro_f1'}
+RECIPE={'training_states':{'complete':1/3,'oct_missing':1/3,'cfp_missing':1/3},'complete_selection':'analytical_integrated_mean_logits','single_missing_evaluation':'one_author_forward','complete_pca_reference':'analytic_author_stochastic_second_moment','complete_selection_probabilities':[0.5,0.5]}
 SITES=['joint_input','joint_stem','joint_stage1','joint_stage2','joint_stage3','joint_stage4','joint_features','joint_participant_feature','embraced_feature']
 LOOK={'arms':['pca_free_mean','residual_rrr'],'patterns':['oct_missing','cfp_missing'],'search':'positive_forward_tree','factor':16,'rank':32,'penalty_policy':'prefix_train_pca_gcv','sites':SITES}
 
@@ -20,7 +21,7 @@ def validate(spec):
     from look.runtime.device_budget import validate as budget
     budget(spec)
     if (spec.get('schema')!=SCHEMA or spec.get('test_access') is not False or spec.get('architecture')!='convnext_base'
-        or spec.get('seed')!=3416 or spec.get('embracement_size')!=256 or spec.get('training')!=TRAINING or spec.get('look')!=LOOK):
+        or spec.get('seed')!=3416 or spec.get('embracement_size')!=256 or spec.get('training')!=TRAINING or spec.get('look')!=LOOK or spec.get('recipe')!=RECIPE):
         raise ValueError('Unregistered full-cohort modern method contract')
     if spec.get('cohort')!={'train':58403,'development':12510}:raise ValueError('Complete registered cohort required')
     if spec.get('lease_safety_seconds')!=900:raise ValueError('Lease-safe stage continuation required')
@@ -44,6 +45,8 @@ def validate(spec):
         if ids[0]!=ids[1] or len({r[0] for r in ids[0]})!=count:raise ValueError('Participant pairing mismatch')
     train={x['id'] for x in read(parents[0]['train_manifest'])['samples']}
     if train & {x['id'] for x in read(parents[0]['development_manifest'])['samples']}:raise ValueError('Participant leakage')
+    acceptance=spec.get('parent_acceptance',{})
+    if file_sha256(acceptance.get('path',''))!=acceptance.get('sha256'):raise ValueError('Parent acceptance changed')
     if not spec.get('source_pins'):raise ValueError('Pinned execution source required')
     for row in spec['source_pins']:
         if file_sha256(row['path'])!=row['sha256']:raise ValueError('Execution source changed')

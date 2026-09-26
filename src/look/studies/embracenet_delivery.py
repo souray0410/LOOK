@@ -333,8 +333,9 @@ def _resource_guard(spec, root, stop_requested=lambda: False):
     return bool(stop_requested())
 
 
-def _scan_dataset(dataset):
+def _scan_dataset(dataset, check=lambda:False):
     for index in range(len(dataset)):
+        if index % 64 == 0 and check(): raise StagePaused()
         dataset[index]
     return {"participants": len(dataset), "verified_files": len(dataset.verified)}
 
@@ -364,7 +365,7 @@ def stage_profile(spec, root, check):
     train = make_dataset(spec, "train", augment=True)
     fit = make_dataset(spec, "train")
     dev = make_dataset(spec, "development")
-    scan = {"train": _scan_dataset(fit), "development": _scan_dataset(dev)}
+    scan = {"train": _scan_dataset(fit,check), "development": _scan_dataset(dev,check)}
     torch.cuda.reset_peak_memory_stats()
     from look.runtime.device_budget import configure
     configure(spec)

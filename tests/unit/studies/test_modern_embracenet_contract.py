@@ -7,7 +7,7 @@ from look.studies import embracenet_delivery as delivery
 
 def minimal():
     return dict(schema=modern.SCHEMA,test_access=False,architecture='convnext_base',seed=3416,embracement_size=256,
-                training=copy.deepcopy(modern.TRAINING),look=copy.deepcopy(modern.LOOK),cohort={'train':58403,'development':12510},
+                training=copy.deepcopy(modern.TRAINING),look=copy.deepcopy(modern.LOOK),recipe=copy.deepcopy(modern.RECIPE),cohort={'train':58403,'development':12510},
                 lease_safety_seconds=900,gpu_reserve_bytes=0,gpu_budget_bytes=1024)
 
 
