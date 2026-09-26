@@ -330,7 +330,7 @@ def test_work_signal_callback_reaches_stage_and_releases_lock(tmp_path,monkeypat
     monkeypatch.setattr(delivery,"validate",lambda spec:None)
     monkeypatch.setattr(delivery.signal,"signal",lambda sig,handler:handlers.__setitem__(sig,handler))
     monkeypatch.setattr(delivery,"_resource_guard",lambda spec,root,stop_requested=lambda:False:bool(stop_requested()))
-    monkeypatch.setattr(delivery.torch.cuda,"get_device_properties",lambda index:type("P",(),{"name":"fake"})())
+    monkeypatch.setattr(delivery.torch.cuda,"get_device_properties",lambda index:type("P",(),{"name":"fake","uuid":"GPU-fake"})())
     monkeypatch.setattr(delivery.torch.cuda,"mem_get_info",lambda:(100,200))
     monkeypatch.setattr(delivery.subprocess,"check_output",lambda *args,**kwargs:"GPU-fake\n")
     observed={}
