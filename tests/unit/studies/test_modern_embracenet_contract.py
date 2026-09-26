@@ -53,3 +53,14 @@ def test_modern_host_requires_separate_recovery_before_training(tmp_path):
     (tmp_path/'modern_resume/accepted.json').write_text(json.dumps({'state':'accepted','identity':'another execution'}))
     with pytest.raises(ValueError,match='fresh-process'):
         delivery.stage_host(s,tmp_path,lambda:False)
+
+
+def test_slurm_device_uuid_uses_visible_cuda_properties(monkeypatch):
+    from types import SimpleNamespace
+    monkeypatch.setenv('SLURM_JOB_ID','123')
+    monkeypatch.setenv('CUDA_VISIBLE_DEVICES','4')
+    monkeypatch.setattr(torch.cuda,'device_count',lambda:1)
+    assert delivery._visible_gpu_uuid(SimpleNamespace(uuid='GPU-allocated-four'))=='GPU-allocated-four'
+    with pytest.raises(ValueError,match='UUID'):delivery._visible_gpu_uuid(SimpleNamespace())
+    monkeypatch.setattr(torch.cuda,'device_count',lambda:2)
+    with pytest.raises(ValueError,match='exactly one'):delivery._visible_gpu_uuid(SimpleNamespace(uuid='GPU-four'))

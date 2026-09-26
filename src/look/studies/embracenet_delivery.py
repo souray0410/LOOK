@@ -936,7 +936,7 @@ def pipeline(spec_path):
                     if record.get("identity")!=stable_hash(spec) or record.get("state")!="accepted":
                         raise ValueError("Existing stage receipt changed: "+stage)
                     continue
-                env=dict(os.environ,CUDA_VISIBLE_DEVICES="0",CUBLAS_WORKSPACE_CONFIG=":4096:8")
+                env=dict(os.environ,CUBLAS_WORKSPACE_CONFIG=":4096:8")
                 log=(root/f"{stage}.log").open("a")
                 process=subprocess.run(
                     [sys.executable,"-m","look.studies.embracenet_delivery","--spec",str(spec_path),"--stage",stage],
@@ -960,6 +960,16 @@ def pipeline(spec_path):
             raise
 
 
+def _visible_gpu_uuid(props):
+    # CUDA ordinal0 is local to the Slurm visibility mask, not physical GPU0.
+    value=getattr(props,"uuid",None)
+    if not value or not str(value).startswith(("GPU-","MIG-")):
+        raise ValueError("Actual visible CUDA device UUID required")
+    if os.environ.get("SLURM_JOB_ID") and torch.cuda.device_count()!=1:
+        raise ValueError("This method requires exactly one allocated visible GPU")
+    return str(value)
+
+
 def work(spec, stage):
     validate(spec);root=Path(spec["output"]);root.mkdir(parents=True,exist_ok=True)
     stop=False
@@ -972,7 +982,7 @@ def work(spec, stage):
 
     props=torch.cuda.get_device_properties(0)
     locks=Path(spec["lock_root"]);locks.mkdir(parents=True,exist_ok=True)
-    uuid=subprocess.check_output(["nvidia-smi","--query-gpu=uuid","--format=csv,noheader","-i","0"],text=True).strip()
+    uuid=_visible_gpu_uuid(props)
     try:
         with (locks/(uuid+".lock")).open("a") as lock:
             fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
