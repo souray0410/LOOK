@@ -5,7 +5,7 @@ from pathlib import Path
 import shutil
 import textwrap
 
-from tools.build_v5_monitor_runtime_package import build, write_json
+from scripts.build_v5_monitor_runtime_package import build, write_json
 from look.runtime.v5_monitor_runtime_pin import file_sha256
 
 

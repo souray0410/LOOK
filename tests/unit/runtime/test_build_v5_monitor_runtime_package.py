@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from look.runtime.v5_monitor_runtime_pin import file_sha256, verify_runtime
-from tools.build_v5_monitor_runtime_package import build
+from scripts.build_v5_monitor_runtime_package import build
 
 
 def test_builder_pins_complete_source_and_detects_later_drift(tmp_path):

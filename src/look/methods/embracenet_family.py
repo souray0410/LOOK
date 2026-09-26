@@ -525,6 +525,18 @@ def fit_embracenet_search_suite(
                 run_identity = dict(parent=identity, coverage='full_fit_search_suite_v1',
                                     search=mode, sites=selected_sites)
                 target = root / arm / pattern / directory
+                completed = target / 'suite_completed.json'
+                request_id = stable_hash(dict(identity=run_identity, arm=arm, pattern=pattern,
+                                              candidates=candidates_by_arm[arm]))
+                if completed.exists():
+                    receipt = json.loads(completed.read_text())
+                    if receipt['request_id'] != request_id:
+                        raise ValueError('Completed suite trajectory identity changed')
+                    for path, digest in receipt['files'].items():
+                        if file_sha256(path) != digest:
+                            raise ValueError('Completed suite trajectory artifact changed')
+                    records.append(receipt['record'])
+                    continue
                 _, result = fit_embracenet_family_trajectory(
                     graph, train_loader, dev_loader, arm=arm, pattern=pattern,
                     sites=selected_sites, candidates=candidates_by_arm[arm],
@@ -532,10 +544,15 @@ def fit_embracenet_search_suite(
                     search='positive_forward_tree' if mode == 'single_site' else mode,
                     **kwargs,
                 )
-                records.append(dict(arm=arm, pattern=pattern, search=mode,
-                                    sites=selected_sites, output=str(target),
-                                    selection_sha256=file_sha256(target / 'selection.json'),
-                                    final=result['final']))
+                record = dict(arm=arm, pattern=pattern, search=mode,
+                              sites=selected_sites, output=str(target),
+                              selection_sha256=file_sha256(target / 'selection.json'),
+                              final=result['final'])
+                paths = [target / name for name in ('selection.json', 'bank.pt', 'replay.json')]
+                paths.append(Path(result['final']['prediction']))
+                write_json_atomic(dict(request_id=request_id, record=record,
+                                       files={str(p): file_sha256(p) for p in paths}), completed)
+                records.append(record)
     write_json_atomic(dict(identity=identity, records=records, test_access=False,
                            scientific_acceptance=False), root / 'coverage.json')
     return records

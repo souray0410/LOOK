@@ -452,3 +452,5 @@ Local targeted verification: 33 tests passed, including full-scope/resume,
 modified evidence rejection, incomplete cache rejection, terminal-versus-live
 ownership, monitor handover and runtime pinning. Deployment/job evidence belongs
 in the private PHD rollout receipt; this source change alone is not GPU acceptance.
+
+2026-09-26完整现代覆盖后继：新增`studies/modern_coverage.py`，同一冻结宿主/接受PCA，四族×双缺失×9单站点/best-forward/正向树88轨迹，完成轨迹按SHA恢复免重算，GPU拟合后CPU生成全部匹配比较/区间/CSV/方法图。原673844b运行快照不改。现为CPU接受代码，实际GPU与最终独立报告未接受；协议docs/protocols/modern_coverage_successor_20260926.md。
