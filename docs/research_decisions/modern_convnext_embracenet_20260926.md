@@ -43,3 +43,11 @@ Implementation09-26: native ConvNeXt-Base cuts and EmbraceNet graph implemented;
 25 CPU tests passed, including native feature equality, branch gradients and
 sampling replay. Full package entry, GPU recovery and method execution remain
 open. Do not relabel an old small-cohort spec to bypass its finite contract.
+
+Implementation follow-up09-26: source69505dc adds the separate full-cohort method
+entry, native observed-eye dataset adapter, mandatory lease end, and an independent
+process for update1-to2 recovery before host training. Seventeen targeted CPU
+checks pass. Selected-parent publication d05fd8d is deployed as CPU successor to
+the real A100 migration qualification, with strict current-artifact consumer
+checks. The full modern scientific GPU package and automatic lease reapplication
+are not deployed or accepted yet; do not infer those from this implementation.
