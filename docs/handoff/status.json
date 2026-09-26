@@ -2,16 +2,16 @@
   "schema": "research_project_status_v1",
   "project": "LOOK",
   "goal": "缺失模态线性修正的可复现机制研究",
-  "phase": "modern_full_method_deployed_pending_gpu",
-  "next_acceptance": "核现代任务52615061实际GPU恢复与完整方法报告；保持历史健康链。",
+  "phase": "modern_full_coverage_successor_waiting_accepted_parent",
+  "next_acceptance": "保持原52615061；独立全覆盖后继52628024等待原host/PCA接受，随后88轨迹及CPU完整报告；真实GPU与最终独立接受未发生。",
   "dependencies": [
     "宿主验收",
     "当前算法与匹配对照的实际执行证据"
   ],
-  "source_commit": "673844b5f54dcc55d6480aab463b0bc2ea391e7e",
-  "evidence_cutoff": "2026-09-26T10:24:32.225636+00:00",
-  "verified_at": "2026-09-26T10:24:32.225636+00:00",
-  "verification_scope": "runtime_and_evidence",
+  "source_commit": "abf8976",
+  "evidence_cutoff": "2026-09-26T17:42:17.852077+00:00",
+  "verified_at": "2026-09-26T17:42:17.852231+00:00",
+  "verification_scope": "actual_cpu_gate_and_dependency_worker",
   "layers": {
     "planned": "documented",
     "implemented": "verified",
@@ -333,5 +333,17 @@
       "new_suite_gpu_lifecycle_and_dispatch",
       "whole_matrix_independent_acceptance"
     ]
+  },
+  "coverage_successor": {
+    "source": "abf8976",
+    "cpu_job": "52628023",
+    "cpu_state": "COMPLETED0",
+    "actual_nodes": 23,
+    "correction_sites": 9,
+    "trajectories": 88,
+    "dependency_worker": "52628024",
+    "state": "waiting_accepted_host_and_pca",
+    "gpu_scientific_updates": 0,
+    "independent_acceptance": false
   }
 }

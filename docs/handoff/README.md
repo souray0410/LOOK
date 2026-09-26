@@ -454,3 +454,7 @@ ownership, monitor handover and runtime pinning. Deployment/job evidence belongs
 in the private PHD rollout receipt; this source change alone is not GPU acceptance.
 
 2026-09-26完整现代覆盖后继：新增`studies/modern_coverage.py`，同一冻结宿主/接受PCA，四族×双缺失×9单站点/best-forward/正向树88轨迹，完成轨迹按SHA恢复免重算，GPU拟合后CPU生成全部匹配比较/区间/CSV/方法图。原673844b运行快照不改。现为CPU接受代码，实际GPU与最终独立报告未接受；协议docs/protocols/modern_coverage_successor_20260926.md。
+
+## 2026-09-26 完整覆盖后继已部署
+
+新源abf8976独立读取原673844b宿主与PCA，不热改52615061。CPU52628023完成：实际当前23节点、9修正位置、完整数据/父模型身份与4定向测试通过。旧检查误写17节点的52627948失败原样存档后修正；不是改模型适应检查。单一CPU后继52628024已实际运行并记录waiting_accepted_host_and_pca。后续在共享账号锁/LOOK角色内申请，必要时只归还从未启动的native借用申请，不碰运行中的owner。四族×双缺失×(9单站点+best-forward+正向树)=88轨迹；已完成轨迹严格SHA复用，完整报告在GPU释放后的CPU终结任务生成。最多8个已验证干净暂停租期，未知失败隔离。真正跨租期与最终科学接受仍未发生，3417/3418及完整IMD下一单元仍需主窗口接续。
