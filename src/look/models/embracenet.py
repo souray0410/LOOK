@@ -429,7 +429,7 @@ def build_embracenet_host(
     sampling_seed: int = 3416,
     classifier_dropout: float = 0.0,
 ) -> MHD_Graph:
-    """Build a 2-D observed-eye R18 EmbraceNet MHD prototype.
+    """Build a 2-D observed-eye EmbraceNet host from explicitly supported parents.
 
     The two encoders remain complete modality-specific native parents. Each is
     pooled across the actually observed eyes, then EmbraceNet docks/embraces the
@@ -439,9 +439,9 @@ def build_embracenet_host(
     if a.configuration() != b.configuration():
         raise ValueError("EmbraceNet prototype requires same-architecture complete parents")
     config = a.configuration()
-    if config.get("name") != "resnet18" or config.get("views", 1) != 1 or config.get("spatial_dims", 2) != 2:
-        raise ValueError("This finite EmbraceNet prototype is locked to observed-eye 2-D ResNet18 parents")
-    stages = STAGE_MAP["resnet18"]
+    if config.get("name") not in ("resnet18", "convnext_base") or config.get("views", 1) != 1 or config.get("spatial_dims", 2) != 2:
+        raise ValueError("EmbraceNet requires observed-eye 2-D ResNet18 or ConvNeXt-Base parents")
+    stages = STAGE_MAP[config["name"]]
     device = torch.device(device)
     nodes: list[MHD_Node] = []
     edges: list[MHD_Edge] = []
@@ -560,7 +560,7 @@ def build_embracenet_host(
     graph.fusion_position = "embracenet"
     graph.num_classes = int(config["num_classes"])
     graph.observed_eye_input = True
-    graph.architecture_id = "resnet18_observed_embracenet"
+    graph.architecture_id = config["name"] + "_observed_embracenet"
     graph.embracenet_missing_method = True
     graph.embracenet_provenance = {
         "schema": "look_embracenet_mhd_prototype_v1",

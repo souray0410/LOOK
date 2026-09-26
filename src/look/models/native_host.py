@@ -16,6 +16,7 @@ STAGE_MAP = {
     "resnet50": ("stem", "stage1", "stage2", "stage3", "stage4", "features"),
     "densenet121": ("stem", "denseblock1", "denseblock2", "denseblock3", "denseblock4", "features"),
     "swin_b": ("patch_embed", "stage1", "stage2", "stage3", "stage4", "features"),
+    "convnext_base": ("stem", "stage1", "stage2", "stage3", "stage4", "features"),
 }
 STARTS = {"middle": 2, "deep": 4, "features": 5}
 
